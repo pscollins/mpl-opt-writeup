@@ -1,0 +1,479 @@
+%% Delete "draft" to make images render
+\documentclass[leqno,11pt]{article}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[shortlabels]{enumitem}
+
+\usepackage{amsmath}
+
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{float}
+
+
+\usepackage{bm}
+\usepackage{bbm}
+
+\usepackage{geometry}
+\usepackage{changepage}
+
+%% https://tex.stackexchange.com/questions/2607/spacing-around-left-and-right
+\usepackage{mleftright}
+
+\usepackage{tkz-euclide}
+\usetikzlibrary{angles,patterns,calc}
+\usetikzlibrary{arrows,automata,shapes.gates.logic.US,shapes.geometric,arrows.meta}
+
+%% https://tex.stackexchange.com/questions/643287
+\usetikzlibrary{positioning}
+
+%% https://tex.stackexchange.com/questions/399829
+\usepackage{tikz-cd}
+
+%% https://tex.stackexchange.com/questions/475826
+\usepackage{pythonhighlight}
+
+%% hyperlinks
+\usepackage{hyperref}
+
+%% nicely formatted references (must load last)
+\usepackage{cleveref}
+
+\newcommand{\cof}{\textrm{cof}\, }
+\newcommand{\tr}{\textrm{tr}}
+
+\newcommand{\Ker}{\textnormal{Ker}\, }
+\newcommand{\Img}{\textnormal{Img}\, }
+\newcommand{\D}{\textnormal{\textbf{D}}\, }
+\newcommand{\Hessian}{\textnormal{\textbf{H}}\, }
+\newcommand{\J}{\textnormal{\textbf{J}}\, }
+\newcommand{\vecnab}{\vec{\nabla}}
+%% bm is required for symbols, rather than mathbf
+%% https://tex.stackexchange.com/questions/595/
+\newcommand{\point}[1]{\bm{#1}}
+
+
+\DeclareMathOperator{\vol}{vol}
+\DeclareMathOperator{\osc}{osc}
+\DeclareMathOperator{\Area}{Area}
+\DeclareMathOperator{\Mat}{Mat}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\grad}{grad}
+\DeclareMathOperator{\curl}{curl}
+\DeclareMathOperator{\Div}{div}
+
+\DeclareMathOperator{\Imag}{Im}
+\DeclareMathOperator{\Real}{Re}
+
+%% rank of a matrix
+\DeclareMathOperator{\rank}{rank}
+
+%% residual
+\DeclareMathOperator{\Res}{Res}
+
+%% span of a set of vectors
+\DeclareMathOperator{\Span}{span}
+
+%% normal subgroup
+\DeclareMathOperator{\normsub}{\triangleleft}
+
+%% automorphism
+\DeclareMathOperator{\Aut}{Aut}
+
+%% stabilizer
+\DeclareMathOperator{\stab}{stab}
+
+%% Laplacian: https://tex.stackexchange.com/questions/76553/
+\newcommand*\Laplace{\mathop{}\!\mathbin\bigtriangleup}
+
+%% support
+\DeclareMathOperator{\supp}{supp}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Ind}{\mathbbm{1}}
+
+\usepackage{accents}           % underbar
+%% abstract vectors
+%% https://tex.stackexchange.com/questions/163280
+\newcommand\avec[1]{\underline{\point{#1}}}
+
+%% bold (vector) variable with overhat
+\newcommand\pointhat[1]{\point{\hat{#1}}}
+
+\usepackage{listings}
+\usepackage{minted}
+
+%% integral with a bar for "average"
+\usepackage{esint}
+
+%% Better spacing for \middle|
+%% https://tex.stackexchange.com/questions/5502
+\newcommand{\relmiddle}[1]{\mathrel{}\middle#1\mathrel{}}
+
+%% Support for augmented matrices
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+\usepackage{tikz}
+
+%% Contradiction symbol
+\newcommand{\contradiction}{%
+  \begin{tikzpicture}[rotate=45,x=0.5ex,y=0.5ex]
+    \draw[line width=.2ex] (0,2) -- (3,2) (0,1) -- (3,1) (1,3) -- (1,0) (2,3) -- (2,0);
+  \end{tikzpicture}
+}
+
+%% Check mark
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+
+%% Brackets for math in a finite field
+\newcommand{\inZ}[2]{\ensuremath{[#2]_{#1}}}
+\newcommand{\inZU}[2]{\ensuremath{[#1]}}
+
+%% Vector derivative
+\newcommand{\vecd}[1]{\ensuremath{\dot{\vec{#1}}}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+%% ceil and floor
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+%% argmin operator
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+%% scale a matrix
+%% https://tex.stackexchange.com/questions/43065
+\newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
+
+%% move the margin for an equation
+%% https://tex.stackexchange.com/questions/287239/
+\usepackage{changepage}
+
+%% matrix with labels
+%% https://tex.stackexchange.com/questions/59517
+\usepackage{blkarray}
+
+\newcommand{\hatvec}[1]{\ensuremath{\hat{\vec{#1}}}}
+
+
+%% skip items
+%% https://tex.stackexchange.com/questions/226609/
+\makeatletter
+\newcommand\nextitem[1]{%
+  \setcounter{\@enumctr}{#1}%
+  \addtocounter{\@enumctr}{-1}%
+}
+
+%% partial derivative
+%% https://tex.stackexchange.com/questions/29179/partial-derivative-macro
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+
+%% Correct spacing for hodge star
+%% https://tex.stackexchange.com/questions/632798/
+\newcommand{\hodge}{{*}}
+
+%% Complex conjugate
+\newcommand{\conj}[1]{\overline{#1}}
+
+%% absolute condition number
+\newcommand{\kabs}{\ensuremath{\kappa_{\textrm{abs}}}}
+%% relative condition number
+\newcommand{\krel}{\ensuremath{\kappa_{\textrm{rel}}}}
+
+%% highlight via \hl{}
+\usepackage{xcolor}
+\usepackage{soul}
+
+\begin{document}
+
+\title{MATH-GA 2430: Final Practice Exam}
+\author{Patrick Collins}
+\maketitle
+
+\section{Problem 1}
+Let $\mu$ be an unsigned measure and $\nu$ a signed measure (respectively) on a
+measurable space $(X, \mathcal A)$.
+
+\begin{lemma}[Part (a)]
+  If $\nu \perp \mu$ and $\nu \ll \mu$, then $\nu = 0$.
+\end{lemma}
+\begin{proof}
+  Fix an $E \in \mathcal A$. Since $\nu \perp \mu$, there exist disjoint $A$,
+  $B$ such that for all $E$, $\mu(E) = \mu(E \cap A)$ and $\nu(E) = \nu(E \cap
+  B)$.
+
+  First, suppose that $E \subset A$: then since $A \cap B = \emptyset$, 
+  \[
+  \nu(E) = \nu(E \cap B) = 0
+  \]
+
+  Now suppose that $E \subset A^c$: then
+  \[
+  \mu(E) = \mu(E \cap A) = 0
+  \]
+  Hence since $\nu \ll \mu$, $\mu(E) = 0$.
+
+  The claim follows for arbitrary $E$ by decomposing $E = E_1 \cup E_2$ for $E_1
+  \subset A$, $E_2 \subset A^c$ and applying addivity.
+\end{proof}
+
+\begin{lemma}[Part (b)]
+  Suppose $\nu_1 \perp \mu$ and $\nu_2 \perp \mu$. Then for any $\alpha_1,
+  \alpha_2 \in \R$, for the signed measure:
+  \[
+  \nu = \alpha_1 \nu_1 + \alpha_2 \nu_2
+  \]
+  we have $\nu \perp \mu$.
+\end{lemma}
+\begin{proof}
+  Since $\nu_1 \perp \mu, \nu_2 \perp \mu$, there exist $A_1, A_2$ disjoint with
+  $B_1, B_2$ such that for all $E \in \mathcal A$,
+  \begin{align*}
+    \nu_1(E) &= \nu_1(E \cap A_1) \\
+    \nu_2(E) &= \nu_2(E \cap A_2) \\
+    \mu(E) &= \mu(E \cap B_1) = \mu(E \cap B_2)
+  \end{align*}
+  Note that then:
+  \[
+  \mu(E) = \mu(E \cap (B_1 \cap B_2))
+  \]
+  and thus we can take $B = B_1 \cap B_2$ for:
+  \[
+  \mu(E) = \mu(E \cap B)
+  \]
+  We want to show that there exists an $A$ disjoint with $B$ such that:
+  \[
+  \nu(E) = \nu(E \cap A)
+  \]
+
+  Setting $A = A_1 \cup A_2$, we have:
+  \begin{align*}
+    \nu(E \cap A) &=
+    \alpha_1 \nu_1(E \cap A) +
+    \alpha_2 \nu_2(E \cap A) \\
+    &= \alpha_1 \nu_1((E \cap A) \cap A_1) +
+    \alpha_2 \nu_2((E \cap A) \cap A_2) \\
+    &= \alpha_1 \nu_1(E \cap A_1) + \alpha_2 \nu_2(E \cap A_2) \\
+    &= \alpha_1 \nu_1(E) + \alpha_2 \nu_2(E) \\
+  \end{align*}
+  and thus the claim is satisfied.
+\end{proof}
+
+\begin{lemma}[Part (c)]
+  Suppose $\nu_1 \ll \mu$ and $\nu_2 \ll \mu$. Then for any $\alpha_1, \alpha_2
+  \in \R$, for the signed measure:
+  \[
+  \nu = \alpha_1 \nu_1 + \alpha_2 \nu_2
+  \]
+  we have $\nu \ll \mu$.
+\end{lemma}
+\begin{proof}
+  Suppose $\mu(E) = 0$. Then:
+  \begin{align*}
+    \nu(E) &=
+    \alpha_1 \nu_1(E) + 
+    \alpha_2 \nu_2(E) \\
+    &= 0
+  \end{align*}
+  because $\nu_1(E) = \nu_2(E) = 0$ since $\nu_1, \nu_2 \ll \mu$.
+\end{proof}
+
+\section{Problem 2}
+\begin{theorem}
+  \[
+  \lim_{n \to \infty}
+  \int_{[0, \infty)} n^{-1} e^{-nx^2} \, d\lambda =0
+    \]
+\end{theorem}
+
+\begin{proof}
+  Observe that, for:
+  \[
+  g(x) = e^{-x^2}
+  \]
+  For all $x \geq 1$, $e^{x^2} \geq x^2$, hence $e^{-x^2} \leq x^{-2}$. Recall
+  that the infinite sum $\sum_{n=1}^\infty \frac{1}{x^2}$ converges, and so
+  $\int_1^\infty g < \infty$. Then on the range $0 \leq x < 1$, $e^{-x^2}$ is
+  bounded by $1$, and so $g \in L^1$.
+  \[
+  f_n(x) = \frac{1}{n} \cdot \frac{1}{e^{nx^2}}
+  \]
+  we have $f_n \leq g$ for all $n$. Hence by the dominated convergence theorem,
+  \begin{align*}
+  \lim_{n \to \infty}
+  \int_{[0, \infty)} n^{-1} e^{-nx^2} \, d\lambda
+    &=
+  \int_{[0, \infty)}
+    \left(\lim_{n \to \infty}
+    n^{-1} e^{-nx^2}\right) \, d\lambda \\
+    &= \int_{[0, \infty)} 0 \, d\lambda \\
+    &= 0
+  \end{align*}
+\end{proof}
+
+\section{Problem 3}
+\begin{theorem}
+  Suppose $f \colon \R \to \R$ is bounded, measurable, and:
+  \[
+  \lim_{h \to 0} \int_0^1 \frac{|f(x + h) - f(x)|}{h} \, dx = 0
+  \]
+  Show that $f$ is a.e. constant on the interval $[0, 1]$.
+\end{theorem}
+
+\begin{proof}
+  Since $\frac{|f(x + h) - f(x)|}{h}$ is nonnegative, it follows that for every
+  subinterval $[a, b] \subset [0, 1]$, we have:
+  \[
+  \lim_{h \to 0} \int_a^b \frac{|f(x + h) - f(x)|}{h} \, dx = 0
+  \]
+  Thus since:
+  \[
+  \left| \int_a^b \frac{f(x + h) - f(x)}{h} \, dx \right| \leq 
+  \int_a^b \frac{|f(x + h) - f(x)|}{h} \, dx
+  \]
+  We have, for all $0 \leq a \leq b \leq 1$,
+  \[
+  \lim_{h \to 0} \int_a^b \frac{f(x + h) - f(x)}{h} \, dx  = 0
+  \]
+  Then
+  \begin{align*}
+    \int_a^b \frac{f(x + h) - f(x)}{h} \, dx
+    &=
+    \frac{1}{h}\int_a^b \left(f(x + h) - f(x)\right) \, dx \\
+    &=
+    \frac{1}{h}\left(\int_a^b f(x + h) \, dx - \int_a^b f(x) \, dx\right) \\
+    &= \frac{1}{h}\left(\int_a^b f(x + h) \, dx - \int_a^b f(x) \, dx\right) \\
+    &= \frac{1}{h}\left(\int_{a+h}^{b+h} f(x) \, dx - \int_a^b f(x) \, dx\right) \\
+    &= \frac{1}{h}\left(\int_{b}^{b+h} f(x) \, dx - \int_a^{a+h} f(x) \, dx\right) \\
+  \end{align*}
+  By the Lebesgue differentiation theorem (which holds since $f$ is bounded and
+  $[0, 1]$ is a closed interval, and so $f \in L^1$), for a.e. $a, b$, we have:
+  \[
+  \lim_{h \to 0}
+  \int_a^b \frac{f(x + h) - f(x)}{h} \, dx  = f(b) - f(a)
+  \]
+  Hence $f(b) = f(a)$ for a.e. $a, b$, i.e., $f$ is a.e. constant on $[0, 1]$.
+\end{proof}
+
+\section{Problem 4}
+\begin{theorem}
+  Suppose $f \in L^2$ and for any rational $a, b$ with $a < b$, we have:
+  \[
+  \int_{[a, b]} f(x) \, dx =0
+  \]
+  Then $f(x) = 0$ a.e.
+\end{theorem}
+
+\begin{proof}
+  First, we show that
+  \[
+  \int_{[a, b]} f(x) \, dx =0
+  \]
+  for arbitrary $[a, b]$ (not merely rational). Suppose that $a \in Q$ but $b
+  \not\in Q$. By density, for every $\delta > 0$, there exists a $b' \in \Q, b'
+  < b$ such that $m([b', b]) < \delta$. Furthermore, we note that if $f \in
+  L^2(\R^d)$, then $f \in L^1(E)$ for any compact subset of $\R^d$. Hence by
+  additvitiy and the triangle inequality:
+  \begin{align*}
+    |\int_{[a, b]} f|
+    &= |\int_{[a, b']} f + \int_{[b', b]} f| \\
+    &\leq |\int_{[a, b']} f|  + |\int_{[b', b]} f| \\
+    &\leq |\int_{[a, b']} f|  + \int_{[b', b]} |f|  \\
+    &\leq \int_{[b', b]} |f|
+  \end{align*}
+  Now by absolute continuity of the integral, for every $\epsilon > 0$, there
+  exists a $\delta' > 0$ such that $\int_{E} |f| < \epsilon$ whenever $m(E) <
+  \delta'$, and hence $\int_{[b', b]} |f| \to 0$ as $\delta \to 0$. Applying the
+  same argument to an $a' \in Q, a < a'$, we obtain the desired result for
+  arbitrary endpoints. \checkmark
+
+  Now for every $x \in \R$, and every closed ball $B$ containing $x$, we have:
+  \[
+  \frac{1}{m(B)} \int_B f = 0
+  \]
+  Hence by the Lebesgue differentiation theorem, $f(x) = 0$ for every $x$ in the
+  Lebesgue set of $x$, i.e. almost everywhere.
+\end{proof}
+
+\section{Problem 5}
+\begin{theorem}
+  Recall that, if $K(x, y) \in L^2(\R^d \times \R^d)$, then the operator $T$
+  defined by:
+  \[
+  Tf(x) = \int_{\R^d} K(x, y) f(y) \, dy
+  \]
+  defines a Hilbert-Schmidt operator. Prove that $T$ is a bounded operator from
+  $L^2(\R^d)$ to $L^2(\R^d)$.
+\end{theorem}
+
+\begin{proof}
+  By Cauchy-Schwarz, we have:
+  \begin{align*}
+    |T(f)(x)|^2 &=
+    \left|\int K(x, y) f(y) \, dy\right|^2 \\
+    &= \leq \left(
+    \int |K(x, y)|^2 \, dy
+    \right)
+    \left(
+    \int |f(y)|^2 \, dy
+    \right)
+  \end{align*}
+  Thus:
+  \[
+  |T(f)(x)|^2 \leq \|f\|^2_2 \int |K(x, y)|^2 \, dy 
+  \]
+  Integrating with respect to $x$,
+  \[
+  \|T f\|^2_2 \leq
+  \|K\|^2_{L^2} \|f\|^2_2 \Rightarrow
+  \|T f\|_2 \leq \|K\|_{L^2} \|f\|_2
+  \]
+  Thus $T$ is bounded, with operator norm at most $\|K\|_L^2$.
+\end{proof}
+%% Let $\{f_n\}$ be ??
+
+  %% If $T$ is unbounded, then there exists an $f$ with $\|f\| = 1$ such that
+  %% $\|Tf\| = \infty$, i.e.:
+
+  %% Suppose for contradiction that $T$ is unbounded, i.e. that there exists an $f
+  %% \in L^2(\R^d)$ with $\|f\| = 1$ such that $\|T f\| = \infty$. Then, for $f' =
+  %% \overline f$, we have
+  %% \[
+  %% \int_{\R^d} \left|\int_{\R^d} K(x, y) \overline{f'}(y) \, dy\right|^2 \, dx = \infty
+  %% \]
+  %% By the triangle inequality,
+  %% \[
+  %% \int_{\R^d} \left|\int_{\R^d} K(x, y) \overline{f'}(y) \, dy\right)^2 \, dx \leq
+  %% \int_{\R^d} \left|\int_{\R^d} K(x, y) \overline{f'}(y) \, dy\right)^2 \, dx 
+  %% \]
+  %% \[
+  %% \int_{\R^d} \left(\int_{\R^d} K(x, y) \overline{f'} \, dy\right) \, dx = \infty
+  %% \]
+
+
+\section{Problem 6}
+\begin{theorem}
+  Suppose $\Gamma$ is a curve $y = f(x)$ in $\R^2$, where $f$ is continuous.
+  Show that $m(\Gamma) = 0$.
+\end{theorem}
+
+\begin{proof}
+  First, suppose that 
+\end{proof}
+
+\end{document}
+
