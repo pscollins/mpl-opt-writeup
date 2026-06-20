@@ -7,3 +7,54 @@
   address   = {Portland, Oregon, USA},
   url       = {http://mlton.org/References.attachments/060916-mlton.pdf}
 }
+
+@misc{mlton-website,
+  author       = {{The MLton Team}},
+  title        = {{MLton}: A whole-program optimizing compiler for the {Standard ML} programming language},
+  howpublished = {\url{http://mlton.org/}},
+  year         = {2026}
+}
+
+@phdthesis{mpl-theis,
+  author       = {Sam Westrick},
+  title        = {Efficient and Scalable Parallel Functional Programming Through Disentanglement},
+  school       = {Carnegie Mellon University},
+  year         = {2022},
+  type         = {Doctoral dissertation},
+  address      = {Pittsburgh, PA},
+  month        = {August},
+  note         = {CMU-CS-22-141}
+}
+@article{ssa-paper,
+  title     = "Efficiently computing static single assignment form and the
+               control dependence graph",
+  author    = "Cytron, Ron and Ferrante, Jeanne and Rosen, Barry K and Wegman,
+               Mark N and Zadeck, F Kenneth",
+  journal   = "ACM Trans. Program. Lang. Syst.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  13,
+  number    =  4,
+  pages     = "451--490",
+  abstract  = "In optimizing compilers, data structure choices directly
+               influence the power and efficiency of practical program
+               optimization. A poor choice of data structure can inhibit
+               optimization or slow compilation to the point that advanced
+               optimization features become undesirable. Recently, static single
+               assignment form and the control dependence graph have been
+               proposed to represent data flow and control flow properties of
+               programs. Each of these previously unrelated techniques lends
+               efficiency and power to a useful class of program optimizations.
+               Although both of these structures are attractive, the difficulty
+               of their construction and their potential size have discouraged
+               their use. We present new algorithms that efficiently compute
+               these data structures for arbitrary control flow graphs. The
+               algorithms use {\em dominance frontiers}, a new concept that may
+               have other applications. We also give analytical and experimental
+               evidence that all of these data structures are usually linear in
+               the size of the original program. This paper thus presents strong
+               evidence that these structures can be of practical use in
+               optimization.",
+  month     =  oct,
+  year      =  1991,
+  language  = "en"
+}

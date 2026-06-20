@@ -207,7 +207,42 @@
 \section{Background}
 
 \subsection{MLton/MaPLe Compilation Pipeline}
-MLton is a whole-program optimizing compiler for Standard ML introduced in \cite{mlton-proj}.
+MLton is a whole-program optimizing compiler for Standard ML introduced in
+\cite{mlton-proj}, with a parallel variant MaPLe intreoduced in
+\cite{mpl-thesis}. MaPLe expands on MLton with a variety of primitive operations
+to support parallel programming (e.g. fork/join, atomics) along with runtime
+support for managing pools of green threads and a sophisticated parallel garbage
+collector. For the purposes of the exploration in this document, MLton and MPL
+broadly interchangeable, differing primarily in terms of the benchmark workloads
+that they support: unless explicitly noted otherwise, any statements about one
+compiler will also apply to the other.
+
+The MLton compilation pipeline passes through 8 distinct IRs on the way to
+codegen (as documented on \cite{mlton-website}):
+
+%% http://mlton.org/IntermediateLanguage
+
+\begin{itemize}
+\item \texttt{AST}: isomorphic to the source
+\item \texttt{CoreML}: removes module constructs (\texttt{structure}, \texttt{signature},
+  \texttt{functor}) from \texttt{AST}
+\item \texttt{XML} (``eXplicitly typed ML''): adds explicit typing to \texttt{CoreML} (but retains
+  polymorphism)
+\item \texttt{SXML} (``Simply typed \texttt{XML}''): removes polymorphism (but
+  retains higher-order functions)
+\item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
+  guarntees the usual SSA properties (as described in e.g. \cite{ssa-paper})
+\item \texttt{SSA2}: simplifies representations of \texttt{ref}s and container types \hl{??}
+\item \texttt{RSSA}: introduces explicit memory layouts
+\item \texttt{Machine}: 1:1 with generated code
+\end{itemize}
+
+MLton supports a variety of codgen backends (including x86 and LLVM), but for
+the purposes of this document, we will focus only on the C backend.
+
+
+
+For the purpose of this \hl{project}, we will focus on the
 
 \nocite{*}
 \bibliographystyle{plain}
