@@ -306,7 +306,8 @@ L_6736 ()
 \end{minted}
 so we'll instead work here with a loose, Python-inspired pseudocode, and assert
 that the \texttt{fib} function is lowered to \texttt{SSA} as something like the
-following:
+following (where we'll adopt the simplifying convention that all functions begin
+at \texttt{bb0}):
 \begin{minted}{python}
   def fib(n: int): int =
     block bb0():
@@ -328,8 +329,40 @@ following:
 A few features of this representation are worth noting:
 
 \begin{itemize}
-\item 
+\item Concrete operations on particular types are implemented as ``primitive
+  applications,'' \texttt{prim \$PRIM\_NAME (\dots)}. \texttt{prim}s are
+  elimiated at various different compilation phases, and come equipped with type
+  checkers to ensure that the IR is well-formed.
+\item Basic blocks carry explicit arguments. These arguments take the place of
+  $\phi$ nodes in compilers for imperative languages: within each block
+  \texttt{bbN} all names defined in blocks that strictly dominate \texttt{bbN}
+  are available, including block arguments. To conditionally bind a value to a
+  name, then, we add a conditional jump to a block that takes the desired name
+  as an argument, i.e.
+
+  \begin{minted}{python}
+    block bb0():
+      cond: bool = ...
+      lhs: int = ...
+      rhs: int = ...
+      case cond of true => goto bb1 | false => goto bb2
+
+    block bb1():
+      # `lhs` is available because `bb0` dominates `bb1`
+      goto bb3(lhs)
+
+    block bb2():
+      # `rhs` is available because `bb0` dominates `bb2`
+      goto bb3(rhs)
+
+    block bb3(boundValue: int):
+      # All blocks dominated by bb3 now have `boundValue` available
+      ...
+  \end{minted}
+
 \end{itemize}
+
+\subsubsection{\texttt{SSA} $\Rightarrow$ \texttt{Machine}}
 
 \nocite{*}
 \bibliographystyle{plain}
