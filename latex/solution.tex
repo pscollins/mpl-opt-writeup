@@ -37,6 +37,12 @@
 
 %% hyperlinks
 \usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=red,
+  filecolor=magenta,
+  urlcolor=blue,
+}
 
 %% nicely formatted references (must load last)
 \usepackage{cleveref}
@@ -207,6 +213,8 @@
 \section{Background}
 
 \subsection{MLton/MaPLe Compilation Pipeline}
+
+\subsubsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced in
 \cite{mlton-proj}, with a parallel variant MaPLe intreoduced in
 \cite{mpl-thesis}. MaPLe expands on MLton with a variety of primitive operations
@@ -238,11 +246,90 @@ codegen (as documented on \cite{mlton-website}):
 \end{itemize}
 
 MLton supports a variety of codgen backends (including x86 and LLVM), but for
-the purposes of this document, we will focus only on the C backend.
+the purposes of this document, we will consider only on the C backend (which is
+the only backend supported by MPL).
 
+The optimizations that we will explore all target the \texttt{SSA}
+representation, so in the following sections we will talk through the SML
+$\Rightarrow$ \texttt{SSA} transformation (in order to motivate the source-language
+constructs that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarrow$
+\texttt{Machine} ($\approx$ C codegen) transformation (in order to motivate the
+performance implications of each optimization). \hl{NOT GREAT WORDING}
 
+\subsubsection{SML $\Rightarrow$ \texttt{SSA}}
 
-For the purpose of this \hl{project}, we will focus on the
+The \texttt{SSA} IR is defined
+\href{https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245}{here}.
+Since MLton is a whole-program compiler, the textual format of the IR can be
+rather difficult to read: a trivial SML program like
+
+%% Compile command:
+%% ➜  lit-tests git:(f6e8544f3) /bin/rm -rf /tmp/out/*; OVERRIDE_OUTDIR=/tmp/out tools/mlton-compile.sh -verbose 3 -keep-pass '.*' -diag-pass '.*' examples/fib.sml &> /tmp/log
+
+\begin{minted}{sml}
+  fun fib(n) =
+    if n = 0 then 1
+    else n * fib(n -1)
+
+  val _ = print (Int.toString (fib 4))
+\end{minted}
+
+is transformed to a whopping ~1 MB of text in the first \texttt{SSA} pass
+(shrinking down to a still-substantial 125KB by the last \texttt{SSA} pass).
+Apart from verbosity, the actual textual format is rather difficult to read,
+e.g. for the \texttt{fib} function alone, we get:
+\begin{minted}{sml}
+fun fib_4 (x_51048: word32): {returns = Some (word32), raises = Some (exn_27)} =
+L_6736 ()
+  block L_6736 ()
+    val x_55402: bool = prim Word32_equal (x_51048, global_160 (*0x0:w32*))
+    case x_55402 of
+      true => L_7010 | false => L_1761
+  block L_7010 ()
+    return (global_69 (*0x1:w32*))
+  block L_1761 ()
+    val x_55002: word32 = prim Word32_sub (x_51048, global_69 (*0x1:w32*))
+    val x_55001: bool = prim WordS32_subCheckP (x_51048, global_69 (*0x1:w32*))
+    case x_55001 of
+      true => L_7011 | false => L_6366
+  block L_7011 ()
+    raise (global_912 (*con Overflow_4*))
+  block L_6366 ()
+    call L_1766 (fib_4 (x_55002)) handle _ => raise
+  block L_1766 (x_51053: word32)
+    val x_51055: word32 = prim WordS32_mul (x_51053, x_51048)
+    val x_51054: bool = prim WordS32_mulCheckP (x_51053, x_51048)
+    case x_51054 of
+      true => L_7011 | false => L_1767
+  block L_1767 ()
+    return (x_51055)
+\end{minted}
+so we'll instead work here with a loose, Python-inspired pseudocode, and assert
+that the \texttt{fib} function is lowered to \texttt{SSA} as something like the
+following:
+\begin{minted}{python}
+  def fib(n: int): int =
+    block bb0():
+      isEq: bool = prim Word32_equal (n, 0)
+      case isEq of true => goto bb1 | false => goto bb2
+
+    block bb1():
+      return 1
+
+    block bb2():
+      callArg: int = prim Word32_sub (n, 1)
+      # call fib(n-1) and return to bb3
+      call bb3 (fib (callArg))
+
+    block bb3(callResult: int):
+      funcResult: int = prim Word32_mul (callResult, n)
+      return funcResult
+\end{minted}
+A few features of this representation are worth noting:
+
+\begin{itemize}
+\item 
+\end{itemize}
 
 \nocite{*}
 \bibliographystyle{plain}
