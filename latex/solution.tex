@@ -363,6 +363,15 @@ A few features of this representation are worth noting:
 \end{itemize}
 
 \subsubsection{\texttt{SSA} $\Rightarrow$ C}
+Through the \texttt{SSA}, \texttt{SSA2}, and \texttt{RSSA}, the compiler
+
+%% TODO: we keep everything in registers through RSSA, then we move to passing
+%% via stack (across fn boundaries)
+%%
+%% we use temporaries when we can prove that it's possible. it's never possible
+%% across non-tail-recursive functions
+
+
 Continuing the previous example, our \texttt{fib} function is compiled down to
 the following, partial snippet:
 \begin{minted}{c}
