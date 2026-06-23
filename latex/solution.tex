@@ -325,6 +325,15 @@ at \texttt{bb0}):
     block bb3(callResult: int):
       funcResult: int = prim Word32_mul (callResult, n)
       return funcResult
+
+  def main(): unit =
+    block bb0():
+      initVal: int = 4
+      # call fib(initVal) and return to bb1
+      call bb1 (fib (initVal))
+
+    block bb1(fibResult: int):
+      ...call print and exit...
 \end{minted}
 A few features of this representation are worth noting:
 
@@ -363,15 +372,41 @@ A few features of this representation are worth noting:
 \end{itemize}
 
 \subsubsection{\texttt{SSA} $\Rightarrow$ C}
-Through the \texttt{SSA}, \texttt{SSA2}, and \texttt{RSSA}, the compiler
+Zooming out to the most abstract level, we might end up with something like the
+following for the snippet above (where we'll continue to use pseudocode in order
+to elide some of the syntactic complexity, now with a C++ flavor):
+\begin{minted}{cpp}
+  GCState gc_state;  // Global garbage collector state
+  vector<int> stack;  // Global stack; dynamically-resizable
 
-%% TODO: we keep everything in registers through RSSA, then we move to passing
-%% via stack (across fn boundaries)
-%%
-%% we use temporaries when we can prove that it's possible. it's never possible
-%% across non-tail-recursive functions
+  // Labels for all blocks in the program
+  enum Label {
+    fib_bb0,
+    fib_bb1,
+    ...
+  };
 
+  void fib_chunk(Label nextBlock) {
+    // Locals used across all blocks
+    bool isEq;
+    bool callArg;
+    int funcResult;
+    int n;
 
+    // Jump table for all blocks in this chunk
+    switch (nextBlock) {
+      case fib_bb0: goto L_fib_bb0;
+      case fib_bb1: goto L_fib_bb1;
+      ...
+    }
+
+  L_fib_bb0:
+
+  }
+
+\end{minted}
+
+>>>>>>> Conflict 1 of 1 ends
 Continuing the previous example, our \texttt{fib} function is compiled down to
 the following, partial snippet:
 \begin{minted}{c}
