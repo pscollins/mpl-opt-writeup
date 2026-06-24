@@ -375,9 +375,31 @@ A few features of this representation are worth noting:
 Zooming out to the most abstract level, we might end up with something like the
 following for the snippet above (where we'll continue to use pseudocode in order
 to elide some of the syntactic complexity, now with a C++ flavor):
+
+\hl{TODO: This seems too long}
+
 \begin{minted}{cpp}
   GCState gc_state;  // Global garbage collector state
-  vector<int> stack;  // Global stack; dynamically-resizable
+  Stack stack;  // Global stack
+
+  struct Stack {
+    template <typename T>
+    T* Push() {
+      // Append `sizeof(T)` bytes to `data` and cast
+    }
+
+    template <typename T>
+    T* Peek(int offset) {
+      // Copy a `T` out of `data` and shrink
+    }
+
+    void Pop(int bytes) {
+      // Drop the last `bytes` of the stack
+    }
+
+    vector<int8_t> data;  // Backing memory; dynamically-resizable
+  };
+
 
   // Labels for all blocks in the program
   enum Label {
@@ -394,6 +416,7 @@ to elide some of the syntactic complexity, now with a C++ flavor):
     int n;
 
     // Jump table for all blocks in this chunk
+  doSwitchNextBlock:
     switch (nextBlock) {
       case fib_bb0: goto L_fib_bb0;
       case fib_bb1: goto L_fib_bb1;
@@ -401,17 +424,64 @@ to elide some of the syntactic complexity, now with a C++ flavor):
     }
 
   L_fib_bb0:
+    // Read function argument from `stack`
+    n = stack.Pop<int>();
+    isEq = Word32_equal(n, 0);  // `prim` translated to C call
+    if (isEq)
+      goto l_fib_bb1;
+    else
+      goto l_fib_bb2;
 
+  L_fib_bb1:  // return 1
+    // Write function return value to `stack`
+    *stack.Push<int>() = 1;
+    // Stack frame size known at compile time
+    nextBlock = stack.Peek<Label>(/*offset=*/-fibStackFrameSize);
+    goto doSwitchNextBlock;
+
+  L_fib_bb1:  // recursive call
+    callArg = Word32_sub(n, 1);
+    // Write return label to `stack`
+    *stack.Push<Label>(fib_bb2);
+    // Write function argument to `stack`
+    *stack.Push<int>(callArg);
+    goto fib_4;
+
+  L_fib_bb3: // return from recursive call
+    // Pop the caller result off the stack
+    callResult = stack.Pop<int>();
+    funcResult = Word32_mul(callResult, n);
+    // Write return value to stack and return to caller
+    *stack.Push<int>() = funcResult;
+    nextBlock = stack.Peek<Label>(/*offset=*/-fibStackFrameSize);
+    goto doSwitchNextBlock;
+
+    ... other `fibChunk` logic ...
   }
 
-\end{minted}
+  ... other chunks ...
 
->>>>>>> Conflict 1 of 1 ends
-Continuing the previous example, our \texttt{fib} function is compiled down to
-the following, partial snippet:
-\begin{minted}{c}
-  
+  ... runtime-provided `Main` ...
+
 \end{minted}
+We'll again highlight a few notable features of the generated code:
+
+%% TODO:
+%%   1. prims are C calls
+%%   2. data passes in C-temps when possible, otherwise via explicit stack
+%%   3. SML funcs are collapsed into chunks
+
+\paragraph{Stack vs ``registers''}
+
+\hl{TODO}
+
+\paragraph{Chunkification}
+
+\hl{TODO}
+
+\subsection{Flattening optimizations}
+
+\hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
 \nocite{*}
 \bibliographystyle{plain}
