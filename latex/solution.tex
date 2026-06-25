@@ -408,7 +408,7 @@ to elide some of the syntactic complexity, now with a C++ flavor):
     ...
   };
 
-  void fib_chunk(Label nextBlock) {
+  Label fib_chunk(Label nextBlock) {
     // Locals used across all blocks
     bool isEq;
     bool callArg;
@@ -471,15 +471,105 @@ We'll again highlight a few notable features of the generated code:
 %%   2. data passes in C-temps when possible, otherwise via explicit stack
 %%   3. SML funcs are collapsed into chunks
 
-\paragraph{Stack vs ``registers''}
+\begin{itemize}
+%% \item SML control flow becomes 
+\item SML functions are collapsed into ``chunks'' in the generated C code
+\item Within a ``chunk,'' data passes between blocks either by explicit stack
+  operations, or by ``registers'' as C-function locals.
+\end{itemize}
 
-\hl{TODO}
+\hl{TODO: Better transition}
+
+We'll discuss these in more detail below
+
+%% \paragraph{Jump }
 
 \paragraph{Chunkification}
 
+Rather than maintaining a mapping between SML functions and C functions, the
+compiler instead attempts to implement procedure calls as either a direct
+\texttt{goto} (for statically-known branch targets) or a computation to find the
+appropriate entry in a jump table: this strategy makes it possible to e.g.
+naturally guarantee that tail-recursive SML functions do not consume a C stack
+frame per call.
+
+For maximum performance, MLton would ideally compile the entire SML program into
+a single C function: C function boundaries serve no purpose in the generated
+code, and so any such boundaries are pure overhead. However, C compilation time
+scales superlinearly with function size, and so this strategy can be
+prohibitively expensive in practice (20+ minutes to compile a single benchmark).
+
+As a workaround, MLton trades off improved runtime performance for decreased C
+compile time by dividing the generated user program into ``chunks,'' each with
+their own local jump table, local ``registers,'' and so on. Control flow between
+chunks is orchestrated by returning the target block ID to the runtime, which
+looks up the containing chunk in a global map, i.e.:
+\begin{minted}{cpp}
+  typedef enum Label {
+    chunk_1_bb0,
+    ...,
+    chunk_2_bb0,
+    ...
+    doneLabel,  // Indicates program termination
+  };
+
+  Label Chunk_1(...) {
+    ...local variables, jump table...
+
+L_chunk_1_bb0:
+  ...some computation...
+  return chunk2_bb0;  // return to ``trampoline''
+}
+
+  Label Chunk_2(...) {
+    ...local variables, jump table...
+
+L_chunk_2_bb0:
+  ...some computation...
+  return chunk2_bb0;  // return to ``trampoline''
+}
+
+  typedef ChunkFn = ...; // Type of &Chunk_1, &Chunk_2, etc
+  void MLton_trampoline(...) {  // Outer loop over executing chunks
+    ChunkFn chunkMap[] = {
+      &Chunk_1, // index == chunk_0_bb0,
+      ...
+      &Chunk_2, // index == chunk_1_bb0
+      ...
+    };
+    Label nextBlock = chunk_0_bb0; // Distinguished 'start' block
+    do {
+      // Call into the chunk corresponding to the requested block
+      nextBlock = *chunkMap[nextBlock](...);
+    } while (nextBLock != doneLabel);
+  }
+\end{minted}
+
+
+
+\paragraph{Stack vs ``registers''}
+%% TODO:
+%%   intra-chunk: choice between "regs" and stack
+%%     "regs" are allowed when there is no GC and no tail call
+%%     otherwise, requires stack
+%%   inter-chunk: always requires stack
+
 \hl{TODO}
 
+
 \subsection{Flattening optimizations}
+%% TODO:
+%%   flatten: 'peels apart' tuples
+
+%%     unintuitively, because of the structure of the generated C, flattening
+%%     *does not* guarantee that data is passed in registers, even when the
+%%     argument count is small (unlike the usual e.g. Linux calling convention)
+%%
+%%     in the general case it's really a tradeoff between BW and locality (the
+%%     stack is always "hot" but we need to copy into it
+%%
+%%     chunk boundaries are not known until late so we need to make uncertain
+%%     decisions
 
 \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
