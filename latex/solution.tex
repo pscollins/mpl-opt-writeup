@@ -836,7 +836,7 @@ than cold heap) instead of a pure savings.
   TUPLE}
 
 %% TODO:
-%%   flatten: 'peels apart' tuples
+%%   flatten: 'peels apart' tuples (in arguments)
 
 %%     unintuitively, because of the structure of the generated C, flattening
 %%     *does not* guarantee that data is passed in registers, even when the
@@ -847,6 +847,25 @@ than cold heap) instead of a pure savings.
 %%
 %%     chunk boundaries are not known until late so we need to make uncertain
 %%     decisions
+
+\subsubsection{\texttt{DeepFlatten}}
+
+%% TODO:
+%%   deepFlatten: 'squashes' tuples in arrays
+
+%%   arrays are very performance sensitive for flattening because we pay the
+%%   cost of an extra indirection on every access. arrays are not touched by the
+%%   transformation above, which is motivated by function arguments
+
+%%   relies on the particular structure defined above: a PackedRepresentation
+%%   that squashes elements into the array. it runs on SSA2, a slight variant
+%%   that gives us this exact property
+
+%%   downsides: basically free when it works, but doesn't always work. also,
+%%   since it runs after flatten, we can miss out on opportunities to do
+%%   flattening that we would otherwise be able to do
+
+%%   TODO: what does it target? when is it forbidden?
 
 \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
