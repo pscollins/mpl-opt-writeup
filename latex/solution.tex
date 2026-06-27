@@ -25,6 +25,7 @@
 \usepackage{tkz-euclide}
 \usetikzlibrary{angles,patterns,calc}
 \usetikzlibrary{arrows,automata,shapes.gates.logic.US,shapes.geometric,arrows.meta}
+\usetikzlibrary{calc, positioning, backgrounds, decorations.pathreplacing, fit}
 
 %% https://tex.stackexchange.com/questions/643287
 \usetikzlibrary{positioning}
@@ -209,6 +210,8 @@
 \title{MPL Optimization Writeup}
 \author{Patrick Collins}
 \maketitle
+
+\tableofcontents
 
 \section{Background}
 
@@ -546,18 +549,221 @@ L_chunk_2_bb0:
 \end{minted}
 
 
-
 \paragraph{Stack vs ``registers''}
-%% TODO:
-%%   intra-chunk: choice between "regs" and stack
-%%     "regs" are allowed when there is no GC and no tail call
-%%     otherwise, requires stack
-%%   inter-chunk: always requires stack
+As we can see in the samples above, there are two possible mechanisms to pass
+data between blocks in the generated C, either in ``registers,'' which are
+compiled down to function-local C variables:
+\begin{minted}{cpp}
+  Label Chunk(...) {
+    int x;
+    int y;
+    ...
+   L_bb0:
+    x = 1; // write to a "register"
+    goto L_bb1;
 
-\hl{TODO}
+   L_bb1:
+    y = f(x); // read from a "register"
+    ...
+\end{minted}
+or through manipulation of an explicit C-level \texttt{Stack} data structure:
+\begin{minted}{cpp}
+  Label Chunk(...) {
+    ....
+   L_bb0:
+    *Stack.Push<int>() = 1; // Bump `top` pointer and initialize memory
+    goto L_bb1;
+
+   L_bb1:
+    y = Stack.Peek<int>();  // Sized read from `top` pointer
+    ...
+\end{minted}
+
+It is mandatory to pass data via the \texttt{Stack} in the following situations:
+
+\begin{itemize}
+\item All calls to non-tail-recursive functions: a non-tail-recursive function
+  necessarily passes e.g. the return address to the callee via the stack, and so
+  for the sake of simplicity, MLton chooses to pass all arguments across the
+  stack in this case. \hl{TODO: CHECK}
+ 
+\item All function calls across chunk boundaries: all generated chunks take the
+  same arguments (GC state, stack state, and the target block), so there is no
+  way to pass data across chunks in ``registers.''
+
+\item All values that remain live across a GC point: for simplicity, the garbage
+  collector does not examine ``registers'' when tracing live objects, hence all
+  data must be spilled to the stack before the GC runs.
+
+\end{itemize}
+
+It is worth noting, furthermore, that passing data via C temporaries does not
+\textit{guarantee} that the data remains in host machine registers: it merely
+offers the C compiler's register allocator the opportunity to do so. MLton makes
+no attempt to pack temporaries into available registers, and so blocks with a
+large number of live-in/live-out variables will pay a performance penalty to
+spill/fetch onto the (implicit, OS-level) C stack.
+
+%% \hl{TODO}
 
 
 \subsection{Flattening optimizations}
+The following section will outline two of the existing ``flattening
+optimizations'' performed by MLton. In the context of MLton, this class of
+optimization was originally explored by \cite{flat-paper}. Additional
+optimizations of this type were implemented by later contributors without
+corresponding publications, as discussed in e.g. \cite{deep-flat-email}.
+
+\subsubsection{Motivation}
+
+\hl{CONTAINERS?}
+
+In the source language, we have three basic species of data types (ignoring
+\texttt{ref}, which is not relevant for the optimizations that we'll discuss)
+\begin{itemize}
+\item Primitive values: \texttt{int}, \texttt{bool}, \texttt{real}, etc
+\item Tuples: a fixed-sized collection of zero or more values of a
+  statically-known type, e.g. \texttt{int * int}, \texttt{real * bool * int},
+  etc
+\item Vectors/arrays: an immutable/mutable (respectively) variable-sized
+  container for elements of a uniform, statically-known type, e.g. \texttt{int
+    array}, \texttt{(int * bool) array}, etc.
+\end{itemize}
+In C codegen, these are translated as follows:
+
+\hl{DIAGRAMS WOULD BE NICE}
+\begin{itemize}
+\item Primitive values are mapped to corresponding primitive C types, and
+  reads/writes are plain C load/store operations. Primitive values can be
+  allocated on the \texttt{Stack} or in local temporaries:
+\begin{minted}{cpp}
+  int tmp1;
+  float tmp2;
+  ...
+  tmp1 = 42;
+  tmp2 = 3.14f;
+  ...
+\end{minted}
+
+\item The tuple type is mapped to a C struct type:
+
+\begin{minted}{cpp}
+  struct TupleT1 {
+    struct Metadata {
+      GC_header gc_header;  // Metadata tag for GC
+    } metadata;
+    struct Members {
+      int field1;
+      float field2;
+      ...
+    } members;
+  };
+\end{minted}
+
+Unlike primitive types, tuple types are always allocated on the heap. Any
+references in the generated code read/write through a pointer, e.g.
+\begin{minted}{cpp}
+  TupleT1::Members* t1 = nullptr; // Tuple of type T1
+  float tmp;
+  ...
+  tmp = *bit_cast<float*>(bit_cast<uint8_t*>(t1) +
+                          offsetof(TupleT1::Members, field2));
+  *bit_cast<int*>(bit_cast<uint8_t*>(t1) +
+                  offsetof(TupleT1::Members, field1)) = 13;
+\end{minted}
+
+\item Similarly to tuples, array types and vector types are translated to C
+  struct types:
+
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      int el;
+    } elements[];  // "Flex array" extends according to array length
+  };
+\end{minted}
+and operations are always through pointers to data allocated on the heap:
+\begin{minted}{cpp}
+  ArrTypeT1::Element* arr = nullptr;  // Array of type T1
+  int length;
+  int tmp;
+  ...
+  // Element read
+  tmp = bit_cast<ArrTypeT1::Element*>(bit_cast<uint8_t*>(arr) +
+                                      sizeof(ArrTypeT1::Element) * 15)->el;
+  // Metadata read
+  length = bit_cast<ArrTypeT1::Metadata*>(bit_cast<uint8_t*>(arr) -
+                                          offsetof(ArrTypeT1, Element))->length;
+
+\end{minted}
+
+\end{itemize}
+
+For both the tuple and container case, nested heap-allocated data structures are
+represented by \texttt{void*} members, i.e.:
+\begin{minted}{cpp}
+  struct TupleT2 {
+    ...
+    struct Members {
+      void* field1;
+      ...
+\end{minted}
+Because MLton is a whole-program compiler, all types are known statically: there
+is no runtime polymorphism in the generated code. Headers carrying type
+information exist only for the benefit of the GC. \hl{CUT?}
+
+
+\subsubsection{Flatten}
+In the source language, all functions are unary, with support for multiple
+arguments implemented via tuple types, i.e. for:
+\begin{minted}{sml}
+  fun add(a, b) = a + b
+\end{minted}
+The function \texttt{add} has the type \texttt{(int * int) -> int}. This
+convention is desirable in terms of simplifying language design, by removing the
+need for a \hl{special construct to represent function arguments} outside of the
+regular type system.
+
+However, naively lowering \hl{this construct} to C according to the rules that
+we have described above has disasterous performance characteristics: every
+single function call must
+\begin{enumerate}
+\item Allocate a new tuple on the heap to store the function arguments
+\item Copy the function arguments into the heap-allocated memory
+\item Pass the address of the new tuple to the callee (on either the stack or a temporary)
+\item Jump to the callee
+\item Read the call arguments out of the tuple, into local variables
+\item (Eventually) garbage collect the allocated tuple
+\end{enumerate}
+These penalties apply even in the fast intra-chunk call case. Compared to the
+usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
+registers \cite{amd64-abi}), we pay the price of a heap allocation per function
+call and two memory accesses per argument, hurting locality and wasting memory
+bandwidth.
+
+The ``tuple flattening'' transformation of \cite{flat-paper} operates on the SSA
+representation, which supports true $n$-ary functions and blocks, contrasting:
+\begin{minted}{python}
+  # Unary tuple-based representation
+  def add_tuple(ab: (int * int)): int =
+    block bb0():
+      a: int = select (ab, 0)  # tuple member read
+      b: int = select (ab, 1)  # tuple member read
+      ret: int = prim Word32_add (a, b)
+      return ret
+\end{minted}
+with:
+\begin{minted}{python}
+  # Binary "flat" representation
+  def add(a: int, b: int): int =
+    block bb0():
+      ret: int = prim Word32_add (a, b)
+      return ret
+\end{minted}
+
 %% TODO:
 %%   flatten: 'peels apart' tuples
 
