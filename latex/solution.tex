@@ -716,7 +716,7 @@ is no runtime polymorphism in the generated code. Headers carrying type
 information exist only for the benefit of the GC. \hl{CUT?}
 
 
-\subsubsection{Flatten}
+\subsubsection{\texttt{Flatten}}
 In the source language, all functions are unary, with support for multiple
 arguments implemented via tuple types, i.e. for:
 \begin{minted}{sml}
@@ -744,7 +744,7 @@ registers \cite{amd64-abi}), we pay the price of a heap allocation per function
 call and two memory accesses per argument, hurting locality and wasting memory
 bandwidth.
 
-The ``tuple flattening'' transformation of \cite{flat-paper} operates on the SSA
+The \texttt{Flatten} transformation of \cite{flat-paper} operates on the SSA
 representation, which supports true $n$-ary functions and blocks, contrasting:
 \begin{minted}{python}
   # Unary tuple-based representation
@@ -763,6 +763,77 @@ with:
       ret: int = prim Word32_add (a, b)
       return ret
 \end{minted}
+
+A naive solution to the problem would be to interpret all SML-level functions as
+$n$-ary functions over their arguments. However, this strategy can introduce
+unnecessary pack/unpack operations in cases where the natural representation for
+data really is a tuple, e.g.:
+\begin{minted}{sml}
+  val toArray: 'a array = .... (* global array value *)
+
+  fun writeFirstElementTo (el: 'a) =
+      Array.update (toArray, 0, el)
+
+  fun readFirstElement (arr: 'a array): 'a =
+    Array.sub (fromArray, 0)
+
+  fun copyFirstElement (fromArray: 'a array) =
+    writeFirstElementTo (readFirstElement fromArray)
+\end{minted}
+For the ``non-flat'' representation, the cost of \texttt{copyFirstElement} is
+independent of the \texttt{'a} type that we instantiate the function at: even
+for 1KB tuple elements, all we need to copy is a pointer to the tuple.
+
+For the ``flat'' representation, however, the cost of \texttt{copyFirstElement}
+is linear in the size of \texttt{'a} -- copying a 1KB tuple requires
+``unpacking'' the entire 1KB via writes to the \texttt{Stack}, then
+``re-packing'' via other 1KB worth of writes into a newly-allocated tuple.
+
+\hl{BAD SUMMARY: DOESN'T MATCH PAPER. LET'S CIRCLE BACK AFTER DISCUSSING OUR OWN
+  VERSION}
+
+The insight of \cite{flat-paper} is to adopt a lattice-based analysis that
+ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
+we can guarantee that all uses are compatible with flattening, avoiding
+pathogical cases (like the one above) that result from applying purely-local
+heuristics.
+
+This approach has the advantage that it handles more general \hl{cases of
+  tuples}, including nested tuples, e.g. supporting a transformation like:
+\begin{minted}{python}
+  fun add_vec(input: ((int * int) * (int * int))): int =
+    block bb0():
+      lhs: int * int = select (input, 0)
+      rhs: int * int = select (input, 1)
+      lhs_x: int = select (lhs, 0)
+      lhs_y: int = select (lhs, 1)
+      rhs_x: int = select (rhs, 0)
+      rhs_y: int = select (rhs, 1)
+      ... add elements ...
+\end{minted}
+mapping to:
+\begin{minted}{python}
+  fun add_vec_flat(lhs_x: int, lhs_y: int, rhs_x: int, rhs_y: int): int =
+    block bb0():
+      ... add elements ...
+\end{minted}
+It is worth noting, however, that due to the structure of the generated C
+discussed above, the savings may be less large in practice \hl{than they appear}
+based on the transformation in the SSA format: a naive reading suggests that by
+translating from \texttt{add\_vec} to \texttt{add\_vec\_flat}, we have saved a
+total of 6 writes into temporary tuples (2 per inner tuple and 2 for the outer
+tuple), eliding them naturally into register writes.
+
+This is not true in the general case, however: if a call to
+\texttt{add\_vec\_flat} crosses a C chunk boundary, then we still need to pay the
+cost to write all 4 values to the \texttt{Stack}, and pay the same cost again to
+pass the data on to any further flattened callers. Therefore, for nested tuple
+types, it is perhaps more correct to think of flattening as a tradeoff of
+bandwidth for locality (passing data through hot \texttt{Stack} memory rather
+than cold heap) instead of a pure savings.
+
+\hl{TODO: BAD DISCUSSION ABOVE; WE DON'T NECESSARILY CONSTRUCT A TEMPORARY
+  TUPLE}
 
 %% TODO:
 %%   flatten: 'peels apart' tuples
