@@ -849,6 +849,122 @@ than cold heap) instead of a pure savings.
 %%     decisions
 
 \subsubsection{\texttt{DeepFlatten}}
+The \texttt{Flatten} transformation fixes the problem that the source language
+does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
+solves the problem that the source language does not support unboxed tuple types.
+
+As discussed above, the normal MLton lowering for tuple types in containers is
+\texttt{void*}, i.e. for an SML type like \texttt{(int * int) array}, we get the
+C type:
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      // C-level type erasure
+      void* el;
+    } elements[]
+  };
+\end{minted}
+Maniupulating elements in this kind of container corresponds to manipulating
+pointers to pre-constructed tuples, stored out-of-line from the container
+itself.
+
+In terms of the local efficiency of the container operations themselves, this is
+optimal: we pay a flat O(1) cost regardless of the contained element type, and
+we never need to store more than a single copy of a particular tuple's data
+regardness of how many containers we insert it into.
+
+In terms of global program efficiency on modern CPU architectures, however, this
+layout is disasterous. As an illustration, compare the following C++ snippets:
+suppose we have a type:
+\begin{minted}{cpp}
+  struct Point {
+    float x;
+    float y;
+  };
+\end{minted}
+The non-flat SML-like layout corresponds to:
+\begin{minted}{cpp}
+  float GetDistance(const vector<Point*>& lhs, const vector<Point*>& rhs) {
+    float sum = 0.0;
+    for (int i = 0; i < lhs.size(); ++i) {
+      const float x = lhs[i]->x - rhs[i]->x;
+      const float y = lhs[i]->y - rhs[i]->y;
+      sum += x * x + y * y;
+    }
+    return sum;
+  }
+\end{minted}
+Suppose that \texttt{lhs.size() = rhs.size() = n}. Then the memory bandwidth
+requirement for this implementation is:
+\begin{enumerate}
+\item Cost to load $2n$ pointers: \texttt{$2n$ * sizeof(uintptr\_t)}. These
+  values are laid out contiguously in memory, so we can assume perfect
+  efficiency while loading them. \hl{REPHRASE}
+\item Cost to load $2n$ \texttt{Point} objects: \texttt{$2n$ * cacheline size}.
+  Since these \texttt{Point} objects are unlikely to have any particular spatial
+  locality in the heap when travsered in their order in the \texttt{vector}s,
+  the most likely case is that we only get \texttt{sizeof(Point) == 8} useful
+  bytes out of each read from DRAM.
+\end{enumerate}
+
+Given that most modern CPU architectures have 64B cachelines and 8B pointers,
+combining the two estimates above, we observe that we pay a total of 72B for
+each 8B \texttt{Point} object (one 8B pointer plus one 64B cacheline), wasting a
+whopping $\approx 89\%$ of the memory bandwidth that we expend on each input.
+
+Aside from the bandwidth cost, there is also a latency cost: the load of the
+pointer data (e.g. \texttt{lhs[i]->x}) cannot be pipelined with the load of the
+pointer itself -- no matter how cleverly we design our out-of-order CPU, we
+simply cannot issue a load to an address that we do not yet know. We thus must
+wait at least a few cycles to complete a load in L1, risking a hit to our
+instructions-per-cycle without heroics from the C compiler. \hl{TODO: REFERENCE}
+
+In C++, the solution to this problem is to eliminate the indirection in the
+source language, i.e.:
+\begin{minted}{cpp}
+  float GetDistanceFlat(const vector<Point>& lhs, const vector<Point>& rhs) {
+    float sum = 0.0;
+    for (int i = 0; i < lhs.size(); ++i) {
+      const float x = lhs[i].x - rhs[i].x;
+      const float y = lhs[i].y - rhs[i].y;
+      sum += x * x + y * y;
+    }
+    return sum;
+  }
+\end{minted}
+From the perspective of the memory access pattern of the consuming code, this
+strategy is optimal: since the \texttt{Point} data is in a dense, contiguous
+layout, we get 100\% efficient utilization of memory bandwidth, and we eliminate
+the pipeline-hostile chain of dependent loads from the inner loop of the
+program.
+
+MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
+-- for an \texttt{(int * int) array} corresponding to the \texttt{Point} type
+above, we get:
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      // Flattened, inlined tuple members
+      int x;
+      int y;
+    } elements[]
+  };
+\end{minted}
+Unlike \texttt{Flatten}, which operates on the SSA representation (where
+containers are either \texttt{'a array} or \texttt{'b array} -- both unary type
+constructors), \texttt{DeepFlatten} operates on the SSA2 representation, where
+we distinguish between a \texttt{((int * int) tuple) sequence} (for the non-flat
+representation) vs \texttt{(int * int) sequence} (for the flat representation).
+
+Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
+flattening the types associated with particular variables only when all of their
+uses are compatible with the transformation. In particular, 
 
 %% TODO:
 %%   deepFlatten: 'squashes' tuples in arrays
@@ -868,6 +984,8 @@ than cold heap) instead of a pure savings.
 %%   TODO: what does it target? when is it forbidden?
 
 \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
+
+\hl{TODO: OUTLINE BENCHMARK SUITES}
 
 \nocite{*}
 \bibliographystyle{plain}
