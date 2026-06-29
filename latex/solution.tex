@@ -220,7 +220,7 @@
 \subsubsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced in
 \cite{mlton-proj}, with a parallel variant MaPLe intreoduced in
-\cite{mpl-thesis}. MaPLe expands on MLton with a variety of primitive operations
+\cite{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
 to support parallel programming (e.g. fork/join, atomics) along with runtime
 support for managing pools of green threads and a sophisticated parallel garbage
 collector. For the purposes of the exploration in this document, MLton and MPL
@@ -983,9 +983,31 @@ uses are compatible with the transformation. In particular,
 
 %%   TODO: what does it target? when is it forbidden?
 
-\hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
+%% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
-\hl{TODO: OUTLINE BENCHMARK SUITES}
+\section{Further Flattening Optimizations}
+
+\subsection{\texttt{PreFlatten}}
+
+\hl{TODO: TUPLE AND CON APP FLATTENING}
+
+\hl{We might want to expand the discussion above to include some discussion
+  about defunctionalization and the memory layout of ADTs}
+
+\subsection{\texttt{ShallowFlatten}}
+
+\hl{TODO: AOS AND SOA}
+
+\section{Evaluation}
+
+\subsection{Methodology}
+\hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
+
+\subsection{Results}
+
+\hl{TODO: MEASUREMENTS}
+
+%% \section{ 
 
 \nocite{*}
 \bibliographystyle{plain}
