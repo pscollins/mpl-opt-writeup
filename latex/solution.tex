@@ -233,6 +233,8 @@ codegen (as documented on \cite{mlton-website}):
 
 %% http://mlton.org/IntermediateLanguage
 
+\hl{Add a diagram (in addition to text)}
+
 \begin{itemize}
 \item \texttt{AST}: isomorphic to the source
 \item \texttt{CoreML}: removes module constructs (\texttt{structure}, \texttt{signature},
@@ -260,6 +262,9 @@ constructs that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarro
 performance implications of each optimization). \hl{NOT GREAT WORDING}
 
 \subsubsection{SML $\Rightarrow$ \texttt{SSA}}
+
+\hl{CUT! Just say ``we'll show it this way'' and don't bother explaining what
+  actually exists, it's not helpful for our purpose}
 
 The \texttt{SSA} IR is defined
 \href{https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245}{here}.
@@ -660,6 +665,9 @@ In C codegen, these are translated as follows:
   };
 \end{minted}
 
+\hl{Add a diagram of the struct layout |header| |field1, field2,...| with arrow
+  pointing to `t1`}
+
 Unlike primitive types, tuple types are always allocated on the heap. Any
 references in the generated code read/write through a pointer, e.g.
 \begin{minted}{cpp}
@@ -876,6 +884,8 @@ optimal: we pay a flat O(1) cost regardless of the contained element type, and
 we never need to store more than a single copy of a particular tuple's data
 regardness of how many containers we insert it into.
 
+\hl{Add a diagram -- array with arrows pointing to scatterd boxes}
+
 In terms of global program efficiency on modern CPU architectures, however, this
 layout is disasterous. As an illustration, compare the following C++ snippets:
 suppose we have a type:
@@ -922,6 +932,8 @@ simply cannot issue a load to an address that we do not yet know. We thus must
 wait at least a few cycles to complete a load in L1, risking a hit to our
 instructions-per-cycle without heroics from the C compiler. \hl{TODO: REFERENCE}
 
+\hl{Add a matching diagram}
+
 In C++, the solution to this problem is to eliminate the indirection in the
 source language, i.e.:
 \begin{minted}{cpp}
@@ -966,6 +978,13 @@ Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
 flattening the types associated with particular variables only when all of their
 uses are compatible with the transformation. In particular, 
 
+\hl{Consider adding a small benchmark to confirm the napkin math}
+
+\hl{If we want to discuss SSA vs SSA2, we need to flesh out SSA2 more. Consider
+  just using SSA2 as our target IR for the whole thing. (downside: we actually
+  target SSA with the optimizations later, it will raise awkward questions why
+  we didn't use a different representation). Biggest conceptual difference: SSA2 allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x = A[i, 1]}
+
 %% TODO:
 %%   deepFlatten: 'squashes' tuples in arrays
 
@@ -986,6 +1005,7 @@ uses are compatible with the transformation. In particular,
 %% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
 \section{Further Flattening Optimizations}
+\hl{TODO: separate sections for PreFlatten / ShallowFlatten}
 
 \subsection{\texttt{PreFlatten}}
 
@@ -1006,6 +1026,49 @@ uses are compatible with the transformation. In particular,
 \subsection{Results}
 
 \hl{TODO: MEASUREMENTS}
+
+\section{TODO}
+
+Items to follow up on from discussions:
+
+\subsection{6/29}
+\begin{itemize}
+\item Code snippets should be diagrams rather than inlined
+\item A bulleted list should generally be compact on a single page
+\item Introducing both C and python flavor pseudo-IRs up front is wordy and
+  confusing. Also, using a C-flavor can be distracting in that it's unclear what
+  we should ``interpret literally.'' Consider sticking to a single,
+  Python-flavor IR
+\item For the IR we do choose to pick, add an explicit grammar up-front
+\item Add more ``signposting'' up-front to support hte nfo dump
+\item Probably worth adding a section on polyvariance / defunctionalization to
+  motivate the con flattening
+
+\item With con flattening, maybe emphasize: MLton creates opportunites for
+  specialization to happen downstream; we do the opposite -- explicitly
+  specializing where we see a win
+
+\item C struct definitions can be confusing because they imply stuff about
+  alignment and packing that doesn't really hold
+
+\item For diagrams: draw.io ?
+
+\item Be careful to distinguish source language constructs from guarantees about
+  generated code; e.g. ``tuples are allocated om the heap'' -- only when
+  flattening fails
+
+\item Ok to introduce more sections -- e.g. separate for each optimization type
+
+\item Need to dig into why DeepFlatten is failing in our case or at least
+  explicitly call out that we tried and couldn't do it. One useful thing to
+  note: lattice-based ``poisoning'' analysis can be difficult to track
+
+\item Add an intro where we make it more explicit what our contribution is
+
+\item Think of the evaluation section as a reference to refer to throughout the
+  other sections
+
+\end{itemize}
 
 %% \section{ 
 
