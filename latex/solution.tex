@@ -1038,17 +1038,178 @@ uses are compatible with the transformation. In particular,
 
 %% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
+\subsubsection{\texttt{Polyvariance}}
+
+%% TODO: explain polyvariance
+
+%%   defunctionalization runs as part of the SXML -> SSA transformation, we
+%% replace higher order functions/closures with datatypes
+
+%%   datatypes are tagged unions; the "data" portion is (maybe?) also a
+%% heap-allocated tuple (give a C struct) example
+
+%%    like how the unary-function restriction introduces tuple pack/unpack
+%%  around callsites, the closure-conversion restriction of SSA introduces
+%%  ConApp statements at callsites followed by case statements in callees (give
+%%  a code example with a datatype + ConApp along with matching SML).
+
+%%    these are relevant to us because they prevent tuple flattening: Flatten
+%%  can't act on a type that is buried inside of a datatype (we'd need to know
+%%  which case it applied to); DeepFlatten will (?) choose not to since it is an
+%%  immutable member (?)
+
+%%    the existing workaround is the polyvariance pass: according to some simple
+%%  knobs, running in SXML, we (lexically) duplicate function bodies so that we
+%%  end up with a single-case datatype that can be optimized away
+
 \section{\texttt{PreFlatten}}
 
-\subsection{Motivation}
+Like \texttt{Flatten}, \texttt{PreFlatten} runs on the \texttt{SSA} IR:
+currently, it runs before \texttt{Flatten}, so that the lattice-based
+\texttt{Flatten} analysis has a better chance to pick up on opportunities to
+completely flatten particular uses.
 
-The basic 
+\subsection{Motivation}
+The basic intution is that if we see a sequence like:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      t: 'a * 'b = tuple(x0, x1)
+      # call g(t) and return to some other block bbM
+      call bbM g(t)
+
+    ...other blocks...
+
+  def g(t: 'a * 'b) -> ...:
+    block bb0():
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+then we can elimiate the intermediate tuple \texttt{t} with a simple peephole
+optimization that ``pushes down'' the tuple allocation from the caller into the
+callee, i.e.:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      # call g(x0, x1) and return to some other block bbM
+      call bbM g_flat(x0, x1)
+
+    ...other blocks...
+
+  def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    block bb0():
+      t: 'a * 'b = tuple(x0_flat, x1_flat)
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+and then rely on existing optimization machinery to \hl{remove the allocation
+  completely}.
+
+In case all callers of \texttt{g} satisfy the pattern above, then the result of
+this transformation is equivalent to the existing \texttt{Flatten} pass.
+However, since we want to phrase this optimization as a simple, purely-local
+transformation, we need a solution for the case when not all callers of
+\texttt{g} are \texttt{PreFlatten}-able: we resolve this problem by emitting a
+fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
+for callers that require it, i.e. for something like:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # call g(t1) and return to some other block bbM
+      call bbM g(t1)
+
+    block bbN2():
+      t2 = tuple (x1, x2)
+      # call g(t2) and return to some other block bbM
+      call bbM g(t2)
+
+    ...other blocks...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+We can emit:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # Unflattenable caller: no tuple allocation to ``push down''
+      call bbM g(t1)
+
+    block bbN2():
+      # Flattenable caller: can ``push down'' the allocation
+      call bbM g_flat(x1, x2)
+
+    ...other blocks...
+
+ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    ...as above...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+By iteratively applying this strategy, we can ``push together'' distant pairs of
+flatten/unflatten operations, and so try to ensure that the maximum possible
+number of callsites in the program are flattened -- even in cases where the
+global \texttt{Flatten} transformation would fail.
+
+This strategy also naturally extends to eliminating \texttt{ConApp}s: starting
+from a pattern like:
+\begin{minted}{python}
+  datatype Env = Env1 of 'a * 'b | ...
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      env: Env = Env1 (t)
+      call bbM g(env)
+    ...
+
+  def g(e: Env) -> ...:
+    block bb0():
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive at:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      call bbM g(t)
+    ...
+
+  def g_flat_env1(t: 'a * 'b) -> ...:
+    block bb0():
+      e: Env = Env1 (t)
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+and, again, rely on existing optimization patterns to eliminate the
+\texttt{ConApp} completely, in addition to elimating now-dead blocks
+corresponding to \texttt{Env} cases that are no longer reachable, etc.
+
+\hl{TODO: EXPLAIN CONAPP}
+
 
 \subsection{Implementation}
 
 \subsubsection{Tuple-flattening}
 
 \subsubsection{Constructor-flattening}
+
+\subsubsection{Limitations}
 
 \section{Further Flattening Optimizations}
 \hl{TODO: separate sections for PreFlatten / ShallowFlatten}
