@@ -213,6 +213,38 @@
 
 \tableofcontents
 
+\section{Introduction}
+
+In the source language, Standard ML offers the programmer no direct control over
+the memory layout for data structures in the generated code: consequently, it is
+the compiler's responsibility to choose a memory layout that efficiently
+utilizes the hardware of the target platform. However, the most ``literal''
+translation of the source language to machine code (i.e. the one which preserves
+exactly the data structures present in the user's original input) has
+disasterous performance characteristics on modern CPUs: every function call and
+every access into a (non-primitive) container incurs a cache miss at an
+unpredictable address in the heap.
+
+Each Standard ML compiler chooses different strategies to mitigate these costs:
+MLton \cite{mlton-website} deploys a class of optimizations that it calls
+``flattening,'' first introduced in \cite{flat-paper}. These strategies are also
+used in MLton's parallel-friendly fork, MaPLe, introduced in \cite{mpl-orig}.
+
+In this document, we will explore two novel ``flattening'' strategies: the
+first, \texttt{PreFlatten} (building on top of the existing \texttt{Flatten}
+pass from \cite{flat-paper}), specializes functions in order to enable
+more-aggressive elimination of heap allocations at callsites. The second,
+\texttt{ShallowFlatten} (building on top of the existing \texttt{DeepFlatten}
+pass) applies well-known optimization techniques from C-like languages in order
+to eliminate heap allocations inside of containers.
+
+\hl{TODO: SUMMARIZE IMPACT}
+
+%% in this document, we will 
+
+%% in this document, we will explore the impact of two new strategies on the
+%% (broadly-shared) codebase of MLton and its parallel fork, MaPLe. 
+
 \section{Background}
 
 \subsection{MLton/MaPLe Compilation Pipeline}
