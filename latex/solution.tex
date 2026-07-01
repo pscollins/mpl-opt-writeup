@@ -1015,7 +1015,9 @@ uses are compatible with the transformation. In particular,
 \hl{If we want to discuss SSA vs SSA2, we need to flesh out SSA2 more. Consider
   just using SSA2 as our target IR for the whole thing. (downside: we actually
   target SSA with the optimizations later, it will raise awkward questions why
-  we didn't use a different representation). Biggest conceptual difference: SSA2 allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x = A[i, 1]}
+  we didn't use a different representation). Biggest conceptual difference: SSA2
+  allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x =
+  A[i, 1]}
 
 %% TODO:
 %%   deepFlatten: 'squashes' tuples in arrays
@@ -1036,10 +1038,21 @@ uses are compatible with the transformation. In particular,
 
 %% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
+\section{\texttt{PreFlatten}}
+
+\subsection{Motivation}
+
+The basic 
+
+\subsection{Implementation}
+
+\subsubsection{Tuple-flattening}
+
+\subsubsection{Constructor-flattening}
+
 \section{Further Flattening Optimizations}
 \hl{TODO: separate sections for PreFlatten / ShallowFlatten}
 
-\subsection{\texttt{PreFlatten}}
 
 \hl{TODO: TUPLE AND CON APP FLATTENING}
 
