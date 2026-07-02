@@ -1039,6 +1039,132 @@ uses are compatible with the transformation. In particular,
 %% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
 \subsubsection{\texttt{Polyvariance}}
+\hl{TODO: SHOULD PROBABLY MOVE THIS INTO AN SML -> SXML SECTION ABOVE}
+
+Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
+pass is also relevant to the optimizations we will explore here.
+\texttt{Polyvariance} runs on the \texttt{SXML} IR, where the IR still has
+higher order functions and implicit closure captures (all that has been removed
+are the \texttt{module} constructs, which are irrelevant from the perspective of
+performance). Beginning from an SML program like:
+\begin{minted}{sml}
+  def doOp(l: int, r: int, f: int * int -> int): int =
+    f(l, r)
+
+  def add(l: int, r: int): int =
+    l + r
+
+  def sub(l: int, r: int): int =
+    l - r
+
+  def call1(): int =
+    doOp (2, 2, add)
+
+  def call2(): int =
+    doOp (2, 2, sub)
+\end{minted}
+we might end up with \texttt{SXML} IR like the following (using the same
+Python-style pseudocode as before):
+\begin{minted}{python}
+  def do_op(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def add(l: int, r: int) -> int:
+    return l + r
+
+  def sub(l: int, r: int) -> int:
+    return l - r
+
+  def call1() -> int:
+    return do_op(2, 2, add)
+
+  def call2() -> bool:
+    return do_op(2, 2, sub)
+\end{minted}
+The \texttt{Polyvariance} pass duplicates function definitions at callsites
+(limited by a cost heuristic that is calculated as the product of how many times
+the function is called and a measure of the size of the function related to the
+number of nodes in the program graph). Thus for the preceeding example, we might
+end up with:
+\begin{minted}{python}
+  def do_op_add(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def do_op_sub(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def add(l: int, r: int) -> int:
+    return l + r
+
+  def sub(l: int, r: int) -> int:
+    return l - r
+
+  def call1() -> int:
+    return do_op_add(2, 2, add)
+
+  def call2() -> int:
+    return do_op_sub(2, 2, sub)
+\end{minted}
+The benefit of this pass that is relevant to our discussion here is the impact
+on closure conversion, which takes places as part of the $\texttt{SXML}
+\Rightarrow \texttt{SSA}$ conversion.
+
+While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
+around all function calls in the SSA representation, \hl{closure capture}
+introduces \texttt{datatype} pack/unpack pairs around calls to higher-order
+functions specifically. So for the pre-\texttt{Polyvariance} snippet from above,
+we might end up with the following SSA IR:
+\begin{minted}{python}
+  datatype lambda1 = xEnv_add | xEnv_sub
+  def doOp(l: int, r: int, env: lambda1) -> int:
+    block bb0():
+      case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
+
+    block bb1():
+      result: int = prim Word32_add (l, r)
+      return result
+
+    block bb2():
+      result: int = prim Word32_sub (l, r)
+      return result
+\end{minted}
+The contents of each \texttt{datatype} case corresponds to the capture
+environment of the function argument that it maps to, e.g. for a call like:
+\begin{minted}{sml}
+  fun buildAddWithBias(bias: int): int -> int = let
+    fun addWithBias (l: int, r: int): int =
+      return l + r + bias
+  ...
+
+  fun call3() -> int:
+    doOp (2, 2, buildAddWithBias 4)
+\end{minted}
+we would end up with a case in the declaration like:
+\begin{minted}{python}
+  datatype lambda1 = xEnv_addWithBias of int | xEnv_add | xEnv_sub
+\end{minted}
+and a callsite like:
+\begin{minted}{python}
+  def call3() -> int:
+    block bb0():
+      biasArg: int = 5
+      env: lambda_1 = xEnv_addWithBias (biasArg)
+      call bbN doOp (2, 2, env)
+    ...
+\end{minted}
+In the generated C, \texttt{datatype} objects correspond to tagged unions,
+roughly:
+\begin{minted}{cpp}
+  struct Lambda1 {
+    enum Case {
+      xEnv_addWithBias,
+      xEnv_add,
+      xEnv_sub,
+    } case;
+    // Optional data member for the xEnv_addWithBias case
+    void *data;
+  };
+\end{minted}
 
 %% TODO: explain polyvariance
 
@@ -1274,6 +1400,11 @@ Items to follow up on from discussions:
 \item Think of the evaluation section as a reference to refer to throughout the
   other sections
 
+\end{itemize}
+
+Other items:
+\begin{itemize}
+\item We should avoid writing \texttt{'a} in SSA IR since it's monomorphic
 \end{itemize}
 
 %% \section{ 
