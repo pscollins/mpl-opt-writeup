@@ -1477,20 +1477,71 @@ becomes:
   process above on all newly-emitted functions until either convergence or a
   user-specified iteration limit is reached. This fixes an issue with (mutually)
   recursive functions, where a collection of $n$ mutually recursive calls
-  require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for:
+  require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for
+  a source program like:
 \begin{minted}{python}
-  # flat call to `g` elsewhere
-  t0 = (x, y)
-  call bbN g(t0)
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g(t0)
 
-  # g definition
   g(t: a * b) -> ...:
     ...
-    block bbN():
-
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      call bbK g(t2)
 \end{minted}
+The action of the pass is as follows: for both the call in \texttt{f} and
+\texttt{g}, we can flatten the function argument, and so we emit a new
+specialization of the function, \texttt{g\_flat}
+\begin{minted}{python}
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g_flat(x, y)  # pointed to flat specialization
 
-\hl{TODO: FINISH EXAMPLE}
+  g(t: a * b) -> ...:
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+      goto bb0()
+
+    ...
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      # This call is not flattened, but it could be!
+      call bbK g(t2)
+\end{minted}
+In this step, we re-run the flattening logic using the already-emitted set of
+specializations to remove the unflattened call in the specialized function, i.e.:
+\begin{minted}{python}
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+     goto bb0()
+
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+\end{minted}
+Multiple iterations are required to handle the case of mutually recursive
+functions, in a similar way. \hl{TODO: EXAMPLE?}
+
+\item Introduce fresh names for the symbols (specifically block labels and
+  variable names) in all duplicated functions. This is a requirement from MLton,
+  which expects that symbols' names are globally unique.
 
 \item Signal either ``progress'' (if we emitted a new specialization) or
   ``done'' to the caller. Repeat until either convergence or a user-specified
@@ -1502,22 +1553,22 @@ becomes:
 \hl{TODO: SHOULD RUN EXPERIMENTS WHERE WE RUN AFTER FLATTEN AND ALSO ONLY
   FLATTEN NON-TAIL CALLS}
 
-\subsubsection{Tuple-flattening}
+%% \subsubsection{Tuple-flattening}
 
-\subsubsection{Constructor-flattening}
+%% \subsubsection{Constructor-flattening}
 
 \subsubsection{Limitations}
+Note that the worst-case bloat in IR size is quadratic in a single iteration:
+the very upper bound is that every statement in the program causes us to
+duplicate the entire program. This is clearly problematic in practice, and it
+interacts particularly poorly with chunkification (since flattened tuples can be
+more expensive than non-flat tuples to pass across chunk boundaries, due to the
+required stack writes that are linear in the number of tuple elements).
 
-\section{Further Flattening Optimizations}
-\hl{TODO: separate sections for PreFlatten / ShallowFlatten}
+\hl{TODO: EXPAND}
 
-
-\hl{TODO: TUPLE AND CON APP FLATTENING}
-
-\hl{We might want to expand the discussion above to include some discussion
-  about defunctionalization and the memory layout of ADTs}
-
-\subsection{\texttt{ShallowFlatten}}
+\section{\texttt{ShallowFlatten}}
+\section{Motivation}
 
 \hl{TODO: AOS AND SOA}
 
