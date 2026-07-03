@@ -1382,9 +1382,125 @@ The two type flattening implementations share a common framework, differing only
 in the types of operations that they match on:
 
 \begin{enumerate}
-\item Find all 
+\item Find all \texttt{call} statements with a ``pack'' operation that feeds
+  directly into a \texttt{call}: for the \texttt{tuple} case, this corresponds
+  to \texttt{tuple} constructor applications:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+  ....
+  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+\end{minted}
+and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
+\begin{minted}{python}
+  datatype ConType = Con1 of a * b * ... | Con2 of ...
+  ...
+  t: a * b * ... = ...
+  ...
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+  ...
+  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+\end{minted}
+\item Tag each such \texttt{call} statement with a per-argument flattening
+  decision, to indicate which arguments are valid targets to flatten, and
+  associate the tagged \texttt{call}s with their callee. For the flattenable
+  arguments, we include the information necessary to construct the flattened
+  call (i.e. the arguments to the \texttt{tuple} / \texttt{ConApp} call).
+  Continuing the examples from above, we would have:
+\begin{minted}{python}
+    f_tuple_caller_info = {
+      'call1': [FlattenVar(x1, x1, ...), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+    f_con_caller_info = {
+      'call2': [FlattenVar(t), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+\end{minted}
+\item Traverse all function-callee-decision collections and apply heuristics to
+  ``downgrade'' \texttt{FlattenVar} decisions to \texttt{PreserveVar} decisions
+  when specialization would be unprofitable.
+
+\item Traverse all function-callee-decision collections and emit the new
+  required specialized versions: an all-\texttt{PreserveVar} decision
+  corresponds to the original function. Any \texttt{FlattenVar(...)} decisions
+  result in a new specialization whose formal parameters include the flat
+  arguments in the appropriate location, and whose first block re-binds the
+  flattened names to the old, un-flattened name before jumping to the original
+  first block. That is, for the \texttt{tuple} example above, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_tuple_flat0(x1: a, x2: b, ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      t: a * b * ... = tuple(x1, x2, ...)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+and for the \texttt{ConApp} example, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_con_flat0(t: a * b * ..., ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      c: ConType = con Con1(t)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+
+\item Traverse the program to visit all \texttt{call} statements again, and
+  redirect the call target to the appropriate specialization that we identified
+  in the previous step (perhaps the original function). For non-identity
+  flattening decisions, use the contents of the \texttt{FlattenVar(...)}
+  argument to construct the appropriate flat call, i.e. for \texttt{tuple}:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_tuple_flat0(x1, x2, ..., y, z, ...)
+\end{minted}
+and for \texttt{ConApp}, 
+\begin{minted}{python}
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_con_flat0(t, y, z, ...)
+\end{minted}
+
+\item With the callsite-flattening mapping still intact and with the duplicated
+  functions retaining the original variable names, iteratively re-apply the
+  process above on all newly-emitted functions until either convergence or a
+  user-specified iteration limit is reached. This fixes an issue with (mutually)
+  recursive functions, where a collection of $n$ mutually recursive calls
+  require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for:
+\begin{minted}{python}
+  # flat call to `g` elsewhere
+  t0 = (x, y)
+  call bbN g(t0)
+
+  # g definition
+  g(t: a * b) -> ...:
+    ...
+    block bbN():
+
+\end{minted}
+
+\hl{TODO: FINISH EXAMPLE}
+
+\item Signal either ``progress'' (if we emitted a new specialization) or
+  ``done'' to the caller. Repeat until either convergence or a user-specified
+  iteration limit is reached.
 \end{enumerate}
 
+\subsection{Cost Heuristics}
+
+\hl{TODO: SHOULD RUN EXPERIMENTS WHERE WE RUN AFTER FLATTEN AND ALSO ONLY
+  FLATTEN NON-TAIL CALLS}
 
 \subsubsection{Tuple-flattening}
 
