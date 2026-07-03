@@ -1161,12 +1161,57 @@ roughly:
       xEnv_add,
       xEnv_sub,
     } case;
-    // Optional data member for the xEnv_addWithBias case
-    void *data;
+    // Interpretation of the payload depends on the tag
+    void *paylod;
   };
 \end{minted}
+The representation of \texttt{payload} depends on the particular
+\texttt{datatype}: small types and other special cases may be allocated inline,
+but the general case with a \hl{large payload} corresponds to allocating a
+nested tuple, i.e. for:
+\begin{minted}{sml}
+  datatype env = xEnvLarge of int * int | ...
+\end{minted}
+the callers (in \texttt{SSA}) will look like:
+\begin{minted}{python}
+  l: int = ...
+  r: int = ...
+  t: int * int = tuple (l, r)
+  e: Env = xEnvLarge t
+\end{minted}
+The relevance of the closure conversion transformation to flattening, then, is
+that it introduces further nested tuples at callsites of higher order functions.
+In the case when these nested tuples make it through to the \texttt{SSA}
+representation, this indirection cannot be optimized away by \texttt{Flatten},
+\texttt{DeepFlatten}, or any of the other flattening passes in MLton (since
+``peeling apart'' the tuple elements is only possible when we know the value of
+the tag).
 
-\hl{TODO: FINISH}
+The existing solution to this problem is \texttt{Polyvariance}: by duplicating
+higher-order functions at their callsite, for each caller like:
+\begin{minted}{python}
+  def call1() -> int:
+    return do_op_add(2, 2, add)
+
+  def call2() -> int:
+    return do_op_sub(2, 2, sub)
+\end{minted}
+the duplicated functions \texttt{do\_op\_add}, \texttt{do\_op\_sub} each end up
+with a single-variant \texttt{datatype} that can easily be optimized away by
+later passes (since the tag is statically known), allowing \texttt{Flatten} /
+\texttt{DeepFlatten} to act on the embedded tuple as normal.
+
+\texttt{Polyvariance} is limited, however: since it acts by duplicating
+functions across all callsites, it imposes a risk of severe code bloat beyond
+what is necessary just for the sake of eliminating the \texttt{datatype}. The
+cost heuristic also implies the potential for a sharp performance cliff around
+minor changes to the source-language program: a program that calls \texttt{map}
+$N$ times might have significantly worse performance than a program that calls
+\texttt{map} $N-1$ times if it pushes the \texttt{map} beyond the
+\texttt{Polyvariance} threshold.
+
+
+%% \hl{TODO: FINISH}
 
 %% TODO: explain polyvariance
 
@@ -1326,9 +1371,11 @@ we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive a
 \end{minted}
 and, again, rely on existing optimization patterns to eliminate the
 \texttt{ConApp} completely, in addition to elimating now-dead blocks
-corresponding to \texttt{Env} cases that are no longer reachable, etc.
+corresponding to \texttt{Env} cases that are no longer reachable, etc. For
+higher order functions, this subsumes the action of the existing
+\texttt{Polyvariance} pass.
 
-\hl{TODO: EXPLAIN CONAPP}
+\hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
 
 
 \subsection{Implementation}
