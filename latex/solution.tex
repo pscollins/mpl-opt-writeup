@@ -1570,6 +1570,32 @@ required stack writes that are linear in the number of tuple elements).
 \section{\texttt{ShallowFlatten}}
 \section{Motivation}
 
+%% deep flatten would be great but we observe that it often doesn't work in
+%% practice. the priority seems to be inverted: deepflatten thinks of container
+%% flattening as a minor best-effort win, but really it's crucial for HPC
+%% workloads. these workloads seem to be under-represented in the MLton
+%% benchmark suite, but they appear in parallel-ml-bench
+
+%% what are the natural generalizatons of flattening? one strategy is that we
+%% pull the pointers out of the containers and drop the association between
+%% elements. this seems like the natural generalization of tuple flattening.
+%% another strategy is that we push the elements inside the container and drop
+%% the tuple structure. this is closer to what deep flatten does
+
+%% these two strategies coincide with AoS vs SoA. SoA is the preferred format
+%% for SIMD. it is a little odd to call the other version AoS (C++ programmers
+%% would think of AoS as "the default" rather than something you can opt-into),
+%% but it helps to make the distinction clear
+
+%% in order to preserve the nearby types, we insert pack/unpack operations. this
+%% allows us to be more aggressive than deep flatten. by running before the
+%% other flattening passes (in SSA IR rather than SSA2) we create opportunities
+%% for those tuples to be eliminated anyway (though this choice introduces some
+%% fixable limitations -- specifically about uniform types). it's possible in
+%% theory to imagine that the more-aggressive choice is worse if it requires us
+%% to do a lot of extra pack/unpack, but that's a question for the benchmarks
+
+
 \hl{TODO: AOS AND SOA}
 
 \section{Evaluation}
