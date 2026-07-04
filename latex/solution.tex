@@ -1569,6 +1569,46 @@ required stack writes that are linear in the number of tuple elements).
 
 \section{\texttt{ShallowFlatten}}
 \section{Motivation}
+As outlined above, the MLton default array-of-pointers is disasterous from the
+perspective of efficiently utilizing the memory controler, in terms of both
+bandwidth and latency. The MLton priorities in the MLton approach appear to be
+inverted: rather than treating array-of-pointers elimination as the
+highest-priority among the potential flattening options, it is treated as a
+final, best-effort transformation. For common array-oriented workloads (HPC,
+graphics, etc), this has demonstrably-poor results. These workloads appear to be
+under-represented in the MLton benchmark suite, but they have good coverage in
+parallel-ml-bench, as we'll see below.
+
+How can we generalize the argument-centric \texttt{Flatten} transformation to
+arrays? In the \texttt{SSA} representation, the action of the \texttt{Flatten}
+transformation is to dissovle the association between the conjoined elements by
+providing them separate names, i.e.;
+\begin{minted}{python}
+  t: a * b * c * ... -->
+  x: a, y: b, z: c, ...
+\end{minted}
+Mapping this on to arrays, we would, likewise, provide a name for each element
+in the tuple, i.e.:
+\begin{minted}{pyhon}
+  arr: (a * b * c * ...) array -->
+  arr_x: a array, arr_y: b array, arr_z: c array * ...
+\end{minted}
+Considering the \texttt{Flatten} transformation on the \texttt{Machine}
+representation (focusing on the non-tail-recursive case), the action is to copy
+the \hl{conjoined elements} themselves into the buffer carrying on the function
+arguments (rather than a pointer to them), i.e.:
+\begin{minted}{python}
+  *stack.Push<void*>() = t ->
+  *stack.Push<typeA>() = t[0], 
+  *stack.Push<typeB>() = t[1],
+   ...
+\end{minted}
+The analogue for arrays is to copy the elements themselves into the array, i.e.:
+\begin{minted}
+  
+\end{minted}
+
+\hl{TODO: FINISH}
 
 %% deep flatten would be great but we observe that it often doesn't work in
 %% practice. the priority seems to be inverted: deepflatten thinks of container
@@ -1595,7 +1635,7 @@ required stack writes that are linear in the number of tuple elements).
 %% theory to imagine that the more-aggressive choice is worse if it requires us
 %% to do a lot of extra pack/unpack, but that's a question for the benchmarks
 
-\hl{TODO}
+\hl{TODO: NEED A BETTER DIAGRAM}
 
 \subsection{Implementation}
 
