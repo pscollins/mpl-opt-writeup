@@ -1589,7 +1589,7 @@ providing them separate names, i.e.;
 \end{minted}
 Mapping this on to arrays, we would, likewise, provide a name for each element
 in the tuple, i.e.:
-\begin{minted}{pyhon}
+\begin{minted}{python}
   arr: (a * b * c * ...) array -->
   arr_x: a array, arr_y: b array, arr_z: c array * ...
 \end{minted}
@@ -1597,18 +1597,46 @@ Considering the \texttt{Flatten} transformation on the \texttt{Machine}
 representation (focusing on the non-tail-recursive case), the action is to copy
 the \hl{conjoined elements} themselves into the buffer carrying on the function
 arguments (rather than a pointer to them), i.e.:
-\begin{minted}{python}
+\begin{minted}{cpp}
   *stack.Push<void*>() = t ->
   *stack.Push<typeA>() = t[0], 
   *stack.Push<typeB>() = t[1],
    ...
 \end{minted}
 The analogue for arrays is to copy the elements themselves into the array, i.e.:
-\begin{minted}
-  
+\begin{minted}{cpp}
+  arr[i] = t ->
+  arr[i * tuplelen(*t)] = t[0],
+  arr[i * tuplelen(*t) + 1] = t[1],
+  ...
 \end{minted}
+Speaking somewhat loosely, these two choices of strategies correspond to the
+familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
+layout is the natural default for a C++ programmer, i.e.:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point> array_of_structs;
+\end{minted}
+SoA is the natural default for SIMD operations, since it makes it simple to load
+contiguous chunks of data into SIMD registers:
+\begin{minted}{cpp}
+  struct PointSoA {
+    std::vector<int> xs;
+    std::vector<int> ys;
+  };
+\end{minted}
+Libraries and frameworks to support SIMD CPU programming commonly offer support
+for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
+introduced in \cite{ispc-paper}. ``Manual'' SoA layouts are also a standard
+technique in high-performance GPU programming, as discussed in e.g.
+\cite{cuda-textbook}.
 
-\hl{TODO: FINISH}
+The case of MLton differs slightly from the two cases 
+
+\hl{TODO: EXAMPLES ARE BAD}
 
 %% deep flatten would be great but we observe that it often doesn't work in
 %% practice. the priority seems to be inverted: deepflatten thinks of container

@@ -89,3 +89,45 @@
   version      = {1.0},
   url          = {https://gitlab.com/x86-psABIs/x86-64-ABI}
 }
+
+@INPROCEEDINGS{ispc-paper,
+  title     = "ispc: A {SPMD} compiler for high-performance {CPU} programming",
+  author    = "Pharr, Matt and Mark, William R",
+  booktitle = "2012 Innovative Parallel Computing (InPar)",
+  publisher = "IEEE",
+  abstract  = "SIMD parallelism has become an increasingly important mechanism
+               for delivering performance in modern CPUs, due its power
+               efficiency and relatively low cost in die area compared to other
+               forms of parallelism. Unfortunately, languages and compilers for
+               CPUs have not kept up with the hardware's capabilities. Existing
+               CPU parallel programming models focus primarily on multi-core
+               parallelism, neglecting the substantial computational
+               capabilities that are available in CPU SIMD vector units.
+               GPU-oriented languages like OpenCL support SIMD but lack
+               capabilities needed to achieve maximum efficiency on CPUs and
+               suffer from GPU-driven constraints that impair ease of use on
+               CPUs. We have developed a compiler, the Intel R® SPMD Program
+               Compiler (ispc), that delivers very high performance on CPUs
+               thanks to effective use of both multiple processor cores and SIMD
+               vector units. ispc draws from GPU programming languages, which
+               have shown that for many applications the easiest way to program
+               SIMD units is to use a single-program, multiple-data (SPMD)
+               model, with each instance of the program mapped to one SIMD lane.
+               We discuss language features that make ispc easy to adopt and use
+               productively with existing software systems and show that ispc
+               delivers up to 35x speedups on a 4-core system and up to 240×
+               speedups on a 40-core system for complex workloads (compared to
+               serial C++ code).",
+  month     =  may,
+  year      =  2012
+}
+
+@BOOK{cuda-textbook,
+  title     = "Professional {CUDA} {C} Programming",
+  author    = "Cheng, John and Grossman, Max and McKercher, Ty",
+  publisher = "Wrox Press",
+  address   = "Indianapolis",
+  month     =  aug,
+  year      =  2014,
+  language  = "en"
+}
