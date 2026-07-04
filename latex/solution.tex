@@ -1634,9 +1634,39 @@ introduced in \cite{ispc-paper}. ``Manual'' SoA layouts are also a standard
 technique in high-performance GPU programming, as discussed in e.g.
 \cite{cuda-textbook}.
 
-The case of MLton differs slightly from the two cases 
+The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
+described above, our default memory layout is an array-of-pointers:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point*> array_of_pointers;
+\end{minted}
+which lacks a name in standard performance-engineering parlance, since it is
+virtually never the right choice to achieve high \hl{performance}. We will refer
+to it here as AoP when necessary.
 
-\hl{TODO: EXAMPLES ARE BAD}
+In order to handle the case where the consuming operations of the array elements
+cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
+operations for elements read from the AoS/SoA versions of the containers, and
+``unpack'' operations for elements written to the AoS/SoA versions. This lets us
+preserve the pre-existing names and types in the consuming code (for the
+elements), simplifying the transformation at the cost of some
+potentially-unnecessary heap operations if the intermediate tuples can't be
+optimzied away by later passes. While this can in theory result in a net
+performance loss, choosing the right heuristic for flattening is a question for
+the benchmarks, and the high cost of the AoP layout means that the bar to clear
+is very low.
+
+For the containers themselves, however, we need to update the types everywhere
+that they appear: not only in variable bindings and function arguments, but also
+in \texttt{datatype} declarations, including \texttt{datatype}s introduced as
+part of closure conversion. This makes it difficult to support partial versions
+of the transformation in order to enable cases where some, but not all AoP
+containers in the program are \texttt{ShallowFlatten}ed: the implementation
+below assumes all-or-nothing conversion.
+
 
 %% deep flatten would be great but we observe that it often doesn't work in
 %% practice. the priority seems to be inverted: deepflatten thinks of container
@@ -1667,11 +1697,82 @@ The case of MLton differs slightly from the two cases
 
 \subsection{Implementation}
 
+%% visit all statements/types
+
+%%   define a heuristic for the element type (e.g. tuple width), then find all
+%%   references to arrays/vectors of that type
+
+%%   recursively, deeply rewrite types of array/vector so long as there is an
+%%   array/vector over a matched type. iterate until convergence to catch bugs
+%%   that we'll describe. this step is for non-statement types (TODO: list them)
+
+%%   rewrite all statements: prims are transformed in a container-/prim-specific
+%%   way (which we outline below). statements and their attached types are
+%%   transformed jointy. some are pass-through (type only), some need
+%%   transformation
+
+%%   unlike PreFlatten, there is no need ot iterate, we always converge after 1
+%%   step
+
 \hl{TODO}
 
 \subsection{Limitations}
+As outlined above, this implementation only supports the case when all AoP
+containers of a given type are flattened -- we cannot support a mix of flattened
+and unflattened AoP containers with a given type using the strategy above. The
+implementation discussed in this document simply emits an error if it encounters
+an un-flattenable construct, none of which appear in the benchmark suites that
+we evaluated this optimization against.
 
-\hl{TODO}
+It is debatable whether supporting a fallback is required for the transformation
+to be usable by real developers. The problem to worry about is that the
+AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
+an SML program like:
+\begin{minted}{sml}
+  val arr : (int * int) array = Array.array (3, (0, 0))
+  val element = (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Are \texttt{element} and \texttt{element'} physically identical? If this element
+is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
+equality, since the write/read result in pack/unpack operations that construct a
+new tuple. From the perspective of strict StandardML as defined in the language
+specification \cite{sml-def}, this is a non-issue: there is no way to observe
+pointer equality of tuples in the source language, and so the compiler has
+complete freedom. The only spec-compliant way to write this test would be to
+wrap the element type in \texttt{ref}:
+\begin{minted}{sml}
+  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+  val element = ref (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+by \texttt{PreFlatten}.
+
+However, both MLton and MPL extend the source language with constructs that
+allow user programs to observe this behavior: both have \texttt{MLton.eq}
+(physical equality for arbitrary values), and MPL additionally offers
+compare-and-swap primitives to support implementing lock-free parallel
+algorithms.
+
+Since physical equality of tuples is not defined in \cite{sml-def}, one option
+to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
+to return \texttt{false} in these cases. Another simple option would to be
+disable \texttt{ShallowFlatten} for all values of any types that participate in
+one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
+\texttt{int * int} tuple anywhere in the program disables
+\texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
+refined by a dataflow analysis to determine if the elements in the forbidden
+comparison may have originated in a container.
+
+This results in a potentially-unpleasant performance cliff for users, but there
+are various simple workarounds -- e.g. users can wrap any objects that must be
+tested for pointer equality in \texttt{ref} cells (which are not impacted by
+\texttt{ShallowFlatten}).
+
+%% \hl{TODO}
 
 
 \section{Evaluation}
