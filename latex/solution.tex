@@ -1568,7 +1568,7 @@ required stack writes that are linear in the number of tuple elements).
 \hl{TODO: EXPAND}
 
 \section{\texttt{ShallowFlatten}}
-\section{Motivation}
+\subsection{Motivation}
 As outlined above, the MLton default array-of-pointers is disasterous from the
 perspective of efficiently utilizing the memory controler, in terms of both
 bandwidth and latency. The MLton priorities in the MLton approach appear to be
@@ -1696,6 +1696,62 @@ below assumes all-or-nothing conversion.
 \hl{TODO: NEED A BETTER DIAGRAM}
 
 \subsection{Implementation}
+First, we will outline the high-level steps of the transformation (which are
+identical for the two flattening strategies). Second, we will provide a detailed
+description of the transformation that this pass applies to the types in the
+program. Finally, we will provide the detailed \texttt{prim}-by-\texttt{prim}
+transformation, \hl{specialized} for the AoS and SoA flavors of the
+transformation
+
+\subsubsection{High-level overview}
+
+\hl{TODO: PROBABLY NEED A FORMAL GRAMMAR OF SSA TO MOTIVATE THIS}
+
+\begin{enumerate}
+\item Fix a heuristic that divides all SSA types into ``flattenable'' and
+  ``un-flattenable.'' In this work, we define the ``tuple type width'' of any
+  SSA type \texttt{t} as: if \texttt{t} is a tuple with $n$ members, its width
+  its $n$, otherwise the width is 0.
+
+\item Visit all non-\texttt{Statement} IR constructs (\texttt{datatype}
+  constructors, function argument/return types, and block arguments) and
+  iteratively flatten all flattenable types until convergence.
+
+\item Visit all \texttt{Statement} IR constructs and iteratively flatten until
+  convergence (i.e. flatten each \texttt{Statement}, perhaps emitting more
+  \texttt{Statement}s, and then apply the flattening transformation to all
+  emitted statements until they can no longer be further flattened).
+
+\end{enumerate}
+
+\subsubsection{Type transformation}
+The core transformation is to rewrite an array-of-tuple to a tuple-of-array:
+\begin{minted}{python}
+  (a * b * c * ...) array ->
+  a array * b array * c array * ...
+\end{minted}
+Since there exist constructs that convert the type \texttt{a array} to \texttt{a
+  vector} (which is effectively a cast, for which MLTon inserts a copy in order
+to prersve the property that \texttt{vector} objects are immutable after
+construction), applying the optimization to \texttt{array} requires a either
+matching transformation for \texttt{vector}, or a complicated re-un-flattening
+in order to construct the contents of the un-flattened \texttt{vector} type.
+
+In this document, we choose the former strategy, rewriting \texttt{vector} types
+in addition to \texttt{array} types:
+\begin{minted}{python}
+  (a * b * c * ...) vector ->
+  a vector * b vector * c vector * ...
+\end{minted}
+
+It is similarly necessary to apply the transformation iteratively, since the
+input to construct a nested-flattenable type are themselves flattenable types,
+i.e.:
+\begin{minted}{python}
+  ((a * b) array * c) array ->
+   (
+\end{minted}
+
 
 %% visit all statements/types
 
