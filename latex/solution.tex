@@ -1696,6 +1696,25 @@ below assumes all-or-nothing conversion.
 \hl{TODO: NEED A BETTER DIAGRAM}
 
 \subsection{Implementation}
+%% ---whole section outline --
+
+%% visit all statements/types
+
+%%   define a heuristic for the element type (e.g. tuple width), then find all
+%%   references to arrays/vectors of that type
+
+%%   recursively, deeply rewrite types of array/vector so long as there is an
+%%   array/vector over a matched type. iterate until convergence to catch bugs
+%%   that we'll describe. this step is for non-statement types (TODO: list them)
+
+%%   rewrite all statements: prims are transformed in a container-/prim-specific
+%%   way (which we outline below). statements and their attached types are
+%%   transformed jointy. some are pass-through (type only), some need
+%%   transformation
+
+%%   unlike PreFlatten, there is no need ot iterate, we always converge after 1
+%%   step
+
 First, we will outline the high-level steps of the transformation (which are
 identical for the two flattening strategies). Second, we will provide a detailed
 description of the transformation that this pass applies to the types in the
@@ -1744,31 +1763,39 @@ in addition to \texttt{array} types:
   a vector * b vector * c vector * ...
 \end{minted}
 
-It is similarly necessary to apply the transformation iteratively, since the
-input to construct a nested-flattenable type are themselves flattenable types,
-i.e.:
+Likewise, it is necessary to traverse ``deeply'' inside of types, i.e. we need
+to do the transformation:
+\begin{minted}{python}
+  ((a * b) array * c) ->
+  ((a array * b array) * c)
+\end{minted}
+since, in order to construct an object of type \texttt{(a * b) array * c}, we
+need an input object of type \texttt{(a * b) array}, which will be flattened by
+the transformation below.
+
+It is similarly necessary to apply the transformation iteratively, i.e. we need:
 \begin{minted}{python}
   ((a * b) array * c) array ->
-   (
+  ((a * b) array) array * c array ->
+  (a array array * b array array) * c array
 \end{minted}
+since in order to construct the original type, we needed to have an object of
+type \texttt{(a * b) array} in hand, and this object was transformed into an
+\texttt{a array * b array} by the earlier action of the pass.
+
+\subsubsection{Statement transformation}
+The general form of an \texttt{SSA} statement is:
+\begin{minted}{python}
+  lhs: lhsTy = exp
+\end{minted}
+where \texttt{lhs} is a variable name, \texttt{lhsTy} is its type, and
+\texttt{exp} is an expression.
+
+The transformation on statements is divided into two cases: ``passthrough'' and
+``rewrite.'' The ``passthrough'' case applies to all constructs that do not
+directly manipulate flattened containers -- 
 
 
-%% visit all statements/types
-
-%%   define a heuristic for the element type (e.g. tuple width), then find all
-%%   references to arrays/vectors of that type
-
-%%   recursively, deeply rewrite types of array/vector so long as there is an
-%%   array/vector over a matched type. iterate until convergence to catch bugs
-%%   that we'll describe. this step is for non-statement types (TODO: list them)
-
-%%   rewrite all statements: prims are transformed in a container-/prim-specific
-%%   way (which we outline below). statements and their attached types are
-%%   transformed jointy. some are pass-through (type only), some need
-%%   transformation
-
-%%   unlike PreFlatten, there is no need ot iterate, we always converge after 1
-%%   step
 
 \hl{TODO}
 
