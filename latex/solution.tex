@@ -380,7 +380,7 @@ A few features of this representation are worth noting:
 \begin{itemize}
 \item Concrete operations on particular types are implemented as ``primitive
   applications,'' \texttt{prim \$PRIM\_NAME (\dots)}. \texttt{prim}s are
-  elimiated at various different compilation phases, and come equipped with type
+  eliminated at various different compilation phases, and come equipped with type
   checkers to ensure that the IR is well-formed.
 \item Basic blocks carry explicit arguments. These arguments take the place of
   $\phi$ nodes in compilers for imperative languages: within each block
@@ -1243,7 +1243,7 @@ currently, it runs before \texttt{Flatten}, so that the lattice-based
 completely flatten particular uses.
 
 \subsection{Motivation}
-The basic intution is that if we see a sequence like:
+The basic intuition is that if we see a sequence like:
 \begin{minted}{python}
   def f(...) -> ...:
     ...other blocks...
@@ -1263,7 +1263,7 @@ The basic intution is that if we see a sequence like:
 
     ...other blocks...
 \end{minted}
-then we can elimiate the intermediate tuple \texttt{t} with a simple peephole
+then we can eliminate the intermediate tuple \texttt{t} with a simple peephole
 optimization that ``pushes down'' the tuple allocation from the caller into the
 callee, i.e.:
 \begin{minted}{python}
@@ -1879,18 +1879,45 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
   n: int = Array_length[a](arr_a)
 \end{minted}
 
-\item \tetttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
+\item \texttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
   elements, and constructs the final output tuple:
 
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  n: int = Array_length[a * b * ...](arr)
+  # Read element i
+  x: (a * b * ...) = Array_sub[a * b * ...](arr, i)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
-  arr_a = select (arr, 0)
-  n: int = Array_length[a](arr_a)
+  arr_a: a array = select (arr, 0)
+  x_a: a = Array_sub[a](arr_a, i)
+  arr_b: b array = select (arr, 1)
+  x_b: b = Array_sub[b](arr_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
 \end{minted}
+
+\item \texttt{Array\_update} unpacks the tuple-of-arrays and writes in the
+  necessary elements:
+
+  %% TODO(agy): COPY CODE
+
+\item \texttt{Array\_uninitIsNop} (which checks to see if raw data is dangerous
+  for the garbage collector for the specified array type) is hardcoded to
+  \texttt{false} for simplicity:
+
+  %% TODO(agy): COPY CODE
+
+\item \texttt{Array\_uninit} (which fills an array with garbage data that is
+  safe for the garbage collector) is passed on to the constituent members:
+
+  %% TODO(agy): COPY CODE
+
+\item \texttt{Array\_toArray} (which marks an array as initialized, and so safe
+  for the garbage collector) is also passed on to the constituent members:
+
+  %% TODO(agy): COPY CODE
+
 \end{enumerate}
 
 
