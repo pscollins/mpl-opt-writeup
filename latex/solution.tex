@@ -1841,6 +1841,58 @@ and now the other transformations of the pass are responsible for ensuring that
 other uses of \texttt{x} in the program use the updated type (e.g. any function
 signatures must be rewritten according to \texttt{tTy}, etc).
 
+Like as in the case of types, it is necessary to apply the transformation
+iteratively until convergence in order to correctly handle the case of nested
+types, e.g. after one round, we get:
+\begin{minted}{python}
+  arr: ((a * b) * c) array = prim Array_alloc[(a * b) * c](n) ->
+  arr_ab: (a * b) array = prim Array_alloc[a * b]
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Now the type of \texttt{x} still admits flattening: this is a problem, since, as
+we described above, the type transformation will eliminate all ocurrences of
+flattenable types in the program. Hence any users of \texttt{a} will fail to
+typecheck, and the resulting program is ill-formed. Applying another round of
+``rewrite''-flattening to each of the resulting expressions resolves the issue:
+\begin{minted}{python}
+  arr_ab: (a * b) array = prim Array_alloc[a * b](n)
+  arr_c: c array = prim Array_alloc[a * b](n)
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+  ->
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  arr_ab: a array * b array = tuple(arr_a, arr_b)
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a array * b array) * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO: CAN RETHINK ORDER}
+\begin{enumerate}
+\item \texttt{Array\_length} picks an arbitrary tuple member to pass the call on to)
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  n: int = Array_length[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a = select (arr, 0)
+  n: int = Array_length[a](arr_a)
+\end{minted}
+
+\item \tetttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
+  elements, and constructs the final output tuple:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  n: int = Array_length[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a = select (arr, 0)
+  n: int = Array_length[a](arr_a)
+\end{minted}
+\end{enumerate}
+
 
 \hl{TODO}
 
