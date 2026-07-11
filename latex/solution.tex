@@ -1570,7 +1570,7 @@ required stack writes that are linear in the number of tuple elements).
 \section{\texttt{ShallowFlatten}}
 \subsection{Motivation}
 As outlined above, the MLton default array-of-pointers is disasterous from the
-perspective of efficiently utilizing the memory controler, in terms of both
+perspective of efficiently utilizing the memory controller, in terms of both
 bandwidth and latency. The MLton priorities in the MLton approach appear to be
 inverted: rather than treating array-of-pointers elimination as the
 highest-priority among the potential flattening options, it is treated as a
@@ -1900,23 +1900,65 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 \item \texttt{Array\_update} unpacks the tuple-of-arrays and writes in the
   necessary elements:
 
-  %% TODO(agy): COPY CODE
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  x: (a * b * ...) = ...
+  _ = Array_update[a * b * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  x_a: a = select (x, 0)
+  _ = Array_update[a](arr_a, i, x_a)
+  arr_b: b array = select (arr, 1)
+  x_b: b = select (x, 1)
+  _ = Array_update[b](arr_b, i, x_b)
+  ...
+\end{minted}
 
 \item \texttt{Array\_uninitIsNop} (which checks to see if raw data is dangerous
   for the garbage collector for the specified array type) is hardcoded to
   \texttt{false} for simplicity:
 
-  %% TODO(agy): COPY CODE
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * b * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
 
 \item \texttt{Array\_uninit} (which fills an array with garbage data that is
   safe for the garbage collector) is passed on to the constituent members:
 
-  %% TODO(agy): COPY CODE
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  _ = Array_uninit[a * b * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  _ = Array_uninit[a](arr_a, n)
+  arr_b: b array = select (arr, 1)
+  _ = Array_uninit[b](arr_b, n)
+  ...
+\end{minted}
 
 \item \texttt{Array\_toArray} (which marks an array as initialized, and so safe
   for the garbage collector) is also passed on to the constituent members:
 
-  %% TODO(agy): COPY CODE
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  arr': (a * b * ...) array = Array_toArray[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  arr'_a: a array = Array_toArray[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  arr'_b: b array = Array_toArray[b](arr_b)
+  ...
+  arr': a array * b array * ... = tuple(arr'_a, arr'_b, ...)
+\end{minted}
 
 \end{enumerate}
 
