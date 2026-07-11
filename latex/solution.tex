@@ -1822,12 +1822,24 @@ type expressions according to the type transformation above.
 
 The non-``passthrough,'' ``rewrite'' case applies to \texttt{PrimApp}s that
 manipulate flattened containers. These transformations differ between the SoA
-and AoS cases. Recall from above that this transformation is applied iteratively
-until convergence; below we will outline only a single iteration for
-convencience.
+and AoS cases.
 
-Beginning with the SoA case, the general form of the transformation is ``
-
+Beginning with the SoA case, the general form of the transformation is ``find
+all containers of tuples, rewrite them to be tuples of containers.'' Beginning
+with container-creation as an illustrative example, a single step of the
+transformation is:
+\begin{minted}{python}
+  x: (a * b * ...) array = prim Array_alloc[a * b * ...](n) ->
+  # Construct per-member arrays
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  ...
+  # Bind the tuple-of-arrays to the original name
+  x: a array * b array * ... = tuple(arr_a, arr_b, ...)
+\end{minted}
+and now the other transformations of the pass are responsible for ensuring that
+other uses of \texttt{x} in the program use the updated type (e.g. any function
+signatures must be rewritten according to \texttt{tTy}, etc).
 
 
 \hl{TODO}
