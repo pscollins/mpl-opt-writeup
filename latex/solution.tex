@@ -1841,6 +1841,10 @@ and now the other transformations of the pass are responsible for ensuring that
 other uses of \texttt{x} in the program use the updated type (e.g. any function
 signatures must be rewritten according to \texttt{tTy}, etc).
 
+\hl{TODO: WE REALLY DO ONE MORE ITERATION AFTER THIS (i.e. first update
+  statements until convergence, then update types, then run again). EXPLAIN?
+  MIGHT BE WRONG}
+
 Like as in the case of types, it is necessary to apply the transformation
 iteratively until convergence in order to correctly handle the case of nested
 types, e.g. after one round, we get:
@@ -1960,6 +1964,17 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
   arr': a array * b array * ... = tuple(arr'_a, arr'_b, ...)
 \end{minted}
 
+\end{enumerate}
+
+The transformation additionally handles the \texttt{array -> vector}
+transformation primitive (a copy into an immutable container); i.e.:
+
+%% TODO(agy): copy code
+
+Consequently, it is necessary to handle the corresponding transformations on
+\textttt{vector}, i.e.:
+\begin{enumerate}
+\item \hl{TODO: FILL IN}
 \end{enumerate}
 
 
