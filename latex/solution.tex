@@ -1792,8 +1792,41 @@ where \texttt{lhs} is a variable name, \texttt{lhsTy} is its type, and
 \texttt{exp} is an expression.
 
 The transformation on statements is divided into two cases: ``passthrough'' and
-``rewrite.'' The ``passthrough'' case applies to all constructs that do not
-directly manipulate flattened containers -- 
+``rewrite.'' Every non-\texttt{PrimApp} statement is a ``passthrough''
+statement. Taking \texttt{fTy} as the transformation on types above, these cases
+are all
+\begin{minted}{python}
+  lhs: lhsTy = exp ->
+  lhs: fTy(lhsTy) = exp
+\end{minted}
+where \texttt{exp} is some expression that contains no type expressions.
+
+The general form of a \texttt{PrimApp} is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+\end{minted}
+where \texttt{PrimName} is the name of a particular primitive operation (e.g.
+\texttt{Word32\_add}, \texttt{Word32\_equal}, etc), \texttt{targ1, targ2, ...}
+is a sequence of zero or more type arguments, and \texttt{arg1, arg2, ...} is a
+sequence of zero or more variable names.
+
+
+The ``passthrough'' case for \texttt{PrimApp} applies to all \texttt{PrimApp}s
+that do not manipulate flattened containers. Its general form is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+  lhs: fTy(lhsTy) = prim PrimName[fTy(targ1), fTy(targ2), ...](arg1, arg2, ...)
+\end{minted}
+i.e.: leave all non-type portions of the expression unchanged, and transform all
+type expressions according to the type transformation above.
+
+The non-``passthrough,'' ``rewrite'' case applies to \texttt{PrimApp}s that
+manipulate flattened containers. These transformations differ between the SoA
+and AoS cases. Recall from above that this transformation is applied iteratively
+until convergence; below we will outline only a single iteration for
+convencience.
+
+Beginning with the SoA case, the general form of the transformation is ``
 
 
 
