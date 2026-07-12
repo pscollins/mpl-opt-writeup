@@ -1969,19 +1969,52 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 The transformation additionally handles the \texttt{array -> vector}
 transformation primitive (a copy into an immutable container); i.e.:
 
-%% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  vec: (a * b * ...) vector = Array_toVector[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  vec_a: a vector = Array_toVector[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  vec_b: b vector = Array_toVector[b](arr_b)
+  ...
+  vec: a vector * b vector * ... = tuple(vec_a, vec_b, ...)
+\end{minted}
 
 Consequently, it is necessary to handle the full set of operations on
 \texttt{vector}, i.e.:
 \begin{enumerate}
-\item \textt{Vector\_length}: like \texttt{Array\_length}, arbitrarily forwards
+\item \texttt{Vector\_length}: like \texttt{Array\_length}, arbitrarily forwards
   the call to the first tuple element:
 
-%% TODO(agy): copy code
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  n: int = Vector_length[a * b * ...](vec)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a = select (vec, 0)
+  n: int = Vector_length[a](vec_a)
+\end{minted}
 
 \item \texttt{Vector\_sub}: analogous to \texttt{Array\_sub}
 
-%% TODO(agy): copy code
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  # Read element i
+  x: (a * b * ...) = Vector_sub[a * b * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a: a vector = select (vec, 0)
+  x_a: a = Vector_sub[a](vec_a, i)
+  vec_b: b vector = select (vec, 1)
+  x_b: b = Vector_sub[b](vec_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
+\end{minted}
 
 \end{enumerate}
 
