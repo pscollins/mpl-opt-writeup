@@ -1971,10 +1971,18 @@ transformation primitive (a copy into an immutable container); i.e.:
 
 %% TODO(agy): copy code
 
-Consequently, it is necessary to handle the corresponding transformations on
+Consequently, it is necessary to handle the full set of operations on
 \texttt{vector}, i.e.:
 \begin{enumerate}
-\item \hl{TODO: FILL IN}
+\item \textt{Vector\_length}: like \texttt{Array\_length}, arbitrarily forwards
+  the call to the first tuple element:
+
+%% TODO(agy): copy code
+
+\item \texttt{Vector\_sub}: analogous to \texttt{Array\_sub}
+
+%% TODO(agy): copy code
+
 \end{enumerate}
 
 
