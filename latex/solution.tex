@@ -2018,7 +2018,65 @@ Consequently, it is necessary to handle the full set of operations on
 
 \end{enumerate}
 
-For the AoS version, we ``flatten'' by reinterpreting the AoP data
+For the AoS version, we ``flatten'' by reinterpreting the AoP data as consective
+elements in a larger array. Taking \texttt{Array\_alloc} again as a
+representative example, this means:
+\begin{minted}{python}
+  x: (a * a * ...) array = prim Array_alloc[a * a * ...](n)
+  -->
+  # Scale up the array by the \# of tuple elements
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = n * tupleWidth
+  # Bind `x` to a flat array of the scaled-up size
+  x: a array = Array_alloc[a](n')
+\end{minted}
+
+The other operations follow in the obvious way:
+\begin{enumerate}
+\item \texttt{Array\_length} scales down the length of the flattened array
+
+\begin{minted}
+  arr: (a * a * ...) array = ...
+  n: int = Array_length[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = Array_length[a](arr)
+  n: int = n / tupleWidth
+\end{minted}
+
+
+  %% TODO(agy): copy code
+
+\item \texttt{Array\_sub} reads out a slice from the flattened array and packs
+  it into a tuple:
+
+  %% TODO(agy): copy code
+
+\item \texttt{Array\_sub} unpacks the input tuple and writes it into a slice:
+
+  %% TODO(agy): copy code
+
+\item \texttt{Array\_uninitIsNop} is hardcoded to \texttt{false}
+
+  %% TODO(agy): copy code
+
+\item \texttt{Array\_uninit} is passed on to the slice of the flattened array
+  corresponding to the provided index:
+
+  %% TODO(agy): copy code
+
+\item \texttt{Array\_toVector} is passed on to the flattned array:
+
+  %% TODO(agy): copy code
+
+\item \texttt{Vector\_sub} works analogously to \texttt{Array\_sub}
+
+  %% TODO(agy): copy code
+
+\end{enumerate}
+
 
 \hl{TODO}
 
