@@ -2035,7 +2035,7 @@ The other operations follow in the obvious way:
 \begin{enumerate}
 \item \texttt{Array\_length} scales down the length of the flattened array
 
-\begin{minted}
+\begin{minted}{python}
   arr: (a * a * ...) array = ...
   n: int = Array_length[a * a * ...](arr)
   -->
@@ -2043,42 +2043,101 @@ The other operations follow in the obvious way:
   #   arr: a array = ...
   tupleSize: int = tupleWidth(a * a * ...)
   n': int = Array_length[a](arr)
-  n: int = n / tupleWidth
+  n: int = n' / tupleSize
 \end{minted}
-
-
-  %% TODO(agy): copy code
 
 \item \texttt{Array\_sub} reads out a slice from the flattened array and packs
   it into a tuple:
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  # Read element i
+  x: (a * a * ...) = Array_sub[a * a * ...](arr, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Array_sub[a](arr, i * tupleSize)
+  x_1: a = Array_sub[a](arr, i * tupleSize + 1)
+  ...
+  x_n: a = Array_sub[a](arr, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
 
 \item \texttt{Array\_sub} unpacks the input tuple and writes it into a slice:
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  x: (a * a * ...) = ...
+  _ = Array_update[a * a * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = select(x, 0)
+  x_1: a = select(x, 1)
+  ...
+  _ = Array_update[a](arr, i * tupleSize + 0, x_0)
+  _ = Array_update[a](arr, i * tupleSize + 1, x_1)
+  ...
+\end{minted}
 
 \item \texttt{Array\_uninitIsNop} is hardcoded to \texttt{false}
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * a * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
 
 \item \texttt{Array\_uninit} is passed on to the slice of the flattened array
   corresponding to the provided index:
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  _ = Array_uninit[a * a * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  _ = Array_uninit[a](arr, n * tupleSize)
+  _ = Array_uninit[a](arr, n * tupleSize + 1)
+  ...
+  _ = Array_uninit[a](arr, n * tupleSize + tupleSize - 1)
+\end{minted}
 
 \item \texttt{Array\_toVector} is passed on to the flattned array:
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  vec: (a * a * ...) vector = Array_toVector[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  vec: a vector = Array_toVector[a](arr)
+\end{minted}
 
 \item \texttt{Vector\_sub} works analogously to \texttt{Array\_sub}
 
-  %% TODO(agy): copy code
+\begin{minted}{python}
+  vec: (a * a * ...) vector = ...
+  # Read element i
+  x: (a * a * ...) = Vector_sub[a * a * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: a vector = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Vector_sub[a](vec, i * tupleSize)
+  x_1: a = Vector_sub[a](vec, i * tupleSize + 1)
+  ...
+  x_n: a = Vector_sub[a](vec, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
 
 \end{enumerate}
 
-
-\hl{TODO}
+\hl{TODO: DISCUSS SECOND CALL TO PROPAGATE TYPES?}
 
 \subsection{Limitations}
 As outlined above, this implementation only supports the case when all AoP
@@ -2139,14 +2198,31 @@ tested for pointer equality in \texttt{ref} cells (which are not impacted by
 %% \hl{TODO}
 
 
+\subsection{Comparison to more-agressive \texttt{DeepFlatten}}
+
+\hl{TODO: implement an benchmark a version of deepflatten that kicks in for this
+  case (i.e. no restriction on nested immutable types) / determine why it
+  doesn't work}
+
 \section{Evaluation}
 
 \subsection{Methodology}
+In the evalutat
+
 \hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
 
 \subsection{Results}
 
 \hl{TODO: MEASUREMENTS}
+
+
+\section{Related Work}
+
+\hl{TODO}
+
+\section{Conclusion}
+
+\hl{TODO}
 
 \section{TODO}
 
@@ -2197,6 +2273,7 @@ Other items:
 \end{itemize}
 
 %% \section{ 
+
 
 \nocite{*}
 \bibliographystyle{plain}
