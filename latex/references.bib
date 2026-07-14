@@ -143,3 +143,380 @@
   year      =  1997,
   language  = "en"
 }
+
+@INPROCEEDINGS{virgil-paper,
+  title     = "Harmonizing classes, functions, tuples, and type parameters in
+               virgil iii",
+  author    = "Titzer, Ben L",
+  booktitle = "Proceedings of the 34th ACM SIGPLAN Conference on Programming
+               Language Design and Implementation",
+  publisher = "ACM",
+  address   = "New York, NY, USA",
+  abstract  = "Languages are becoming increasingly multi-paradigm. Subtype
+               polymorphism in statically-typed object-oriented languages is
+               being supplemented with parametric polymorphism in the form of
+               generics. Features like first-class functions and lambdas are
+               appearing everywhere. Yet existing languages like Java, C\#, C++,
+               D, and Scala seem to accrete ever more complexity when they reach
+               beyond their original paradigm into another; inevitably older
+               features have some rough edges that lead to nonuniformity and
+               pitfalls. Given a fresh start, a new language designer is faced
+               with a daunting array of potential features. Where to start? What
+               is important to get right first, and what can be added later?
+               What features must work together, and what features are
+               orthogonal? We report on our experience with Virgil III, a
+               practical language with a careful balance of classes, functions,
+               tuples and type parameters. Virgil intentionally lacks many
+               advanced features, yet we find its core feature set enables new
+               species of design patterns that bridge multiple paradigms and
+               emulate features not directly supported such as interfaces,
+               abstract data types, ad hoc polymorphism, and variant types.
+               Surprisingly, we find variance for function types and tuple types
+               often replaces the need for other kinds of type variance when
+               libraries are designed in a more functional style.",
+  month     =  jun,
+  year      =  2013,
+  language  = "en"
+}
+
+@INCOLLECTION{mlton-closure-paper,
+  title     = "Flow-directed closure conversion for typed languages",
+  author    = "Cejtin, Henry and Jagannathan, Suresh and Weeks, Stephen",
+  booktitle = "Programming Languages and Systems",
+  publisher = "Springer Berlin Heidelberg",
+  address   = "Berlin, Heidelberg",
+  pages     = "56--71",
+  abstract  = "This paper presents a new closure conversion algorithm for
+               simply-typed languages. We have have implemented the algorithm as
+               part of MLton, a whole-program compiler for Standard ML (SML).
+               MLton first applies all functors and eliminates polymorphism by
+               code duplication to produce a simply-typed program. MLton then
+               performs closure conversion to produce a first-order,
+               simply-typed program. In contrast to typical functional language
+               implementations, MLton performs most optimizations on the
+               first-order language, after closure conversion. There are two
+               notable contributions of our work:",
+  series    = "Lecture Notes in Computer Science",
+  year      =  2000
+}
+
+@ARTICLE{closure-sharing-paper,
+  title     = "Flow-analysis-based closure optimization",
+  author    = "Reppy, John and Shivers, Olin and Zhong, Byron",
+  journal   = "Proc. ACM Program. Lang.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  10,
+  number    = "PLDI",
+  pages     = "379--404",
+  abstract  = "One of the key implementation challenges for higher-order
+               functional languages is managing the representation of
+               first-class function values. The standard approach to this
+               problem is closure conversion , which is a compiler
+               transformation that introduces an explicit data structure to
+               represent the environment of a function value. Constructing the
+               closure for a nested function usually involves copying data from
+               the enclosing function’s closure. To avoid this copying, one
+               might use linked representations, but that choice makes variable
+               access slow and can introduce space leaks. Shao and Appel
+               developed an effective closure converter that reduces copying and
+               is safe-for-space, but their converter is based on a weak,
+               first-order analysis. In this paper, we present a new
+               safe-for-space closure converter that uses a higher-order flow
+               analysis to inform closure-representation decisions. We describe
+               how this information can be used to improve two aspects of
+               closure optimization: sharing heap-allocated tuples of variables
+               and spreading variables into argument registers. We have
+               implemented our converter in the Standard ML of New Jersey system
+               and demonstrated that it produces better code on average than the
+               Shao and Appel converter, with significant performance gains for
+               some benchmarks.",
+  month     =  jun,
+  year      =  2026,
+  language  = "en"
+}
+
+@INCOLLECTION{manticore-arity-paper,
+  title     = "Arity Raising in Manticore",
+  author    = "Bergstrom, Lars and Reppy, John",
+  booktitle = "Implementation and Application of Functional Languages",
+  publisher = "Springer Berlin Heidelberg",
+  address   = "Berlin, Heidelberg",
+  pages     = "90--106",
+  abstract  = "Compilers for polymorphic languages are required to treat values
+               in programs in an abstract and generic way at the source level.
+               The challenges of optimizing the boxing of raw values, flattening
+               of argument tuples, and raising the arity of functions that
+               handle complex structures to reduce memory usage are old ones,
+               but take on newfound import with processors that have twice as
+               many registers. We present a novel strategy that uses both
+               control-flow and type information to provide an arity raising
+               implementation addressing these problems. This strategy is
+               conservative-no matter the execution path, the transformed
+               program will not perform extra operations.",
+  series    = "Lecture Notes in Computer Science",
+  year      =  2010
+}
+
+@ARTICLE{mpl-sched-paper,
+  title     = "Automatic parallelism management",
+  author    = "Westrick, Sam and Fluet, Matthew and Rainey, Mike and Acar, Umut
+               A",
+  journal   = "Proc. ACM Program. Lang.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  8,
+  number    = "POPL",
+  pages     = "1118--1149",
+  abstract  = "On any modern computer architecture today, parallelism comes with
+               a modest cost, born from the creation and management of threads
+               or tasks. Today, programmers battle this cost by manually
+               optimizing/tuning their codes to minimize the cost of parallelism
+               without harming its benefit, performance. This is a difficult
+               battle: programmers must reason about architectural constant
+               factors hidden behind layers of software abstractions, including
+               thread schedulers and memory managers, and their impact on
+               performance, also at scale. In languages that support
+               higher-order functions, the battle hardens: higher order
+               functions can make it difficult, if not impossible, to reason
+               about the cost and benefits of parallelism. Motivated by these
+               challenges and the numerous advantages of high-level languages,
+               we believe that it has become essential to manage parallelism
+               automatically so as to minimize its cost and maximize its
+               benefit. This is a challenging problem, even when considered on a
+               case-by-case, application-specific basis. But if a solution were
+               possible, then it could combine the many correctness benefits of
+               high-level languages with performance by managing parallelism
+               without the programmer effort needed to ensure performance. This
+               paper proposes techniques for such automatic management of
+               parallelism by combining static (compilation) and run-time
+               techniques. Specifically, we consider the Parallel ML language
+               with task parallelism, and describe a compiler pipeline that
+               embeds “potential parallelism” directly into the call-stack and
+               avoids the cost of task creation by default. We then pair this
+               compilation pipeline with a run-time system that dynamically
+               converts potential parallelism into actual parallel tasks.
+               Together, the compiler and run-time system guarantee that the
+               cost of parallelism remains low without losing its benefit. We
+               prove that our techniques have no asymptotic impact on the work
+               and span of parallel programs and thus preserve their asymptotic
+               properties. We implement the proposed techniques by extending the
+               MPL compiler for Parallel ML and show that it can eliminate the
+               burden of manual optimization while delivering good practical
+               performance.",
+  month     =  jan,
+  year      =  2024,
+  language  = "en"
+}
+
+@INPROCEEDINGS{futhark-flatten,
+  title     = "Incremental flattening for nested data parallelism",
+  author    = "Henriksen, Troels and Thorøe, Frederik and Elsman, Martin and
+               Oancea, Cosmin",
+  booktitle = "Proceedings of the 24th Symposium on Principles and Practice of
+               Parallel Programming",
+  publisher = "ACM",
+  address   = "New York, NY, USA",
+  pages     = "53--67",
+  abstract  = "Compilation techniques for nested-parallel applications that can
+               adapt to hardware and dataset characteristics are vital for
+               unlocking the power of modern hardware. This paper proposes such
+               a technique, which builds on flattening and is applied in the
+               context of a functional data-parallel language. Our solution uses
+               the degree of utilized parallelism as the driver for generating a
+               multitude of code versions, which together cover all possible
+               mappings of the application's regular nested parallelism to the
+               levels of parallelism supported by the hardware. These code
+               versions are then combined into one program by guarding them with
+               predicates, whose threshold values are automatically tuned to
+               hardware and dataset characteristics. Our unsupervised
+               method---of statically clustering datasets to code versions---is
+               different from autotuning work that typically searches for the
+               combination of code transformations producing a single version,
+               best suited for a specific dataset or on average for all
+               datasets. We demonstrate---by fully integrating our technique in
+               the repertoire of a compiler for the Futhark programming
+               language---significant performance gains on two GPUs for three
+               real-world applications, from the financial domain, and for six
+               Rodinia benchmarks.",
+  month     =  feb,
+  year      =  2019
+}
+
+@InProceedings{bbv-paper,
+  author =	{Melan\c{c}on, Olivier and Feeley, Marc and Serrano, Manuel},
+  title =	{{Static Basic Block Versioning}},
+  booktitle =	{38th European Conference on Object-Oriented Programming (ECOOP 2024)},
+  pages =	{28:1--28:27},
+  series =	{Leibniz International Proceedings in Informatics (LIPIcs)},
+  ISBN =	{978-3-95977-341-6},
+  ISSN =	{1868-8969},
+  year =	{2024},
+  volume =	{313},
+  editor =	{Aldrich, Jonathan and Salvaneschi, Guido},
+  publisher =	{Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  address =	{Dagstuhl, Germany},
+  URL =		{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2024.28},
+  URN =		{urn:nbn:de:0030-drops-208770},
+  doi =		{10.4230/LIPIcs.ECOOP.2024.28},
+  annote =	{Keywords: Compiler, Ahead-of-Time Compilation, Optimization, Dynamic Languages}
+}
+
+@MISC{layout-poly-paper,
+  title        = "Unboxed types for {OCaml} :: Jane Street",
+  abstract     = "Jane Street is a quantitative trading firm and liquidity
+                  provider with a unique focus on technology and collaborative
+                  problem solving.",
+  howpublished = "\url{https://www.janestreet.com/tech-talks/unboxed-types-for-ocaml/}",
+  note         = "Accessed: 2026-3-6",
+  language     = "en"
+}
+
+@ARTICLE{dataonly-paper,
+  title     = "Data-only flattening for nested data parallelism",
+  author    = "Bergstrom, Lars and Fluet, Matthew and Rainey, Mike and Reppy,
+               John and Rosen, Stephen and Shaw, Adam",
+  journal   = "SIGPLAN Not.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  48,
+  number    =  8,
+  pages     = "81--92",
+  abstract  = "Data parallelism has proven to be an effective technique for
+               high-level programming of a certain class of parallel
+               applications, but it is not well suited to irregular parallel
+               computations. Blelloch and others proposed nested data
+               parallelism (NDP) as a language mechanism for programming
+               irregular parallel applications in a declarative data-parallel
+               style. The key to this approach is a compiler transformation that
+               flattens the NDP computation and data structures into a form that
+               can be executed efficiently on a wide-vector SIMD architecture.
+               Unfortunately, this technique is ill suited to execution on
+               today's multicore machines. We present a new technique, called
+               data-only flattening , for the compilation of NDP, which is
+               suitable for multicore architectures. Data-only flattening
+               transforms nested data structures in order to expose programs to
+               various optimizations while leaving control structures intact. We
+               present a formal semantics of data-only flattening in a core
+               language with a rewriting system. We demonstrate the
+               effectiveness of this technique in the Parallel ML implementation
+               and we report encouraging experimental results across various
+               benchmark applications.",
+  month     =  aug,
+  year      =  2013,
+  language  = "en"
+}
+
+@PHDTHESIS{adt4hpc-paper,
+  title    = "Algebraic data types for high-performance computing",
+  author   = "Baudon, Thaïs",
+  editor   = "Henrio, Ludovic",
+  year     =  2024,
+  language = "en"
+}
+
+@INPROCEEDINGS{local-paper,
+  title     = "{LoCal}: a language for programs operating on serialized data",
+  author    = "Vollmer, Michael and Koparkar, Chaitanya and Rainey, Mike and
+               Sakka, Laith and Kulkarni, Milind and Newton, Ryan R",
+  booktitle = "Proceedings of the 40th ACM SIGPLAN Conference on Programming
+               Language Design and Implementation",
+  publisher = "ACM",
+  address   = "New York, NY, USA",
+  abstract  = "In a typical data-processing program, the representation of data
+               in memory is distinct from its representation in a serialized
+               form on disk. The former has pointers and arbitrary, sparse
+               layout, facilitating easy manipulation by a program, while the
+               latter is packed contiguously, facilitating easy I/O. We propose
+               a language, LoCal, to unify in-memory and serialized formats.
+               LoCal extends a region calculus into a location calculus,
+               employing a type system that tracks the byte-addressed layout of
+               all heap values. We formalize LoCal and prove type safety, and
+               show how LoCal programs can be inferred from unannotated source
+               terms. We transform the existing Gibbon compiler to use LoCal as
+               an intermediate language, with the goal of achieving a balance
+               between code speed and data compactness by introducing just
+               enough indirection into heap layouts, preserving the asymptotic
+               complexity of traditional representations, but working with
+               mostly or completely serialized data. We show that our approach
+               yields significant performance improvement over prior approaches
+               to operating on packed data, without abandoning idiomatic
+               programming with recursive functions.",
+  month     =  jun,
+  year      =  2019
+}
+
+@ARTICLE{realtime-sml-paper,
+  title     = "Adding real-time capabilities to a {SML} compiler",
+  author    = "Li, Muyuan and McArdle, Daniel E and Murphy, Jeffrey C and
+               Shivkumar, Bhargav and Ziarek, Lukasz",
+  journal   = "ACM SIGBED Rev.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  13,
+  number    =  2,
+  pages     = "8--13",
+  abstract  = "There has been much recent interest in adopting functional and
+               reactive programming for use in real-time system design. Moving
+               toward a more declarative methodology for developing real-time
+               systems purports to improve the fidelity of software. To study
+               the benefits of functional and reactive programming for real-time
+               systems, real-time aware functional compilers and language
+               runtimes are required. In this paper we examine the necessary
+               changes to a modern Standard ML compiler, MLton, to provide basic
+               support for real-time execution. We detail our current progress
+               in modifying MLton with a threading model that supports
+               priorities, a chunked object model to support real-time garbage
+               collection, and low level modification to execute on top of a
+               real-time operating system. We present preliminary numbers and
+               our work in progress prototype, which is able to boot ML programs
+               compiled with MLton on x86 machines.",
+  month     =  apr,
+  year      =  2016,
+  language  = "en"
+}
+
+@ARTICLE{double-steal-paper,
+  title     = "Double-ended bit-stealing for algebraic data types",
+  author    = "Elsman, Martin",
+  journal   = "Proc. ACM Program. Lang.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  8,
+  number    = "ICFP",
+  pages     = "88--120",
+  abstract  = "Algebraic data types are central to the development and
+               evaluation of most functional programs. It is therefore important
+               for compilers to choose compact and efficient representations of
+               such types, in particular to achieve good memory footprints for
+               applications. Algebraic data types are most often represented
+               using blocks of memory where the first word is used as a
+               so-called tag, carrying information about the constructor, and
+               the following words are used for carrying the constructor’s
+               arguments. As an optimisation, lists are usually represented more
+               compactly, using a technique called bit-stealing, which, in its
+               simplest form, uses the word-alignment property of pointers to
+               byte-addressed allocated memory to discriminate between the nil
+               constructor (often represented as 0 × 1 ) and the cons
+               constructor (aligned pointer to allocated pair). Because the
+               representation supports that all values can be held uniformly in
+               one machine word, possibly pointing to blocks of memory, type
+               erasure is upheld. However, on today’s 64-bit architectures,
+               memory addresses (pointers) are represented using only a subset
+               of the 64 bits available in a machine word, which leave many bits
+               unused. In this paper, we explore the use, not only of the
+               least-significant bits of pointers, but also of the
+               most-significant bits, for representing algebraic data types in a
+               full ML compiler. It turns out that, with such a particular
+               utilisation of otherwise unused bits, which we call double-ended
+               bit-stealing, it is possible to choose unboxed representations
+               for a large set of data types, while still not violating the
+               principle of uniform data-representations. Examples include
+               Patricia trees, union-find data structures, stream data types,
+               internal language representations for types and expressions, and
+               mutually recursive ASTs for full language definitions. The
+               double-ended bit-stealing technique is implemented in the MLKit
+               compiler and speedup ranges from 0 to 26 percent on benchmarks
+               that are influenced by the technique. For MLKit, which uses
+               abstract data types extensively, compilation speedups of around 9
+               percent are achieved for compiling MLton (another Standard ML
+               compiler) and for compiling MLKit itself.",
+  month     =  aug,
+  year      =  2024,
+  language  = "en"
+}

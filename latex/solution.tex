@@ -2207,7 +2207,25 @@ tested for pointer equality in \texttt{ref} cells (which are not impacted by
 \section{Evaluation}
 
 \subsection{Methodology}
-In the evalutat
+In the evalutation below, we will use two sets of benchmarks:
+\begin{enumerate}
+\item \texttt{parallel-ml-bench}: an MPL-specific benchmark suite introduced as
+  part of \cite{mpl-orig}. This benchmark suite is focused largely on
+  parallelism-friendly workloads, i.e. HPC, computational geometry, etc.
+
+\item The MLton benchmark suite: shipped as part of the MLton codebase, this
+  benchmark suite captures only single-core performance, and emphasizes some
+  more synthetic workloads to capture particular compiler capabilities (e.g. a
+  comparison between tail-recursive and non-tail-recursive Fibonacci
+  implementations).
+
+\end{enumerate}
+
+As we will see below, while the MLton benchmark suite does try to explicitly
+cover array flattening, the workloads it exhibits seem to under-weight the
+importance of the transformation.
+
+All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
 
 \hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
 
@@ -2215,8 +2233,39 @@ In the evalutat
 
 \hl{TODO: MEASUREMENTS}
 
-
 \section{Related Work}
+
+This work directly builds on the original \texttt{Flattening} transformation of
+\cite{flat-paper}, but extends it to a) handle additional cases where the
+callers cannot be ``unified'' to a single flat/non-flat representation (for
+non-array types), and b) more-agressively flatten cases related to arrays.
+
+%% ConApp-focused examples
+
+\cite{mlton-closure-paper} introduced the MLton defunctionalization pass, whose \texttt{datatype} objects we seek to eliminate through our \texttt{PreFlatten} pass. We, effectively, repurpose their control flow analysis in order to drive function specialization decisions.
+
+\cite{local-paper} and \cite{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format)
+
+\cite{double-steal-paper} also investigates a similar problem to our \texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the source language); however their contribution focuses on a novel, lossless in-memory representation for the ADT rather than optimize-out the ADT metadata entirely.
+
+\cite{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to "clean up" in the specialized blocks).
+
+\cite{manticore-arity-paper} treats a problem very similar to \cite{flat-paper}. Much of their complexity stems from performing the transformation on an higher-order IR, whereas we (like \cite{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
+
+The recent work \cite{closure-sharing-paper} examines the opposite optimization strategy to the one discussed here – introducing new layers of indirection in closure representations as a performance optimization. Like \cite{manticore-arity-paper}, their analysis differs substantially from anything in MLton, since MLton implements higher-order functions via defunctionalization rather than closure conversion.
+\cite{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
+
+%% DeepFlatten-focused examples
+
+\cite{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their "data-only flattening" is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations
+
+Various work at jane street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \cite{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
+
+\cite{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through clever low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \cite{mpl-sched-paper}.
+
+\cite{realtime-sml-paper} also investigates the impact of deep flattening optimizations on performance: the authors there disable \texttt{DeepFlatten} in order to avoid complexity when computing byte offsets for post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of different sizes. We avoid this issue by simply restricting ourselves to tuples with uniform element types and observe that this is sufficient for all opportunities in our benchmark suites.
+
+
 
 \hl{TODO}
 
