@@ -2277,6 +2277,74 @@ Various work at jane street for unboxed types in OCaml aims to materialize the s
 
 Items to follow up on from discussions:
 
+\subsection{7/14}
+\begin{itemize}
+\item Lit review
+
+  \begin{itemize}
+
+  \item Generally: say more! Can spend e.g. a full page on how we differ from
+    the flattening paper
+
+  \item The lit review should stand alone (readers may start with it)
+
+  \item Want to be superexplicit ``we pursue a more aggressive flattening
+    strategy'' -- how? what makes it more agressive? what do we do that they
+    don't?
+
+  \item Avoid lumping stuff toether: e.g. the two ``serialized data papers,''
+    the attempt to unify them as ``fast disk format'' is not really a match.
+    Something like ``manual control of serialized formats'' is better
+
+  \item Don't use raw /cite -- the sentences should read like the footnote
+    numbers don't exist. Use /citet to get better auto-formatat
+
+  \item To cite the Jane Street slide deck, best to try to make a bibtex entry
+    that includes the talk as well
+
+  \item Consider using multiple /subsection or /paragraph blocks
+
+  \item Be sure to tie every cited paper exactly to what we did
+
+  \item When contrasting, aim to emphasize fundamental differences of approach
+    rather than just incidental implementation differences (e.g. we are using
+    MLton and so we get some passes for free, but that doesn't make our strategy
+    conceptually simpler)
+
+  \end{itemize}
+
+\item Tuple-flattening ``meat''
+
+  \begin{itemize}
+  \item Aim for text to be standalone! The english should stand alone. Be sure
+    that we have concise, compact statements that describe what we do
+
+  \item E.g. from ``the basic intution is'' -- just state ``the intuition is
+    that we can optimize away matching pack/unpack operations by pushing them
+    through function calls'' and then call out to diagrams that describe what we
+    want to do
+
+  \item Extend the example to show how the later \texttt{simplify} passes
+    actually eliminate the tuple
+
+  \item Consider a single, complex example rather than starting off with an easy
+    case and adding complexity. We want it to be clear why we are necessary from
+    the very start.
+
+  \item For the algorithm part, we need to sketch it out more formally as
+    transformations on an AST (in addition to perhaps an informal English
+    description). Certainly the rewrite itself, maybe also the analysis (might
+    be OK for that to be more informal)
+
+  \item A useful way to write the AST transformation is ``[|foo bar = baz|] =
+    [|foo bar|] = [|baz|], where ....'' followed by a detailed explanation. The
+    transformation brackets can be subscripted by some symbol that indicates the
+    result of the analysis 
+
+  \end{itemize}
+
+\end{itemize}
+
 \subsection{6/29}
 \begin{itemize}
 \item Code snippets should be diagrams rather than inlined
