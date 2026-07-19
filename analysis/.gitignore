@@ -1,0 +1,17 @@
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual Environments
+jupyter-env/
+venv/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IPython / Jupyter history and config
+profile_default/
+ipython_config.py
