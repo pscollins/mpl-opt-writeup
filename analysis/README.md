@@ -1,4 +1,14 @@
-# Basics
+# Environment setup
+
+To build the virtualenv and install dependencies:
+```
+$ python3 -m venv env
+$ . env/bin/activate
+$ pip install -r requirements.txt
+```
+
+
+# Usage
 
 To activate the virtualenv:
 ```
