@@ -2225,6 +2225,37 @@ As we will see below, while the MLton benchmark suite does try to explicitly
 cover array flattening, the workloads it exhibits seem to under-weight the
 importance of the transformation.
 
+All measurements were performed using the same compiler binary on both test
+sides (MLton or MPL, respectively), using compiler flags to enable/disable
+passes as needed to test the impact of each optimization. All ratios are
+reported as \texttt{test / base}, i.e. <1.0 means ``smaller number on the test
+side'' (the ``good'' outcome) and >1.0 means ``bigger number on the
+test side (the ``bad'' outcome).
+
+In order to more-faithfully measure cases where our optimizations impacted only
+a small number of benchmarks (and to avoid including confusing noise in the
+geomean results), we exclude cases where the optimization under test did not
+change the generated code. In order to achieve bit-identical output binaries in
+this case, it was necessary to:
+\begin{itemize}
+
+\item Pass \texttt{-link-opt -s} to strip debug info (otherwise the C compiler
+  inserts strings into the binary that contain non-deterministic temporary
+  filenames)
+
+\item Manually override the ``magic number'' inserted by MLton into the
+  generated binary to a fixed, deterministic value: this magic number is formed
+  from hash of the compiler binary version (deterministic) and a call to
+  \texttt{Random.word ()} (not necessarily fixed, in case the optimization pass
+  advanced the state of the random number generator).
+
+The purpose of this value is just to enable MLton to more easily correlate its
+generated C code with the compiled binaries (for profiling and state
+serialization), so our choice to hardcode \texttt{0x0} has no impact on
+performance.
+
+\end{itemize}
+
 All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
 
 \hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
