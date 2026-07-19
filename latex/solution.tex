@@ -2279,15 +2279,30 @@ For the evaluation below, we use the following configuration:
 
 \paragraph{MLton benchmarks}
 \hl{TODO: THIS IS ON BAD GCP HW!}
+
+\hl{TODO: MORE RUNS TO CAPTURE NOISE?}
 \begin{figure}[htbp]
   \centering
-  % If using a subdirectory, it would be: \includegraphics[width=\textwidth]{figures/mlton_runtime_comparison.pdf}
   \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_mlton_run_mlton_vs_mlton.pdf}
-  \caption{Relative runtime comparison between MLton0 and MLton1. The baseline is represented at 0\%, with negative values indicating a performance improvement.}
-  \label{fig:mlton_runtime}
+  \caption{Relative run time for with- vs without-\texttt{PreFlatten}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_mlton_run_mlton_vs_mlton}
 \end{figure}
 
-See 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_mlton_compile_mlton_vs_mlton.pdf}
+  \caption{Relative compile time for with- vs without-\texttt{PreFlatten}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_mlton_compile_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_mlton_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{PreFlatten}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_mlton_size_mlton_vs_mlton}
+\end{figure}
+
+As we can see in \cref{fig:tuple_mlon_run_mlton_vs_mlton}, 
 
 
 \hl{TODO: MEASUREMENTS}
