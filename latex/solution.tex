@@ -2262,6 +2262,34 @@ All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
 
 \subsection{Results}
 
+\subsubsection{Tuple Flattening}
+For the evaluation below, we use the following configuration:
+\begin{itemize}
+
+\item \texttt{PreFlatten} runs after \texttt{Flatten} (in order to avoid
+  introducing duplication in the case where the \texttt{Flatten} global analysis
+  can already fix all callers)
+
+\item \texttt{PreFlatten} only transforms non-tail-recursive functions
+
+\item \texttt{PreFlatten} runs 10 ``recursive steps'' (\hl{TODO: EXPLAIN? REMOVE?}
+
+\end{itemize}
+
+
+\paragraph{MLton benchmarks}
+\hl{TODO: THIS IS ON BAD GCP HW!}
+\begin{figure}[htbp]
+  \centering
+  % If using a subdirectory, it would be: \includegraphics[width=\textwidth]{figures/mlton_runtime_comparison.pdf}
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_mlton_run_mlton_vs_mlton.pdf}
+  \caption{Relative runtime comparison between MLton0 and MLton1. The baseline is represented at 0\%, with negative values indicating a performance improvement.}
+  \label{fig:mlton_runtime}
+\end{figure}
+
+See 
+
+
 \hl{TODO: MEASUREMENTS}
 
 \section{Related Work}
