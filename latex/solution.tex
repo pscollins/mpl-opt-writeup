@@ -2282,6 +2282,9 @@ For the evaluation below, we use the following configuration:
 \hl{TODO: THIS IS ON BAD GCP HW! NEED TO RERUN}
 
 \hl{TODO: MORE RUNS TO CAPTURE NOISE?}
+
+\hl{TODO: FORMATTING IS BAD, HOW TO CONDENSE?}
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_mlton_run_mlton_vs_mlton.pdf}
@@ -2387,7 +2390,7 @@ The recent work \cite{closure-sharing-paper} examines the opposite optimization 
 
 Various work at jane street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \cite{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
 
-\cite{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through clever low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \cite{mpl-sched-paper}.
+\cite{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \cite{mpl-sched-paper}.
 
 \cite{realtime-sml-paper} also investigates the impact of deep flattening optimizations on performance: the authors there disable \texttt{DeepFlatten} in order to avoid complexity when computing byte offsets for post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of different sizes. We avoid this issue by simply restricting ourselves to tuples with uniform element types and observe that this is sufficient for all opportunities in our benchmark suites.
 
