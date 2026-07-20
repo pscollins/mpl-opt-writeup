@@ -2336,7 +2336,30 @@ For the evaluation below, we use the following configuration:
 
 \subsubsection{MLton Benchmarks}
 
-\hl{TODO: MEASUREMENTS}
+\hl{TODO: ON BAD MACHINE}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_mlton_run_mlton_vs_mlton.pdf}
+  \caption{Relative run time for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_mlton_run_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_mlton_compile_mlton_vs_mlton.pdf}
+  \caption{Relative compile time for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_mlton_compile_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_mlton_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_mlton_size_mlton_vs_mlton}
+\end{figure}
+
+\hl{TODO: SUSPECT THE MEASUREMENTS ABOVE WERE IN A BAD STATE. NEED TO RERUN ON CHAMELEON}
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
