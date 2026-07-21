@@ -25,9 +25,15 @@ def test_process_config(tmp_path):
         "tuple_mlton_run_mlton_vs_mlton.pdf",
         "tuple_mlton_compile_mlton_vs_mlton.pdf",
         "tuple_mlton_size_mlton_vs_mlton.pdf",
+        "chart_info.md",
     ]
 
     for fname in expected_files:
         output_file = output_dir / fname
         assert output_file.exists(), f"Expected chart file {fname} was not created."
         assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+
+    chart_info_content = (output_dir / "chart_info.md").read_text(encoding="utf-8")
+    assert "Data generated at " in chart_info_content
+    assert "using the following config:" in chart_info_content
+

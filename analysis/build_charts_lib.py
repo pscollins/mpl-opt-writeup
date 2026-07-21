@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import dataclass
+from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -94,6 +95,13 @@ def plot_mlton_con_flattening(out_dir='charts'):
 
 def process_config(config: dict):
     out_dir = config["output_directory"]
+    os.makedirs(out_dir, exist_ok=True)
+
+    timestamp = datetime.now()
+    chart_info_path = os.path.join(out_dir, "chart_info.md")
+    with open(chart_info_path, "w", encoding="utf-8") as f:
+        f.write(f"Data generated at {timestamp} using the following config:\n\n{json.dumps(config, indent=2)}\n")
+
     if "mlton_benchmarks_mlton_vs_mlton" in config:
         for type_name, data_file in config["mlton_benchmarks_mlton_vs_mlton"].items():
             plot_mlton_vs_mlton(data_file, type_name, out_dir=out_dir)
