@@ -99,6 +99,7 @@ def process_config(config: dict):
 
     timestamp = datetime.now()
     chart_info_path = os.path.join(out_dir, "chart_info.md")
+    print(f'Saving run info to {chart_info_path}')
     with open(chart_info_path, "w", encoding="utf-8") as f:
         f.write(f"Data generated at {timestamp} using the following config:\n\n{json.dumps(config, indent=2)}\n")
 
