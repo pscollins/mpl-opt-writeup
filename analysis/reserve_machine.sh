@@ -31,8 +31,8 @@ fi
 # Example: "1d5h30m" becomes "1 days 5 hours 30 minutes
 TIME_OFFSET=$(echo "$DURATION" | sed -E 's/([0-9]+)d/\1 days /g; s/([0-9]+)h/\1 hours /g; s/([0-9]+)m/\1 minutes /g')
 
-# Calculate only the end date in YYYY-MM-DD HH:MM format
-END_DATE=$(date -d "now + $TIME_OFFSET" +"%Y-%m-%d %H:%M")
+# Calculate only the end date in YYYY-MM-DD HH:MM format (in UTC for OpenStack)
+END_DATE=$(date -u -d "now + $TIME_OFFSET" +"%Y-%m-%d %H:%M")
 
 echo "Requesting immediate reservation..."
 echo "End Date: $END_DATE"
