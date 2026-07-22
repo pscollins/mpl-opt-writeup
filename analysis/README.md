@@ -22,6 +22,12 @@ Now, before each use:
 $ source ./chameleon_env.sh
 ```
 
+TODO: pick a machine family
+
+To create a new reservation:
+```
+
+```
 
 
 # Usage
