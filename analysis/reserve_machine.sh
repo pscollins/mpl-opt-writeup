@@ -44,4 +44,4 @@ source ./env/bin/activate
 openstack reservation lease create \
   --reservation min=1,max=1,resource_type=physical:host,resource_properties='["=", "$node_type", "compute_skylake"]' \
   --end-date "$END_DATE" \
-  test_reservation
+  flattening_tests
