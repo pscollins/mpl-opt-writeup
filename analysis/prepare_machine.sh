@@ -19,3 +19,11 @@ openstack server create \
           --hint reservation=$RESERVATION_ID \
           $INSTANCE_NAME
 
+# Allocate the IP and extract only the address string
+RESERVED_IP=$(openstack floating ip create public -c floating_ip_address -f value)
+
+# Print the IP to the terminal for your reference
+echo "Successfully allocated Floating IP: $RESERVED_IP"
+
+# Attach the IP to your bare metal instance
+openstack server add floating ip $INSTANCE_NAME $RESERVED_IP

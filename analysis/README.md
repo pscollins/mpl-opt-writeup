@@ -32,6 +32,13 @@ $ ./reserve_machine.sh
 $ ./prepare_machine.sh
 ```
 
+When done, be sure to release any reserved IPs:
+```
+# Find allocated IPs
+$ openstack floating ip list
+# Free up the newly-allocated one
+$ openstack floating ip delete $IP
+```
 
 # Usage
 
