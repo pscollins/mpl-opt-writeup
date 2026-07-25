@@ -12,6 +12,7 @@ bleach==6.4.0
 ccauth @ git+https://github.com/ChameleonCloud/ccauth.git@7650b494eb79c6ac0beccac114081f88e22bb167
 certifi==2026.6.17
 cffi==2.1.0
+chameleon-blazarclient==3.6.2
 charset-normalizer==3.4.9
 cliff==4.15.0
 cmd2==4.1.2

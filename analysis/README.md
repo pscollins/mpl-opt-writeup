@@ -13,7 +13,6 @@ $ pip install -r requirements.txt
 Initial setup:
 ```
 $ ccauth login
-$ source ./CHI-251524-openrc.sh
 $ ccauth clouds-yaml --all-sites --all-projects --output ./clouds.yaml
 $ source ./chameleon_env.sh
 $ openstack keypair create --public-key ~/.ssh/id_ed25519.pub mpl-testing
@@ -28,7 +27,7 @@ TODO: pick a machine family
 
 To create a new reservation:
 ```
-$ ./reserve_machine.sh
+$ ./reserve_machine.sh --duration=Nh
 $ ./prepare_machine.sh
 ```
 
