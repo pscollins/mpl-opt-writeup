@@ -31,12 +31,9 @@ $ ./reserve_machine.sh --duration=Nh
 $ ./prepare_machine.sh
 ```
 
-When done, be sure to release any reserved IPs:
+When done, release all reserved resources (server instance, floating IPs, and lease):
 ```
-# Find allocated IPs
-$ openstack floating ip list
-# Free up the newly-allocated one
-$ openstack floating ip delete $IP
+$ ./delete_machine.sh
 ```
 
 # Usage

@@ -42,6 +42,6 @@ echo "---------------------------"
 source ./chameleon_env.sh
 source ./env/bin/activate
 openstack reservation lease create \
-  --reservation min=1,max=1,resource_type=physical:host,resource_properties='["=", "$node_type", "compute_skylake"]' \
+  --reservation min=1,max=1,resource_type=physical:host,resource_properties='["=", "$node_type", "compute_zen5"]' \
   --end-date "$END_DATE" \
   flattening_tests
