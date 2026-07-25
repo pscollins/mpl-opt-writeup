@@ -15,7 +15,7 @@ Initial setup:
 $ ccauth login
 $ ccauth clouds-yaml --all-sites --all-projects --output ./clouds.yaml
 $ source ./chameleon_env.sh
-$ openstack keypair create --public-key ~/.ssh/id_ed25519.pub mpl-testing
+$ openstack keypair create --public-key ~/.ssh/id_ed25519.pub mpl-testing-$(hostname)
 ```
 
 Now, before each use:

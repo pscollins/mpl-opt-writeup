@@ -4,7 +4,7 @@ set -x
 
 # Setup to configure the reserved instance after running ./reserve_machine.sh
 INSTANCE_NAME=flattening_tests
-KEY_NAME=mpl-testing
+KEY_NAME=mpl-testing-$(hostname)
 
 # Grab the ID for the common `sharednet1`
 SHAREDNET1_ID=$(openstack network show sharednet1 -f json | jq -r '.id')
