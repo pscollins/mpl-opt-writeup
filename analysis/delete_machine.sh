@@ -28,10 +28,10 @@ fi
 
 # 2. Release / Delete Floating IPs
 echo "Checking for floating IPs..."
-FLOATING_IPS=$(openstack floating ip list -f json 2>/dev/null | jq -r '.[].id' 2>/dev/null || true)
-if [ -n "$FLOATING_IPS" ] && [ "$FLOATING_IPS" != "null" ]; then
+FLOATING_IPS=$(openstack floating ip list -c ID -f value 2>/dev/null || true)
+if [ -n "$FLOATING_IPS" ]; then
   for IP_ID in $FLOATING_IPS; do
-    if [ "$IP_ID" != "null" ] && [ -n "$IP_ID" ]; then
+    if [ -n "$IP_ID" ]; then
       echo "Deleting floating IP '$IP_ID'..."
       openstack floating ip delete "$IP_ID" || true
     fi
