@@ -31,6 +31,11 @@ $ ./reserve_machine.sh --duration=Nh
 $ ./prepare_machine.sh
 ```
 
+To check the status of reserved resources (lease, server, floating IPs):
+```
+$ ./check_status.sh
+```
+
 When done, release all reserved resources (server instance, floating IPs, and lease):
 ```
 $ ./delete_machine.sh
