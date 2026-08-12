@@ -19,6 +19,20 @@ fi
 
 RESERVATION_ID=$(openstack reservation lease show "$LEASE_ID" -c reservations -f json | jq -r '.reservations[0].id')
 
+echo "Waiting for reservation lease '$LEASE_ID' to become ACTIVE..."
+while true; do
+  STATUS=$(openstack reservation lease show "$LEASE_ID" -c status -f value)
+  if [ "$STATUS" = "ACTIVE" ]; then
+    echo "Lease '$LEASE_ID' is ACTIVE."
+    break
+  elif [ "$STATUS" = "ERROR" ]; then
+    echo "Error: Reservation lease '$LEASE_ID' is in ERROR state."
+    exit 1
+  fi
+  echo "Current lease status: $STATUS. Waiting 5 seconds..."
+  sleep 5
+done
+
 openstack server create \
           --wait \
           --image CC-Ubuntu26.04 \
