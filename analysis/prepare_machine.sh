@@ -35,7 +35,7 @@ done
 
 openstack server create \
           --wait \
-          --image CC-Ubuntu26.04 \
+          --image flattening_tests_with_mlton \
           --flavor baremetal \
           --key-name $KEY_NAME \
           --nic net-id=$SHAREDNET1_ID \
