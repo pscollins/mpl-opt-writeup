@@ -20,6 +20,7 @@ fi
 RESERVATION_ID=$(openstack reservation lease show "$LEASE_ID" -c reservations -f json | jq -r '.reservations[0].id')
 
 openstack server create \
+          --wait \
           --image CC-Ubuntu26.04 \
           --flavor baremetal \
           --key-name $KEY_NAME \
