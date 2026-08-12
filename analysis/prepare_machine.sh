@@ -8,8 +8,16 @@ KEY_NAME=mpl-testing-$(hostname)
 
 # Grab the ID for the common `sharednet1`
 SHAREDNET1_ID=$(openstack network show sharednet1 -f json | jq -r '.id')
-# Grab the ID for our specific lease
-RESERVATION_ID=$(openstack reservation lease show $INSTANCE_NAME -c reservations -f json | jq -r '.reservations[0].id')
+# Grab the ID for our specific active lease
+LEASE_ID=$(openstack reservation lease list -f json | jq -r --arg name "$INSTANCE_NAME" '[.[] | select(.name==$name)] | sort_by(.end_date) | last | .id // empty')
+
+if [ -z "$LEASE_ID" ]; then
+  echo "Error: No reservation lease found for '$INSTANCE_NAME'."
+  echo "Run ./reserve_machine.sh first."
+  exit 1
+fi
+
+RESERVATION_ID=$(openstack reservation lease show "$LEASE_ID" -c reservations -f json | jq -r '.reservations[0].id')
 
 openstack server create \
           --image CC-Ubuntu26.04 \

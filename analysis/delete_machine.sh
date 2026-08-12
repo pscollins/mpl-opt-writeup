@@ -43,9 +43,10 @@ fi
 
 # 3. Delete Reservation Lease
 echo "Checking for reservation lease '$INSTANCE_NAME'..."
-if openstack reservation lease show "$INSTANCE_NAME" >/dev/null 2>&1; then
-  echo "Deleting reservation lease '$INSTANCE_NAME'..."
-  openstack reservation lease delete "$INSTANCE_NAME"
+LEASE_ID=$(openstack reservation lease list -f json | jq -r --arg name "$INSTANCE_NAME" '[.[] | select(.name==$name)] | sort_by(.end_date) | last | .id // empty')
+if [ -n "$LEASE_ID" ]; then
+  echo "Deleting reservation lease '$LEASE_ID' ('$INSTANCE_NAME')..."
+  openstack reservation lease delete "$LEASE_ID"
   echo "Reservation lease '$INSTANCE_NAME' deleted successfully."
 else
   echo "Reservation lease '$INSTANCE_NAME' not found or already deleted."

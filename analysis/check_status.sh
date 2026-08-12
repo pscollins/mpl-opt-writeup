@@ -14,8 +14,9 @@ echo "=========================================="
 
 echo ""
 echo "--- 1. Reservation Lease ---"
-if openstack reservation lease show "$INSTANCE_NAME" >/dev/null 2>&1; then
-  openstack reservation lease show "$INSTANCE_NAME" -f table
+LEASE_ID=$(openstack reservation lease list -f json | jq -r --arg name "$INSTANCE_NAME" '[.[] | select(.name==$name)] | sort_by(.end_date) | last | .id // empty')
+if [ -n "$LEASE_ID" ]; then
+  openstack reservation lease show "$LEASE_ID" -f table
 else
   echo "No reservation lease found with name '$INSTANCE_NAME'."
 fi
