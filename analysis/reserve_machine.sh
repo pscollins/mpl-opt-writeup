@@ -4,6 +4,7 @@
 set -e
 
 DURATION=""
+NODE_TYPE="compute_icelake_r750"
 
 # Parse command line arguments
 for i in "$@"; do
@@ -12,9 +13,13 @@ for i in "$@"; do
       DURATION="${i#*=}"
       shift
       ;;
+    --node-type=*)
+      NODE_TYPE="${i#*=}"
+      shift
+      ;;
     *)
       echo "Unknown option: $i"
-      echo "Usage: ./reserve_machine.sh --duration=<time>"
+      echo "Usage: ./reserve_machine.sh --duration=<time> [--node-type=<type>]"
       exit 1
       ;;
   esac
@@ -35,13 +40,14 @@ TIME_OFFSET=$(echo "$DURATION" | sed -E 's/([0-9]+)d/\1 days /g; s/([0-9]+)h/\1 
 END_DATE=$(date -u -d "now + $TIME_OFFSET" +"%Y-%m-%d %H:%M")
 
 echo "Requesting immediate reservation..."
-echo "End Date: $END_DATE"
+echo "Node Type: $NODE_TYPE"
+echo "End Date:  $END_DATE"
 echo "---------------------------"
 
 # Execute the OpenStack command (omitting --start-date triggers the "now" default)
 source ./chameleon_env.sh
 source ./env/bin/activate
 openstack reservation lease create \
-          --reservation min=1,max=1,resource_type=physical:host,resource_properties='["=", "$node_type", "compute_icelake_r650"]' \
+  --reservation min=1,max=1,resource_type=physical:host,resource_properties="[\"==\", \"\$node_type\", \"$NODE_TYPE\"]" \
   --end-date "$END_DATE" \
   flattening_tests

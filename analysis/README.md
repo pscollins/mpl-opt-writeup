@@ -23,11 +23,14 @@ Now, before each use:
 $ source ./chameleon_env.sh
 ```
 
-TODO: pick a machine family
+To check host capacity before creating a reservation:
+```
+$ ./check_capacity.sh [--duration=Nh]
+```
 
 To create a new reservation:
 ```
-$ ./reserve_machine.sh --duration=Nh
+$ ./reserve_machine.sh --duration=Nh [--node-type=<type>]
 $ ./prepare_machine.sh
 ```
 
