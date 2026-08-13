@@ -1,9 +1,9 @@
-Data generated at 2026-07-21 09:39:07.810851 using the following config:
+Data generated at 2026-08-12 20:03:29.129327 using the following config:
 
 {
   "output_directory": "charts/",
   "mlton_benchmarks_mlton_vs_mlton": {
-    "tuple": "fix_hashes4:big-mpl:99fe634ab:20260719_202336.jsonl",
-    "con": "run_con1:big-mpl:1cae85c45:20260719_222637.jsonl"
+    "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl",
+    "con": "test_tuple_flatten_cc_icelake:flattening-tests:41f63ec71:20260725_203206.jsonl"
   }
 }
