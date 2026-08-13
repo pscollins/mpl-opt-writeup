@@ -6,6 +6,11 @@ set -x
 INSTANCE_NAME=flattening_tests
 KEY_NAME=mpl-testing-$(hostname)
 
+# Use our pre-prepared image
+# IMAGE_NAME=CC-Ubuntu24.04
+# Has MLton installed -- based on CC-Ubuntu26.04
+IMAGE_NAME=flattening_tests_with_mlton
+
 # Grab the ID for the common `sharednet1`
 SHAREDNET1_ID=$(openstack network show sharednet1 -f json | jq -r '.id')
 # Grab the ID for our specific active lease
@@ -35,7 +40,7 @@ done
 
 openstack server create \
           --wait \
-          --image CC-Ubuntu24.04 \
+          --image $IMAGE_NAME \
           --flavor baremetal \
           --key-name $KEY_NAME \
           --nic net-id=$SHAREDNET1_ID \
