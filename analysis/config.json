@@ -1,8 +1,17 @@
 {
   "output_directory": "charts/",
   "mlton_benchmarks_mlton_vs_mlton": {
+    "compiler": "mlton",
+    "suite": "mlton",
     "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl",
     "con": "test_tuple_flatten_cc_icelake:flattening-tests:41f63ec71:20260725_203206.jsonl"
+  },
+  "parallel_bench_benchmarks_mlton_vs_mlton": {
+    "compiler": "mlton",
+    "suite": "parallel_bench",
+    "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
+    "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl"
   }
 }
+
 
