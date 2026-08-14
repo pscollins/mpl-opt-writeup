@@ -5,4 +5,6 @@ solution:
 	pdflatex -shell-escape solution.tex
 
 clean:
-	rm *.aux *.log *.out
+	rm -f *.aux *.log *.out *.toc *.lof *.lot *.synctex.gz *.fls *.fdb_latexmk *.bbl *.blg *.bcf *.run.xml *.nav *.snm *.vrb *.idx *.ind *.ilg
+
+.PHONY: clean
