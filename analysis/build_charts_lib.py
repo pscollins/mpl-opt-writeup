@@ -28,7 +28,15 @@ def safe_std(all_abs_ratios):
 
 
 # Plots data from the parallel-ml-bench suite
-def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', abbrevs=('mlton-baseline', 'mlton'), out_dir='charts'):
+def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', out_dir='charts'):
+    # Infer the name of the test config by removing the -baseline version
+    configs = set(df[COMPILER_NAME_FIELD_PARALLEL].dropna().unique())
+    if 'mlton-baseline' not in configs:
+        raise ValueError(f"Baseline 'mlton-baseline' not found in compiler configurations: {configs}")
+    configs.remove('mlton-baseline')
+    assert len(configs) == 1, f"Expected exactly 1 test configuration after removing 'mlton-baseline', found {len(configs)}: {configs}"
+    test_key = next(iter(configs))
+
     # Remove columns we don't care about
     filtered = df[['bench', COMPILER_NAME_FIELD_PARALLEL, values, CHECKSUM_FIELD_PARALLEL]]
     # Remove benchmarks with identical binaries
@@ -39,7 +47,7 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
     pivot = filtered.pivot(index='bench', columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
     # Calculate the ratio (<1 is good, >1 is bad) between pairs of trials
     all_abs_ratios = pivot.apply(lambda row:
-                              np.array(row[abbrevs[1]]) / np.array(row[abbrevs[0]]),
+                              np.array(row[test_key]) / np.array(row['mlton-baseline']),
                               axis=1)
     mean_abs_ratios = all_abs_ratios.apply(np.mean)
     std_abs_ratios = all_abs_ratios.apply(safe_std)
