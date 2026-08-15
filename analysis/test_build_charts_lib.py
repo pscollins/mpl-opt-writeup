@@ -221,4 +221,152 @@ def test_plot_parallel_bench_invalid_configs(tmp_path):
         plot_parallel_bench(df_multiple_test, out_dir=str(tmp_path))
 
 
+def test_process_config_mpl_parallel_bench(tmp_path):
+    output_dir = tmp_path / "charts_mpl"
+    test_config_path = tmp_path / "test_config_mpl.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "tuple_parallel_bench_run_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
+        "chart_info.md",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected chart file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+
+
+def test_infer_configs():
+    import pytest
+    import pandas as pd
+    from build_charts_lib import infer_configs
+
+    # Explicit abbrevs passed
+    df = pd.DataFrame({'config': ['a', 'b']})
+    assert infer_configs(df, abbrevs=('c1', 'c2')) == ('c1', 'c2')
+
+    # Baseline mlton-baseline + 1 test config
+    df = pd.DataFrame({'config': ['mlton-baseline', 'mlton-opt']})
+    assert infer_configs(df) == ('mlton-baseline', 'mlton-opt')
+
+    # Baseline mpl-baseline + 1 test config
+    df = pd.DataFrame({'config': ['mpl-baseline', 'mpl-tuple']})
+    assert infer_configs(df) == ('mpl-baseline', 'mpl-tuple')
+
+    # Non-allowable baseline name (e.g. 'custom-baseline') should raise ValueError
+    df = pd.DataFrame({'config': ['custom-baseline', 'mpl-opt']})
+    with pytest.raises(ValueError):
+        infer_configs(df)
+
+    # Invalid: no baseline and multiple configs
+    df = pd.DataFrame({'config': ['opt1', 'opt2', 'opt3']})
+    with pytest.raises(ValueError):
+        infer_configs(df)
+
+
+def test_plot_parallel_bench_cores(tmp_path):
+    import pandas as pd
+    from build_charts_lib import plot_parallel_bench_cores
+
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[1.0, 1.1], [0.5, 0.55], [0.8, 0.85], [0.4, 0.45]],
+        'binary_md5': ['hash_base', 'hash_base', 'hash_opt', 'hash_opt'],
+    })
+
+    out_file = "test_cores_chart"
+    plot_parallel_bench_cores(df, title="Test Cores", out_filename=out_file, out_dir=str(tmp_path))
+    created = tmp_path / f"{out_file}.pdf"
+    assert created.exists()
+    assert created.stat().st_size > 0
+
+
+def test_plot_parallel_bench_size(tmp_path):
+    import pandas as pd
+    from build_charts_lib import plot_parallel_bench_size
+
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1'],
+        'procs': [1, 1],
+        'config': ['mpl-baseline', 'mpl-opt'],
+        'binary_bytes': [1000, 900],
+        'binary_md5': ['hash_base', 'hash_opt'],
+    })
+
+    out_file = "test_size_chart"
+    plot_parallel_bench_size(df, title="Test Size", out_filename=out_file, out_dir=str(tmp_path))
+    created = tmp_path / f"{out_file}.pdf"
+    assert created.exists()
+    assert created.stat().st_size > 0
+
+
+def test_process_config_all_sections(tmp_path):
+    output_dir = tmp_path / "charts_all"
+    test_config_path = tmp_path / "test_config_all.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "mlton_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "mlton",
+            "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl"
+        },
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl"
+        },
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "tuple_mlton_run_mlton_vs_mlton.pdf",
+        "tuple_mlton_compile_mlton_vs_mlton.pdf",
+        "tuple_mlton_size_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_run_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_size_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_run_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
+        "chart_info.md",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected chart file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+
+
+
 

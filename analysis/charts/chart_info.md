@@ -1,4 +1,4 @@
-Data generated at 2026-08-15 10:18:12.270330 using the following config:
+Data generated at 2026-08-15 13:22:43.472629 using the following config:
 
 {
   "output_directory": "charts/",
@@ -17,5 +17,13 @@ Data generated at 2026-08-15 10:18:12.270330 using the following config:
     "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl",
     "aos": "cc_aos_flatten:260814-144252:flattening-tests:b4d8ba41a1a341b3a2390460f9f14e4babbc05ea:260814-144252.processed.jsonl",
     "soa": "cc_soa_flatten:260814-161510:flattening-tests:e979d4dcc72fa0405eaed998063f4acda35193e8:260814-161510.processed.jsonl"
+  },
+  "parallel_bench_benchmarks_mpl_vs_mpl": {
+    "compiler": "mpl",
+    "suite": "parallel_bench",
+    "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
+    "con": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
+    "aos": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
+    "soa": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
   }
 }
