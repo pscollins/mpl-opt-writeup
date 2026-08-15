@@ -149,17 +149,6 @@ def plot_parallel_bench_vs_mlton(data, type_name='tuple', out_dir='charts'):
         plot_parallel_bench(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
 
 
-# Generate all MLton-vs-MLton tuple flattening charts
-def plot_mlton_tuple_flattening(out_dir='charts'):
-    data = 'fix_hashes4:big-mpl:99fe634ab:20260719_202336.jsonl'
-    plot_mlton_vs_mlton(data, 'tuple', out_dir=out_dir)
-
-
-def plot_mlton_con_flattening(out_dir='charts'):
-    data = 'run_con1:big-mpl:1cae85c45:20260719_222637.jsonl'
-    plot_mlton_vs_mlton(data, 'con', out_dir=out_dir)
-
-
 def process_config(config: dict):
     out_dir = config["output_directory"]
     os.makedirs(out_dir, exist_ok=True)
