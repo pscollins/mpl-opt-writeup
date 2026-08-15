@@ -2331,7 +2331,7 @@ benchmarks.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_mlton_size_mlton_vs_mlton.pdf}
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/tuple_parallel_bench_size_mlton_vs_mlton.pdf}
   \caption{Relative binary size for with- vs without-\texttt{PreFlatten}, applied to tuple constructors. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
   \label{fig:tuple_parallel_bench_size_mlton_vs_mlton}
 \end{figure}
@@ -2393,7 +2393,7 @@ For the evaluation below, we use the following configuration:
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_mlton_size_mlton_vs_mlton.pdf}
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/con_parallel_bench_size_mlton_vs_mlton.pdf}
   \caption{Relative binary size for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp}. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
   \label{fig:con_parallel_bench_size_mlton_vs_mlton}
 \end{figure}
@@ -2408,11 +2408,97 @@ For the evaluation below, we use the following configuration:
 
 \subsubsection{MLton Benchmarks}
 
-\hl{TODO: MEASUREMENTS}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/aos_mlton_run_mlton_vs_mlton.pdf}
+  \caption{Relative run time for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_mlton_run_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/aos_mlton_compile_mlton_vs_mlton.pdf}
+  \caption{Relative compile time for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_mlton_compile_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/aos_mlton_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_mlton_size_mlton_vs_mlton}
+\end{figure}
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
+\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+
+\hl{TODO: SKIPPED COMPILE SIZE}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/aos_parallel_bench_run_mlton_vs_mlton.pdf}
+  \caption{Relative run time for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
+  \label{fig:aos_parallel_bench_run_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/aos_parallel_bench_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
+  \label{fig:aos_parallel_bench_size_mlton_vs_mlton}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
 \hl{TODO: MEASUREMENTS}
+
+\subsection{SoA Flattening}
+
+\hl{TODO: DESCRIBE}
+
+\subsubsection{MLton Benchmarks}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/soa_mlton_run_mlton_vs_mlton.pdf}
+  \caption{Relative run time for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_mlton_run_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/soa_mlton_compile_mlton_vs_mlton.pdf}
+  \caption{Relative compile time for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_mlton_compile_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/soa_mlton_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_mlton_size_mlton_vs_mlton}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+
+\hl{TODO: SKIPPED COMPILE SIZE}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/soa_parallel_bench_run_mlton_vs_mlton.pdf}
+  \caption{Relative run time for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
+  \label{fig:soa_parallel_bench_run_mlton_vs_mlton}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../analysis/charts/soa_parallel_bench_size_mlton_vs_mlton.pdf}
+  \caption{Relative binary size for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation. <0\% represents an improvement, >0\% represents a regression. Targets the \texttt{parallel-ml-bench} benchmark suite.}
+  \label{fig:soa_parallel_bench_size_mlton_vs_mlton}
+\end{figure}
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
