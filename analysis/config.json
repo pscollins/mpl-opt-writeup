@@ -19,10 +19,10 @@
   "parallel_bench_benchmarks_mpl_vs_mpl": {
     "compiler": "mpl",
     "suite": "parallel_bench",
-    "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
-    "con": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
-    "aos": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl",
-    "soa": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+    "tuple": "mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl",
+    "con": "mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl",
+    "aos": "mpl_aos_full_parallel_mpl:260815-192835:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-192835.processed.jsonl",
+    "soa": "mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl"
   }
 }
 
