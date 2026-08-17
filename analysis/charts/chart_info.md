@@ -1,14 +1,14 @@
-Data generated at 2026-08-17 08:55:56.268930 using the following config:
+Data generated at 2026-08-17 09:23:47.673746 using the following config:
 
 {
   "output_directory": "charts/",
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl",
-    "con": "test_tuple_flatten_cc_icelake:flattening-tests:41f63ec71:20260725_203206.jsonl",
-    "aos": "test_aos:flattening-tests:cd71a086d:20260814_181551.jsonl",
-    "soa": "test_soa:flattening-tests:a47df0e7f:20260814_201829.jsonl"
+    "tuple": "test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl",
+    "con": "test_conapp_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_193112.jsonl",
+    "aos": "test_aos_flatten_full_mlton_mlton:flattening-tests:75df6a4:20260816_153128.jsonl",
+    "soa": "test_soa_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_173128.jsonl"
   },
   "parallel_bench_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
