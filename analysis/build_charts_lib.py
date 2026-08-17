@@ -74,14 +74,13 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
     std_abs_ratios = all_abs_ratios.apply(safe_std)
     # Convert to relative_pct (<0% is good, >0% is bad)
     relative_pct = (mean_abs_ratios - 1) * 100
+    std_pct = std_abs_ratios * 100
 
     results_df = pd.DataFrame({
         'bench': pivot.index,
-        'mean_ratio': mean_abs_ratios.values,
-        'std_ratio': std_abs_ratios.values,
         'relative_pct': relative_pct.values,
-        'std_pct': std_abs_ratios.values * 100,
-    })
+        'std_pct': std_pct.values,
+    }).round(3)
 
     ax = relative_pct.plot(kind='bar',
                            yerr=std_abs_ratios)
@@ -137,17 +136,22 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
     mean_abs_ratios = all_abs_ratios.apply(np.mean)
     std_abs_ratios = all_abs_ratios.apply(safe_std)
 
+    relative_pct = (mean_abs_ratios.values - 1) * 100
+    std_pct = std_abs_ratios.values * 100
+
     results_df = pd.DataFrame({
         'bench': [idx[0] for idx in pivot.index],
         'procs': [idx[1] for idx in pivot.index],
-        'mean_ratio': mean_abs_ratios.values,
-        'std_ratio': std_abs_ratios.values,
-        'relative_pct': (mean_abs_ratios.values - 1) * 100,
-        'std_pct': std_abs_ratios.values * 100,
-    })
+        'relative_pct': relative_pct,
+        'std_pct': std_pct,
+    }).round(3)
 
     # 5. Add an additional series for the geomean speedup at each core count
-    geomean_per_proc = results_df.groupby('procs')['mean_ratio'].apply(
+    df_with_ratios = pd.DataFrame({
+        'procs': [idx[1] for idx in pivot.index],
+        'mean_ratio': mean_abs_ratios.values,
+    })
+    geomean_per_proc = df_with_ratios.groupby('procs')['mean_ratio'].apply(
         lambda s: np.exp(np.mean(np.log(s.dropna())))
     )
     geomean_pct = (geomean_per_proc - 1) * 100
@@ -157,8 +161,15 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
     markers = ['o', 's', '^', 'v', 'D', 'p', 'h', '*', 'X', '<', '>']
     benches = sorted(results_df['bench'].unique())
 
+    plot_df = pd.DataFrame({
+        'bench': [idx[0] for idx in pivot.index],
+        'procs': [idx[1] for idx in pivot.index],
+        'relative_pct': relative_pct,
+        'std_pct': std_pct,
+    })
+
     for i, bench in enumerate(benches):
-        bench_data = results_df[results_df['bench'] == bench].sort_values('procs')
+        bench_data = plot_df[plot_df['bench'] == bench].sort_values('procs')
         marker = markers[i % len(markers)]
         ax.errorbar(
             bench_data['procs'],
@@ -255,9 +266,8 @@ def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0
         'bench': pivot.index,
         abbrevs[0]: pivot[abbrevs[0]].values,
         abbrevs[1]: pivot[abbrevs[1]].values,
-        'mean_ratio': abs_ratio.values,
         'relative_pct': pivot['relative_pct'].values,
-    })
+    }).round(3)
 
     ax = (pivot['relative_pct']).plot(kind='bar')
 

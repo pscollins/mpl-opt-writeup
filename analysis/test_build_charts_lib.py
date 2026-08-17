@@ -328,7 +328,7 @@ def test_plot_parallel_bench_cores(tmp_path):
     assert created_csv.exists()
     assert created_csv.stat().st_size > 0
     csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'procs', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert list(csv_df.columns) == ['bench', 'procs', 'relative_pct', 'std_pct']
     assert len(csv_df) == 2
 
 
@@ -351,9 +351,8 @@ def test_plot_parallel_bench_size(tmp_path):
     assert created_csv.exists()
     assert created_csv.stat().st_size > 0
     csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
     assert csv_df.iloc[0]['bench'] == 'bench1'
-    assert csv_df.iloc[0]['mean_ratio'] == pytest.approx(0.9)
     assert csv_df.iloc[0]['relative_pct'] == pytest.approx(-10.0)
 
 
@@ -376,9 +375,9 @@ def test_plot_parallel_bench_size_multicore(tmp_path):
     assert created_csv.exists()
     assert created_csv.stat().st_size > 0
     csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
     assert len(csv_df) == 1
-    assert csv_df.iloc[0]['mean_ratio'] == pytest.approx(0.9)
+    assert csv_df.iloc[0]['relative_pct'] == pytest.approx(-10.0)
 
 
 def test_process_config_all_sections(tmp_path):
@@ -452,13 +451,12 @@ def test_plot_mlton_csv_content(tmp_path):
     assert csv_file.exists()
 
     csv_df = pd.read_csv(csv_file)
-    assert list(csv_df.columns) == ['bench', 'MLton0', 'MLton1', 'mean_ratio', 'relative_pct']
+    assert list(csv_df.columns) == ['bench', 'MLton0', 'MLton1', 'relative_pct']
     assert len(csv_df) == 1
     row = csv_df.iloc[0]
     assert row['bench'] == 'bench1'
     assert row['MLton0'] == pytest.approx(10.0)
     assert row['MLton1'] == pytest.approx(8.0)
-    assert row['mean_ratio'] == pytest.approx(0.8)
     assert row['relative_pct'] == pytest.approx(-20.0)
 
 
@@ -478,11 +476,10 @@ def test_plot_parallel_bench_csv_content(tmp_path):
     assert csv_file.exists()
 
     csv_df = pd.read_csv(csv_file)
-    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
     assert len(csv_df) == 1
     row = csv_df.iloc[0]
     assert row['bench'] == 'bench1'
-    assert row['mean_ratio'] == pytest.approx(0.5)
     assert row['relative_pct'] == pytest.approx(-50.0)
 
 
@@ -516,3 +513,25 @@ def test_every_pdf_has_matching_csv(tmp_path):
         assert csv_file.stat().st_size > 0
         df = pd.read_csv(csv_file)
         assert len(df) > 0, f"CSV {csv_file.name} has no data rows"
+
+
+def test_csv_values_truncated_to_3_decimal_places(tmp_path):
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1'],
+        'compilerAbbrev': ['MLton0', 'MLton1'],
+        'runTime': [10.123456, 8.987654],
+        'binaryChecksum': ['hash0', 'hash1'],
+    })
+    out_file = "test_trunc_chart"
+    plot_mlton(df, values='runTime', title='Test Trunc', out_filename=out_file, abbrevs=('MLton0', 'MLton1'), out_dir=str(tmp_path))
+
+    csv_file = tmp_path / f"{out_file}.csv"
+    assert csv_file.exists()
+    content = csv_file.read_text(encoding="utf-8")
+    lines = content.strip().split("\n")
+    header = lines[0].split(",")
+    values = lines[1].split(",")
+    assert header == ['bench', 'MLton0', 'MLton1', 'relative_pct']
+    assert values[1] == "10.123"
+    assert values[2] == "8.988"
+    assert values[3] == "-11.22" or values[3] == "-11.220" or len(values[3].split(".")[1]) <= 3
