@@ -74,6 +74,15 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
     std_abs_ratios = all_abs_ratios.apply(safe_std)
     # Convert to relative_pct (<0% is good, >0% is bad)
     relative_pct = (mean_abs_ratios - 1) * 100
+
+    results_df = pd.DataFrame({
+        'bench': pivot.index,
+        'mean_ratio': mean_abs_ratios.values,
+        'std_ratio': std_abs_ratios.values,
+        'relative_pct': relative_pct.values,
+        'std_pct': std_abs_ratios.values * 100,
+    })
+
     ax = relative_pct.plot(kind='bar',
                            yerr=std_abs_ratios)
 
@@ -92,6 +101,9 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
     ax.set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$')
     ax.yaxis.set_major_formatter(ticker.PercentFormatter())
     os.makedirs(out_dir, exist_ok=True)
+    csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+    print(f'Saving data to {csv_path}')
+    results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
     plt.savefig(path, format='pdf', bbox_inches='tight')
@@ -192,6 +204,9 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
 
     plt.tight_layout()
     os.makedirs(out_dir, exist_ok=True)
+    csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+    print(f'Saving data to {csv_path}')
+    results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
     plt.savefig(path, format='pdf', bbox_inches='tight')
@@ -221,11 +236,29 @@ def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0
     filtered = df[['bench', 'compilerAbbrev', values, 'binaryChecksum']]
     # Remove benchmarks with identical binaries
     filtered = df[filtered.groupby('bench')['binaryChecksum'].transform('nunique') > 1]
+    if filtered.empty:
+        print("No benchmarks with differing binary hash found.")
+        return
+
     pivot = filtered.pivot(index='bench', columns='compilerAbbrev', values=values)
+    pivot = pivot.dropna(subset=[abbrevs[0], abbrevs[1]])
+    if pivot.empty:
+        print("No matching benchmark runs found for comparison.")
+        return
+
     # Calculate the ratio (<1 is good, >1 is bad)
     abs_ratio = pivot[abbrevs[1]] / pivot[abbrevs[0]]
     # Convert to relative_pct (<0% is good, >0% is bad)
     pivot['relative_pct'] = (abs_ratio - 1) * 100
+
+    results_df = pd.DataFrame({
+        'bench': pivot.index,
+        abbrevs[0]: pivot[abbrevs[0]].values,
+        abbrevs[1]: pivot[abbrevs[1]].values,
+        'mean_ratio': abs_ratio.values,
+        'relative_pct': pivot['relative_pct'].values,
+    })
+
     ax = (pivot['relative_pct']).plot(kind='bar')
 
     # Calculate the absolute geomean (1.0 is neutral)
@@ -243,6 +276,9 @@ def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0
     ax.set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$')
     ax.yaxis.set_major_formatter(ticker.PercentFormatter())
     os.makedirs(out_dir, exist_ok=True)
+    csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+    print(f'Saving data to {csv_path}')
+    results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
     plt.savefig(path, format='pdf', bbox_inches='tight')

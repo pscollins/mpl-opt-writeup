@@ -1,5 +1,14 @@
 import json
-from build_charts_lib import process_config
+import pandas as pd
+import pytest
+from build_charts_lib import (
+    process_config,
+    plot_mlton,
+    plot_parallel_bench,
+    plot_parallel_bench_cores,
+    plot_parallel_bench_size,
+    infer_configs,
+)
 
 
 def test_process_config(tmp_path):
@@ -23,8 +32,11 @@ def test_process_config(tmp_path):
 
     expected_files = [
         "tuple_mlton_run_mlton_vs_mlton.pdf",
+        "tuple_mlton_run_mlton_vs_mlton.csv",
         "tuple_mlton_compile_mlton_vs_mlton.pdf",
+        "tuple_mlton_compile_mlton_vs_mlton.csv",
         "tuple_mlton_size_mlton_vs_mlton.pdf",
+        "tuple_mlton_size_mlton_vs_mlton.csv",
         "chart_info.md",
     ]
 
@@ -62,9 +74,13 @@ def test_process_config_parallel_bench(tmp_path):
 
     expected_files = [
         "tuple_parallel_bench_run_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_run_mlton_vs_mlton.csv",
         "tuple_parallel_bench_size_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_size_mlton_vs_mlton.csv",
         "con_parallel_bench_run_mlton_vs_mlton.pdf",
+        "con_parallel_bench_run_mlton_vs_mlton.csv",
         "con_parallel_bench_size_mlton_vs_mlton.pdf",
+        "con_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
     ]
 
@@ -104,15 +120,25 @@ def test_process_config_full(tmp_path):
 
     expected_files = [
         "tuple_mlton_run_mlton_vs_mlton.pdf",
+        "tuple_mlton_run_mlton_vs_mlton.csv",
         "tuple_mlton_compile_mlton_vs_mlton.pdf",
+        "tuple_mlton_compile_mlton_vs_mlton.csv",
         "tuple_mlton_size_mlton_vs_mlton.pdf",
+        "tuple_mlton_size_mlton_vs_mlton.csv",
         "con_mlton_run_mlton_vs_mlton.pdf",
+        "con_mlton_run_mlton_vs_mlton.csv",
         "con_mlton_compile_mlton_vs_mlton.pdf",
+        "con_mlton_compile_mlton_vs_mlton.csv",
         "con_mlton_size_mlton_vs_mlton.pdf",
+        "con_mlton_size_mlton_vs_mlton.csv",
         "tuple_parallel_bench_run_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_run_mlton_vs_mlton.csv",
         "tuple_parallel_bench_size_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_size_mlton_vs_mlton.csv",
         "con_parallel_bench_run_mlton_vs_mlton.pdf",
+        "con_parallel_bench_run_mlton_vs_mlton.csv",
         "con_parallel_bench_size_mlton_vs_mlton.pdf",
+        "con_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
     ]
 
@@ -145,8 +171,11 @@ def test_process_config_suite_selection(tmp_path):
     process_config(config)
 
     assert (output_dir / "tuple_parallel_bench_run_mlton_vs_mlton.pdf").exists()
+    assert (output_dir / "tuple_parallel_bench_run_mlton_vs_mlton.csv").exists()
     assert (output_dir / "tuple_parallel_bench_size_mlton_vs_mlton.pdf").exists()
+    assert (output_dir / "tuple_parallel_bench_size_mlton_vs_mlton.csv").exists()
     assert not (output_dir / "tuple_mlton_run_mlton_vs_mlton.pdf").exists()
+    assert not (output_dir / "tuple_mlton_run_mlton_vs_mlton.csv").exists()
 
 
 def test_process_config_with_aos_soa(tmp_path):
@@ -173,9 +202,13 @@ def test_process_config_with_aos_soa(tmp_path):
 
     expected_files = [
         "aos_parallel_bench_run_mlton_vs_mlton.pdf",
+        "aos_parallel_bench_run_mlton_vs_mlton.csv",
         "aos_parallel_bench_size_mlton_vs_mlton.pdf",
+        "aos_parallel_bench_size_mlton_vs_mlton.csv",
         "soa_parallel_bench_run_mlton_vs_mlton.pdf",
+        "soa_parallel_bench_run_mlton_vs_mlton.csv",
         "soa_parallel_bench_size_mlton_vs_mlton.pdf",
+        "soa_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
     ]
 
@@ -186,10 +219,6 @@ def test_process_config_with_aos_soa(tmp_path):
 
 
 def test_plot_parallel_bench_invalid_configs(tmp_path):
-    import pytest
-    import pandas as pd
-    from build_charts_lib import plot_parallel_bench
-
     # Case 1: Missing 'mlton-baseline'
     df_no_baseline = pd.DataFrame({
         'bench': ['b1'],
@@ -244,7 +273,9 @@ def test_process_config_mpl_parallel_bench(tmp_path):
 
     expected_files = [
         "tuple_parallel_bench_run_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_run_mpl_vs_mpl.csv",
         "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_size_mpl_vs_mpl.csv",
         "chart_info.md",
     ]
 
@@ -255,10 +286,6 @@ def test_process_config_mpl_parallel_bench(tmp_path):
 
 
 def test_infer_configs():
-    import pytest
-    import pandas as pd
-    from build_charts_lib import infer_configs
-
     # Explicit abbrevs passed
     df = pd.DataFrame({'config': ['a', 'b']})
     assert infer_configs(df, abbrevs=('c1', 'c2')) == ('c1', 'c2')
@@ -283,9 +310,6 @@ def test_infer_configs():
 
 
 def test_plot_parallel_bench_cores(tmp_path):
-    import pandas as pd
-    from build_charts_lib import plot_parallel_bench_cores
-
     df = pd.DataFrame({
         'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
         'procs': [1, 2, 1, 2],
@@ -296,15 +320,19 @@ def test_plot_parallel_bench_cores(tmp_path):
 
     out_file = "test_cores_chart"
     plot_parallel_bench_cores(df, title="Test Cores", out_filename=out_file, out_dir=str(tmp_path))
-    created = tmp_path / f"{out_file}.pdf"
-    assert created.exists()
-    assert created.stat().st_size > 0
+    created_pdf = tmp_path / f"{out_file}.pdf"
+    assert created_pdf.exists()
+    assert created_pdf.stat().st_size > 0
+
+    created_csv = tmp_path / f"{out_file}.csv"
+    assert created_csv.exists()
+    assert created_csv.stat().st_size > 0
+    csv_df = pd.read_csv(created_csv)
+    assert list(csv_df.columns) == ['bench', 'procs', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert len(csv_df) == 2
 
 
 def test_plot_parallel_bench_size(tmp_path):
-    import pandas as pd
-    from build_charts_lib import plot_parallel_bench_size
-
     df = pd.DataFrame({
         'bench': ['bench1', 'bench1'],
         'procs': [1, 1],
@@ -315,15 +343,21 @@ def test_plot_parallel_bench_size(tmp_path):
 
     out_file = "test_size_chart"
     plot_parallel_bench_size(df, title="Test Size", out_filename=out_file, out_dir=str(tmp_path))
-    created = tmp_path / f"{out_file}.pdf"
-    assert created.exists()
-    assert created.stat().st_size > 0
+    created_pdf = tmp_path / f"{out_file}.pdf"
+    assert created_pdf.exists()
+    assert created_pdf.stat().st_size > 0
+
+    created_csv = tmp_path / f"{out_file}.csv"
+    assert created_csv.exists()
+    assert created_csv.stat().st_size > 0
+    csv_df = pd.read_csv(created_csv)
+    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert csv_df.iloc[0]['bench'] == 'bench1'
+    assert csv_df.iloc[0]['mean_ratio'] == pytest.approx(0.9)
+    assert csv_df.iloc[0]['relative_pct'] == pytest.approx(-10.0)
 
 
 def test_plot_parallel_bench_size_multicore(tmp_path):
-    import pandas as pd
-    from build_charts_lib import plot_parallel_bench_size
-
     df = pd.DataFrame({
         'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
         'procs': [1, 2, 1, 2],
@@ -334,9 +368,17 @@ def test_plot_parallel_bench_size_multicore(tmp_path):
 
     out_file = "test_size_chart_multi"
     plot_parallel_bench_size(df, title="Test Multi Size", out_filename=out_file, out_dir=str(tmp_path))
-    created = tmp_path / f"{out_file}.pdf"
-    assert created.exists()
-    assert created.stat().st_size > 0
+    created_pdf = tmp_path / f"{out_file}.pdf"
+    assert created_pdf.exists()
+    assert created_pdf.stat().st_size > 0
+
+    created_csv = tmp_path / f"{out_file}.csv"
+    assert created_csv.exists()
+    assert created_csv.stat().st_size > 0
+    csv_df = pd.read_csv(created_csv)
+    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert len(csv_df) == 1
+    assert csv_df.iloc[0]['mean_ratio'] == pytest.approx(0.9)
 
 
 def test_process_config_all_sections(tmp_path):
@@ -372,12 +414,19 @@ def test_process_config_all_sections(tmp_path):
 
     expected_files = [
         "tuple_mlton_run_mlton_vs_mlton.pdf",
+        "tuple_mlton_run_mlton_vs_mlton.csv",
         "tuple_mlton_compile_mlton_vs_mlton.pdf",
+        "tuple_mlton_compile_mlton_vs_mlton.csv",
         "tuple_mlton_size_mlton_vs_mlton.pdf",
+        "tuple_mlton_size_mlton_vs_mlton.csv",
         "tuple_parallel_bench_run_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_run_mlton_vs_mlton.csv",
         "tuple_parallel_bench_size_mlton_vs_mlton.pdf",
+        "tuple_parallel_bench_size_mlton_vs_mlton.csv",
         "tuple_parallel_bench_run_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_run_mpl_vs_mpl.csv",
         "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
+        "tuple_parallel_bench_size_mpl_vs_mpl.csv",
         "chart_info.md",
     ]
 
@@ -387,5 +436,83 @@ def test_process_config_all_sections(tmp_path):
         assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
 
 
+def test_plot_mlton_csv_content(tmp_path):
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1'],
+        'compilerAbbrev': ['MLton0', 'MLton1'],
+        'runTime': [10.0, 8.0],
+        'binaryChecksum': ['hash0', 'hash1'],
+    })
+    out_file = "test_mlton_chart"
+    plot_mlton(df, values='runTime', title='Test MLton', out_filename=out_file, abbrevs=('MLton0', 'MLton1'), out_dir=str(tmp_path))
+
+    pdf_file = tmp_path / f"{out_file}.pdf"
+    csv_file = tmp_path / f"{out_file}.csv"
+    assert pdf_file.exists()
+    assert csv_file.exists()
+
+    csv_df = pd.read_csv(csv_file)
+    assert list(csv_df.columns) == ['bench', 'MLton0', 'MLton1', 'mean_ratio', 'relative_pct']
+    assert len(csv_df) == 1
+    row = csv_df.iloc[0]
+    assert row['bench'] == 'bench1'
+    assert row['MLton0'] == pytest.approx(10.0)
+    assert row['MLton1'] == pytest.approx(8.0)
+    assert row['mean_ratio'] == pytest.approx(0.8)
+    assert row['relative_pct'] == pytest.approx(-20.0)
 
 
+def test_plot_parallel_bench_csv_content(tmp_path):
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1'],
+        'config': ['mlton-baseline', 'mlton-opt'],
+        'test_results_secs': [[2.0, 4.0], [1.0, 2.0]],
+        'binary_md5': ['hash0', 'hash1'],
+    })
+    out_file = "test_pb_chart"
+    plot_parallel_bench(df, values='test_results_secs', title='Test PB', out_filename=out_file, out_dir=str(tmp_path))
+
+    pdf_file = tmp_path / f"{out_file}.pdf"
+    csv_file = tmp_path / f"{out_file}.csv"
+    assert pdf_file.exists()
+    assert csv_file.exists()
+
+    csv_df = pd.read_csv(csv_file)
+    assert list(csv_df.columns) == ['bench', 'mean_ratio', 'std_ratio', 'relative_pct', 'std_pct']
+    assert len(csv_df) == 1
+    row = csv_df.iloc[0]
+    assert row['bench'] == 'bench1'
+    assert row['mean_ratio'] == pytest.approx(0.5)
+    assert row['relative_pct'] == pytest.approx(-50.0)
+
+
+def test_every_pdf_has_matching_csv(tmp_path):
+    output_dir = tmp_path / "charts_all_match"
+    config_data = {
+        "output_directory": str(output_dir),
+        "mlton_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "mlton",
+            "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl"
+        },
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl"
+        },
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+        }
+    }
+    process_config(config_data)
+
+    pdf_files = list(output_dir.glob("*.pdf"))
+    assert len(pdf_files) > 0
+    for pdf_file in pdf_files:
+        csv_file = pdf_file.with_suffix(".csv")
+        assert csv_file.exists(), f"Missing matching CSV for {pdf_file.name}"
+        assert csv_file.stat().st_size > 0
+        df = pd.read_csv(csv_file)
+        assert len(df) > 0, f"CSV {csv_file.name} has no data rows"
