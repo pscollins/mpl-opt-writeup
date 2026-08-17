@@ -45,26 +45,30 @@ def infer_configs(df, abbrevs=None):
 
 
 # Plots data from the parallel-ml-bench suite
-def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', out_dir='charts'):
-    # Infer the name of the test config by removing the -baseline version
-    configs = set(df[COMPILER_NAME_FIELD_PARALLEL].dropna().unique())
-    if 'mlton-baseline' not in configs:
-        raise ValueError(f"Baseline 'mlton-baseline' not found in compiler configurations: {configs}")
-    configs.remove('mlton-baseline')
-    assert len(configs) == 1, f"Expected exactly 1 test configuration after removing 'mlton-baseline', found {len(configs)}: {configs}"
-    test_key = next(iter(configs))
+def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts'):
+    base_key, test_key = infer_configs(df, abbrevs)
 
     # Remove columns we don't care about
     filtered = df[['bench', COMPILER_NAME_FIELD_PARALLEL, values, CHECKSUM_FIELD_PARALLEL]]
+    filtered = filtered[filtered[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
     # Remove benchmarks with identical binaries
     filtered = filtered[filtered.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
+    if filtered.empty:
+        print("No benchmarks with differing binary hash found.")
+        return
+
     # Drop older duplicate runs before pivoting
     filtered = filtered.drop_duplicates(subset=['bench', COMPILER_NAME_FIELD_PARALLEL], keep='last')
 
     pivot = filtered.pivot(index='bench', columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
+    pivot = pivot.dropna(subset=[base_key, test_key])
+    if pivot.empty:
+        print("No matching benchmark runs found for comparison.")
+        return
+
     # Calculate the ratio (<1 is good, >1 is bad) between pairs of trials
     all_abs_ratios = pivot.apply(lambda row:
-                              np.array(row[test_key]) / np.array(row['mlton-baseline']),
+                              np.array(row[test_key]) / np.array(row[base_key]),
                               axis=1)
     mean_abs_ratios = all_abs_ratios.apply(np.mean)
     std_abs_ratios = all_abs_ratios.apply(safe_std)
@@ -202,50 +206,7 @@ def plot_parallel_bench_size(df, values='binary_bytes', title='', out_filename='
     else:
         df_size = df.copy()
 
-    # Filter benchmarks with differing binary hash
-    filtered = df_size[df_size.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
-    if filtered.empty:
-        print("No benchmarks with differing binary hash found.")
-        return
-
-    base_key, test_key = infer_configs(filtered, abbrevs)
-    filtered = filtered[filtered[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
-    filtered = filtered.drop_duplicates(subset=['bench', COMPILER_NAME_FIELD_PARALLEL], keep='last')
-
-    pivot = filtered.pivot(index='bench', columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
-    pivot = pivot.dropna(subset=[base_key, test_key])
-    if pivot.empty:
-        print("No matching benchmark runs found for comparison.")
-        return
-
-    abs_ratio = pivot[test_key] / pivot[base_key]
-    relative_pct = (abs_ratio - 1) * 100
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-    relative_pct.plot(kind='bar', ax=ax, color='tab:blue', alpha=0.85, edgecolor='black', linewidth=0.5)
-
-    # Calculate absolute geomean
-    abs_geomean = np.exp(np.mean(np.log(abs_ratio.dropna())))
-    geomean_pct = (abs_geomean - 1) * 100
-
-    textstr = fr'Geomean: {geomean_pct:+.1f}\%'
-    props = dict(boxstyle='square,pad=0.5', facecolor='white', alpha=0.9, edgecolor='black', linewidth=0.5)
-    ax.text(0.95, 0.95, textstr, transform=ax.transAxes, fontsize=10,
-            verticalalignment='top', horizontalalignment='right', bbox=props)
-
-    ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
-    if title:
-        ax.set_title(title)
-    ax.set_xlabel('Benchmark name')
-    ax.set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$')
-    ax.yaxis.set_major_formatter(ticker.PercentFormatter())
-    plt.xticks(rotation=0)
-    plt.tight_layout()
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, f'{out_filename}.pdf')
-    print(f'Saving chart to {path}')
-    plt.savefig(path, format='pdf', bbox_inches='tight')
-    plt.close()
+    plot_parallel_bench(df_size, values=values, title=title, out_filename=out_filename, abbrevs=abbrevs, out_dir=out_dir)
 
 
 def load_df(fname):

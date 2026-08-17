@@ -320,6 +320,25 @@ def test_plot_parallel_bench_size(tmp_path):
     assert created.stat().st_size > 0
 
 
+def test_plot_parallel_bench_size_multicore(tmp_path):
+    import pandas as pd
+    from build_charts_lib import plot_parallel_bench_size
+
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'binary_bytes': [1000, 1000, 900, 900],
+        'binary_md5': ['hash_base', 'hash_base', 'hash_opt', 'hash_opt'],
+    })
+
+    out_file = "test_size_chart_multi"
+    plot_parallel_bench_size(df, title="Test Multi Size", out_filename=out_file, out_dir=str(tmp_path))
+    created = tmp_path / f"{out_file}.pdf"
+    assert created.exists()
+    assert created.stat().st_size > 0
+
+
 def test_process_config_all_sections(tmp_path):
     output_dir = tmp_path / "charts_all"
     test_config_path = tmp_path / "test_config_all.json"
