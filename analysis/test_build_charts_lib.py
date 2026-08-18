@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from build_charts_lib import (
     process_config,
+    generate_all_charts_tex,
     plot_mlton,
     plot_parallel_bench,
     plot_parallel_bench_cores,
@@ -38,6 +39,7 @@ def test_process_config(tmp_path):
         "tuple_mlton_size_mlton_vs_mlton.pdf",
         "tuple_mlton_size_mlton_vs_mlton.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
@@ -48,6 +50,11 @@ def test_process_config(tmp_path):
     chart_info_content = (output_dir / "chart_info.md").read_text(encoding="utf-8")
     assert "Data generated at " in chart_info_content
     assert "using the following config:" in chart_info_content
+
+    all_charts_tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert "fix_hashes4:big-mpl:99fe634ab:20260719_202336.jsonl" in all_charts_tex_content
+    assert "tuple_mlton_run_mlton_vs_mlton.pdf" in all_charts_tex_content
+
 
 
 def test_process_config_parallel_bench(tmp_path):
@@ -82,6 +89,7 @@ def test_process_config_parallel_bench(tmp_path):
         "con_parallel_bench_size_mlton_vs_mlton.pdf",
         "con_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
@@ -140,6 +148,7 @@ def test_process_config_full(tmp_path):
         "con_parallel_bench_size_mlton_vs_mlton.pdf",
         "con_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
@@ -210,6 +219,7 @@ def test_process_config_with_aos_soa(tmp_path):
         "soa_parallel_bench_size_mlton_vs_mlton.pdf",
         "soa_parallel_bench_size_mlton_vs_mlton.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
@@ -277,12 +287,14 @@ def test_process_config_mpl_parallel_bench(tmp_path):
         "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
         "tuple_parallel_bench_size_mpl_vs_mpl.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
         output_file = output_dir / fname
         assert output_file.exists(), f"Expected chart file {fname} was not created."
         assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+
 
 
 def test_infer_configs():
@@ -427,6 +439,7 @@ def test_process_config_all_sections(tmp_path):
         "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
         "tuple_parallel_bench_size_mpl_vs_mpl.csv",
         "chart_info.md",
+        "all_charts.tex",
     ]
 
     for fname in expected_files:
@@ -535,3 +548,63 @@ def test_csv_values_truncated_to_3_decimal_places(tmp_path):
     assert values[1] == "10.123"
     assert values[2] == "8.988"
     assert values[3] == "-11.22" or values[3] == "-11.220" or len(values[3].split(".")[1]) <= 3
+
+
+def test_generate_all_charts_tex_includes_filenames():
+    config_data = {
+        "output_directory": "charts/",
+        "mlton_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "mlton",
+            "tuple": "my_mlton_data_file.jsonl"
+        },
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "my_pb_mlton_data_file.jsonl"
+        },
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "my_pb_mpl_data_file.jsonl"
+        }
+    }
+
+    tex = generate_all_charts_tex(config_data)
+
+    assert r"\protect\nolinkurl{my_mlton_data_file.jsonl}" in tex
+    assert r"\protect\nolinkurl{my_pb_mlton_data_file.jsonl}" in tex
+    assert r"\protect\nolinkurl{my_pb_mpl_data_file.jsonl}" in tex
+    assert r"\section{Tuple Flattening}" in tex
+    assert r"\subsection{MLton Benchmarks}" in tex
+    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in tex
+    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in tex
+
+
+def test_latex_templates_renderers():
+    from latex_templates import (
+        render_mlton_subsection,
+        render_parallel_bench_mlton_subsection,
+        render_parallel_bench_mpl_subsection,
+        format_caption,
+    )
+
+    cap = format_caption("Base caption", "data.jsonl")
+    assert r"Base caption Data: \protect\nolinkurl{data.jsonl}." in cap
+
+    mlton_sub = render_mlton_subsection("tuple", "data_mlton.jsonl")
+    assert r"\subsection{MLton Benchmarks}" in mlton_sub
+    assert r"tuple_mlton_run_mlton_vs_mlton.pdf" in mlton_sub
+    assert r"\protect\nolinkurl{data_mlton.jsonl}" in mlton_sub
+
+    pb_mlton_sub = render_parallel_bench_mlton_subsection("con", "data_pb_mlton.jsonl")
+    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in pb_mlton_sub
+    assert r"con_parallel_bench_run_mlton_vs_mlton.pdf" in pb_mlton_sub
+    assert r"\protect\nolinkurl{data_pb_mlton.jsonl}" in pb_mlton_sub
+
+    pb_mpl_sub = render_parallel_bench_mpl_subsection("aos", "data_pb_mpl.jsonl")
+    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in pb_mpl_sub
+    assert r"aos_parallel_bench_run_mpl_vs_mpl.pdf" in pb_mpl_sub
+    assert r"\protect\nolinkurl{data_pb_mpl.jsonl}" in pb_mpl_sub
+
+

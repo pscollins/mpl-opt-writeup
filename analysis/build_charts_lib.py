@@ -7,6 +7,15 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
+from latex_templates import (
+    DOCUMENT_PREAMBLE,
+    DOCUMENT_POSTAMBLE,
+    SECTION_TITLES,
+    render_mlton_subsection,
+    render_parallel_bench_mlton_subsection,
+    render_parallel_bench_mpl_subsection,
+)
+
 # Use system latex
 plt.rcParams.update({
     "text.usetex": True,
@@ -105,7 +114,7 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
     results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
-    plt.savefig(path, format='pdf', bbox_inches='tight')
+    plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
     plt.close()
 
 
@@ -220,7 +229,7 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
     results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
-    plt.savefig(path, format='pdf', bbox_inches='tight')
+    plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
     plt.close()
 
 
@@ -291,7 +300,7 @@ def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0
     results_df.to_csv(csv_path, index=False)
     path = os.path.join(out_dir, f'{out_filename}.pdf')
     print(f'Saving chart to {path}')
-    plt.savefig(path, format='pdf', bbox_inches='tight')
+    plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
     plt.close()
 
 
@@ -353,6 +362,66 @@ def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts'):
             plot_parallel_bench_cores(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
 
 
+def generate_all_charts_tex(config: dict) -> str:
+    types_order = ['tuple', 'con', 'aos', 'soa']
+    found_types = []
+    for sec_k, sec_v in config.items():
+        if sec_k == 'output_directory' or not isinstance(sec_v, dict):
+            continue
+        for t in sec_v:
+            if t not in METADATA_KEYS and t not in found_types:
+                found_types.append(t)
+
+    ordered_types = [t for t in types_order if t in found_types] + [t for t in found_types if t not in types_order]
+
+    # Collect section entries per type
+    type_entries = {}
+    for sec_k, sec_v in config.items():
+        if sec_k == 'output_directory' or not isinstance(sec_v, dict):
+            continue
+        suite = sec_v.get('suite', 'mlton')
+        compiler = sec_v.get('compiler', 'mlton')
+        for t, data_file in sec_v.items():
+            if t in METADATA_KEYS:
+                continue
+            if t not in type_entries:
+                type_entries[t] = []
+            type_entries[t].append((suite, compiler, data_file))
+
+    sections_tex = []
+    for idx, t in enumerate(ordered_types):
+        sec_parts = []
+        if idx > 0:
+            sec_parts.append(r'\clearpage')
+        title = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+        sec_parts.append(fr'\section{{{title}}}' + '\n')
+
+        entries = type_entries.get(t, [])
+        def entry_key(e):
+            s, c, _ = e
+            if s == 'mlton':
+                return 0
+            if s == 'parallel_bench' and c == 'mlton':
+                return 1
+            if s == 'parallel_bench' and c == 'mpl':
+                return 2
+            return 3
+        entries.sort(key=entry_key)
+
+        for s, c, data_file in entries:
+            if s == 'mlton':
+                sec_parts.append(render_mlton_subsection(t, data_file))
+            elif s == 'parallel_bench' and c == 'mlton':
+                sec_parts.append(render_parallel_bench_mlton_subsection(t, data_file))
+            elif s == 'parallel_bench' and c == 'mpl':
+                sec_parts.append(render_parallel_bench_mpl_subsection(t, data_file))
+
+        sections_tex.append('\n'.join(sec_parts))
+
+    body = '\n'.join(sections_tex)
+    return f"{DOCUMENT_PREAMBLE}\n{body}\n{DOCUMENT_POSTAMBLE}"
+
+
 def process_config(config: dict):
     out_dir = config["output_directory"]
     os.makedirs(out_dir, exist_ok=True)
@@ -387,3 +456,9 @@ def process_config(config: dict):
                     raise ValueError(f"Unknown compiler for parallel_bench: {compiler}")
             else:
                 raise ValueError(f"Unknown suite: {suite}")
+
+    all_charts_tex_path = os.path.join(out_dir, "all_charts.tex")
+    print(f'Saving all_charts TeX file to {all_charts_tex_path}')
+    with open(all_charts_tex_path, "w", encoding="utf-8") as f:
+        f.write(generate_all_charts_tex(config))
+
