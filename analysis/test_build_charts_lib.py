@@ -674,12 +674,22 @@ def test_generate_all_charts_tex_includes_filenames():
     assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in tex
     assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in tex
 
+    # Verify Data Tables section is at the end
+    assert r"\section{Data Tables}" in tex
+    fig_idx = tex.find(r"tuple_parallel_bench_run_mpl_vs_mpl.pdf")
+    data_tables_idx = tex.find(r"\section{Data Tables}")
+    csv_idx = tex.find(r"\importcsv{tuple_parallel_bench_run_mpl_vs_mpl.csv}")
+    assert fig_idx < data_tables_idx < csv_idx
+
 
 def test_latex_templates_renderers():
     from latex_templates import (
         render_mlton_subsection,
         render_parallel_bench_mlton_subsection,
         render_parallel_bench_mpl_subsection,
+        render_mlton_tables_subsection,
+        render_parallel_bench_mlton_tables_subsection,
+        render_parallel_bench_mpl_tables_subsection,
         format_caption,
     )
 
@@ -700,5 +710,18 @@ def test_latex_templates_renderers():
     assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in pb_mpl_sub
     assert r"aos_parallel_bench_run_mpl_vs_mpl.pdf" in pb_mpl_sub
     assert r"\protect\nolinkurl{data_pb_mpl.jsonl}" in pb_mpl_sub
+
+    mlton_tbl = render_mlton_tables_subsection("tuple")
+    assert r"\subsubsection{MLton Benchmarks}" in mlton_tbl
+    assert r"\importcsv{tuple_mlton_run_mlton_vs_mlton.csv}" in mlton_tbl
+
+    pb_mlton_tbl = render_parallel_bench_mlton_tables_subsection("con")
+    assert r"\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in pb_mlton_tbl
+    assert r"\importcsv{con_parallel_bench_run_mlton_vs_mlton.csv}" in pb_mlton_tbl
+
+    pb_mpl_tbl = render_parallel_bench_mpl_tables_subsection("aos")
+    assert r"\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in pb_mpl_tbl
+    assert r"\importcsv{aos_parallel_bench_run_mpl_vs_mpl.csv}" in pb_mpl_tbl
+
 
 

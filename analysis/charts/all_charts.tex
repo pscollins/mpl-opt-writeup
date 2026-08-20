@@ -61,15 +61,6 @@
   \label{fig:tuple_mlton}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{tuple_mlton_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Compile time}
-\importcsv{tuple_mlton_compile_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{tuple_mlton_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[H]
@@ -91,12 +82,6 @@
   \label{fig:tuple_parallel_bench}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{tuple_parallel_bench_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{tuple_parallel_bench_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[H]
@@ -117,12 +102,6 @@
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{tuple_parallel_bench_run_mpl_vs_mpl.csv}
-
-\subsubsection*{Binary size}
-\importcsv{tuple_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
 \section{\texttt{ConApp} Flattening}
@@ -155,15 +134,6 @@
   \label{fig:con_mlton}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{con_mlton_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Compile time}
-\importcsv{con_mlton_compile_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{con_mlton_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[H]
@@ -185,12 +155,6 @@
   \label{fig:con_parallel_bench}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{con_parallel_bench_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{con_parallel_bench_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[H]
@@ -211,12 +175,6 @@
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{con_parallel_bench_run_mpl_vs_mpl.csv}
-
-\subsubsection*{Binary size}
-\importcsv{con_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
 \section{AoS Flattening}
@@ -249,15 +207,6 @@
   \label{fig:aos_mlton}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{aos_mlton_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Compile time}
-\importcsv{aos_mlton_compile_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{aos_mlton_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[H]
@@ -279,12 +228,6 @@
   \label{fig:aos_parallel_bench}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{aos_parallel_bench_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{aos_parallel_bench_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[H]
@@ -305,12 +248,6 @@
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_full_parallel_mpl:260815-192835:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-192835.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{aos_parallel_bench_run_mpl_vs_mpl.csv}
-
-\subsubsection*{Binary size}
-\importcsv{aos_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
 \section{SoA Flattening}
@@ -343,15 +280,6 @@
   \label{fig:soa_mlton}
 \end{figure}
 
-\subsubsection*{Run time}
-\importcsv{soa_mlton_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Compile time}
-\importcsv{soa_mlton_compile_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{soa_mlton_size_mlton_vs_mlton.csv}
-
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[H]
@@ -372,12 +300,6 @@
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_soa_full_parallel_mlton:260816-143356:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-143356.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{soa_parallel_bench_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{soa_parallel_bench_size_mlton_vs_mlton.csv}
 
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
@@ -400,10 +322,126 @@
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
 
-\subsubsection*{Run time}
+\clearpage
+\section{Data Tables}
+
+\subsection{Tuple Flattening}
+
+\subsubsection{MLton Benchmarks}
+
+\paragraph*{Run time}
+\importcsv{tuple_mlton_run_mlton_vs_mlton.csv}
+
+\paragraph*{Compile time}
+\importcsv{tuple_mlton_compile_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_mlton_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\paragraph*{Run time}
+\importcsv{tuple_parallel_bench_run_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_parallel_bench_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\paragraph*{Run time}
+\importcsv{tuple_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{\texttt{ConApp} Flattening}
+
+\subsubsection{MLton Benchmarks}
+
+\paragraph*{Run time}
+\importcsv{con_mlton_run_mlton_vs_mlton.csv}
+
+\paragraph*{Compile time}
+\importcsv{con_mlton_compile_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{con_mlton_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\paragraph*{Run time}
+\importcsv{con_parallel_bench_run_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{con_parallel_bench_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\paragraph*{Run time}
+\importcsv{con_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{con_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{AoS Flattening}
+
+\subsubsection{MLton Benchmarks}
+
+\paragraph*{Run time}
+\importcsv{aos_mlton_run_mlton_vs_mlton.csv}
+
+\paragraph*{Compile time}
+\importcsv{aos_mlton_compile_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_mlton_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\paragraph*{Run time}
+\importcsv{aos_parallel_bench_run_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_parallel_bench_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\paragraph*{Run time}
+\importcsv{aos_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{SoA Flattening}
+
+\subsubsection{MLton Benchmarks}
+
+\paragraph*{Run time}
+\importcsv{soa_mlton_run_mlton_vs_mlton.csv}
+
+\paragraph*{Compile time}
+\importcsv{soa_mlton_compile_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{soa_mlton_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\paragraph*{Run time}
+\importcsv{soa_parallel_bench_run_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{soa_parallel_bench_size_mlton_vs_mlton.csv}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\paragraph*{Run time}
 \importcsv{soa_parallel_bench_run_mpl_vs_mpl.csv}
 
-\subsubsection*{Binary size}
+\paragraph*{Binary size}
 \importcsv{soa_parallel_bench_size_mpl_vs_mpl.csv}
 
 \end{document}

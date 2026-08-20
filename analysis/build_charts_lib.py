@@ -14,6 +14,9 @@ from latex_templates import (
     render_mlton_subsection,
     render_parallel_bench_mlton_subsection,
     render_parallel_bench_mpl_subsection,
+    render_mlton_tables_subsection,
+    render_parallel_bench_mlton_tables_subsection,
+    render_parallel_bench_mpl_tables_subsection,
 )
 
 # Use system latex
@@ -480,7 +483,19 @@ def generate_all_charts_tex(config: dict) -> str:
                 type_entries[t] = []
             type_entries[t].append((suite, compiler, data_file))
 
+    def entry_key(e):
+        s, c, _ = e
+        if s == 'mlton':
+            return 0
+        if s == 'parallel_bench' and c == 'mlton':
+            return 1
+        if s == 'parallel_bench' and c == 'mpl':
+            return 2
+        return 3
+
     sections_tex = []
+
+    # 1. Figure sections (one per transformation type)
     for idx, t in enumerate(ordered_types):
         sec_parts = []
         if idx > 0:
@@ -489,15 +504,6 @@ def generate_all_charts_tex(config: dict) -> str:
         sec_parts.append(fr'\section{{{title}}}' + '\n')
 
         entries = type_entries.get(t, [])
-        def entry_key(e):
-            s, c, _ = e
-            if s == 'mlton':
-                return 0
-            if s == 'parallel_bench' and c == 'mlton':
-                return 1
-            if s == 'parallel_bench' and c == 'mpl':
-                return 2
-            return 3
         entries.sort(key=entry_key)
 
         for s, c, data_file in entries:
@@ -509,6 +515,35 @@ def generate_all_charts_tex(config: dict) -> str:
                 sec_parts.append(render_parallel_bench_mpl_subsection(t, data_file))
 
         sections_tex.append('\n'.join(sec_parts))
+
+    # 2. Data Tables section at the end of the document
+    tables_parts = []
+    has_any_tables = False
+    for idx, t in enumerate(ordered_types):
+        entries = type_entries.get(t, [])
+        if not entries:
+            continue
+        entries.sort(key=entry_key)
+        type_tbl_parts = []
+        if idx > 0:
+            type_tbl_parts.append(r'\clearpage')
+        title = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+        type_tbl_parts.append(fr'\subsection{{{title}}}' + '\n')
+
+        for s, c, _ in entries:
+            if s == 'mlton':
+                type_tbl_parts.append(render_mlton_tables_subsection(t))
+            elif s == 'parallel_bench' and c == 'mlton':
+                type_tbl_parts.append(render_parallel_bench_mlton_tables_subsection(t))
+            elif s == 'parallel_bench' and c == 'mpl':
+                type_tbl_parts.append(render_parallel_bench_mpl_tables_subsection(t))
+
+        tables_parts.append('\n'.join(type_tbl_parts))
+        has_any_tables = True
+
+    if has_any_tables:
+        sections_tex.append(r'\clearpage' + '\n' + r'\section{Data Tables}' + '\n')
+        sections_tex.append('\n'.join(tables_parts))
 
     body = '\n'.join(sections_tex)
     return f"{DOCUMENT_PREAMBLE}\n{body}\n{DOCUMENT_POSTAMBLE}"

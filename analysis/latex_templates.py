@@ -94,15 +94,6 @@ MLTON_SUBSECTION_TEMPLATE = r"""\subsection{MLton Benchmarks}
   \caption{${caption}}
   \label{fig:${t}_mlton}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{${t}_mlton_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Compile time}
-\importcsv{${t}_mlton_compile_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{${t}_mlton_size_mlton_vs_mlton.csv}
 """
 
 PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
@@ -125,12 +116,6 @@ PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-b
   \caption{${caption}}
   \label{fig:${t}_parallel_bench}
 \end{figure}
-
-\subsubsection*{Run time}
-\importcsv{${t}_parallel_bench_run_mlton_vs_mlton.csv}
-
-\subsubsection*{Binary size}
-\importcsv{${t}_parallel_bench_size_mlton_vs_mlton.csv}
 """
 
 PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
@@ -153,11 +138,35 @@ PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-ben
   \caption{${caption}}
   \label{fig:${t}_parallel_bench_mpl}
 \end{figure}
+"""
 
-\subsubsection*{Run time}
+MLTON_TABLES_TEMPLATE = r"""\subsubsection{MLton Benchmarks}
+
+\paragraph*{Run time}
+\importcsv{${t}_mlton_run_mlton_vs_mlton.csv}
+
+\paragraph*{Compile time}
+\importcsv{${t}_mlton_compile_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{${t}_mlton_size_mlton_vs_mlton.csv}
+"""
+
+PARALLEL_BENCH_MLTON_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\paragraph*{Run time}
+\importcsv{${t}_parallel_bench_run_mlton_vs_mlton.csv}
+
+\paragraph*{Binary size}
+\importcsv{${t}_parallel_bench_size_mlton_vs_mlton.csv}
+"""
+
+PARALLEL_BENCH_MPL_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\paragraph*{Run time}
 \importcsv{${t}_parallel_bench_run_mpl_vs_mpl.csv}
 
-\subsubsection*{Binary size}
+\paragraph*{Binary size}
 \importcsv{${t}_parallel_bench_size_mpl_vs_mpl.csv}
 """
 
@@ -182,3 +191,15 @@ def render_parallel_bench_mpl_subsection(t: str, data_file: str) -> str:
     base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.')
     cap = format_caption(base_cap, data_file)
     return Template(PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE).substitute(t=t, caption=cap)
+
+
+def render_mlton_tables_subsection(t: str) -> str:
+    return Template(MLTON_TABLES_TEMPLATE).substitute(t=t)
+
+
+def render_parallel_bench_mlton_tables_subsection(t: str) -> str:
+    return Template(PARALLEL_BENCH_MLTON_TABLES_TEMPLATE).substitute(t=t)
+
+
+def render_parallel_bench_mpl_tables_subsection(t: str) -> str:
+    return Template(PARALLEL_BENCH_MPL_TABLES_TEMPLATE).substitute(t=t)
