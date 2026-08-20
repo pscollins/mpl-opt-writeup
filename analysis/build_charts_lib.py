@@ -29,12 +29,60 @@ CHECKSUM_FIELD_PARALLEL = 'binary_md5'
 COMPILER_NAME_FIELD_PARALLEL = 'config'
 ALLOWABLE_BASELINES = {'mlton-baseline', 'mpl-baseline'}
 
+USE_NEW_ANALYSIS_STYLE = True
+
 
 def safe_std(all_abs_ratios):
     arr = np.atleast_1d(all_abs_ratios)
     if len(arr) <= 1:
         return 0.0
     return np.std(arr, ddof=1)
+
+
+def calculate_error_bars(test_rows, base_rows, n_bootstraps=10000, ci=0.95, random_state=None):
+    """
+    Calculates % speedup and 95% CI bounds using non-parametric bootstrapping.
+    Assumes B is the baseline and A is the new configuration.
+    """
+    rng = np.random.default_rng(random_state)
+    alpha = (1.0 - ci) / 2.0 * 100
+
+    def _bootstrap_ci(test_trials, base_trials):
+        t = np.atleast_1d(np.asarray(test_trials, dtype=float))
+        b = np.atleast_1d(np.asarray(base_trials, dtype=float))
+        if len(t) <= 1 or len(b) <= 1 or np.mean(b) == 0:
+            return 0.0, 0.0
+        boot_t = rng.choice(t, size=(n_bootstraps, len(t)), replace=True).mean(axis=1)
+        boot_b = rng.choice(b, size=(n_bootstraps, len(b)), replace=True).mean(axis=1)
+        boot_ratios = boot_t / boot_b
+        ci_lower = np.percentile(boot_ratios, alpha)
+        ci_upper = np.percentile(boot_ratios, 100 - alpha)
+        point_est = np.mean(t) / np.mean(b)
+        err_minus = max(0.0, float(point_est - ci_lower))
+        err_plus = max(0.0, float(ci_upper - point_est))
+        return err_minus, err_plus
+
+    # Single pair of 1D trial arrays / lists
+    if isinstance(test_rows, (list, np.ndarray, tuple)) and len(test_rows) > 0:
+        if isinstance(test_rows[0], (int, float, np.number)):
+            err_minus, err_plus = _bootstrap_ci(test_rows, base_rows)
+            return [err_minus, err_plus]
+
+    err_minus_list = []
+    err_plus_list = []
+    for t_row, b_row in zip(test_rows, base_rows):
+        em, ep = _bootstrap_ci(t_row, b_row)
+        err_minus_list.append(em)
+        err_plus_list.append(ep)
+
+    if isinstance(test_rows, pd.Series):
+        err_minus = pd.Series(err_minus_list, index=test_rows.index)
+        err_plus = pd.Series(err_plus_list, index=test_rows.index)
+    else:
+        err_minus = np.array(err_minus_list)
+        err_plus = np.array(err_plus_list)
+
+    return [err_minus, err_plus]
 
 
 def infer_configs(df, abbrevs=None):
@@ -54,7 +102,7 @@ def infer_configs(df, abbrevs=None):
 
 
 # Plots data from the parallel-ml-bench suite
-def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts'):
+def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     base_key, test_key = infer_configs(df, abbrevs)
 
     # Remove columns we don't care about
@@ -75,24 +123,44 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
         print("No matching benchmark runs found for comparison.")
         return
 
-    # Calculate the ratio (<1 is good, >1 is bad) between pairs of trials
-    all_abs_ratios = pivot.apply(lambda row:
-                              np.array(row[test_key]) / np.array(row[base_key]),
-                              axis=1)
-    mean_abs_ratios = all_abs_ratios.apply(np.mean)
-    std_abs_ratios = all_abs_ratios.apply(safe_std)
-    # Convert to relative_pct (<0% is good, >0% is bad)
-    relative_pct = (mean_abs_ratios - 1) * 100
-    std_pct = std_abs_ratios * 100
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+        err_minus, err_plus = calculate_error_bars(pivot[test_key], pivot[base_key])
+        err_minus_pct = np.asarray(err_minus) * 100
+        err_plus_pct = np.asarray(err_plus) * 100
+        relative_pct = (mean_abs_ratios - 1) * 100
 
-    results_df = pd.DataFrame({
-        'bench': pivot.index,
-        'relative_pct': relative_pct.values,
-        'std_pct': std_pct.values,
-    }).round(3)
+        results_df = pd.DataFrame({
+            'bench': pivot.index,
+            'relative_pct': relative_pct.values,
+            'err_minus_pct': err_minus_pct,
+            'err_plus_pct': err_plus_pct,
+        }).round(3)
 
-    ax = relative_pct.plot(kind='bar',
-                           yerr=std_abs_ratios)
+        yerr = np.vstack([err_minus_pct, err_plus_pct])
+        ax = relative_pct.plot(kind='bar', yerr=yerr)
+    else:
+        # Calculate the ratio (<1 is good, >1 is bad) between pairs of trials
+        all_abs_ratios = pivot.apply(lambda row:
+                                  np.array(row[test_key]) / np.array(row[base_key]),
+                                  axis=1)
+        mean_abs_ratios = all_abs_ratios.apply(np.mean)
+        std_abs_ratios = all_abs_ratios.apply(safe_std)
+        # Convert to relative_pct (<0% is good, >0% is bad)
+        relative_pct = (mean_abs_ratios - 1) * 100
+        std_pct = std_abs_ratios * 100
+
+        results_df = pd.DataFrame({
+            'bench': pivot.index,
+            'relative_pct': relative_pct.values,
+            'std_pct': std_pct.values,
+        }).round(3)
+
+        ax = relative_pct.plot(kind='bar',
+                               yerr=std_abs_ratios)
 
     # Calculate the absolute geomean (1.0 is neutral)
     abs_geomean = np.exp(np.mean(np.log(mean_abs_ratios.dropna())))
@@ -119,7 +187,7 @@ def plot_parallel_bench(df, values='test_results_secs', title='', out_filename='
 
 
 # Plots run time data across core counts (procs) from the parallel-ml-bench suite
-def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts'):
+def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     # 1. Find the benchmarks where the compiled binary has a differing hash
     filtered = df[df.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
     if filtered.empty:
@@ -137,23 +205,41 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
         print("No matching benchmark runs found for comparison.")
         return
 
-    # 3. Calculate the base-vs-test ratio for each core-count, plus a stddev
-    all_abs_ratios = pivot.apply(
-        lambda row: np.array(row[test_key]) / np.array(row[base_key]),
-        axis=1
-    )
-    mean_abs_ratios = all_abs_ratios.apply(np.mean)
-    std_abs_ratios = all_abs_ratios.apply(safe_std)
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+        err_minus, err_plus = calculate_error_bars(pivot[test_key], pivot[base_key])
+        err_minus_pct = np.asarray(err_minus) * 100
+        err_plus_pct = np.asarray(err_plus) * 100
+        relative_pct = (mean_abs_ratios.values - 1) * 100
 
-    relative_pct = (mean_abs_ratios.values - 1) * 100
-    std_pct = std_abs_ratios.values * 100
+        results_df = pd.DataFrame({
+            'bench': [idx[0] for idx in pivot.index],
+            'procs': [idx[1] for idx in pivot.index],
+            'relative_pct': relative_pct,
+            'err_minus_pct': err_minus_pct,
+            'err_plus_pct': err_plus_pct,
+        }).round(3)
+    else:
+        # 3. Calculate the base-vs-test ratio for each core-count, plus a stddev
+        all_abs_ratios = pivot.apply(
+            lambda row: np.array(row[test_key]) / np.array(row[base_key]),
+            axis=1
+        )
+        mean_abs_ratios = all_abs_ratios.apply(np.mean)
+        std_abs_ratios = all_abs_ratios.apply(safe_std)
 
-    results_df = pd.DataFrame({
-        'bench': [idx[0] for idx in pivot.index],
-        'procs': [idx[1] for idx in pivot.index],
-        'relative_pct': relative_pct,
-        'std_pct': std_pct,
-    }).round(3)
+        relative_pct = (mean_abs_ratios.values - 1) * 100
+        std_pct = std_abs_ratios.values * 100
+
+        results_df = pd.DataFrame({
+            'bench': [idx[0] for idx in pivot.index],
+            'procs': [idx[1] for idx in pivot.index],
+            'relative_pct': relative_pct,
+            'std_pct': std_pct,
+        }).round(3)
 
     # 5. Add an additional series for the geomean speedup at each core count
     df_with_ratios = pd.DataFrame({
@@ -170,20 +256,17 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
     markers = ['o', 's', '^', 'v', 'D', 'p', 'h', '*', 'X', '<', '>']
     benches = sorted(results_df['bench'].unique())
 
-    plot_df = pd.DataFrame({
-        'bench': [idx[0] for idx in pivot.index],
-        'procs': [idx[1] for idx in pivot.index],
-        'relative_pct': relative_pct,
-        'std_pct': std_pct,
-    })
-
     for i, bench in enumerate(benches):
-        bench_data = plot_df[plot_df['bench'] == bench].sort_values('procs')
+        bench_data = results_df[results_df['bench'] == bench].sort_values('procs')
         marker = markers[i % len(markers)]
+        if use_new_analysis_style:
+            yerr = [bench_data['err_minus_pct'], bench_data['err_plus_pct']]
+        else:
+            yerr = bench_data['std_pct']
         ax.errorbar(
             bench_data['procs'],
             bench_data['relative_pct'],
-            yerr=bench_data['std_pct'],
+            yerr=yerr,
             label=bench,
             marker=marker,
             capsize=3,
@@ -234,14 +317,14 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
 
 
 # Plots binary size comparison (using procs=1 as binary size is independent of core count)
-def plot_parallel_bench_size(df, values='binary_bytes', title='', out_filename='', abbrevs=None, out_dir='charts'):
+def plot_parallel_bench_size(df, values='binary_bytes', title='', out_filename='', abbrevs=None, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     # Filter for procs == 1 if procs column exists
     if 'procs' in df.columns:
         df_size = df[df['procs'] == 1].copy()
     else:
         df_size = df.copy()
 
-    plot_parallel_bench(df_size, values=values, title=title, out_filename=out_filename, abbrevs=abbrevs, out_dir=out_dir)
+    plot_parallel_bench(df_size, values=values, title=title, out_filename=out_filename, abbrevs=abbrevs, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
 
 
 def load_df(fname):
@@ -251,7 +334,7 @@ def load_df(fname):
 
 
 # Plots data from the MLton benchmark suite
-def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0', 'MLton1'), out_dir='charts'):
+def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0', 'MLton1'), out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     # Remove columns we don't care about
     filtered = df[['bench', 'compilerAbbrev', values, 'binaryChecksum']]
     # Remove benchmarks with identical binaries
@@ -266,10 +349,19 @@ def plot_mlton(df, values='runTime', title='', out_filename='', abbrevs=('MLton0
         print("No matching benchmark runs found for comparison.")
         return
 
-    # Calculate the ratio (<1 is good, >1 is bad)
-    abs_ratio = pivot[abbrevs[1]] / pivot[abbrevs[0]]
-    # Convert to relative_pct (<0% is good, >0% is bad)
-    pivot['relative_pct'] = (abs_ratio - 1) * 100
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[abbrevs[1]]) / np.mean(row[abbrevs[0]]),
+            axis=1
+        )
+        relative_pct = (mean_abs_ratios - 1) * 100
+        pivot['relative_pct'] = relative_pct
+        abs_ratio = mean_abs_ratios
+    else:
+        # Calculate the ratio (<1 is good, >1 is bad)
+        abs_ratio = pivot[abbrevs[1]] / pivot[abbrevs[0]]
+        # Convert to relative_pct (<0% is good, >0% is bad)
+        pivot['relative_pct'] = (abs_ratio - 1) * 100
 
     results_df = pd.DataFrame({
         'bench': pivot.index,
@@ -311,7 +403,7 @@ class PlotConfig:
     out_filename: str
 
 
-def plot_mlton_vs_mlton(data, type_name='tuple', out_dir='charts'):
+def plot_mlton_vs_mlton(data, type_name='tuple', out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     print(f'Plotting file for {type_name} flattening (MLton vs MLton): {data}')
     df = load_df(data)
     configs = [
@@ -326,10 +418,10 @@ def plot_mlton_vs_mlton(data, type_name='tuple', out_dir='charts'):
                    out_filename=f'{type_name}_mlton_size_mlton_vs_mlton'),
     ]
     for c in configs:
-        plot_mlton(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
+        plot_mlton(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
 
 
-def plot_parallel_bench_vs_mlton(data, type_name='tuple', out_dir='charts'):
+def plot_parallel_bench_vs_mlton(data, type_name='tuple', out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     print(f'Plotting file for {type_name} flattening (MLton vs MLton - Parallel Bench): {data}')
     df = load_df(data)
     configs = [
@@ -341,10 +433,10 @@ def plot_parallel_bench_vs_mlton(data, type_name='tuple', out_dir='charts'):
                    out_filename=f'{type_name}_parallel_bench_size_mlton_vs_mlton'),
     ]
     for c in configs:
-        plot_parallel_bench(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
+        plot_parallel_bench(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
 
 
-def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts'):
+def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     print(f'Plotting file for {type_name} (MPL vs MPL): {data}')
     df = load_df(data)
     configs = [
@@ -357,9 +449,9 @@ def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts'):
     ]
     for c in configs:
         if c.values_column in ('binary_bytes', 'binarySize'):
-            plot_parallel_bench_size(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
+            plot_parallel_bench_size(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
         else:
-            plot_parallel_bench_cores(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir)
+            plot_parallel_bench_cores(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
 
 
 def generate_all_charts_tex(config: dict) -> str:
@@ -422,7 +514,7 @@ def generate_all_charts_tex(config: dict) -> str:
     return f"{DOCUMENT_PREAMBLE}\n{body}\n{DOCUMENT_POSTAMBLE}"
 
 
-def process_config(config: dict):
+def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     out_dir = config["output_directory"]
     os.makedirs(out_dir, exist_ok=True)
 
@@ -446,12 +538,12 @@ def process_config(config: dict):
                 continue
 
             if suite == "mlton":
-                plot_mlton_vs_mlton(data_file, type_name, out_dir=out_dir)
+                plot_mlton_vs_mlton(data_file, type_name, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
             elif suite == "parallel_bench":
                 if compiler == "mpl":
-                    plot_parallel_bench_vs_mpl(data_file, type_name, out_dir=out_dir)
+                    plot_parallel_bench_vs_mpl(data_file, type_name, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
                 elif compiler == "mlton":
-                    plot_parallel_bench_vs_mlton(data_file, type_name, out_dir=out_dir)
+                    plot_parallel_bench_vs_mlton(data_file, type_name, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
                 else:
                     raise ValueError(f"Unknown compiler for parallel_bench: {compiler}")
             else:
@@ -461,4 +553,5 @@ def process_config(config: dict):
     print(f'Saving all_charts TeX file to {all_charts_tex_path}')
     with open(all_charts_tex_path, "w", encoding="utf-8") as f:
         f.write(generate_all_charts_tex(config))
+
 

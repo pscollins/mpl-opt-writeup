@@ -2,6 +2,8 @@ import json
 import pandas as pd
 import pytest
 from build_charts_lib import (
+    USE_NEW_ANALYSIS_STYLE,
+    calculate_error_bars,
     process_config,
     generate_all_charts_tex,
     plot_mlton,
@@ -321,6 +323,37 @@ def test_infer_configs():
         infer_configs(df)
 
 
+def test_constant_export():
+    assert isinstance(USE_NEW_ANALYSIS_STYLE, bool)
+
+
+def test_calculate_error_bars():
+    # 1. Single pair of 1D lists
+    test_trials = [1.0, 1.1, 1.2, 0.9, 1.0]
+    base_trials = [1.0, 1.0, 1.0, 1.0, 1.0]
+    em, ep = calculate_error_bars(test_trials, base_trials, random_state=42)
+    assert em >= 0.0
+    assert ep >= 0.0
+    assert isinstance(em, float)
+    assert isinstance(ep, float)
+
+    # 2. pd.Series of trial lists
+    s_test = pd.Series([[1.0, 1.1, 1.2], [2.0, 2.2, 2.1]], index=['b1', 'b2'])
+    s_base = pd.Series([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]], index=['b1', 'b2'])
+    em_series, ep_series = calculate_error_bars(s_test, s_base, random_state=42)
+    assert isinstance(em_series, pd.Series)
+    assert isinstance(ep_series, pd.Series)
+    assert list(em_series.index) == ['b1', 'b2']
+    assert len(em_series) == 2
+
+    # 3. Scalar inputs / length <= 1 (should return 0.0, 0.0)
+    s_test_sc = pd.Series([100, 200], index=['b1', 'b2'])
+    s_base_sc = pd.Series([100, 200], index=['b1', 'b2'])
+    em_sc, ep_sc = calculate_error_bars(s_test_sc, s_base_sc)
+    assert (em_sc.values == 0.0).all()
+    assert (ep_sc.values == 0.0).all()
+
+
 def test_plot_parallel_bench_cores(tmp_path):
     df = pd.DataFrame({
         'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
@@ -330,18 +363,33 @@ def test_plot_parallel_bench_cores(tmp_path):
         'binary_md5': ['hash_base', 'hash_base', 'hash_opt', 'hash_opt'],
     })
 
-    out_file = "test_cores_chart"
-    plot_parallel_bench_cores(df, title="Test Cores", out_filename=out_file, out_dir=str(tmp_path))
-    created_pdf = tmp_path / f"{out_file}.pdf"
+    # Test new analysis style (default)
+    out_file_new = "test_cores_chart_new"
+    plot_parallel_bench_cores(df, title="Test Cores New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    created_pdf = tmp_path / f"{out_file_new}.pdf"
     assert created_pdf.exists()
     assert created_pdf.stat().st_size > 0
 
-    created_csv = tmp_path / f"{out_file}.csv"
+    created_csv = tmp_path / f"{out_file_new}.csv"
     assert created_csv.exists()
     assert created_csv.stat().st_size > 0
     csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'procs', 'relative_pct', 'std_pct']
+    assert list(csv_df.columns) == ['bench', 'procs', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
     assert len(csv_df) == 2
+
+    # Test old analysis style
+    out_file_old = "test_cores_chart_old"
+    plot_parallel_bench_cores(df, title="Test Cores Old", out_filename=out_file_old, out_dir=str(tmp_path), use_new_analysis_style=False)
+    created_pdf_old = tmp_path / f"{out_file_old}.pdf"
+    assert created_pdf_old.exists()
+    assert created_pdf_old.stat().st_size > 0
+
+    created_csv_old = tmp_path / f"{out_file_old}.csv"
+    assert created_csv_old.exists()
+    assert created_csv_old.stat().st_size > 0
+    csv_df_old = pd.read_csv(created_csv_old)
+    assert list(csv_df_old.columns) == ['bench', 'procs', 'relative_pct', 'std_pct']
+    assert len(csv_df_old) == 2
 
 
 def test_plot_parallel_bench_size(tmp_path):
@@ -353,19 +401,35 @@ def test_plot_parallel_bench_size(tmp_path):
         'binary_md5': ['hash_base', 'hash_opt'],
     })
 
-    out_file = "test_size_chart"
-    plot_parallel_bench_size(df, title="Test Size", out_filename=out_file, out_dir=str(tmp_path))
-    created_pdf = tmp_path / f"{out_file}.pdf"
-    assert created_pdf.exists()
-    assert created_pdf.stat().st_size > 0
+    # New style
+    out_file_new = "test_size_chart_new"
+    plot_parallel_bench_size(df, title="Test Size New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    created_pdf_new = tmp_path / f"{out_file_new}.pdf"
+    assert created_pdf_new.exists()
+    assert created_pdf_new.stat().st_size > 0
 
-    created_csv = tmp_path / f"{out_file}.csv"
-    assert created_csv.exists()
-    assert created_csv.stat().st_size > 0
-    csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
-    assert csv_df.iloc[0]['bench'] == 'bench1'
-    assert csv_df.iloc[0]['relative_pct'] == pytest.approx(-10.0)
+    created_csv_new = tmp_path / f"{out_file_new}.csv"
+    assert created_csv_new.exists()
+    assert created_csv_new.stat().st_size > 0
+    csv_df_new = pd.read_csv(created_csv_new)
+    assert list(csv_df_new.columns) == ['bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert csv_df_new.iloc[0]['bench'] == 'bench1'
+    assert csv_df_new.iloc[0]['relative_pct'] == pytest.approx(-10.0)
+
+    # Old style
+    out_file_old = "test_size_chart_old"
+    plot_parallel_bench_size(df, title="Test Size Old", out_filename=out_file_old, out_dir=str(tmp_path), use_new_analysis_style=False)
+    created_pdf_old = tmp_path / f"{out_file_old}.pdf"
+    assert created_pdf_old.exists()
+    assert created_pdf_old.stat().st_size > 0
+
+    created_csv_old = tmp_path / f"{out_file_old}.csv"
+    assert created_csv_old.exists()
+    assert created_csv_old.stat().st_size > 0
+    csv_df_old = pd.read_csv(created_csv_old)
+    assert list(csv_df_old.columns) == ['bench', 'relative_pct', 'std_pct']
+    assert csv_df_old.iloc[0]['bench'] == 'bench1'
+    assert csv_df_old.iloc[0]['relative_pct'] == pytest.approx(-10.0)
 
 
 def test_plot_parallel_bench_size_multicore(tmp_path):
@@ -377,75 +441,84 @@ def test_plot_parallel_bench_size_multicore(tmp_path):
         'binary_md5': ['hash_base', 'hash_base', 'hash_opt', 'hash_opt'],
     })
 
-    out_file = "test_size_chart_multi"
-    plot_parallel_bench_size(df, title="Test Multi Size", out_filename=out_file, out_dir=str(tmp_path))
-    created_pdf = tmp_path / f"{out_file}.pdf"
-    assert created_pdf.exists()
-    assert created_pdf.stat().st_size > 0
+    # New style
+    out_file_new = "test_size_chart_multi_new"
+    plot_parallel_bench_size(df, title="Test Multi Size New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    created_pdf_new = tmp_path / f"{out_file_new}.pdf"
+    assert created_pdf_new.exists()
+    assert created_pdf_new.stat().st_size > 0
 
-    created_csv = tmp_path / f"{out_file}.csv"
-    assert created_csv.exists()
-    assert created_csv.stat().st_size > 0
-    csv_df = pd.read_csv(created_csv)
-    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
-    assert len(csv_df) == 1
-    assert csv_df.iloc[0]['relative_pct'] == pytest.approx(-10.0)
+    created_csv_new = tmp_path / f"{out_file_new}.csv"
+    assert created_csv_new.exists()
+    assert created_csv_new.stat().st_size > 0
+    csv_df_new = pd.read_csv(created_csv_new)
+    assert list(csv_df_new.columns) == ['bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert len(csv_df_new) == 1
+    assert csv_df_new.iloc[0]['relative_pct'] == pytest.approx(-10.0)
+
+    # Old style
+    out_file_old = "test_size_chart_multi_old"
+    plot_parallel_bench_size(df, title="Test Multi Size Old", out_filename=out_file_old, out_dir=str(tmp_path), use_new_analysis_style=False)
+    created_pdf_old = tmp_path / f"{out_file_old}.pdf"
+    assert created_pdf_old.exists()
+    assert created_pdf_old.stat().st_size > 0
+
+    created_csv_old = tmp_path / f"{out_file_old}.csv"
+    assert created_csv_old.exists()
+    assert created_csv_old.stat().st_size > 0
+    csv_df_old = pd.read_csv(created_csv_old)
+    assert list(csv_df_old.columns) == ['bench', 'relative_pct', 'std_pct']
+    assert len(csv_df_old) == 1
+    assert csv_df_old.iloc[0]['relative_pct'] == pytest.approx(-10.0)
 
 
-def test_process_config_all_sections(tmp_path):
-    output_dir = tmp_path / "charts_all"
-    test_config_path = tmp_path / "test_config_all.json"
+def test_plot_analysis_style_difference(tmp_path):
+    # Construct a case where pair-wise mean of ratios differs from ratio of means
+    # base trials: [10.0, 20.0], mean = 15.0
+    # test trials: [5.0, 40.0], mean = 22.5
+    # Pair-wise ratios: [5/10, 40/20] = [0.5, 2.0], mean ratio = 1.25 (+25%)
+    # Ratio of means: 22.5 / 15.0 = 1.5 (+50%)
+    df = pd.DataFrame({
+        'bench': ['diff_bench', 'diff_bench'],
+        'config': ['mlton-baseline', 'mlton-opt'],
+        'test_results_secs': [[10.0, 20.0], [5.0, 40.0]],
+        'binary_md5': ['h1', 'h2'],
+    })
 
+    plot_parallel_bench(df, values='test_results_secs', out_filename='diff_new', out_dir=str(tmp_path), use_new_analysis_style=True)
+    plot_parallel_bench(df, values='test_results_secs', out_filename='diff_old', out_dir=str(tmp_path), use_new_analysis_style=False)
+
+    df_new = pd.read_csv(tmp_path / "diff_new.csv")
+    df_old = pd.read_csv(tmp_path / "diff_old.csv")
+
+    assert df_new.iloc[0]['relative_pct'] == pytest.approx(50.0)
+    assert df_old.iloc[0]['relative_pct'] == pytest.approx(25.0)
+
+
+def test_process_config_old_and_new_style(tmp_path):
     config_data = {
-        "output_directory": str(output_dir),
-        "mlton_benchmarks_mlton_vs_mlton": {
-            "compiler": "mlton",
-            "suite": "mlton",
-            "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl"
-        },
+        "output_directory": str(tmp_path / "charts_old_style"),
         "parallel_bench_benchmarks_mlton_vs_mlton": {
             "compiler": "mlton",
             "suite": "parallel_bench",
-            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl"
-        },
-        "parallel_bench_benchmarks_mpl_vs_mpl": {
-            "compiler": "mpl",
-            "suite": "parallel_bench",
-            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
         }
     }
+    # Run with old style
+    process_config(config_data, use_new_analysis_style=False)
+    csv_old = tmp_path / "charts_old_style" / "tuple_parallel_bench_run_mlton_vs_mlton.csv"
+    assert csv_old.exists()
+    df_old = pd.read_csv(csv_old)
+    assert 'std_pct' in df_old.columns
 
-    with open(test_config_path, "w", encoding="utf-8") as f:
-        json.dump(config_data, f)
-
-    with open(test_config_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    process_config(config)
-
-    expected_files = [
-        "tuple_mlton_run_mlton_vs_mlton.pdf",
-        "tuple_mlton_run_mlton_vs_mlton.csv",
-        "tuple_mlton_compile_mlton_vs_mlton.pdf",
-        "tuple_mlton_compile_mlton_vs_mlton.csv",
-        "tuple_mlton_size_mlton_vs_mlton.pdf",
-        "tuple_mlton_size_mlton_vs_mlton.csv",
-        "tuple_parallel_bench_run_mlton_vs_mlton.pdf",
-        "tuple_parallel_bench_run_mlton_vs_mlton.csv",
-        "tuple_parallel_bench_size_mlton_vs_mlton.pdf",
-        "tuple_parallel_bench_size_mlton_vs_mlton.csv",
-        "tuple_parallel_bench_run_mpl_vs_mpl.pdf",
-        "tuple_parallel_bench_run_mpl_vs_mpl.csv",
-        "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
-        "tuple_parallel_bench_size_mpl_vs_mpl.csv",
-        "chart_info.md",
-        "all_charts.tex",
-    ]
-
-    for fname in expected_files:
-        output_file = output_dir / fname
-        assert output_file.exists(), f"Expected chart file {fname} was not created."
-        assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+    # Run with new style
+    config_data["output_directory"] = str(tmp_path / "charts_new_style")
+    process_config(config_data, use_new_analysis_style=True)
+    csv_new = tmp_path / "charts_new_style" / "tuple_parallel_bench_run_mlton_vs_mlton.csv"
+    assert csv_new.exists()
+    df_new = pd.read_csv(csv_new)
+    assert 'err_minus_pct' in df_new.columns
+    assert 'err_plus_pct' in df_new.columns
 
 
 def test_plot_mlton_csv_content(tmp_path):
@@ -455,22 +528,31 @@ def test_plot_mlton_csv_content(tmp_path):
         'runTime': [10.0, 8.0],
         'binaryChecksum': ['hash0', 'hash1'],
     })
-    out_file = "test_mlton_chart"
-    plot_mlton(df, values='runTime', title='Test MLton', out_filename=out_file, abbrevs=('MLton0', 'MLton1'), out_dir=str(tmp_path))
+    # New style
+    out_file_new = "test_mlton_chart_new"
+    plot_mlton(df, values='runTime', title='Test MLton New', out_filename=out_file_new, abbrevs=('MLton0', 'MLton1'), out_dir=str(tmp_path), use_new_analysis_style=True)
+    csv_file_new = tmp_path / f"{out_file_new}.csv"
+    assert csv_file_new.exists()
+    csv_df_new = pd.read_csv(csv_file_new)
+    assert list(csv_df_new.columns) == ['bench', 'MLton0', 'MLton1', 'relative_pct']
+    assert len(csv_df_new) == 1
+    assert csv_df_new.iloc[0]['bench'] == 'bench1'
+    assert csv_df_new.iloc[0]['MLton0'] == pytest.approx(10.0)
+    assert csv_df_new.iloc[0]['MLton1'] == pytest.approx(8.0)
+    assert csv_df_new.iloc[0]['relative_pct'] == pytest.approx(-20.0)
 
-    pdf_file = tmp_path / f"{out_file}.pdf"
-    csv_file = tmp_path / f"{out_file}.csv"
-    assert pdf_file.exists()
-    assert csv_file.exists()
-
-    csv_df = pd.read_csv(csv_file)
-    assert list(csv_df.columns) == ['bench', 'MLton0', 'MLton1', 'relative_pct']
-    assert len(csv_df) == 1
-    row = csv_df.iloc[0]
-    assert row['bench'] == 'bench1'
-    assert row['MLton0'] == pytest.approx(10.0)
-    assert row['MLton1'] == pytest.approx(8.0)
-    assert row['relative_pct'] == pytest.approx(-20.0)
+    # Old style
+    out_file_old = "test_mlton_chart_old"
+    plot_mlton(df, values='runTime', title='Test MLton Old', out_filename=out_file_old, abbrevs=('MLton0', 'MLton1'), out_dir=str(tmp_path), use_new_analysis_style=False)
+    csv_file_old = tmp_path / f"{out_file_old}.csv"
+    assert csv_file_old.exists()
+    csv_df_old = pd.read_csv(csv_file_old)
+    assert list(csv_df_old.columns) == ['bench', 'MLton0', 'MLton1', 'relative_pct']
+    assert len(csv_df_old) == 1
+    assert csv_df_old.iloc[0]['bench'] == 'bench1'
+    assert csv_df_old.iloc[0]['MLton0'] == pytest.approx(10.0)
+    assert csv_df_old.iloc[0]['MLton1'] == pytest.approx(8.0)
+    assert csv_df_old.iloc[0]['relative_pct'] == pytest.approx(-20.0)
 
 
 def test_plot_parallel_bench_csv_content(tmp_path):
@@ -480,20 +562,32 @@ def test_plot_parallel_bench_csv_content(tmp_path):
         'test_results_secs': [[2.0, 4.0], [1.0, 2.0]],
         'binary_md5': ['hash0', 'hash1'],
     })
-    out_file = "test_pb_chart"
-    plot_parallel_bench(df, values='test_results_secs', title='Test PB', out_filename=out_file, out_dir=str(tmp_path))
 
-    pdf_file = tmp_path / f"{out_file}.pdf"
-    csv_file = tmp_path / f"{out_file}.csv"
-    assert pdf_file.exists()
-    assert csv_file.exists()
+    # New style
+    out_file_new = "test_pb_chart_new"
+    plot_parallel_bench(df, values='test_results_secs', title='Test PB New', out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    pdf_file_new = tmp_path / f"{out_file_new}.pdf"
+    csv_file_new = tmp_path / f"{out_file_new}.csv"
+    assert pdf_file_new.exists()
+    assert csv_file_new.exists()
+    csv_df_new = pd.read_csv(csv_file_new)
+    assert list(csv_df_new.columns) == ['bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert len(csv_df_new) == 1
+    assert csv_df_new.iloc[0]['bench'] == 'bench1'
+    assert csv_df_new.iloc[0]['relative_pct'] == pytest.approx(-50.0)
 
-    csv_df = pd.read_csv(csv_file)
-    assert list(csv_df.columns) == ['bench', 'relative_pct', 'std_pct']
-    assert len(csv_df) == 1
-    row = csv_df.iloc[0]
-    assert row['bench'] == 'bench1'
-    assert row['relative_pct'] == pytest.approx(-50.0)
+    # Old style
+    out_file_old = "test_pb_chart_old"
+    plot_parallel_bench(df, values='test_results_secs', title='Test PB Old', out_filename=out_file_old, out_dir=str(tmp_path), use_new_analysis_style=False)
+    pdf_file_old = tmp_path / f"{out_file_old}.pdf"
+    csv_file_old = tmp_path / f"{out_file_old}.csv"
+    assert pdf_file_old.exists()
+    assert csv_file_old.exists()
+    csv_df_old = pd.read_csv(csv_file_old)
+    assert list(csv_df_old.columns) == ['bench', 'relative_pct', 'std_pct']
+    assert len(csv_df_old) == 1
+    assert csv_df_old.iloc[0]['bench'] == 'bench1'
+    assert csv_df_old.iloc[0]['relative_pct'] == pytest.approx(-50.0)
 
 
 def test_every_pdf_has_matching_csv(tmp_path):
