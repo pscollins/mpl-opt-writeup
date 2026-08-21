@@ -103,6 +103,13 @@
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_parallel_bench_mpl_trellis}
+\end{figure}
+
 \clearpage
 \section{\texttt{ConApp} Flattening}
 
@@ -174,6 +181,13 @@
   \end{subfigure}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench_mpl_trellis}
 \end{figure}
 
 \clearpage
@@ -249,6 +263,13 @@
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_full_parallel_mpl:260815-192835:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-192835.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_parallel_bench_mpl_trellis}
+\end{figure}
+
 \clearpage
 \section{SoA Flattening}
 
@@ -320,6 +341,13 @@
   \end{subfigure}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_parallel_bench_mpl_trellis}
 \end{figure}
 
 \clearpage

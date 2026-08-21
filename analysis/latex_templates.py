@@ -138,6 +138,13 @@ PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-ben
   \caption{${caption}}
   \label{fig:${t}_parallel_bench_mpl}
 \end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{${t}_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{${caption}}
+  \label{fig:${t}_parallel_bench_mpl_trellis}
+\end{figure}
 """
 
 MLTON_TABLES_TEMPLATE = r"""\subsubsection{MLton Benchmarks}

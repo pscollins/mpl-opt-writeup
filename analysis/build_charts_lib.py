@@ -439,6 +439,175 @@ def plot_parallel_bench_vs_mlton(data, type_name='tuple', out_dir='charts', use_
         plot_parallel_bench(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
 
 
+# Plots a trellis chart (small multiples) of run time data across core counts for each benchmark
+def plot_parallel_bench_trellis(df, values='test_results_secs', title='', out_filename='', abbrevs=None, ncols=3, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
+    # 1. Find the benchmarks where the compiled binary has a differing hash
+    filtered = df[df.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
+    if filtered.empty:
+        print("No benchmarks with differing binary hash found.")
+        return
+
+    base_key, test_key = infer_configs(filtered, abbrevs)
+    filtered = filtered[filtered[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
+    
+    # 2. Among benchmarks with a differing hash, collect all runs according to their core-count ("procs")
+    filtered = filtered.drop_duplicates(subset=['bench', 'procs', COMPILER_NAME_FIELD_PARALLEL], keep='last')
+    pivot = filtered.pivot(index=['bench', 'procs'], columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
+    pivot = pivot.dropna(subset=[base_key, test_key])
+    if pivot.empty:
+        print("No matching benchmark runs found for comparison.")
+        return
+
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+        err_minus, err_plus = calculate_error_bars(pivot[test_key], pivot[base_key])
+        err_minus_pct = np.asarray(err_minus) * 100
+        err_plus_pct = np.asarray(err_plus) * 100
+        relative_pct = (mean_abs_ratios.values - 1) * 100
+
+        results_df = pd.DataFrame({
+            'bench': [idx[0] for idx in pivot.index],
+            'procs': [idx[1] for idx in pivot.index],
+            'relative_pct': relative_pct,
+            'err_minus_pct': err_minus_pct,
+            'err_plus_pct': err_plus_pct,
+        }).round(3)
+    else:
+        all_abs_ratios = pivot.apply(
+            lambda row: np.array(row[test_key]) / np.array(row[base_key]),
+            axis=1
+        )
+        mean_abs_ratios = all_abs_ratios.apply(np.mean)
+        std_abs_ratios = all_abs_ratios.apply(safe_std)
+
+        relative_pct = (mean_abs_ratios.values - 1) * 100
+        std_pct = std_abs_ratios.values * 100
+
+        results_df = pd.DataFrame({
+            'bench': [idx[0] for idx in pivot.index],
+            'procs': [idx[1] for idx in pivot.index],
+            'relative_pct': relative_pct,
+            'std_pct': std_pct,
+        }).round(3)
+
+    # 3. Calculate geomean speedup at each core count
+    df_with_ratios = pd.DataFrame({
+        'procs': [idx[1] for idx in pivot.index],
+        'mean_ratio': mean_abs_ratios.values,
+    })
+    geomean_per_proc = df_with_ratios.groupby('procs')['mean_ratio'].apply(
+        lambda s: np.exp(np.mean(np.log(s.dropna())))
+    )
+    geomean_pct = (geomean_per_proc - 1) * 100
+
+    benches = sorted(results_df['bench'].unique())
+    n_benches = len(benches)
+    has_geomean = n_benches > 1
+    total_panels = n_benches + (1 if has_geomean else 0)
+    nrows = int(np.ceil(total_panels / ncols))
+
+    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 3.6, nrows * 2.8), sharex=True, sharey=True)
+    axes_flat = np.atleast_1d(axes).flatten()
+
+    markers = ['o', 's', '^', 'v', 'D', 'p', 'h', '*', 'X', '<', '>']
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color'] if 'color' in prop_cycle.by_key() else ['tab:blue']
+
+    unique_procs = sorted(results_df['procs'].unique())
+    is_log = len(unique_procs) > 2 and all(p > 0 for p in unique_procs) and max(unique_procs) / min(unique_procs) >= 8
+
+    # Geomean panel first
+    if has_geomean:
+        ax = axes_flat[0]
+        ax.plot(
+            geomean_per_proc.index,
+            geomean_pct.values,
+            label='Geomean',
+            linestyle='-',
+            color='black',
+            marker='D',
+            linewidth=2,
+            markersize=5,
+            zorder=10
+        )
+        ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
+        if is_log:
+            ax.set_xscale('log', base=2)
+        ax.set_xticks(unique_procs)
+        ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+        ax.tick_params(axis='x', rotation=45, labelsize=8)
+        ax.set_title('Geomean', fontsize=10, fontweight='bold')
+        ax.grid(True, linestyle=':', alpha=0.5)
+
+    offset = 1 if has_geomean else 0
+    for i, bench in enumerate(benches):
+        ax = axes_flat[i + offset]
+        bench_data = results_df[results_df['bench'] == bench].sort_values('procs')
+        marker = markers[i % len(markers)]
+        color = colors[i % len(colors)]
+
+        if use_new_analysis_style:
+            yerr = [bench_data['err_minus_pct'], bench_data['err_plus_pct']]
+        else:
+            yerr = bench_data['std_pct']
+
+        ax.errorbar(
+            bench_data['procs'],
+            bench_data['relative_pct'],
+            yerr=yerr,
+            marker=marker,
+            capsize=3,
+            capthick=1,
+            linewidth=1.5,
+            markersize=4.5,
+            alpha=0.9,
+            color=color,
+            label=bench
+        )
+        ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
+        if is_log:
+            ax.set_xscale('log', base=2)
+        ax.set_xticks(unique_procs)
+        ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+        ax.tick_params(axis='x', rotation=45, labelsize=8)
+        ax.set_title(bench, fontsize=10)
+        ax.grid(True, linestyle=':', alpha=0.5)
+
+    # Hide any remaining unused axes
+    for j in range(total_panels, len(axes_flat)):
+        fig.delaxes(axes_flat[j])
+
+    # Y-axis labels for leftmost column, X-axis labels for bottom subplots
+    if isinstance(axes, np.ndarray) and axes.ndim == 2:
+        for row in range(nrows):
+            axes[row, 0].set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$', fontsize=9)
+        for col in range(ncols):
+            axes[-1, col].set_xlabel('Core count', fontsize=9)
+    else:
+        axes_flat[0].set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$', fontsize=9)
+        for ax in axes_flat[:total_panels]:
+            ax.set_xlabel('Core count', fontsize=9)
+
+    if title:
+        fig.suptitle(title, fontsize=12, y=1.00)
+
+    plt.tight_layout()
+    os.makedirs(out_dir, exist_ok=True)
+    if out_filename:
+        csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+        print(f'Saving data to {csv_path}')
+        results_df.to_csv(csv_path, index=False)
+        path = os.path.join(out_dir, f'{out_filename}.pdf')
+        print(f'Saving chart to {path}')
+        plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
+    plt.close()
+
+
 def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     print(f'Plotting file for {type_name} (MPL vs MPL): {data}')
     df = load_df(data)
@@ -455,6 +624,15 @@ def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts', use_ne
             plot_parallel_bench_size(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
         else:
             plot_parallel_bench_cores(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
+
+    plot_parallel_bench_trellis(
+        df,
+        values='test_results_secs',
+        title=f'{type_name.capitalize()} run time comparison across core counts (trellis)',
+        out_filename=f'{type_name}_parallel_bench_run_mpl_vs_mpl_trellis',
+        out_dir=out_dir,
+        use_new_analysis_style=use_new_analysis_style
+    )
 
 
 def generate_all_charts_tex(config: dict) -> str:
