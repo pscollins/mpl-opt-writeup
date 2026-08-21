@@ -67,7 +67,7 @@ PARALLEL_MPL_CAPTIONS = {
     'soa': r'Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts.',
 }
 
-MLTON_SUBSECTION_TEMPLATE = r"""\subsection{MLton Benchmarks}
+MLTON_SUBSECTION_TEMPLATE = r"""\subsection{MLton Benchmarks (${test_type})}
 
 \begin{figure}[H]
   \centering
@@ -96,7 +96,7 @@ MLTON_SUBSECTION_TEMPLATE = r"""\subsection{MLton Benchmarks}
 \end{figure}
 """
 
-PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MLton vs MLton (${test_type})}
 
 \begin{figure}[H]
   \centering
@@ -118,7 +118,7 @@ PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-b
 \end{figure}
 """
 
-PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (${test_type})}
 
 \begin{figure}[H]
   \centering
@@ -147,7 +147,7 @@ PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-ben
 \end{figure}
 """
 
-MLTON_TABLES_TEMPLATE = r"""\subsubsection{MLton Benchmarks}
+MLTON_TABLES_TEMPLATE = r"""\subsubsection{MLton Benchmarks (${test_type})}
 
 \paragraph*{Run time}
 \importcsv{${t}_mlton_run_mlton_vs_mlton.csv}
@@ -159,7 +159,7 @@ MLTON_TABLES_TEMPLATE = r"""\subsubsection{MLton Benchmarks}
 \importcsv{${t}_mlton_size_mlton_vs_mlton.csv}
 """
 
-PARALLEL_BENCH_MLTON_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+PARALLEL_BENCH_MLTON_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton (${test_type})}
 
 \paragraph*{Run time}
 \importcsv{${t}_parallel_bench_run_mlton_vs_mlton.csv}
@@ -168,7 +168,7 @@ PARALLEL_BENCH_MLTON_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-be
 \importcsv{${t}_parallel_bench_size_mlton_vs_mlton.csv}
 """
 
-PARALLEL_BENCH_MPL_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+PARALLEL_BENCH_MPL_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (${test_type})}
 
 \paragraph*{Run time}
 \importcsv{${t}_parallel_bench_run_mpl_vs_mpl.csv}
@@ -183,30 +183,37 @@ def format_caption(base_caption: str, data_file: str) -> str:
 
 
 def render_mlton_subsection(t: str, data_file: str) -> str:
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
     base_cap = MLTON_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the MLton benchmark suite.')
     cap = format_caption(base_cap, data_file)
-    return Template(MLTON_SUBSECTION_TEMPLATE).substitute(t=t, caption=cap)
+    return Template(MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mlton_subsection(t: str, data_file: str) -> str:
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
     base_cap = PARALLEL_MLTON_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the \texttt{{parallel-ml-bench}} benchmark suite.')
     cap = format_caption(base_cap, data_file)
-    return Template(PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE).substitute(t=t, caption=cap)
+    return Template(PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mpl_subsection(t: str, data_file: str) -> str:
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
     base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.')
     cap = format_caption(base_cap, data_file)
-    return Template(PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE).substitute(t=t, caption=cap)
+    return Template(PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_mlton_tables_subsection(t: str) -> str:
-    return Template(MLTON_TABLES_TEMPLATE).substitute(t=t)
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    return Template(MLTON_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
 
 
 def render_parallel_bench_mlton_tables_subsection(t: str) -> str:
-    return Template(PARALLEL_BENCH_MLTON_TABLES_TEMPLATE).substitute(t=t)
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    return Template(PARALLEL_BENCH_MLTON_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
 
 
 def render_parallel_bench_mpl_tables_subsection(t: str) -> str:
-    return Template(PARALLEL_BENCH_MPL_TABLES_TEMPLATE).substitute(t=t)
+    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    return Template(PARALLEL_BENCH_MPL_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
+

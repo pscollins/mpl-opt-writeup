@@ -711,9 +711,9 @@ def test_generate_all_charts_tex_includes_filenames():
     assert r"\protect\nolinkurl{my_pb_mlton_data_file.jsonl}" in tex
     assert r"\protect\nolinkurl{my_pb_mpl_data_file.jsonl}" in tex
     assert r"\section{Tuple Flattening}" in tex
-    assert r"\subsection{MLton Benchmarks}" in tex
-    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in tex
-    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in tex
+    assert r"\subsection{MLton Benchmarks (Tuple Flattening)}" in tex
+    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton (Tuple Flattening)}" in tex
+    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Flattening)}" in tex
 
     # Verify Data Tables section is at the end
     assert r"\section{Data Tables}" in tex
@@ -739,31 +739,31 @@ def test_latex_templates_renderers():
     assert r"Base caption Data: \protect\nolinkurl{data.jsonl}." in cap
 
     mlton_sub = render_mlton_subsection("tuple", "data_mlton.jsonl")
-    assert r"\subsection{MLton Benchmarks}" in mlton_sub
+    assert r"\subsection{MLton Benchmarks (Tuple Flattening)}" in mlton_sub
     assert r"tuple_mlton_run_mlton_vs_mlton.pdf" in mlton_sub
     assert r"\protect\nolinkurl{data_mlton.jsonl}" in mlton_sub
 
     pb_mlton_sub = render_parallel_bench_mlton_subsection("con", "data_pb_mlton.jsonl")
-    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in pb_mlton_sub
+    assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton (\texttt{ConApp} Flattening)}" in pb_mlton_sub
     assert r"con_parallel_bench_run_mlton_vs_mlton.pdf" in pb_mlton_sub
     assert r"\protect\nolinkurl{data_pb_mlton.jsonl}" in pb_mlton_sub
 
     pb_mpl_sub = render_parallel_bench_mpl_subsection("aos", "data_pb_mpl.jsonl")
-    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in pb_mpl_sub
+    assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (AoS Flattening)}" in pb_mpl_sub
     assert r"aos_parallel_bench_run_mpl_vs_mpl.pdf" in pb_mpl_sub
     assert r"aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf" in pb_mpl_sub
     assert r"\protect\nolinkurl{data_pb_mpl.jsonl}" in pb_mpl_sub
 
     mlton_tbl = render_mlton_tables_subsection("tuple")
-    assert r"\subsubsection{MLton Benchmarks}" in mlton_tbl
+    assert r"\subsubsection{MLton Benchmarks (Tuple Flattening)}" in mlton_tbl
     assert r"\importcsv{tuple_mlton_run_mlton_vs_mlton.csv}" in mlton_tbl
 
     pb_mlton_tbl = render_parallel_bench_mlton_tables_subsection("con")
-    assert r"\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}" in pb_mlton_tbl
+    assert r"\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton (\texttt{ConApp} Flattening)}" in pb_mlton_tbl
     assert r"\importcsv{con_parallel_bench_run_mlton_vs_mlton.csv}" in pb_mlton_tbl
 
     pb_mpl_tbl = render_parallel_bench_mpl_tables_subsection("aos")
-    assert r"\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}" in pb_mpl_tbl
+    assert r"\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (AoS Flattening)}" in pb_mpl_tbl
     assert r"\importcsv{aos_parallel_bench_run_mpl_vs_mpl.csv}" in pb_mpl_tbl
 
 
