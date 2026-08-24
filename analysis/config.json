@@ -25,14 +25,14 @@
     "soa": "mpl_soa_set_width_3:260822-145503:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-145503.processed.jsonl"
 },
 "trial_scatter_plots": {
-    "delunay_mlton_parallel_bench_scatter": {
+    "delunay_mlton_parallel_bench": {
         "compiler": "mlton",
         "suite": "parallel_bench",
         "experiment_type": "tuple",
         "benchmark": "delunay",
         "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl",
     }
-    "dedup_mlton_parallel_bench_scatter": {
+    "dedup_mlton_parallel_bench": {
         "compiler": "mlton",
         "suite": "parallel_bench",
         "experiment_type": "tuple",
