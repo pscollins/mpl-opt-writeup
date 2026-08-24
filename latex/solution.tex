@@ -51,7 +51,7 @@
 \usepackage{cleveref}
 
 %% \citet command
-\usepackage{natbib}
+\usepackage[numbers]{natbib}
 
 \newcommand{\cof}{\textrm{cof}\, }
 \newcommand{\tr}{\textrm{tr}}
@@ -2250,8 +2250,11 @@ examining \cref{fig:example_scatter_trials}, the measured runtimes often exhibit
 a bimodal distribution, presumably related to the effect of the GC. As argued in
 \citet{bootstrap-paper}, it is consequently incorrect to estimate uncertainty
 using the standard deviation to construct a symmetric confidence interval --
-instead, we report 95\% confidence intervals estimated using the bootstrap
-method.
+instead, we (for the \texttt{parallel\_bench} suite) report 95\% confidence
+intervals estimated using the bootstrap method.
+
+The MLton benchmark framework does not report per-trial numbers, and so no
+confidence intervals are included for the MLton data.
 
 \begin{figure}[htbp]
   \centering
@@ -2808,7 +2811,7 @@ Other items:
 
 
 \nocite{*}
-\bibliographystyle{plain}
+\bibliographystyle{plainnat}
 \bibliography{references}
 
 \end{document}
