@@ -47,11 +47,12 @@
 
 \usepackage{subcaption}
 
-%% nicely formatted references (must load last)
-\usepackage{cleveref}
-
 %% \citet command
 \usepackage[numbers]{natbib}
+
+
+%% nicely formatted references (must load last)
+\usepackage{cleveref}
 
 \newcommand{\cof}{\textrm{cof}\, }
 \newcommand{\tr}{\textrm{tr}}
@@ -2254,7 +2255,9 @@ instead, we (for the \texttt{parallel\_bench} suite) report 95\% confidence
 intervals estimated using the bootstrap method.
 
 The MLton benchmark framework does not report per-trial numbers, and so no
-confidence intervals are included for the MLton data.
+confidence intervals are included for the MLton data. Conversely, the parallel
+ML bench framework does not measure compilation times, and so compilation time
+impact is included only for MLton.
 
 \begin{figure}[htbp]
   \centering
@@ -2271,11 +2274,9 @@ confidence intervals are included for the MLton data.
     \caption{\texttt{dedup}}
     \label{fig:dedup_mlton_parallel_ml_bench_scatter}
   \end{subfigure}
-  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration in both cases.}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \textt{ConApp}-flattening for \texttt{dedup}.}
   \label{fig:example_scatter_trials}
 \end{figure}
-
-
 
 
 In order to more-faithfully measure cases where our optimizations impacted only
@@ -2352,9 +2353,8 @@ For the evaluation below, we use the following configuration:
   \label{fig:tuple_mlton}
 \end{figure}
 
-The effect is modest across the board on this benchmark suite: when the pass has
-any impact at all, it duplicates functions, leading to 
-
+As seen in \cref{fig:tuple_mlton}, the tuple flattning optimization is broadly
+neutral for MLton on the MLton benchmark suite, with <5\% impact on all metrics.
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
@@ -2380,6 +2380,22 @@ any impact at all, it duplicates functions, leading to
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench}
 \end{figure}
+
+As in the previous section, the impact of the tuple optimization on MLton for
+parallel ML bench is also broadly neutral, as seen in
+\cref{fig:tuple_parallel_bench}.
+
+One exception is \texttt{reverb}, which shows a huge (40\%) confidence interval.
+Examining the raw data in \cref{fig:reverb_tuple_scatter} makes it clear that
+both the base and test sides exhibit extreme run-to-run variance (more than a
+factor of 2) and so the noise is inherent to the benchmark rather than a new
+effect of the tuple flattening optimzation.
+
+%% TODO(agy): add in the reverb_scatter figure (find it under charts/)
+
+%% use the description: Trial-by-trial execution time for \texttt{reverb} in the
+%% \textt{tuple}-flattening configuration.
+
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
