@@ -1,4 +1,4 @@
-Data generated at 2026-08-23 23:41:00.707138 using the following config:
+Data generated at 2026-08-24 00:20:53.207997 using the following config:
 
 {
   "output_directory": "charts/",
@@ -40,6 +40,13 @@ Data generated at 2026-08-23 23:41:00.707138 using the following config:
       "experiment_type": "con",
       "benchmark": "dedup",
       "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+    },
+    "reverb_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "tuple",
+      "benchmark": "reverb",
+      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
     }
   }
 }

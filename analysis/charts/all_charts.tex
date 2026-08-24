@@ -371,6 +371,15 @@
   \label{fig:dedup_mlton_parallel_ml_bench_scatter}
 \end{figure}
 
+\subsection{\texttt{reverb} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{reverb_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Per-trial execution times for \texttt{reverb} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}.}
+  \label{fig:reverb_mlton_parallel_ml_bench_scatter}
+\end{figure}
+
 \clearpage
 \section{Data Tables}
 
@@ -503,5 +512,9 @@
 \subsubsection{\texttt{dedup} (\texttt{parallel-ml-bench}: MLton (\texttt{ConApp} Flattening))}
 
 \importcsv{dedup_mlton_parallel_ml_bench_scatter.csv}
+
+\subsubsection{\texttt{reverb} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
+
+\importcsv{reverb_mlton_parallel_ml_bench_scatter.csv}
 
 \end{document}
