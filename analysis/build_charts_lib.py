@@ -541,7 +541,7 @@ def plot_parallel_bench_trellis(df, values='test_results_secs', title='', out_fi
         ax.set_xticks(unique_procs)
         ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
         ax.yaxis.set_major_formatter(ticker.PercentFormatter())
-        ax.tick_params(axis='x', rotation=45, labelsize=8)
+        ax.tick_params(axis='x', labelbottom=True, rotation=45, labelsize=8)
         ax.set_title('Geomean', fontsize=10, fontweight='bold')
         ax.grid(True, linestyle=':', alpha=0.5)
 
@@ -576,7 +576,7 @@ def plot_parallel_bench_trellis(df, values='test_results_secs', title='', out_fi
         ax.set_xticks(unique_procs)
         ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
         ax.yaxis.set_major_formatter(ticker.PercentFormatter())
-        ax.tick_params(axis='x', rotation=45, labelsize=8)
+        ax.tick_params(axis='x', labelbottom=True, rotation=45, labelsize=8)
         ax.set_title(bench, fontsize=10)
         ax.grid(True, linestyle=':', alpha=0.5)
 

@@ -2323,8 +2323,6 @@ For the evaluation below, we use the following configuration:
 
 
 \subsubsection{MLton benchmarks}
-\hl{TODO: MORE RUNS TO CAPTURE NOISE?}
-
 \hl{TODO: FORMATTING IS BAD, HOW TO CONDENSE?}
 
 \begin{figure}[htbp]
@@ -2357,10 +2355,6 @@ As seen in \cref{fig:tuple_mlton}, the tuple flattning optimization is broadly
 neutral for MLton on the MLton benchmark suite, with <5\% impact on all metrics.
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
-
-\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
-
-\hl{TODO: SKIPPED COMPILE SIZE}
 
 \begin{figure}[htbp]
   \centering
@@ -2420,6 +2414,11 @@ effect of the tuple flattening optimzation.
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
+As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
+is a fairly consistent loss across the benchmark suite; with the most striking
+example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
+
+\hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
 
 \subsection{\texttt{ConApp} Flattening}
 

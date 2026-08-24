@@ -405,8 +405,29 @@ def test_plot_parallel_bench_trellis(tmp_path):
     })
 
     # Test new analysis style (default)
+    import matplotlib.pyplot as plt
+
+    captured_axes_labels = []
+    orig_savefig = plt.savefig
+
+    def mock_savefig(*args, **kwargs):
+        fig = plt.gcf()
+        for ax in fig.axes:
+            labels = [t.get_text() for t in ax.get_xticklabels() if t.get_visible()]
+            captured_axes_labels.append((ax.get_title(), labels))
+        orig_savefig(*args, **kwargs)
+
+    plt.savefig = mock_savefig
     out_file_new = "test_trellis_chart_new"
-    plot_parallel_bench_trellis(df, title="Test Trellis New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    try:
+        plot_parallel_bench_trellis(df, title="Test Trellis New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    finally:
+        plt.savefig = orig_savefig
+
+    assert len(captured_axes_labels) == 3  # Geomean, bench1, bench2
+    for title, labels in captured_axes_labels:
+        assert len(labels) == 2, f"Axis {title} expected 2 tick labels, got {labels}"
+
     created_pdf = tmp_path / f"{out_file_new}.pdf"
     assert created_pdf.exists()
     assert created_pdf.stat().st_size > 0
