@@ -50,6 +50,9 @@
 %% nicely formatted references (must load last)
 \usepackage{cleveref}
 
+%% \citet command
+\usepackage{natbib}
+
 \newcommand{\cof}{\textrm{cof}\, }
 \newcommand{\tr}{\textrm{tr}}
 
@@ -2250,12 +2253,24 @@ using the standard deviation to construct a symmetric confidence interval --
 instead, we report 95\% confidence intervals estimated using the bootstrap
 method.
 
-%% TODO(agy): add the figure from the previous paragraph, import the two
-%%*_scatter.pdf charts
-
-%% The description text should be: Trial-by-trial execution time for two
-%% benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The
-%% experimental side is the \texttt{tuple}-flattening configuration in both cases.
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/delunay_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{delunay}}
+    \label{fig:delunay_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/dedup_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{dedup}}
+    \label{fig:dedup_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration in both cases.}
+  \label{fig:example_scatter_trials}
+\end{figure}
 
 
 
