@@ -2274,7 +2274,7 @@ impact is included only for MLton.
     \caption{\texttt{dedup}}
     \label{fig:dedup_mlton_parallel_ml_bench_scatter}
   \end{subfigure}
-  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \textt{ConApp}-flattening for \texttt{dedup}.}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \texttt{ConApp}-flattening for \texttt{dedup}.}
   \label{fig:example_scatter_trials}
 \end{figure}
 
@@ -2391,10 +2391,12 @@ both the base and test sides exhibit extreme run-to-run variance (more than a
 factor of 2) and so the noise is inherent to the benchmark rather than a new
 effect of the tuple flattening optimzation.
 
-%% TODO(agy): add in the reverb_scatter figure (find it under charts/)
-
-%% use the description: Trial-by-trial execution time for \texttt{reverb} in the
-%% \textt{tuple}-flattening configuration.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/reverb_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Trial-by-trial execution time for \texttt{reverb} in the \texttt{tuple}-flattening configuration.}
+  \label{fig:reverb_tuple_scatter}
+\end{figure}
 
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
