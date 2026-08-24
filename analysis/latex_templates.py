@@ -177,6 +177,21 @@ PARALLEL_BENCH_MPL_TABLES_TEMPLATE = r"""\subsubsection{\texttt{parallel-ml-benc
 \importcsv{${t}_parallel_bench_size_mpl_vs_mpl.csv}
 """
 
+TRIAL_SCATTER_SUBSECTION_TEMPLATE = r"""\subsection{${bench_display} (${context_desc})}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{${out_filename}.pdf}
+  \caption{${caption}}
+  \label{fig:${out_filename}}
+\end{figure}
+"""
+
+TRIAL_SCATTER_TABLES_TEMPLATE = r"""\subsubsection{${bench_display} (${context_desc})}
+
+\importcsv{${out_filename}.csv}
+"""
+
 
 def format_caption(base_caption: str, data_file: str) -> str:
     return fr'{base_caption} Data: \protect\nolinkurl{{{data_file}}}. <0\% represents an improvement, >0\% represents a regression.'
@@ -216,4 +231,32 @@ def render_parallel_bench_mlton_tables_subsection(t: str) -> str:
 def render_parallel_bench_mpl_tables_subsection(t: str) -> str:
     test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
     return Template(PARALLEL_BENCH_MPL_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
+
+
+def render_trial_scatter_subsection(out_filename: str, bench: str, data_file: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
+    bench_display = fr'\texttt{{{bench}}}'
+    test_type = SECTION_TITLES.get(exp_type, f'{exp_type.capitalize()} Flattening')
+    suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
+    compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())
+    context_desc = fr'{suite_name}: {compiler_display} ({test_type})' if compiler else f'{suite_name} ({test_type})'
+    caption = fr'Per-trial execution times for \texttt{{{bench}}} on the {suite_name} benchmark suite. Data: \protect\nolinkurl{{{data_file}}}.'
+    return Template(TRIAL_SCATTER_SUBSECTION_TEMPLATE).substitute(
+        bench_display=bench_display,
+        context_desc=context_desc,
+        out_filename=out_filename,
+        caption=caption,
+    )
+
+
+def render_trial_scatter_tables_subsection(out_filename: str, bench: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
+    bench_display = fr'\texttt{{{bench}}}'
+    test_type = SECTION_TITLES.get(exp_type, f'{exp_type.capitalize()} Flattening')
+    suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
+    compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())
+    context_desc = fr'{suite_name}: {compiler_display} ({test_type})' if compiler else f'{suite_name} ({test_type})'
+    return Template(TRIAL_SCATTER_TABLES_TEMPLATE).substitute(
+        bench_display=bench_display,
+        context_desc=context_desc,
+        out_filename=out_filename,
+    )
 

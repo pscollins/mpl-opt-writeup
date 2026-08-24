@@ -766,5 +766,103 @@ def test_latex_templates_renderers():
     assert r"\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (AoS Flattening)}" in pb_mpl_tbl
     assert r"\importcsv{aos_parallel_bench_run_mpl_vs_mpl.csv}" in pb_mpl_tbl
 
+    from latex_templates import (
+        render_trial_scatter_subsection,
+        render_trial_scatter_tables_subsection,
+    )
+    scatter_sub = render_trial_scatter_subsection("test_scatter", "delaunay", "data_file.jsonl", compiler="mlton", suite="parallel_bench", exp_type="tuple")
+    assert r"\subsection{\texttt{delaunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}" in scatter_sub
+    assert r"\includegraphics[width=\textwidth,keepaspectratio]{test_scatter.pdf}" in scatter_sub
+    assert r"\protect\nolinkurl{data_file.jsonl}" in scatter_sub
+
+    scatter_tbl = render_trial_scatter_tables_subsection("test_scatter", "delaunay", compiler="mlton", suite="parallel_bench", exp_type="tuple")
+    assert r"\subsubsection{\texttt{delaunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}" in scatter_tbl
+    assert r"\importcsv{test_scatter.csv}" in scatter_tbl
+
+
+def test_plot_parallel_bench_drilldown(tmp_path):
+    from build_charts_lib import plot_parallel_bench_drilldown
+    import matplotlib.pyplot as plt
+
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1'],
+        'procs': [1, 1],
+        'config': ['mlton-baseline', 'mlton-opt'],
+        'warmup_result_secs': [[1.5, 1.2], [1.4, 1.1]],
+        'test_results_secs': [[1.0, 1.05, 1.02], [0.8, 0.82, 0.81]],
+        'binary_md5': ['hash_base', 'hash_opt'],
+    })
+
+    out_file = "test_scatter_chart"
+    plot_parallel_bench_drilldown(df, bench_name='bench1', title='Scatter Test', out_filename=out_file, out_dir=str(tmp_path))
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert list(csv_df.columns) == ['bench', 'procs', 'config', 'phase', 'trial', 'time_secs']
+    assert len(csv_df) == 10  # (2 warmup + 3 test) * 2 configs
+    assert set(csv_df['config']) == {'mlton-baseline', 'mlton-opt'}
+    assert set(csv_df['phase']) == {'warmup', 'test'}
+
+
+def test_process_config_trial_scatter_plots(tmp_path):
+    output_dir = tmp_path / "charts_scatter"
+    test_config_path = tmp_path / "test_config_scatter.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "trial_scatter_plots": {
+            "delunay_mlton_parallel_ml_bench_scatter": {
+                "compiler": "mlton",
+                "suite": "parallel_bench",
+                "experiment_type": "tuple",
+                "benchmark": "delunay",
+                "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+            },
+            "dedup_mlton_parallel_ml_bench_scatter": {
+                "compiler": "mlton",
+                "suite": "parallel_bench",
+                "experiment_type": "con",
+                "benchmark": "dedup",
+                "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+            }
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "delunay_mlton_parallel_ml_bench_scatter.pdf",
+        "delunay_mlton_parallel_ml_bench_scatter.csv",
+        "dedup_mlton_parallel_ml_bench_scatter.pdf",
+        "dedup_mlton_parallel_ml_bench_scatter.csv",
+        "chart_info.md",
+        "all_charts.tex",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected chart file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"Chart file {fname} is empty."
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert r"\section{Trial Scatter Plots}" in tex_content
+    assert r"delunay_mlton_parallel_ml_bench_scatter.pdf" in tex_content
+    assert r"dedup_mlton_parallel_ml_bench_scatter.pdf" in tex_content
+    assert r"\importcsv{delunay_mlton_parallel_ml_bench_scatter.csv}" in tex_content
+    assert r"\importcsv{dedup_mlton_parallel_ml_bench_scatter.csv}" in tex_content
+
 
 

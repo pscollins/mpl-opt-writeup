@@ -1,4 +1,4 @@
-Data generated at 2026-08-22 14:47:12.877376 using the following config:
+Data generated at 2026-08-23 23:41:00.707138 using the following config:
 
 {
   "output_directory": "charts/",
@@ -25,5 +25,21 @@ Data generated at 2026-08-22 14:47:12.877376 using the following config:
     "con": "mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl",
     "aos": "mpl_aos_set_width_3:260822-135617:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-135617.processed.jsonl",
     "soa": "mpl_soa_set_width_3:260822-145503:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-145503.processed.jsonl"
+  },
+  "trial_scatter_plots": {
+    "delunay_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "tuple",
+      "benchmark": "delunay",
+      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+    },
+    "dedup_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "con",
+      "benchmark": "dedup",
+      "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+    }
   }
 }

@@ -2237,10 +2237,28 @@ reported as \texttt{test / base}, i.e. <1.0 means ``smaller number on the test
 side'' (the ``good'' outcome) and >1.0 means ``bigger number on the test side
 (the ``bad'' outcome). Here \texttt{test} corresponds to the average across all
 trials on the test side, and \texttt{base} corresponds to the average across all
-trials on the base side.
+trials on the base side. The number of trials is managed by the respective
+benchmark frameworks in order to collect on the order of a few seconds of data
+in each configuration.
 
 As we'll discuss in more detail below, directly examining the experiment data
-makes it clear that 
+makes it clear that trial runtimes are not normally distributed: as can be seen
+examining \cref{fig:example_scatter_trials}, the measured runtimes often exhibit
+a bimodal distribution, presumably related to the effect of the GC. As argued in
+\citet{bootstrap-paper}, it is consequently incorrect to estimate uncertainty
+using the standard deviation to construct a symmetric confidence interval --
+instead, we report 95\% confidence intervals estimated using the bootstrap
+method.
+
+%% TODO(agy): add the figure from the previous paragraph, import the two
+%%*_scatter.pdf charts
+
+%% The description text should be: Trial-by-trial execution time for two
+%% benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The
+%% experimental side is the \texttt{tuple}-flattening configuration in both cases.
+
+
+
 
 In order to more-faithfully measure cases where our optimizations impacted only
 a small number of benchmarks (and to avoid including confusing noise in the

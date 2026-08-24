@@ -17,6 +17,8 @@ from latex_templates import (
     render_mlton_tables_subsection,
     render_parallel_bench_mlton_tables_subsection,
     render_parallel_bench_mpl_tables_subsection,
+    render_trial_scatter_subsection,
+    render_trial_scatter_tables_subsection,
 )
 
 # Use system latex
@@ -635,11 +637,156 @@ def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts', use_ne
     )
 
 
+# Plots per-trial scatter comparison for each core count side-by-side
+def plot_parallel_bench_drilldown(df, bench_name=None, title='', out_filename='', abbrevs=None, out_dir='charts'):
+    filtered = df.copy()
+    if bench_name is not None:
+        if bench_name in filtered['bench'].values:
+            filtered = filtered[filtered['bench'] == bench_name]
+        elif bench_name == 'delunay' and 'delaunay' in filtered['bench'].values:
+            filtered = filtered[filtered['bench'] == 'delaunay']
+        else:
+            matches = [b for b in filtered['bench'].dropna().unique() if b.lower() == bench_name.lower() or b.replace('-', '_') == bench_name.replace('-', '_')]
+            if matches:
+                filtered = filtered[filtered['bench'] == matches[0]]
+            else:
+                filtered = filtered[filtered['bench'] == bench_name]
+    if filtered.empty:
+        print(f"No benchmark data found for {bench_name}.")
+        return
+
+    filtered = filtered[filtered.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
+    if filtered.empty:
+        print(f"No differing binary hash found for {bench_name}.")
+        return
+
+    base_key, test_key = infer_configs(filtered, abbrevs)
+    filtered = filtered[filtered[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
+    if 'procs' in filtered.columns:
+        filtered = filtered.drop_duplicates(subset=['bench', 'procs', COMPILER_NAME_FIELD_PARALLEL], keep='last')
+        procs = sorted(filtered['procs'].unique())
+    else:
+        filtered = filtered.drop_duplicates(subset=['bench', COMPILER_NAME_FIELD_PARALLEL], keep='last')
+        procs = [1]
+    n_procs = len(procs)
+    if n_procs == 0:
+        return
+
+    bench_display = filtered['bench'].iloc[0] if 'bench' in filtered.columns and not filtered.empty else (bench_name or '')
+
+    fig, axes = plt.subplots(1, n_procs, figsize=(max(8, 2.5 * n_procs), 3.5), sharey=False)
+    axes = np.atleast_1d(axes)
+
+    base_color = 'tab:blue'
+    test_color = 'tab:orange'
+    warmup_marker = 'x'
+    test_marker = 'o'
+
+    rows_for_csv = []
+
+    for ax, proc in zip(axes, procs):
+        proc_df = filtered[filtered['procs'] == proc] if 'procs' in filtered.columns else filtered
+        
+        base_row = proc_df[proc_df[COMPILER_NAME_FIELD_PARALLEL] == base_key]
+        test_row = proc_df[proc_df[COMPILER_NAME_FIELD_PARALLEL] == test_key]
+
+        # 1. baseline, warmup_result_secs
+        # 2. baseline, test_result_secs
+        if not base_row.empty:
+            warmup = base_row.iloc[0].get('warmup_result_secs', [])
+            if warmup is not None and len(warmup) > 0:
+                ax.scatter(
+                    range(len(warmup)),
+                    warmup,
+                    color=base_color,
+                    marker=warmup_marker,
+                    label=f'{base_key} (warmup)',
+                    alpha=0.85,
+                    s=25
+                )
+                for idx, val in enumerate(warmup):
+                    rows_for_csv.append({'bench': bench_display, 'procs': proc, 'config': base_key, 'phase': 'warmup', 'trial': idx, 'time_secs': round(float(val), 3)})
+            test_res = base_row.iloc[0].get('test_results_secs', base_row.iloc[0].get('test_result_secs', []))
+            if test_res is not None and len(test_res) > 0:
+                ax.scatter(
+                    range(len(test_res)),
+                    test_res,
+                    color=base_color,
+                    marker=test_marker,
+                    label=f'{base_key} (test)',
+                    alpha=0.85,
+                    s=25
+                )
+                for idx, val in enumerate(test_res):
+                    rows_for_csv.append({'bench': bench_display, 'procs': proc, 'config': base_key, 'phase': 'test', 'trial': idx, 'time_secs': round(float(val), 3)})
+
+        # 3. test, warmup_result_secs
+        # 4. test, test_result_secs
+        if not test_row.empty:
+            warmup = test_row.iloc[0].get('warmup_result_secs', [])
+            if warmup is not None and len(warmup) > 0:
+                ax.scatter(
+                    range(len(warmup)),
+                    warmup,
+                    color=test_color,
+                    marker=warmup_marker,
+                    label=f'{test_key} (warmup)',
+                    alpha=0.85,
+                    s=25
+                )
+                for idx, val in enumerate(warmup):
+                    rows_for_csv.append({'bench': bench_display, 'procs': proc, 'config': test_key, 'phase': 'warmup', 'trial': idx, 'time_secs': round(float(val), 3)})
+            test_res = test_row.iloc[0].get('test_results_secs', test_row.iloc[0].get('test_result_secs', []))
+            if test_res is not None and len(test_res) > 0:
+                ax.scatter(
+                    range(len(test_res)),
+                    test_res,
+                    color=test_color,
+                    marker=test_marker,
+                    label=f'{test_key} (test)',
+                    alpha=0.85,
+                    s=25
+                )
+                for idx, val in enumerate(test_res):
+                    rows_for_csv.append({'bench': bench_display, 'procs': proc, 'config': test_key, 'phase': 'test', 'trial': idx, 'time_secs': round(float(val), 3)})
+
+        ax.set_title(f'{proc} cores', fontsize=10)
+        ax.set_xlabel('Trial')
+        ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+        ax.grid(True, linestyle=':', alpha=0.5)
+
+    axes[0].set_ylabel('Time (s)')
+
+    # Add shared legend and figure title
+    handles, labels = axes[0].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.08), ncol=4)
+
+    full_title = f'{bench_display} trial times across core counts' if bench_display else title
+    if full_title:
+        fig.suptitle(full_title, y=1.15, fontsize=12)
+
+    plt.tight_layout()
+    os.makedirs(out_dir, exist_ok=True)
+    if out_filename:
+        if rows_for_csv:
+            csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+            print(f'Saving data to {csv_path}')
+            pd.DataFrame(rows_for_csv).to_csv(csv_path, index=False)
+        path = os.path.join(out_dir, f'{out_filename}.pdf')
+        print(f'Saving chart to {path}')
+        plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
+    plt.close()
+
+
+plot_trial_scatter = plot_parallel_bench_drilldown
+
+
 def generate_all_charts_tex(config: dict) -> str:
     types_order = ['tuple', 'con', 'aos', 'soa']
     found_types = []
     for sec_k, sec_v in config.items():
-        if sec_k == 'output_directory' or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots') or not isinstance(sec_v, dict):
             continue
         for t in sec_v:
             if t not in METADATA_KEYS and t not in found_types:
@@ -650,7 +797,7 @@ def generate_all_charts_tex(config: dict) -> str:
     # Collect section entries per type
     type_entries = {}
     for sec_k, sec_v in config.items():
-        if sec_k == 'output_directory' or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots') or not isinstance(sec_v, dict):
             continue
         suite = sec_v.get('suite', 'mlton')
         compiler = sec_v.get('compiler', 'mlton')
@@ -694,7 +841,33 @@ def generate_all_charts_tex(config: dict) -> str:
 
         sections_tex.append('\n'.join(sec_parts))
 
-    # 2. Data Tables section at the end of the document
+    # 2. Trial Scatter Plots section (if present)
+    scatter_plots = config.get('trial_scatter_plots')
+    has_scatter = isinstance(scatter_plots, dict) and bool(scatter_plots)
+    if has_scatter:
+        scatter_sec_parts = []
+        if sections_tex:
+            scatter_sec_parts.append(r'\clearpage')
+        scatter_sec_parts.append(r'\section{Trial Scatter Plots}' + '\n')
+        for plot_key, plot_spec in scatter_plots.items():
+            if not isinstance(plot_spec, dict):
+                continue
+            bench = plot_spec.get('benchmark') or plot_spec.get('bench', '')
+            data_file = plot_spec.get('source') or plot_spec.get('data', '')
+            compiler = plot_spec.get('compiler', 'mlton')
+            suite = plot_spec.get('suite', 'parallel_bench')
+            exp_type = plot_spec.get('experiment_type', 'tuple')
+            scatter_sec_parts.append(render_trial_scatter_subsection(
+                out_filename=plot_key,
+                bench=bench,
+                data_file=data_file,
+                compiler=compiler,
+                suite=suite,
+                exp_type=exp_type,
+            ))
+        sections_tex.append('\n'.join(scatter_sec_parts))
+
+    # 3. Data Tables section at the end of the document
     tables_parts = []
     has_any_tables = False
     for idx, t in enumerate(ordered_types):
@@ -719,6 +892,28 @@ def generate_all_charts_tex(config: dict) -> str:
         tables_parts.append('\n'.join(type_tbl_parts))
         has_any_tables = True
 
+    if has_scatter:
+        scatter_tbl_parts = []
+        if has_any_tables:
+            scatter_tbl_parts.append(r'\clearpage')
+        scatter_tbl_parts.append(r'\subsection{Trial Scatter Plots}' + '\n')
+        for plot_key, plot_spec in scatter_plots.items():
+            if not isinstance(plot_spec, dict):
+                continue
+            bench = plot_spec.get('benchmark') or plot_spec.get('bench', '')
+            compiler = plot_spec.get('compiler', 'mlton')
+            suite = plot_spec.get('suite', 'parallel_bench')
+            exp_type = plot_spec.get('experiment_type', 'tuple')
+            scatter_tbl_parts.append(render_trial_scatter_tables_subsection(
+                out_filename=plot_key,
+                bench=bench,
+                compiler=compiler,
+                suite=suite,
+                exp_type=exp_type,
+            ))
+        tables_parts.append('\n'.join(scatter_tbl_parts))
+        has_any_tables = True
+
     if has_any_tables:
         sections_tex.append(r'\clearpage' + '\n' + r'\section{Data Tables}' + '\n')
         sections_tex.append('\n'.join(tables_parts))
@@ -738,7 +933,7 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
         f.write(f"Data generated at {timestamp} using the following config:\n\n{json.dumps(config, indent=2)}\n")
 
     for section_key, section_val in config.items():
-        if section_key == "output_directory":
+        if section_key in ("output_directory", "trial_scatter_plots"):
             continue
         if not isinstance(section_val, dict):
             continue
@@ -761,6 +956,23 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
                     raise ValueError(f"Unknown compiler for parallel_bench: {compiler}")
             else:
                 raise ValueError(f"Unknown suite: {suite}")
+
+    trial_scatter = config.get("trial_scatter_plots")
+    if isinstance(trial_scatter, dict):
+        for plot_key, plot_spec in trial_scatter.items():
+            if not isinstance(plot_spec, dict):
+                continue
+            source_file = plot_spec.get("source") or plot_spec.get("data")
+            if not source_file:
+                continue
+            bench_name = plot_spec.get("benchmark") or plot_spec.get("bench")
+            df = load_df(source_file)
+            plot_parallel_bench_drilldown(
+                df,
+                bench_name=bench_name,
+                out_filename=plot_key,
+                out_dir=out_dir,
+            )
 
     all_charts_tex_path = os.path.join(out_dir, "all_charts.tex")
     print(f'Saving all_charts TeX file to {all_charts_tex_path}')

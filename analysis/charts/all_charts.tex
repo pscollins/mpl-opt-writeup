@@ -351,6 +351,27 @@
 \end{figure}
 
 \clearpage
+\section{Trial Scatter Plots}
+
+\subsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{delunay_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Per-trial execution times for \texttt{delunay} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}.}
+  \label{fig:delunay_mlton_parallel_ml_bench_scatter}
+\end{figure}
+
+\subsection{\texttt{dedup} (\texttt{parallel-ml-bench}: MLton (\texttt{ConApp} Flattening))}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{dedup_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Per-trial execution times for \texttt{dedup} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl}.}
+  \label{fig:dedup_mlton_parallel_ml_bench_scatter}
+\end{figure}
+
+\clearpage
 \section{Data Tables}
 
 \subsection{Tuple Flattening}
@@ -471,5 +492,16 @@
 
 \paragraph*{Binary size}
 \importcsv{soa_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{Trial Scatter Plots}
+
+\subsubsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
+
+\importcsv{delunay_mlton_parallel_ml_bench_scatter.csv}
+
+\subsubsection{\texttt{dedup} (\texttt{parallel-ml-bench}: MLton (\texttt{ConApp} Flattening))}
+
+\importcsv{dedup_mlton_parallel_ml_bench_scatter.csv}
 
 \end{document}
