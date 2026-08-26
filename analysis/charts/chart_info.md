@@ -1,4 +1,4 @@
-Data generated at 2026-08-24 00:41:39.069146 using the following config:
+Data generated at 2026-08-26 08:53:22.960248 using the following config:
 
 {
   "output_directory": "charts/",
@@ -21,10 +21,10 @@ Data generated at 2026-08-24 00:41:39.069146 using the following config:
   "parallel_bench_benchmarks_mpl_vs_mpl": {
     "compiler": "mpl",
     "suite": "parallel_bench",
-    "tuple": "mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl",
-    "con": "mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl",
-    "aos": "mpl_aos_set_width_3:260822-135617:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-135617.processed.jsonl",
-    "soa": "mpl_soa_set_width_3:260822-145503:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-145503.processed.jsonl"
+    "tuple": "mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl",
+    "con": "mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl",
+    "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
+    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
   },
   "trial_scatter_plots": {
     "delunay_mlton_parallel_ml_bench_scatter": {
