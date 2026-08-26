@@ -321,6 +321,91 @@ def plot_parallel_bench_cores(df, values='test_results_secs', title='', out_file
     plt.close()
 
 
+# Plots geomean run time data across core counts (procs) from the parallel-ml-bench suite
+def plot_parallel_bench_geomean(df, values='test_results_secs', title='', out_filename='', abbrevs=None, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
+    # 1. Find the benchmarks where the compiled binary has a differing hash
+    filtered = df[df.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
+    if filtered.empty:
+        print("No benchmarks with differing binary hash found.")
+        return
+
+    base_key, test_key = infer_configs(filtered, abbrevs)
+    filtered = filtered[filtered[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
+    
+    # 2. Among benchmarks with a differing hash, collect all runs according to their core-count ("procs")
+    filtered = filtered.drop_duplicates(subset=['bench', 'procs', COMPILER_NAME_FIELD_PARALLEL], keep='last')
+    pivot = filtered.pivot(index=['bench', 'procs'], columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
+    pivot = pivot.dropna(subset=[base_key, test_key])
+    if pivot.empty:
+        print("No matching benchmark runs found for comparison.")
+        return
+
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+    else:
+        all_abs_ratios = pivot.apply(
+            lambda row: np.array(row[test_key]) / np.array(row[base_key]),
+            axis=1
+        )
+        mean_abs_ratios = all_abs_ratios.apply(np.mean)
+
+    df_with_ratios = pd.DataFrame({
+        'procs': [idx[1] for idx in pivot.index],
+        'mean_ratio': mean_abs_ratios.values,
+    })
+    geomean_per_proc = df_with_ratios.groupby('procs')['mean_ratio'].apply(
+        lambda s: np.exp(np.mean(np.log(s.dropna())))
+    )
+    geomean_pct = (geomean_per_proc - 1) * 100
+
+    results_df = pd.DataFrame({
+        'procs': geomean_per_proc.index,
+        'relative_pct': geomean_pct.values,
+    }).round(3)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(
+        geomean_per_proc.index,
+        geomean_pct.values,
+        label='Geomean',
+        linestyle='-',
+        color='black',
+        marker='D',
+        linewidth=2.5,
+        markersize=6,
+        zorder=10
+    )
+
+    ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
+
+    unique_procs = sorted(geomean_per_proc.index)
+    if len(unique_procs) > 2 and all(p > 0 for p in unique_procs) and max(unique_procs) / min(unique_procs) >= 8:
+        ax.set_xscale('log', base=2)
+    ax.set_xticks(unique_procs)
+    ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+
+    ax.set_xlabel('Core count')
+    ax.set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$')
+    ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+    if title:
+        ax.set_title(title)
+    ax.grid(True, linestyle=':', alpha=0.5)
+
+    plt.tight_layout()
+    os.makedirs(out_dir, exist_ok=True)
+    if out_filename:
+        csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+        print(f'Saving data to {csv_path}')
+        results_df.to_csv(csv_path, index=False)
+        path = os.path.join(out_dir, f'{out_filename}.pdf')
+        print(f'Saving chart to {path}')
+        plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
+    plt.close()
+
+
 # Plots binary size comparison (using procs=1 as binary size is independent of core count)
 def plot_parallel_bench_size(df, values='binary_bytes', title='', out_filename='', abbrevs=None, out_dir='charts', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     # Filter for procs == 1 if procs column exists
@@ -626,6 +711,15 @@ def plot_parallel_bench_vs_mpl(data, type_name='tuple', out_dir='charts', use_ne
             plot_parallel_bench_size(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
         else:
             plot_parallel_bench_cores(df, values=c.values_column, title=c.title, out_filename=c.out_filename, out_dir=out_dir, use_new_analysis_style=use_new_analysis_style)
+
+    plot_parallel_bench_geomean(
+        df,
+        values='test_results_secs',
+        title=f'{type_name.capitalize()} run time comparison across core counts (geomean)',
+        out_filename=f'{type_name}_parallel_bench_run_mpl_vs_mpl_geomean',
+        out_dir=out_dir,
+        use_new_analysis_style=use_new_analysis_style
+    )
 
     plot_parallel_bench_trellis(
         df,

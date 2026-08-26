@@ -141,6 +141,13 @@ PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE = r"""\subsection{\texttt{parallel-ml-ben
 
 \begin{figure}[H]
   \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{${t}_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{${caption}}
+  \label{fig:${t}_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{${t}_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{${caption}}
   \label{fig:${t}_parallel_bench_mpl_trellis}

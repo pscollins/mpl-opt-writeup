@@ -9,6 +9,7 @@ from build_charts_lib import (
     plot_mlton,
     plot_parallel_bench,
     plot_parallel_bench_cores,
+    plot_parallel_bench_geomean,
     plot_parallel_bench_size,
     plot_parallel_bench_trellis,
     infer_configs,
@@ -289,6 +290,8 @@ def test_process_config_mpl_parallel_bench(tmp_path):
         "tuple_parallel_bench_run_mpl_vs_mpl.csv",
         "tuple_parallel_bench_size_mpl_vs_mpl.pdf",
         "tuple_parallel_bench_size_mpl_vs_mpl.csv",
+        "tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf",
+        "tuple_parallel_bench_run_mpl_vs_mpl_geomean.csv",
         "tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf",
         "tuple_parallel_bench_run_mpl_vs_mpl_trellis.csv",
         "chart_info.md",
@@ -392,6 +395,44 @@ def test_plot_parallel_bench_cores(tmp_path):
     assert created_csv_old.stat().st_size > 0
     csv_df_old = pd.read_csv(created_csv_old)
     assert list(csv_df_old.columns) == ['bench', 'procs', 'relative_pct', 'std_pct']
+    assert len(csv_df_old) == 2
+
+
+def test_plot_parallel_bench_geomean(tmp_path):
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[1.0, 1.1], [0.5, 0.55], [0.8, 0.85], [0.4, 0.45]],
+        'binary_md5': ['hash_base', 'hash_base', 'hash_opt', 'hash_opt'],
+    })
+
+    # Test new analysis style (default)
+    out_file_new = "test_geomean_chart_new"
+    plot_parallel_bench_geomean(df, title="Test Geomean New", out_filename=out_file_new, out_dir=str(tmp_path), use_new_analysis_style=True)
+    created_pdf = tmp_path / f"{out_file_new}.pdf"
+    assert created_pdf.exists()
+    assert created_pdf.stat().st_size > 0
+
+    created_csv = tmp_path / f"{out_file_new}.csv"
+    assert created_csv.exists()
+    assert created_csv.stat().st_size > 0
+    csv_df = pd.read_csv(created_csv)
+    assert list(csv_df.columns) == ['procs', 'relative_pct']
+    assert len(csv_df) == 2
+
+    # Test old analysis style
+    out_file_old = "test_geomean_chart_old"
+    plot_parallel_bench_geomean(df, title="Test Geomean Old", out_filename=out_file_old, out_dir=str(tmp_path), use_new_analysis_style=False)
+    created_pdf_old = tmp_path / f"{out_file_old}.pdf"
+    assert created_pdf_old.exists()
+    assert created_pdf_old.stat().st_size > 0
+
+    created_csv_old = tmp_path / f"{out_file_old}.csv"
+    assert created_csv_old.exists()
+    assert created_csv_old.stat().st_size > 0
+    csv_df_old = pd.read_csv(created_csv_old)
+    assert list(csv_df_old.columns) == ['procs', 'relative_pct']
     assert len(csv_df_old) == 2
 
 
@@ -739,10 +780,11 @@ def test_generate_all_charts_tex_includes_filenames():
     # Verify Data Tables section is at the end
     assert r"\section{Data Tables}" in tex
     fig_idx = tex.find(r"tuple_parallel_bench_run_mpl_vs_mpl.pdf")
+    geomean_idx = tex.find(r"tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf")
     trellis_idx = tex.find(r"tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf")
     data_tables_idx = tex.find(r"\section{Data Tables}")
     csv_idx = tex.find(r"\importcsv{tuple_parallel_bench_run_mpl_vs_mpl.csv}")
-    assert fig_idx < trellis_idx < data_tables_idx < csv_idx
+    assert fig_idx < geomean_idx < trellis_idx < data_tables_idx < csv_idx
 
 
 def test_latex_templates_renderers():
@@ -772,6 +814,7 @@ def test_latex_templates_renderers():
     pb_mpl_sub = render_parallel_bench_mpl_subsection("aos", "data_pb_mpl.jsonl")
     assert r"\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (AoS Flattening)}" in pb_mpl_sub
     assert r"aos_parallel_bench_run_mpl_vs_mpl.pdf" in pb_mpl_sub
+    assert r"aos_parallel_bench_run_mpl_vs_mpl_geomean.pdf" in pb_mpl_sub
     assert r"aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf" in pb_mpl_sub
     assert r"\protect\nolinkurl{data_pb_mpl.jsonl}" in pb_mpl_sub
 

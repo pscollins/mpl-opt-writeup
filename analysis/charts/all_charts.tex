@@ -105,6 +105,13 @@
 
 \begin{figure}[H]
   \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl_trellis}
@@ -181,6 +188,13 @@
   \end{subfigure}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{con_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench_mpl_geomean}
 \end{figure}
 
 \begin{figure}[H]
@@ -265,6 +279,13 @@
 
 \begin{figure}[H]
   \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench_mpl_trellis}
@@ -341,6 +362,13 @@
   \end{subfigure}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{soa_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_parallel_bench_mpl_geomean}
 \end{figure}
 
 \begin{figure}[H]
