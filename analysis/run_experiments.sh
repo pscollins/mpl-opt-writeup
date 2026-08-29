@@ -4,11 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-  echo "Usage: $0 --compiler=[mlton|mpl] --suite=[mlton|parallel_bench] --base_nick=<nick>" >&2
+  echo "Usage: $0 --compiler=[mlton|mpl] --suite=[mlton|parallel_bench] [--flavors=<flavors>] --base_nick=<nick>" >&2
   echo "" >&2
   echo "Options:" >&2
   echo "  --compiler <mlton|mpl>          Compiler to use (mlton or mpl, required)" >&2
   echo "  --suite <mlton|parallel_bench>  Benchmark suite to run (mlton or parallel_bench, required)" >&2
+  echo "  --flavors <flavors>             Comma-separated list of flavors to benchmark (optional)" >&2
   echo "  --base_nick <nick>              Base nickname for output results (required)" >&2
   echo "  -h, --help                      Show this help message" >&2
   exit 1
@@ -16,6 +17,7 @@ usage() {
 
 COMPILER=""
 SUITE=""
+FLAVORS=""
 BASE_NICK=""
 
 while [[ $# -gt 0 ]]; do
@@ -44,6 +46,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     --suite=*)
       SUITE="${1#*=}"
+      shift
+      ;;
+    --flavors)
+      if [[ -n "${2:-}" && "$2" != --* ]]; then
+        FLAVORS="$2"
+        shift 2
+      else
+        echo "Error: --flavors requires an argument." >&2
+        usage
+      fi
+      ;;
+    --flavors=*)
+      FLAVORS="${1#*=}"
       shift
       ;;
     --base_nick)
@@ -90,14 +105,17 @@ case "${COMPILER}:${SUITE}" in
   mlton:mlton)
     BENCH_SCRIPT="$HOME/code/mlton/benchmark/benchmark-new/run_all_experiments.sh"
     COPY_TYPE="mlton"
+    DEFAULT_FLAVORS="aos,soa,con,tuple"
     ;;
   mlton:parallel_bench)
     BENCH_SCRIPT="$HOME/code/parallel-ml-bench/run_all_mlton.sh"
     COPY_TYPE="parallel_bench"
+    DEFAULT_FLAVORS="aos,soa,conapp,tuple"
     ;;
   mpl:parallel_bench)
     BENCH_SCRIPT="$HOME/code/parallel-ml-bench/run_all_mpl.sh"
     COPY_TYPE="parallel_bench"
+    DEFAULT_FLAVORS="aos,soa,conapp,tuple"
     ;;
   mpl:mlton)
     echo "Error: Unsupported combination: compiler 'mpl' does not support suite 'mlton'." >&2
@@ -108,6 +126,12 @@ case "${COMPILER}:${SUITE}" in
     usage
     ;;
 esac
+
+FLAVORS="${FLAVORS:-$DEFAULT_FLAVORS}"
+
+# Calculate number of files to copy: number of ',' characters + 1
+NUM_COMMAS="${FLAVORS//[^,]/}"
+NUM_FILES=$((${#NUM_COMMAS} + 1))
 
 if [[ ! -f "$BENCH_SCRIPT" ]]; then
   echo "Error: Benchmark script '$BENCH_SCRIPT' not found." >&2
@@ -121,14 +145,14 @@ if [[ ! -f "$COPY_SCRIPT" ]]; then
 fi
 
 echo "=================================================="
-echo "Running experiments for compiler='$COMPILER', suite='$SUITE', base_nick='$BASE_NICK'"
+echo "Running experiments for compiler='$COMPILER', suite='$SUITE', base_nick='$BASE_NICK', flavors='$FLAVORS'"
 echo "Benchmark script: $BENCH_SCRIPT"
 echo "=================================================="
 
-"$BENCH_SCRIPT" --base_nick="$BASE_NICK"
+"$BENCH_SCRIPT" --base_nick="$BASE_NICK" --flavors="$FLAVORS"
 
 echo "=================================================="
-echo "Copying latest 4 $COPY_TYPE results"
+echo "Copying latest $NUM_FILES $COPY_TYPE results"
 echo "=================================================="
 
-"$COPY_SCRIPT" --type="$COPY_TYPE" --count 4
+"$COPY_SCRIPT" --type="$COPY_TYPE" --count "$NUM_FILES"
