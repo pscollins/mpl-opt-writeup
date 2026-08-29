@@ -3,27 +3,48 @@
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_conapp_flatten_cc_icelake:flattening-tests:05e9492b9:20260725_223512.jsonl",
-    "con": "test_tuple_flatten_cc_icelake:flattening-tests:41f63ec71:20260725_203206.jsonl",
-    "aos": "test_aos:flattening-tests:cd71a086d:20260814_181551.jsonl",
-    "soa": "test_soa:flattening-tests:a47df0e7f:20260814_201829.jsonl"
+    "tuple": "test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl",
+    "con": "test_conapp_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_193112.jsonl",
+    "aos": "test_aos_flatten_set_width_3:flattening-tests:8e04c8184:20260822_005802.jsonl",
+    "soa": "test_soa_flatten_set_width_3:flattening-tests:8e04c8184:20260822_025807.jsonl"
   },
   "parallel_bench_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "parallel_bench",
-    "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
-    "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl",
-    "aos": "cc_aos_flatten:260814-144252:flattening-tests:b4d8ba41a1a341b3a2390460f9f14e4babbc05ea:260814-144252.processed.jsonl",
-    "soa": "cc_soa_flatten:260814-161510:flattening-tests:e979d4dcc72fa0405eaed998063f4acda35193e8:260814-161510.processed.jsonl"
+    "tuple": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl",
+    "con": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl",
+    "aos": "mlton_aos_set_width_3:260822-125845:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-125845.processed.jsonl",
+    "soa": "mlton_soa_set_width_3:260822-132730:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-132730.processed.jsonl"
   },
   "parallel_bench_benchmarks_mpl_vs_mpl": {
     "compiler": "mpl",
     "suite": "parallel_bench",
-    "tuple": "mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl",
-    "con": "mpl_con_full_parallel_mpl:260815-210134:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-210134.processed.jsonl",
-    "aos": "mpl_aos_full_parallel_mpl:260815-192835:flattening-tests:9f16c65c0980dae0805c9f131cdde030e8bcb885:260815-192835.processed.jsonl",
-    "soa": "mpl_tuple_full_parallel_mpl:260816-031958:flattening-tests:e5b54c7d06312d90d49e3221644919f375693922:260816-031958.processed.jsonl"
+    "tuple": "mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl",
+    "con": "mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl",
+    "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
+    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
+  },
+  "trial_scatter_plots": {
+    "delunay_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "tuple",
+      "benchmark": "delunay",
+      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+    },
+    "dedup_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "con",
+      "benchmark": "dedup",
+      "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+    },
+    "reverb_mlton_parallel_ml_bench_scatter": {
+      "compiler": "mlton",
+      "suite": "parallel_bench",
+      "experiment_type": "tuple",
+      "benchmark": "reverb",
+      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+    }
   }
 }
-
-

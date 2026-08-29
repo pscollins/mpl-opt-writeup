@@ -47,6 +47,10 @@
 
 \usepackage{subcaption}
 
+%% \citet command
+\usepackage[numbers]{natbib}
+
+
 %% nicely formatted references (must load last)
 \usepackage{cleveref}
 
@@ -2234,8 +2238,46 @@ All measurements were performed using the same compiler binary on both test
 sides (MLton or MPL, respectively), using compiler flags to enable/disable
 passes as needed to test the impact of each optimization. All ratios are
 reported as \texttt{test / base}, i.e. <1.0 means ``smaller number on the test
-side'' (the ``good'' outcome) and >1.0 means ``bigger number on the
-test side (the ``bad'' outcome).
+side'' (the ``good'' outcome) and >1.0 means ``bigger number on the test side
+(the ``bad'' outcome). Here \texttt{test} corresponds to the average across all
+trials on the test side, and \texttt{base} corresponds to the average across all
+trials on the base side. The number of trials is managed by the respective
+benchmark frameworks in order to collect on the order of a few seconds of data
+in each configuration.
+
+As we'll discuss in more detail below, directly examining the experiment data
+makes it clear that trial runtimes are not normally distributed: as can be seen
+examining \cref{fig:example_scatter_trials}, the measured runtimes often exhibit
+a bimodal distribution, presumably related to the effect of the GC. As argued in
+\citet{bootstrap-paper}, it is consequently incorrect to estimate uncertainty
+using the standard deviation to construct a symmetric confidence interval --
+instead, we (for the \texttt{parallel\_bench} suite) report 95\% confidence
+intervals estimated using the bootstrap method.
+
+The MLton benchmark framework does not report per-trial numbers, and so no
+confidence intervals are included for the MLton data. Conversely, the parallel
+ML bench framework does not measure compilation times, and so compilation time
+impact is included only for MLton.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/delunay_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{delunay}}
+    \label{fig:delunay_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/dedup_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{dedup}}
+    \label{fig:dedup_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \texttt{ConApp}-flattening for \texttt{dedup}.}
+  \label{fig:example_scatter_trials}
+\end{figure}
+
 
 In order to more-faithfully measure cases where our optimizations impacted only
 a small number of benchmarks (and to avoid including confusing noise in the
@@ -2281,10 +2323,6 @@ For the evaluation below, we use the following configuration:
 
 
 \subsubsection{MLton benchmarks}
-\hl{TODO: THIS IS ON BAD GCP HW! NEED TO RERUN}
-
-\hl{TODO: MORE RUNS TO CAPTURE NOISE?}
-
 \hl{TODO: FORMATTING IS BAD, HOW TO CONDENSE?}
 
 \begin{figure}[htbp]
@@ -2313,21 +2351,10 @@ For the evaluation below, we use the following configuration:
   \label{fig:tuple_mlton}
 \end{figure}
 
-\hl{TODO: THIS SEEMS LIKE A NOISY RUN -- NEED TO REDO. IGNORING THE DLX SIMULATOR RESULT.}
-
-As we can see in \cref{fig:tuple_mlton_run_mlton_vs_mlton}, we get a small, <5\%
-win on the \texttt{count-graphs} benchmark, and the other tests are basically
-neutral. \Cref{fig:tuple_mlton_compile_mlton_vs_mlton} shows that compile times
-are broadly similar, a 1\% geomean regression across the changed benchmarks in
-the benchmark suite. As expected, \cref{fig:tuple_mlton_size_mlton_vs_mlton}
-shows a strict increase in binary size: a geomean 1.8\% regression on impacted
-benchmarks.
+As seen in \cref{fig:tuple_mlton}, the tuple flattning optimization is broadly
+neutral for MLton on the MLton benchmark suite, with <5\% impact on all metrics.
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
-
-\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
-
-\hl{TODO: SKIPPED COMPILE SIZE}
 
 \begin{figure}[htbp]
   \centering
@@ -2348,13 +2375,31 @@ benchmarks.
   \label{fig:tuple_parallel_bench}
 \end{figure}
 
+As in the previous section, the impact of the tuple optimization on MLton for
+parallel ML bench is also broadly neutral, as seen in
+\cref{fig:tuple_parallel_bench}.
+
+One exception is \texttt{reverb}, which shows a huge (40\%) confidence interval.
+Examining the raw data in \cref{fig:reverb_tuple_scatter} makes it clear that
+both the base and test sides exhibit extreme run-to-run variance (more than a
+factor of 2) and so the noise is inherent to the benchmark rather than a new
+effect of the tuple flattening optimzation.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/reverb_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Trial-by-trial execution time for \texttt{reverb} in the \texttt{tuple}-flattening configuration.}
+  \label{fig:reverb_tuple_scatter}
+\end{figure}
+
+
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:tuple_parallel_bench_run_mpl_vs_mpl}
   \end{subfigure}
@@ -2369,6 +2414,11 @@ benchmarks.
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
+As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
+is a fairly consistent loss across the benchmark suite; with the most striking
+example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
+
+\hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
 
 \subsection{\texttt{ConApp} Flattening}
 
@@ -2447,7 +2497,7 @@ For the evaluation below, we use the following configuration:
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:con_parallel_bench_run_mpl_vs_mpl}
   \end{subfigure}
@@ -2525,7 +2575,7 @@ For the evaluation below, we use the following configuration:
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:aos_parallel_bench_run_mpl_vs_mpl}
   \end{subfigure}
@@ -2603,7 +2653,7 @@ For the evaluation below, we use the following configuration:
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:soa_parallel_bench_run_mpl_vs_mpl}
   \end{subfigure}
@@ -2778,7 +2828,7 @@ Other items:
 
 
 \nocite{*}
-\bibliographystyle{plain}
+\bibliographystyle{plainnat}
 \bibliography{references}
 
 \end{document}
