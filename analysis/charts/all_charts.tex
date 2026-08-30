@@ -57,7 +57,7 @@
     \caption{Binary size}
     \label{fig:tuple_mlton_size_mlton_vs_mlton}
   \end{subfigure}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten} on the MLton benchmark suite. Data: \protect\nolinkurl{test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten} on the MLton benchmark suite. Data: \protect\nolinkurl{test_tuple_flatten_tuple_any_unpack:flattening-tests:af199dc:20260829_212913.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_mlton}
 \end{figure}
 
@@ -78,7 +78,7 @@
     \caption{Binary size}
     \label{fig:tuple_parallel_bench_size_mlton_vs_mlton}
   \end{subfigure}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_tuple_any_unpack:260829-210245:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-210245.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench}
 \end{figure}
 
@@ -99,21 +99,21 @@
     \caption{Binary size}
     \label{fig:tuple_parallel_bench_size_mpl_vs_mpl}
   \end{subfigure}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_tuple_any_unpack:260829-173849:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-173849.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_tuple_any_unpack:260829-173849:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-173849.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl_geomean}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_tuple_any_unpack:260829-173849:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-173849.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl_trellis}
 \end{figure}
 
@@ -386,7 +386,7 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{delunay_mlton_parallel_ml_bench_scatter.pdf}
-  \caption{Per-trial execution times for \texttt{delunay} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}.}
+  \caption{Per-trial execution times for \texttt{delunay} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_tuple_any_unpack:260829-210245:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-210245.processed.jsonl}.}
   \label{fig:delunay_mlton_parallel_ml_bench_scatter}
 \end{figure}
 
@@ -404,7 +404,7 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{reverb_mlton_parallel_ml_bench_scatter.pdf}
-  \caption{Per-trial execution times for \texttt{reverb} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}.}
+  \caption{Per-trial execution times for \texttt{reverb} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_tuple_any_unpack:260829-210245:flattening-tests:694c044f601983ed5dc204800bd3e89a222aae76:260829-210245.processed.jsonl}.}
   \label{fig:reverb_mlton_parallel_ml_bench_scatter}
 \end{figure}
 
