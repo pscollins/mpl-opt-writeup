@@ -1,9 +1,16 @@
 # Run types
 
+The default, standard configurations are:
+
 * "tuple": tuple-flattening vs baseline
 * "con": con-flattening vs baseline
 * "aos": AOS-style container flattening vs baseline
 * "soa": SOA-style container flattening vs baseline
+
+We additionally have (for the sake of drilling down in particular sections):
+
+* "tuple_vs_fixup:" test side is tuple-flattening, baseline enables "always post-fixup mode"
+* "tuple_chunkify_one:" tuple-flattening vs baseline, with `-chunkify one` on both sides
 
 # Previous runs
 
