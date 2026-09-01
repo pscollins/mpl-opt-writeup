@@ -32,7 +32,7 @@ DATA_ROOT = 'data'
 METADATA_KEYS = {'compiler', 'suite'}
 CHECKSUM_FIELD_PARALLEL = 'binary_md5'
 COMPILER_NAME_FIELD_PARALLEL = 'config'
-ALLOWABLE_BASELINES = {'mlton-baseline', 'mpl-baseline'}
+ALLOWABLE_BASELINES = {'mlton-baseline', 'mpl-baseline', 'mpl-tuple-baseline'}
 
 USE_NEW_ANALYSIS_STYLE = True
 
