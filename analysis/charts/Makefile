@@ -1,7 +1,7 @@
 .PHONY: all clean
 
-PDFS := $(wildcard *_vs_*.pdf) $(wildcard *_scatter.pdf)
-CSVS := $(wildcard *_vs_*.csv) $(wildcard *_scatter.csv)
+PDFS := $(filter-out all_charts.pdf all_charts.old%, $(wildcard *.pdf))
+CSVS := $(wildcard *.csv)
 
 all: all_charts.pdf
 

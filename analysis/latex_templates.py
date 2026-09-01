@@ -199,54 +199,69 @@ TRIAL_SCATTER_TABLES_TEMPLATE = r"""\subsubsection{${bench_display} (${context_d
 \importcsv{${out_filename}.csv}
 """
 
+COMPARE_GEOMEANS_SUBSECTION_TEMPLATE = r"""\subsection{${name_display}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{${out_filename}.pdf}
+  \caption{${caption}}
+  \label{fig:${out_filename}}
+\end{figure}
+"""
+
+COMPARE_GEOMEANS_TABLES_TEMPLATE = r"""\subsubsection{${name_display}}
+
+\importcsv{${out_filename}.csv}
+"""
+
 
 def format_caption(base_caption: str, data_file: str) -> str:
     return fr'{base_caption} Data: \protect\nolinkurl{{{data_file}}}. <0\% represents an improvement, >0\% represents a regression.'
 
 
 def render_mlton_subsection(t: str, data_file: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
-    base_cap = MLTON_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the MLton benchmark suite.')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
+    base_cap = MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the MLton benchmark suite.")
     cap = format_caption(base_cap, data_file)
     return Template(MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mlton_subsection(t: str, data_file: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
-    base_cap = PARALLEL_MLTON_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the \texttt{{parallel-ml-bench}} benchmark suite.')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
+    base_cap = PARALLEL_MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the \texttt{{parallel-ml-bench}} benchmark suite.")
     cap = format_caption(base_cap, data_file)
     return Template(PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mpl_subsection(t: str, data_file: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
-    base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr'Relative performance for \texttt{{{t}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
+    base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.")
     cap = format_caption(base_cap, data_file)
     return Template(PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_mlton_tables_subsection(t: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
     return Template(MLTON_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
 
 
 def render_parallel_bench_mlton_tables_subsection(t: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
     return Template(PARALLEL_BENCH_MLTON_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
 
 
 def render_parallel_bench_mpl_tables_subsection(t: str) -> str:
-    test_type = SECTION_TITLES.get(t, f'{t.capitalize()} Flattening')
+    test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
     return Template(PARALLEL_BENCH_MPL_TABLES_TEMPLATE).substitute(t=t, test_type=test_type)
 
 
 def render_trial_scatter_subsection(out_filename: str, bench: str, data_file: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
-    bench_display = fr'\texttt{{{bench}}}'
-    test_type = SECTION_TITLES.get(exp_type, f'{exp_type.capitalize()} Flattening')
+    bench_display = fr"\texttt{{{bench.replace('_', r'\_')}}}"
+    test_type = SECTION_TITLES.get(exp_type, f"{exp_type.replace('_', ' ').title()} Flattening")
     suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
     compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())
     context_desc = fr'{suite_name}: {compiler_display} ({test_type})' if compiler else f'{suite_name} ({test_type})'
-    caption = fr'Per-trial execution times for \texttt{{{bench}}} on the {suite_name} benchmark suite. Data: \protect\nolinkurl{{{data_file}}}.'
+    caption = fr'Per-trial execution times for \texttt{{{bench.replace("_", r"\_")}}} on the {suite_name} benchmark suite. Data: \protect\nolinkurl{{{data_file}}}.'
     return Template(TRIAL_SCATTER_SUBSECTION_TEMPLATE).substitute(
         bench_display=bench_display,
         context_desc=context_desc,
@@ -256,8 +271,8 @@ def render_trial_scatter_subsection(out_filename: str, bench: str, data_file: st
 
 
 def render_trial_scatter_tables_subsection(out_filename: str, bench: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
-    bench_display = fr'\texttt{{{bench}}}'
-    test_type = SECTION_TITLES.get(exp_type, f'{exp_type.capitalize()} Flattening')
+    bench_display = fr"\texttt{{{bench.replace('_', r'\_')}}}"
+    test_type = SECTION_TITLES.get(exp_type, f"{exp_type.replace('_', ' ').title()} Flattening")
     suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
     compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())
     context_desc = fr'{suite_name}: {compiler_display} ({test_type})' if compiler else f'{suite_name} ({test_type})'
@@ -266,4 +281,28 @@ def render_trial_scatter_tables_subsection(out_filename: str, bench: str, compil
         context_desc=context_desc,
         out_filename=out_filename,
     )
+
+
+def render_compare_geomeans_subsection(name: str, title: str = '', series_paths: list = None) -> str:
+    name_display = title if title else name.replace('_', ' ').title()
+    name_escaped = name.replace('_', r'\_')
+    if series_paths:
+        paths_str = ', '.join([fr'\protect\nolinkurl{{{p}}}' for p in series_paths])
+        caption = fr'Comparison of geometric mean speedups across core counts for \texttt{{{name_escaped}}}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
+    else:
+        caption = fr'Comparison of geometric mean speedups across core counts for \texttt{{{name_escaped}}}. <0\% represents an improvement, >0\% represents a regression.'
+    return Template(COMPARE_GEOMEANS_SUBSECTION_TEMPLATE).substitute(
+        name_display=name_display,
+        out_filename=name,
+        caption=caption,
+    )
+
+
+def render_compare_geomeans_tables_subsection(name: str, title: str = '') -> str:
+    name_display = title if title else name.replace('_', ' ').title()
+    return Template(COMPARE_GEOMEANS_TABLES_TEMPLATE).substitute(
+        name_display=name_display,
+        out_filename=name,
+    )
+
 

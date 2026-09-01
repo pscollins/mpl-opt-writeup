@@ -1,4 +1,4 @@
-Data generated at 2026-08-26 09:09:57.091479 using the following config:
+Data generated at 2026-09-01 09:30:54.563438 using the following config:
 
 {
   "output_directory": "charts/",
@@ -22,6 +22,8 @@ Data generated at 2026-08-26 09:09:57.091479 using the following config:
     "compiler": "mpl",
     "suite": "parallel_bench",
     "tuple": "mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl",
+    "tuple_vs_fixup": "mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl",
+    "tuple_chunkify_func": "mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl",
     "con": "mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl",
     "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
     "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
@@ -48,5 +50,21 @@ Data generated at 2026-08-26 09:09:57.091479 using the following config:
       "benchmark": "reverb",
       "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
     }
+  },
+  "compare_geomeans": {
+    "tuple_exp_geomeans": [
+      {
+        "series_name": "Baseline tuple-vs-tuple",
+        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+      },
+      {
+        "series_name": "Tuple-vs-tuple, with basline fixup",
+        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+      },
+      {
+        "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+      }
+    ]
   }
 }

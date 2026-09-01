@@ -10,6 +10,9 @@ from build_charts_lib import (
     plot_parallel_bench,
     plot_parallel_bench_cores,
     plot_parallel_bench_geomean,
+    compute_parallel_bench_geomean,
+    plot_compare_geomeans,
+    resolve_series_path,
     plot_parallel_bench_size,
     plot_parallel_bench_trellis,
     infer_configs,
@@ -927,6 +930,150 @@ def test_process_config_trial_scatter_plots(tmp_path):
     assert r"dedup_mlton_parallel_ml_bench_scatter.pdf" in tex_content
     assert r"\importcsv{delunay_mlton_parallel_ml_bench_scatter.csv}" in tex_content
     assert r"\importcsv{dedup_mlton_parallel_ml_bench_scatter.csv}" in tex_content
+
+
+def test_resolve_series_path():
+    cfg = {
+        "section_a": {
+            "sub_b": "file_b.jsonl",
+            "sub_dict": {"source": "file_dict.jsonl"}
+        }
+    }
+    assert resolve_series_path(cfg, "section_a.sub_b") == "file_b.jsonl"
+    assert resolve_series_path(cfg, "section_a.sub_dict") == "file_dict.jsonl"
+
+    with pytest.raises(KeyError):
+        resolve_series_path(cfg, "section_a.nonexistent")
+
+    with pytest.raises(KeyError):
+        resolve_series_path(cfg, "nonexistent.sub")
+
+    with pytest.raises(ValueError):
+        resolve_series_path({"section": {"empty_dict": {}}}, "section.empty_dict")
+
+
+def test_compute_parallel_bench_geomean():
+    df = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1', 'bench2', 'bench2', 'bench2', 'bench2'],
+        'procs': [1, 2, 1, 2, 1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt', 'mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[2.0], [1.0], [1.0], [0.5], [4.0], [2.0], [2.0], [1.0]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2', 'h3', 'h3', 'h4', 'h4'],
+    })
+    geomean_s = compute_parallel_bench_geomean(df)
+    assert 1 in geomean_s.index
+    assert 2 in geomean_s.index
+    # 50% faster -> -50%
+    assert geomean_s[1] == pytest.approx(-50.0)
+    assert geomean_s[2] == pytest.approx(-50.0)
+
+
+def test_plot_compare_geomeans(tmp_path):
+    df1 = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[2.0], [1.0], [1.0], [0.5]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2'],
+    })
+    df2 = pd.DataFrame({
+        'bench': ['bench1', 'bench1', 'bench1', 'bench1'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[2.0], [1.0], [1.5], [0.75]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2'],
+    })
+
+    series_specs = [
+        {"series_name": "Series A", "df": df1},
+        {"series_name": "Series B", "df": df2},
+    ]
+
+    out_file = "test_compare_output"
+    plot_compare_geomeans(
+        series_specs=series_specs,
+        title="Comparison Chart",
+        out_filename=out_file,
+        out_dir=str(tmp_path),
+    )
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert list(csv_df.columns) == ['procs', 'Series A', 'Series B']
+    assert len(csv_df) == 2
+    assert csv_df.iloc[0]['procs'] == 1
+    assert csv_df.iloc[0]['Series A'] == pytest.approx(-50.0)
+    assert csv_df.iloc[0]['Series B'] == pytest.approx(-25.0)
+
+
+def test_process_config_compare_geomeans(tmp_path):
+    output_dir = tmp_path / "charts_compare"
+    test_config_path = tmp_path / "test_config_compare.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+        },
+        "compare_geomeans": {
+            "my_test_geomeans": [
+                {
+                    "series_name": "Tuple Baseline",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+                }
+            ]
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "my_test_geomeans.pdf",
+        "my_test_geomeans.csv",
+        "chart_info.md",
+        "all_charts.tex",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"File {fname} is empty."
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert r"\section{Compare Geomeans}" in tex_content
+    assert r"my_test_geomeans.pdf" in tex_content
+    assert r"\importcsv{my_test_geomeans.csv}" in tex_content
+
+
+def test_latex_templates_compare_geomeans():
+    from latex_templates import (
+        render_compare_geomeans_subsection,
+        render_compare_geomeans_tables_subsection,
+    )
+    sub_tex = render_compare_geomeans_subsection("tuple_exp_geomeans", series_paths=["file1.jsonl", "file2.jsonl"])
+    assert r"\subsection{Tuple Exp Geomeans}" in sub_tex
+    assert r"tuple_exp_geomeans.pdf" in sub_tex
+    assert r"\protect\nolinkurl{file1.jsonl}" in sub_tex
+    assert r"\protect\nolinkurl{file2.jsonl}" in sub_tex
+
+    tbl_tex = render_compare_geomeans_tables_subsection("tuple_exp_geomeans")
+    assert r"\subsubsection{Tuple Exp Geomeans}" in tbl_tex
+    assert r"\importcsv{tuple_exp_geomeans.csv}" in tbl_tex
+
 
 
 

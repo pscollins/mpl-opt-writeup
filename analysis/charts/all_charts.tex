@@ -379,6 +379,82 @@
 \end{figure}
 
 \clearpage
+\section{Tuple Vs Fixup Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Vs Fixup Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_vs_fixup_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:tuple_vs_fixup_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_vs_fixup_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_vs_fixup_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{tuple\_vs\_fixup} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_vs_fixup_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_vs_fixup_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{tuple\_vs\_fixup} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_vs_fixup_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_vs_fixup_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{tuple\_vs\_fixup} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_vs_fixup_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
+\section{Tuple Chunkify Func Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Chunkify Func Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_chunkify_func_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:tuple_chunkify_func_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_chunkify_func_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_chunkify_func_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_func_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_chunkify_func_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_func_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_chunkify_func_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_func_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
 \section{Trial Scatter Plots}
 
 \subsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
@@ -406,6 +482,18 @@
   \includegraphics[width=\textwidth,keepaspectratio]{reverb_mlton_parallel_ml_bench_scatter.pdf}
   \caption{Per-trial execution times for \texttt{reverb} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl}.}
   \label{fig:reverb_mlton_parallel_ml_bench_scatter}
+\end{figure}
+
+\clearpage
+\section{Compare Geomeans}
+
+\subsection{Tuple Exp Geomeans}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{tuple_exp_geomeans.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for \texttt{tuple\_exp\_geomeans}. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_exp_geomeans}
 \end{figure}
 
 \clearpage
@@ -531,6 +619,28 @@
 \importcsv{soa_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
+\subsection{Tuple Vs Fixup Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Vs Fixup Flattening)}
+
+\paragraph*{Run time}
+\importcsv{tuple_vs_fixup_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_vs_fixup_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{Tuple Chunkify Func Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Chunkify Func Flattening)}
+
+\paragraph*{Run time}
+\importcsv{tuple_chunkify_func_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_chunkify_func_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
 \subsection{Trial Scatter Plots}
 
 \subsubsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
@@ -544,5 +654,12 @@
 \subsubsection{\texttt{reverb} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
 
 \importcsv{reverb_mlton_parallel_ml_bench_scatter.csv}
+
+\clearpage
+\subsection{Compare Geomeans}
+
+\subsubsection{Tuple Exp Geomeans}
+
+\importcsv{tuple_exp_geomeans.csv}
 
 \end{document}
