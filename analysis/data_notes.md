@@ -1,3 +1,10 @@
+# Run types
+
+* "tuple": tuple-flattening vs baseline
+* "con": con-flattening vs baseline
+* "aos": AOS-style container flattening vs baseline
+* "soa": SOA-style container flattening vs baseline
+
 # Previous runs
 
 The runs in:
