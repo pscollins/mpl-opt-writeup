@@ -10,7 +10,7 @@ The default, standard configurations are:
 We additionally have (for the sake of drilling down in particular sections):
 
 * "tuple_vs_fixup:" test side is tuple-flattening, baseline enables "always post-fixup mode"
-* "tuple_chunkify_one:" tuple-flattening vs baseline, with `-chunkify one` on both sides
+* "tuple_chunkify_func:" tuple-flattening vs baseline, with `-chunkify func` on both sides
 
 # Previous runs
 
