@@ -48,5 +48,12 @@
       "benchmark": "reverb",
       "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
     }
-  }
+  },
+    "compare_geomeans": {
+        "tuple_exp_geomeans": [
+            "parallel_bench_benchmarks_mpl_vs_mpl.tuple",
+            "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup",
+            "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_chunkify_func",
+            ]
+    }
 }
