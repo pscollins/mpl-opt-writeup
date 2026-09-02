@@ -485,7 +485,7 @@
 \end{figure}
 
 \clearpage
-\section{Compare Geomeans}
+\section{Compare Series}
 
 \subsection{Tuple Exp Geomeans}
 
@@ -494,6 +494,24 @@
   \includegraphics[width=\textwidth,keepaspectratio]{tuple_exp_geomeans.pdf}
   \caption{Comparison of geometric mean speedups across core counts for \texttt{tuple\_exp\_geomeans}. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_exp_geomeans}
+\end{figure}
+
+\subsection{Tuple Exp Delaunay}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{tuple_exp_delaunay.pdf}
+  \caption{Comparison of \texttt{delaunay} speedups across core counts for \texttt{tuple\_exp\_delaunay}. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_exp_delaunay}
+\end{figure}
+
+\subsection{Tuple Exp Bfs}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{tuple_exp_bfs.pdf}
+  \caption{Comparison of \texttt{bfs} speedups across core counts for \texttt{tuple\_exp\_bfs}. Data: \protect\nolinkurl{mpl_tuple_mpl_parallel_o3_morecores:260825-204258:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-204258.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_baseline:260830-201419:flattening-tests:b6534a325456bec8107247d5d4cb0e75f830e988:260830-201419.processed.jsonl}, \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_exp_bfs}
 \end{figure}
 
 \clearpage
@@ -656,10 +674,18 @@
 \importcsv{reverb_mlton_parallel_ml_bench_scatter.csv}
 
 \clearpage
-\subsection{Compare Geomeans}
+\subsection{Compare Series}
 
 \subsubsection{Tuple Exp Geomeans}
 
 \importcsv{tuple_exp_geomeans.csv}
+
+\subsubsection{Tuple Exp Delaunay}
+
+\importcsv{tuple_exp_delaunay.csv}
+
+\subsubsection{Tuple Exp Bfs}
+
+\importcsv{tuple_exp_bfs.csv}
 
 \end{document}

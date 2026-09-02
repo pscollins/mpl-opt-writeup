@@ -1,4 +1,4 @@
-Data generated at 2026-09-01 09:30:54.563438 using the following config:
+Data generated at 2026-09-01 23:37:45.774603 using the following config:
 
 {
   "output_directory": "charts/",
@@ -51,20 +51,57 @@ Data generated at 2026-09-01 09:30:54.563438 using the following config:
       "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
     }
   },
-  "compare_geomeans": {
-    "tuple_exp_geomeans": [
-      {
-        "series_name": "Baseline tuple-vs-tuple",
-        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
-      },
-      {
-        "series_name": "Tuple-vs-tuple, with basline fixup",
-        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
-      },
-      {
-        "series_name": "Tuple-vs-tuple, with `-chunkify func`",
-        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
-      }
-    ]
+  "compare_series": {
+    "tuple_exp_geomeans": {
+      "source_series_type": "geomeans",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+        }
+      ]
+    },
+    "tuple_exp_delaunay": {
+      "source_series_type": "delaunay",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+        }
+      ]
+    },
+    "tuple_exp_bfs": {
+      "source_series_type": "bfs",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+        }
+      ]
+    }
   }
 }

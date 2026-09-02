@@ -209,10 +209,14 @@ COMPARE_GEOMEANS_SUBSECTION_TEMPLATE = r"""\subsection{${name_display}}
 \end{figure}
 """
 
+COMPARE_SERIES_SUBSECTION_TEMPLATE = COMPARE_GEOMEANS_SUBSECTION_TEMPLATE
+
 COMPARE_GEOMEANS_TABLES_TEMPLATE = r"""\subsubsection{${name_display}}
 
 \importcsv{${out_filename}.csv}
 """
+
+COMPARE_SERIES_TABLES_TEMPLATE = COMPARE_GEOMEANS_TABLES_TEMPLATE
 
 
 def format_caption(base_caption: str, data_file: str) -> str:
@@ -283,26 +287,41 @@ def render_trial_scatter_tables_subsection(out_filename: str, bench: str, compil
     )
 
 
-def render_compare_geomeans_subsection(name: str, title: str = '', series_paths: list = None) -> str:
+def render_compare_series_subsection(name: str, title: str = '', series_paths: list = None, series_type: str = 'geomeans') -> str:
     name_display = title if title else name.replace('_', ' ').title()
     name_escaped = name.replace('_', r'\_')
+    stype_escaped = series_type.replace('_', r'\_')
+    is_geomean = series_type in ('geomean', 'geomeans')
+    if is_geomean:
+        metric_str = "geometric mean speedups"
+    else:
+        metric_str = fr"\texttt{{{stype_escaped}}} speedups"
+
     if series_paths:
         paths_str = ', '.join([fr'\protect\nolinkurl{{{p}}}' for p in series_paths])
-        caption = fr'Comparison of geometric mean speedups across core counts for \texttt{{{name_escaped}}}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
+        caption = fr'Comparison of {metric_str} across core counts for \texttt{{{name_escaped}}}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
     else:
-        caption = fr'Comparison of geometric mean speedups across core counts for \texttt{{{name_escaped}}}. <0\% represents an improvement, >0\% represents a regression.'
-    return Template(COMPARE_GEOMEANS_SUBSECTION_TEMPLATE).substitute(
+        caption = fr'Comparison of {metric_str} across core counts for \texttt{{{name_escaped}}}. <0\% represents an improvement, >0\% represents a regression.'
+    return Template(COMPARE_SERIES_SUBSECTION_TEMPLATE).substitute(
         name_display=name_display,
         out_filename=name,
         caption=caption,
     )
 
 
-def render_compare_geomeans_tables_subsection(name: str, title: str = '') -> str:
+def render_compare_series_tables_subsection(name: str, title: str = '') -> str:
     name_display = title if title else name.replace('_', ' ').title()
-    return Template(COMPARE_GEOMEANS_TABLES_TEMPLATE).substitute(
+    return Template(COMPARE_SERIES_TABLES_TEMPLATE).substitute(
         name_display=name_display,
         out_filename=name,
     )
+
+
+def render_compare_geomeans_subsection(name: str, title: str = '', series_paths: list = None) -> str:
+    return render_compare_series_subsection(name=name, title=title, series_paths=series_paths, series_type='geomeans')
+
+
+def render_compare_geomeans_tables_subsection(name: str, title: str = '') -> str:
+    return render_compare_series_tables_subsection(name=name, title=title)
 
 

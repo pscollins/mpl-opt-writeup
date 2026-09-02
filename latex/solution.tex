@@ -2414,9 +2414,33 @@ effect of the tuple flattening optimzation.
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
-As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
-is a fairly consistent loss across the benchmark suite; with the most striking
-example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
+As we see in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple}
+optimization has a mixed effect, with some benchmarks showing consistent wins
+across core counts, and others showing losses. In order to further investigate
+this effect, we'll select two representative benchmarks: \texttt{bfs} (a
+consistent win) and \texttt{delaunay} (a consistent loss).
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: observed IR change}
+
+\hl{TODO: descibe that they change irrelevant portions}
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: microarchitectural effects}
+
+\hl{TODO: LOOK AT PERF OUTPUT. Discuss high mispredict rate. Conclude that this is not an answer}.
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Simplify} effects}
+
+\hl{TODO: Look at output from base-fixup. Conclude that simplify is not the culprit}.
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Chunkify} effects}
+
+\hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
+  culprit. Link to an appendix with the full table of results from these
+  experiments and conclude that there are more unexplained effects}.
+
+%% As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
+%% is a fairly consistent loss across the benchmark suite; with the most striking
+%% example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
 
 \hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
 

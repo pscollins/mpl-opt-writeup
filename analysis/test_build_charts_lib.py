@@ -11,7 +11,9 @@ from build_charts_lib import (
     plot_parallel_bench_cores,
     plot_parallel_bench_geomean,
     compute_parallel_bench_geomean,
+    compute_parallel_bench_benchmark,
     plot_compare_geomeans,
+    plot_compare_series,
     resolve_series_path,
     plot_parallel_bench_size,
     plot_parallel_bench_trellis,
@@ -1073,6 +1075,161 @@ def test_latex_templates_compare_geomeans():
     tbl_tex = render_compare_geomeans_tables_subsection("tuple_exp_geomeans")
     assert r"\subsubsection{Tuple Exp Geomeans}" in tbl_tex
     assert r"\importcsv{tuple_exp_geomeans.csv}" in tbl_tex
+
+
+def test_compute_parallel_bench_benchmark():
+    df = pd.DataFrame({
+        'bench': ['delaunay', 'delaunay', 'delaunay', 'delaunay', 'bfs', 'bfs'],
+        'procs': [1, 2, 1, 2, 1, 1],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt', 'mpl-baseline', 'mpl-opt'],
+        'test_results_secs': [[2.0, 2.0], [1.0, 1.0], [1.0, 1.0], [0.5, 0.5], [4.0, 4.0], [2.0, 2.0]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2', 'h3', 'h4'],
+    })
+    res_df = compute_parallel_bench_benchmark(df, 'delaunay')
+    assert len(res_df) == 2
+    assert list(res_df['procs']) == [1, 2]
+    assert res_df.iloc[0]['relative_pct'] == pytest.approx(-50.0)
+    assert res_df.iloc[1]['relative_pct'] == pytest.approx(-50.0)
+    assert 'err_minus_pct' in res_df.columns
+    assert 'err_plus_pct' in res_df.columns
+
+
+def test_plot_compare_series_benchmark(tmp_path):
+    df1 = pd.DataFrame({
+        'bench': ['delaunay', 'delaunay', 'delaunay', 'delaunay'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[2.0, 2.2], [1.0, 1.1], [1.0, 1.1], [0.5, 0.55]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2'],
+    })
+    df2 = pd.DataFrame({
+        'bench': ['delaunay', 'delaunay', 'delaunay', 'delaunay'],
+        'procs': [1, 2, 1, 2],
+        'config': ['mpl-baseline', 'mpl-baseline', 'mpl-opt', 'mpl-opt'],
+        'test_results_secs': [[2.0, 2.1], [1.0, 1.05], [1.5, 1.55], [0.75, 0.8]],
+        'binary_md5': ['h1', 'h1', 'h2', 'h2'],
+    })
+
+    series_specs = [
+        {"series_name": "Series A", "df": df1},
+        {"series_name": "Series B", "df": df2},
+    ]
+
+    out_file = "test_compare_delaunay"
+    plot_compare_series(
+        series_specs=series_specs,
+        series_type="delaunay",
+        title="Delaunay Comparison Chart",
+        out_filename=out_file,
+        out_dir=str(tmp_path),
+    )
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert list(csv_df.columns) == ['series', 'procs', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert len(csv_df) == 4
+    assert set(csv_df['series']) == {'Series A', 'Series B'}
+    assert set(csv_df['procs']) == {1, 2}
+
+
+def test_process_config_compare_series(tmp_path):
+    output_dir = tmp_path / "charts_compare_series"
+    test_config_path = tmp_path / "test_config_compare_series.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mpl_vs_mpl": {
+            "compiler": "mpl",
+            "suite": "parallel_bench",
+            "tuple": "test_mpl_cores:260815-120506:home:ab3c6b6692273c761927291bb65dbe256fd5ee64:260815-120506.processed.jsonl"
+        },
+        "compare_series": {
+            "tuple_exp_geomeans": {
+                "source_series_type": "geomeans",
+                "source_series": [
+                    {
+                        "series_name": "Tuple Baseline",
+                        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+                    }
+                ]
+            },
+            "tuple_exp_bfs": {
+                "source_series_type": "bfs",
+                "source_series": [
+                    {
+                        "series_name": "Tuple Baseline",
+                        "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+                    }
+                ]
+            }
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "tuple_exp_geomeans.pdf",
+        "tuple_exp_geomeans.csv",
+        "tuple_exp_bfs.pdf",
+        "tuple_exp_bfs.csv",
+        "chart_info.md",
+        "all_charts.tex",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"File {fname} is empty."
+
+    # Verify geomeans CSV has wide format
+    geo_df = pd.read_csv(output_dir / "tuple_exp_geomeans.csv")
+    assert 'procs' in geo_df.columns
+    assert 'Tuple Baseline' in geo_df.columns
+
+    # Verify non-geomean benchmark CSV has error bars
+    bfs_df = pd.read_csv(output_dir / "tuple_exp_bfs.csv")
+    assert list(bfs_df.columns) == ['series', 'procs', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert r"\section{Compare Series}" in tex_content
+    assert r"tuple_exp_geomeans.pdf" in tex_content
+    assert r"tuple_exp_bfs.pdf" in tex_content
+    assert r"\importcsv{tuple_exp_geomeans.csv}" in tex_content
+    assert r"\importcsv{tuple_exp_bfs.csv}" in tex_content
+
+
+def test_latex_templates_compare_series():
+    from latex_templates import (
+        render_compare_series_subsection,
+        render_compare_series_tables_subsection,
+    )
+    # Geomeans
+    sub_geo = render_compare_series_subsection("tuple_exp_geomeans", series_paths=["f1.jsonl"], series_type="geomeans")
+    assert r"\subsection{Tuple Exp Geomeans}" in sub_geo
+    assert r"tuple_exp_geomeans.pdf" in sub_geo
+    assert r"Comparison of geometric mean speedups" in sub_geo
+
+    # Delaunay
+    sub_del = render_compare_series_subsection("tuple_exp_delaunay", series_paths=["f1.jsonl"], series_type="delaunay")
+    assert r"\subsection{Tuple Exp Delaunay}" in sub_del
+    assert r"tuple_exp_delaunay.pdf" in sub_del
+    assert r"Comparison of \texttt{delaunay} speedups" in sub_del
+
+    tbl_tex = render_compare_series_tables_subsection("tuple_exp_delaunay")
+    assert r"\subsubsection{Tuple Exp Delaunay}" in tbl_tex
+    assert r"\importcsv{tuple_exp_delaunay.csv}" in tbl_tex
 
 
 

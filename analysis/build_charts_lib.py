@@ -19,6 +19,8 @@ from latex_templates import (
     render_parallel_bench_mpl_tables_subsection,
     render_trial_scatter_subsection,
     render_trial_scatter_tables_subsection,
+    render_compare_series_subsection,
+    render_compare_series_tables_subsection,
     render_compare_geomeans_subsection,
     render_compare_geomeans_tables_subsection,
 )
@@ -380,6 +382,104 @@ def compute_parallel_bench_geomean(df, values='test_results_secs', abbrevs=None,
         abs_geomean = np.exp(np.mean(np.log(mean_abs_ratios.dropna())))
         geomean_pct = (abs_geomean - 1) * 100
         return pd.Series([geomean_pct], index=[1])
+
+
+# Computes benchmark run time data across core counts (procs) from the parallel-ml-bench suite
+def compute_parallel_bench_benchmark(
+    df,
+    bench_name,
+    values='test_results_secs',
+    abbrevs=None,
+    use_new_analysis_style=USE_NEW_ANALYSIS_STYLE
+):
+    if CHECKSUM_FIELD_PARALLEL in df.columns:
+        filtered = df[df.groupby('bench')[CHECKSUM_FIELD_PARALLEL].transform('nunique') > 1]
+    else:
+        filtered = df.copy()
+
+    if filtered.empty:
+        print("No benchmarks with differing binary hash found.")
+        return pd.DataFrame()
+
+    if bench_name in filtered['bench'].values:
+        bench_df = filtered[filtered['bench'] == bench_name]
+    elif bench_name == 'delunay' and 'delaunay' in filtered['bench'].values:
+        bench_df = filtered[filtered['bench'] == 'delaunay']
+    elif bench_name == 'delaunay' and 'delunay' in filtered['bench'].values:
+        bench_df = filtered[filtered['bench'] == 'delunay']
+    else:
+        matches = [b for b in filtered['bench'].dropna().unique() if b.lower() == bench_name.lower() or b.replace('-', '_') == bench_name.replace('-', '_')]
+        if matches:
+            bench_df = filtered[filtered['bench'] == matches[0]]
+        else:
+            bench_df = filtered[filtered['bench'] == bench_name]
+
+    if bench_df.empty:
+        print(f"No benchmark data found for '{bench_name}'.")
+        return pd.DataFrame()
+
+    base_key, test_key = infer_configs(bench_df, abbrevs)
+    bench_df = bench_df[bench_df[COMPILER_NAME_FIELD_PARALLEL].isin([base_key, test_key])]
+
+    subset_cols = ['bench', COMPILER_NAME_FIELD_PARALLEL]
+    if 'procs' in bench_df.columns:
+        subset_cols.insert(1, 'procs')
+    bench_df = bench_df.drop_duplicates(subset=subset_cols, keep='last')
+
+    if 'procs' in bench_df.columns:
+        pivot = bench_df.pivot(index=['bench', 'procs'], columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
+    else:
+        pivot = bench_df.pivot(index='bench', columns=COMPILER_NAME_FIELD_PARALLEL, values=values)
+
+    pivot = pivot.dropna(subset=[base_key, test_key])
+    if pivot.empty:
+        print("No matching benchmark runs found for comparison.")
+        return pd.DataFrame()
+
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+        err_minus, err_plus = calculate_error_bars(pivot[test_key], pivot[base_key])
+        err_minus_pct = np.asarray(err_minus) * 100
+        err_plus_pct = np.asarray(err_plus) * 100
+        relative_pct = (mean_abs_ratios.values - 1) * 100
+
+        if 'procs' in bench_df.columns:
+            procs = [idx[1] for idx in pivot.index]
+        else:
+            procs = [1]
+
+        res_df = pd.DataFrame({
+            'procs': procs,
+            'relative_pct': relative_pct,
+            'err_minus_pct': err_minus_pct,
+            'err_plus_pct': err_plus_pct,
+        })
+    else:
+        all_abs_ratios = pivot.apply(
+            lambda row: np.array(row[test_key]) / np.array(row[base_key]),
+            axis=1
+        )
+        mean_abs_ratios = all_abs_ratios.apply(np.mean)
+        std_abs_ratios = all_abs_ratios.apply(safe_std)
+
+        relative_pct = (mean_abs_ratios.values - 1) * 100
+        std_pct = std_abs_ratios.values * 100
+
+        if 'procs' in bench_df.columns:
+            procs = [idx[1] for idx in pivot.index]
+        else:
+            procs = [1]
+
+        res_df = pd.DataFrame({
+            'procs': procs,
+            'relative_pct': relative_pct,
+            'std_pct': std_pct,
+        })
+
+    return res_df.sort_values('procs').reset_index(drop=True)
 
 
 # Plots geomean run time data across core counts (procs) from the parallel-ml-bench suite
@@ -922,8 +1022,9 @@ def resolve_series_path(config: dict, series_path: str):
     return cur
 
 
-def plot_compare_geomeans(
+def plot_compare_series(
     series_specs,
+    series_type='geomeans',
     config=None,
     values='test_results_secs',
     title='',
@@ -931,6 +1032,7 @@ def plot_compare_geomeans(
     out_dir='charts',
     use_new_analysis_style=USE_NEW_ANALYSIS_STYLE
 ):
+    is_geomean = series_type in ('geomean', 'geomeans')
     computed_series = []
     for item in series_specs:
         if not isinstance(item, dict):
@@ -940,6 +1042,9 @@ def plot_compare_geomeans(
             df = item['df']
         elif 'geomean_series' in item:
             computed_series.append((series_name, item['geomean_series']))
+            continue
+        elif 'series_df' in item:
+            computed_series.append((series_name, item['series_df']))
             continue
         elif 'series_path' in item:
             if config is None:
@@ -954,17 +1059,31 @@ def plot_compare_geomeans(
 
         abbrevs = item.get('abbrevs')
         val_col = item.get('values', values)
-        geomean_s = compute_parallel_bench_geomean(
-            df,
-            values=val_col,
-            abbrevs=abbrevs,
-            use_new_analysis_style=use_new_analysis_style
-        )
-        if geomean_s is not None and not geomean_s.empty:
-            computed_series.append((series_name, geomean_s))
+        item_series_type = item.get('source_series_type') or item.get('series_type') or series_type
+        item_is_geomean = item_series_type in ('geomean', 'geomeans')
+
+        if item_is_geomean:
+            geomean_s = compute_parallel_bench_geomean(
+                df,
+                values=val_col,
+                abbrevs=abbrevs,
+                use_new_analysis_style=use_new_analysis_style
+            )
+            if geomean_s is not None and not geomean_s.empty:
+                computed_series.append((series_name, geomean_s))
+        else:
+            bench_df = compute_parallel_bench_benchmark(
+                df,
+                bench_name=item_series_type,
+                values=val_col,
+                abbrevs=abbrevs,
+                use_new_analysis_style=use_new_analysis_style
+            )
+            if bench_df is not None and not bench_df.empty:
+                computed_series.append((series_name, bench_df))
 
     if not computed_series:
-        print("No series data found for compare geomeans.")
+        print(f"No series data found for compare series ({out_filename}).")
         return
 
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -972,20 +1091,56 @@ def plot_compare_geomeans(
 
     all_procs_set = set()
     for _, s in computed_series:
-        all_procs_set.update(s.index)
+        if isinstance(s, pd.Series):
+            all_procs_set.update(s.index)
+        elif isinstance(s, pd.DataFrame) and 'procs' in s.columns:
+            all_procs_set.update(s['procs'])
     all_procs = sorted(all_procs_set)
 
     for i, (name, s) in enumerate(computed_series):
         marker = markers[i % len(markers)]
-        ax.plot(
-            s.index,
-            s.values,
-            label=name,
-            marker=marker,
-            linewidth=2.0,
-            markersize=5.5,
-            alpha=0.9
-        )
+        if isinstance(s, pd.Series):
+            ax.plot(
+                s.index,
+                s.values,
+                label=name,
+                marker=marker,
+                linewidth=2.0,
+                markersize=5.5,
+                alpha=0.9
+            )
+        elif isinstance(s, pd.DataFrame):
+            s_sorted = s.sort_values('procs')
+            if use_new_analysis_style and 'err_minus_pct' in s_sorted.columns and 'err_plus_pct' in s_sorted.columns:
+                yerr = [s_sorted['err_minus_pct'], s_sorted['err_plus_pct']]
+            elif 'std_pct' in s_sorted.columns:
+                yerr = s_sorted['std_pct']
+            else:
+                yerr = None
+
+            if yerr is not None:
+                ax.errorbar(
+                    s_sorted['procs'],
+                    s_sorted['relative_pct'],
+                    yerr=yerr,
+                    label=name,
+                    marker=marker,
+                    capsize=3,
+                    capthick=1,
+                    linewidth=1.5,
+                    markersize=5,
+                    alpha=0.85
+                )
+            else:
+                ax.plot(
+                    s_sorted['procs'],
+                    s_sorted['relative_pct'],
+                    label=name,
+                    marker=marker,
+                    linewidth=2.0,
+                    markersize=5.5,
+                    alpha=0.9
+                )
 
     ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
 
@@ -1005,10 +1160,34 @@ def plot_compare_geomeans(
     plt.tight_layout()
     os.makedirs(out_dir, exist_ok=True)
     if out_filename:
-        csv_data = {'procs': all_procs}
-        for name, s in computed_series:
-            csv_data[name] = [s.get(p, np.nan) for p in all_procs]
-        results_df = pd.DataFrame(csv_data).round(3)
+        if is_geomean:
+            csv_data = {'procs': all_procs}
+            for name, s in computed_series:
+                if isinstance(s, pd.Series):
+                    csv_data[name] = [s.get(p, np.nan) for p in all_procs]
+                elif isinstance(s, pd.DataFrame):
+                    s_map = dict(zip(s['procs'], s['relative_pct']))
+                    csv_data[name] = [s_map.get(p, np.nan) for p in all_procs]
+            results_df = pd.DataFrame(csv_data).round(3)
+        else:
+            rows = []
+            for name, s in computed_series:
+                if isinstance(s, pd.DataFrame):
+                    for _, row in s.iterrows():
+                        r_dict = {'series': name, 'procs': int(row['procs']), 'relative_pct': row['relative_pct']}
+                        if 'err_minus_pct' in row:
+                            r_dict['err_minus_pct'] = row['err_minus_pct']
+                        if 'err_plus_pct' in row:
+                            r_dict['err_plus_pct'] = row['err_plus_pct']
+                        if 'std_pct' in row:
+                            r_dict['std_pct'] = row['std_pct']
+                        rows.append(r_dict)
+                elif isinstance(s, pd.Series):
+                    for p in all_procs:
+                        if p in s.index:
+                            rows.append({'series': name, 'procs': int(p), 'relative_pct': s[p]})
+            results_df = pd.DataFrame(rows).round(3)
+
         csv_path = os.path.join(out_dir, f'{out_filename}.csv')
         print(f'Saving data to {csv_path}')
         results_df.to_csv(csv_path, index=False)
@@ -1019,11 +1198,14 @@ def plot_compare_geomeans(
     plt.close()
 
 
+plot_compare_geomeans = plot_compare_series
+
+
 def generate_all_charts_tex(config: dict) -> str:
     types_order = ['tuple', 'con', 'aos', 'soa']
     found_types = []
     for sec_k, sec_v in config.items():
-        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans') or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series') or not isinstance(sec_v, dict):
             continue
         for t in sec_v:
             if t not in METADATA_KEYS and t not in found_types:
@@ -1034,7 +1216,7 @@ def generate_all_charts_tex(config: dict) -> str:
     # Collect section entries per type
     type_entries = {}
     for sec_k, sec_v in config.items():
-        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans') or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series') or not isinstance(sec_v, dict):
             continue
         suite = sec_v.get('suite', 'mlton')
         compiler = sec_v.get('compiler', 'mlton')
@@ -1104,17 +1286,27 @@ def generate_all_charts_tex(config: dict) -> str:
             ))
         sections_tex.append('\n'.join(scatter_sec_parts))
 
-    # 3. Compare Geomeans section (if present)
+    # 3. Compare Series / Compare Geomeans section (if present)
+    compare_series = config.get('compare_series')
     compare_geomeans = config.get('compare_geomeans')
-    has_compare = isinstance(compare_geomeans, dict) and bool(compare_geomeans)
+    compare_dict = compare_series if isinstance(compare_series, dict) else (compare_geomeans if isinstance(compare_geomeans, dict) else None)
+    has_compare = bool(compare_dict)
     if has_compare:
+        sec_title = "Compare Series" if isinstance(compare_series, dict) else "Compare Geomeans"
         compare_sec_parts = []
         if sections_tex:
             compare_sec_parts.append(r'\clearpage')
-        compare_sec_parts.append(r'\section{Compare Geomeans}' + '\n')
-        for name, series_list in compare_geomeans.items():
-            if not isinstance(series_list, list):
+        compare_sec_parts.append(fr'\section{{{sec_title}}}' + '\n')
+        for name, spec in compare_dict.items():
+            if isinstance(spec, dict):
+                stype = spec.get('source_series_type') or spec.get('series_type') or spec.get('type', 'geomeans')
+                series_list = spec.get('source_series') or spec.get('series') or []
+            elif isinstance(spec, list):
+                stype = 'geomeans'
+                series_list = spec
+            else:
                 continue
+
             series_files = []
             for item in series_list:
                 if isinstance(item, dict) and 'series_path' in item:
@@ -1124,9 +1316,15 @@ def generate_all_charts_tex(config: dict) -> str:
                             series_files.append(resolved)
                     except Exception:
                         pass
-            compare_sec_parts.append(render_compare_geomeans_subsection(
+                elif isinstance(item, dict) and ('source' in item or 'data' in item or 'file' in item):
+                    f = item.get('source') or item.get('data') or item.get('file')
+                    if isinstance(f, str):
+                        series_files.append(f)
+
+            compare_sec_parts.append(render_compare_series_subsection(
                 name=name,
                 series_paths=series_files,
+                series_type=stype,
             ))
         sections_tex.append('\n'.join(compare_sec_parts))
 
@@ -1178,12 +1376,13 @@ def generate_all_charts_tex(config: dict) -> str:
         has_any_tables = True
 
     if has_compare:
+        subsec_title = "Compare Series" if isinstance(compare_series, dict) else "Compare Geomeans"
         compare_tbl_parts = []
         if has_any_tables:
             compare_tbl_parts.append(r'\clearpage')
-        compare_tbl_parts.append(r'\subsection{Compare Geomeans}' + '\n')
-        for name in compare_geomeans:
-            compare_tbl_parts.append(render_compare_geomeans_tables_subsection(name=name))
+        compare_tbl_parts.append(fr'\subsection{{{subsec_title}}}' + '\n')
+        for name in compare_dict:
+            compare_tbl_parts.append(render_compare_series_tables_subsection(name=name))
         tables_parts.append('\n'.join(compare_tbl_parts))
         has_any_tables = True
 
@@ -1206,7 +1405,7 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
         f.write(f"Data generated at {timestamp} using the following config:\n\n{json.dumps(config, indent=2)}\n")
 
     for section_key, section_val in config.items():
-        if section_key in ("output_directory", "trial_scatter_plots", "compare_geomeans"):
+        if section_key in ("output_directory", "trial_scatter_plots", "compare_geomeans", "compare_series"):
             continue
         if not isinstance(section_val, dict):
             continue
@@ -1247,14 +1446,23 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
                 out_dir=out_dir,
             )
 
+    compare_series = config.get("compare_series")
     compare_geomeans = config.get("compare_geomeans")
-    if isinstance(compare_geomeans, dict):
-        for name, series_list in compare_geomeans.items():
-            if not isinstance(series_list, list):
+    compare_dict = compare_series if isinstance(compare_series, dict) else (compare_geomeans if isinstance(compare_geomeans, dict) else None)
+    if isinstance(compare_dict, dict):
+        for name, spec in compare_dict.items():
+            if isinstance(spec, dict):
+                stype = spec.get('source_series_type') or spec.get('series_type') or spec.get('type', 'geomeans')
+                series_list = spec.get('source_series') or spec.get('series') or []
+            elif isinstance(spec, list):
+                stype = 'geomeans'
+                series_list = spec
+            else:
                 continue
             title = name.replace("_", " ").title()
-            plot_compare_geomeans(
+            plot_compare_series(
                 series_specs=series_list,
+                series_type=stype,
                 config=config,
                 title=title,
                 out_filename=name,
@@ -1266,6 +1474,7 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     print(f'Saving all_charts TeX file to {all_charts_tex_path}')
     with open(all_charts_tex_path, "w", encoding="utf-8") as f:
         f.write(generate_all_charts_tex(config))
+
 
 
 
