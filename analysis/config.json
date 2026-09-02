@@ -66,6 +66,41 @@
                     "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
                 }
             ]
+        },
+        "tuple_exp_delaunay": {
+            "source_series_type": "delaunay",
+            "source_series": [
+                {
+                    "series_name": "Baseline tuple-vs-tuple",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+                },
+                {
+                    "series_name": "Tuple-vs-tuple, with basline fixup",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+                },
+                {
+                    "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+                }
+            ]
+        },
+        "tuple_exp_bfs": {
+            "source_series_type": "bfs",
+            "source_series": [
+                {
+                    "series_name": "Baseline tuple-vs-tuple",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+                },
+                {
+                    "series_name": "Tuple-vs-tuple, with basline fixup",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+                },
+                {
+                    "series_name": "Tuple-vs-tuple, with `-chunkify func`",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+                }
+            ]
         }
     }
+}
 }
