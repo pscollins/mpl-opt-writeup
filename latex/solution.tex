@@ -2245,6 +2245,17 @@ trials on the base side. The number of trials is managed by the respective
 benchmark frameworks in order to collect on the order of a few seconds of data
 in each configuration.
 
+All benchmarks use the C backend of MLton/MPL for codegen, calling into GCC
+(version 15.2.0) to emit the final binary. We found that it was necessary to
+compile the benchmarks under \texttt{-O2} (rather than the MLton default of
+\texttt{-O1}) in order to obtain stable, interpretable performance data: with
+\texttt{-O1}, we observed that the same compiler configuration would yield
+dramatically different results on similar host CPUs (Intel Icelake vs AMD Ryzen
+9), e.g. a 40\% slowdown on Intel vs a 10\% speedup on AMD. These differences
+went away after supplying C compiler flags that controlled low-level code layout
+options, e.g. \texttt{-falign-loops}. We also chose to enable
+\texttt{-march=native} because it reduced the strange variance described above.
+
 As we'll discuss in more detail below, directly examining the experiment data
 makes it clear that trial runtimes are not normally distributed: as can be seen
 examining \cref{fig:example_scatter_trials}, the measured runtimes often exhibit
@@ -2421,6 +2432,115 @@ this effect, we'll select two representative benchmarks: \texttt{bfs} (a
 consistent win) and \texttt{delaunay} (a consistent loss).
 
 \subsubsection{\texttt{delaunay} vs \texttt{bfs}: observed IR change}
+
+The \texttt{delaunay} benchmark solves the computational geometry problem of
+\textit{Delaunay triangulation}, which partitions the convex hull of a set of
+points into triangles whose smallest angles are maximal. In \texttt{delaunay},
+the pass flattens arguments to 3 called functions (via duplication):
+
+\begin{enumerate}
+\item \texttt{flushArr}: part of the implementation of the \texttt{print} function
+\item \texttt{makeTreeBounded}: part of the initialization logic, not included
+  in the benchmarked region.
+\item \texttt{parfor}: Transforms one branch of MPL's parallel \texttt{for} loop
+  construct, going from:
+
+\begin{minted}{python}
+  # Parallel for loop on the range (lo, hi) with parallel grain size `grain`
+  def parfor(f: 'a -> 'b, lo_hi: int * int, grain: int):
+    (lo, hi) = lo_hi # unpack tuple
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      parfor (f, (lo, mid), grain)
+    def right():
+      parfor (f, (mid, hi), grain)
+    # launch left + right in parallel
+    par (left, right)
+\end{minted}
+and flattening one of the two \texttt{parfor} recursive calls, i.e.:
+\begin{minted}{python}
+  # Parallel for loop on the range (lo, hi) with parallel grain size `grain`
+  def parfor(f: 'a -> 'b, lo_hi: int * int, grain: int):
+    (lo, hi) = lo_hi # unpack tuple
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      parfor (f, (lo, mid), grain)
+    def right():
+      parfor_flat (f, mid, hi, grain)  # flattened recursive call
+    # launch left + right in parallel
+      par (left, right)
+
+  # flattened specialization of `parfor`
+  def parfor_flat(f: 'a -> b, lo: int, hi: int, grain: int): ...
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      # construct tuple for unflattened call
+      lohi = (lo, mid)
+      parfor (f, lo_hi, grain)
+    def right():
+      parfor_flat (f, mid, hi, grain)  # flattened recursive call
+    # launch left + right in parallel
+    par (left, right)
+\end{minted}
+
+Based on the action of the transformation, we would probably expect to see (for
+\texttt{delaunay}):
+\begin{enumerate}
+\item A small win inside of \texttt{parfor} calls: while we could imagine the
+  duplication adding some overhead due to instruction cache effects, the
+  duplicated code is fairly small.
+
+\item More-or-less no impact on any other part of the benchmark (test setup and
+  \texttt{print} shouldn't have any impact on the per-trial runtime).
+\end{enumerate}
+
+%% Doing some arithmetic with the benchmark configuration, we can estimate on the
+%% order of 500,000 calls to \texttt{parfor}, and so a $\approx 1$ \mu sec change
+%% in this function's performance (which seems like a conservative upper bound for
+%% the performance impact of the IR transformation above) should yield a change of
+%% $\approx .5$ seconds of CPU time over the full benchmark (on the order of 7\%
+%% out of the benchmark's full $\approx 7$ second runtime).
+
+A savings materialized in \texttt{parfor} is consistent with what we see in the
+benchmark: overhead in \texttt{parfor} adds delay in spwaning new tasks, and so
+we would expect a larger savings at higher core counts. However, the consistent
+loss at lower core counts is hard to explain on the basis of the observed IR
+transformation.
+
+In the \texttt{bfs} benchmark, the program calculates the BFS tree of an input
+graph (i.e. the undirected distance between some distinguished source node and
+all other nodes in the graph). The pass applies the following transformations to
+\texttt{bfs}:
+\begin{enumerate}
+\item \texttt{parfor}: the same inline-the-right-hand-branch as above
+
+\item \texttt{parVisitMany}: structurally identical to \texttt{parfor}, manages
+  parallel fanout across graph nodes based on their indices
+
+\item \texttt{sumOfOutDegrees}: avoids constructing a temporary tuple to pass as
+  an argument to a paralllel reduce operation, roughly:
+
+\begin{minted}{python}
+  def sumOfOutDegrees(all_nodes: int array):
+    def do_reduce(env: (...complex, 7-element tuple type...)):
+      ... calculate sum ...
+    reduce(do_reduce, all_nodes)
+\end{minted}
+
+where we flatten the \texttt{do_reduce} call and avoid building the intermediate
+\texttt{env} argument.
+
+\end{enumerate}
+
+
+
+
 
 \hl{TODO: descibe that they change irrelevant portions}
 
