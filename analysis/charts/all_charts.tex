@@ -455,6 +455,44 @@
 \end{figure}
 
 \clearpage
+\section{Tuple Chunkify One Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Chunkify One Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{tuple_chunkify_one_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_chunkify_one_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_one:260901-143537:flattening-tests:2f9a1783de7de96b78f4a934a8afc1d7ebf8c3c6:260901-143537.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_one_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_one:260901-143537:flattening-tests:2f9a1783de7de96b78f4a934a8afc1d7ebf8c3c6:260901-143537.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_one_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{tuple\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_tuple_vs_tuple_chunkify_one:260901-143537:flattening-tests:2f9a1783de7de96b78f4a934a8afc1d7ebf8c3c6:260901-143537.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_chunkify_one_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
 \section{Trial Scatter Plots}
 
 \subsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
@@ -657,6 +695,17 @@
 
 \paragraph*{Binary size}
 \importcsv{tuple_chunkify_func_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{Tuple Chunkify One Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Tuple Chunkify One Flattening)}
+
+\paragraph*{Run time}
+\importcsv{tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{tuple_chunkify_one_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
 \subsection{Trial Scatter Plots}
