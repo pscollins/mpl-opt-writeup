@@ -63,8 +63,8 @@
                     "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
                 },
                 {
-                    "series_name": "Tuple-vs-tuple, with `-chunkify func`",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+                    "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
                 }
             ]
         },

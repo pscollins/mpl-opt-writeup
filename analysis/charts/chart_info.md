@@ -1,4 +1,4 @@
-Data generated at 2026-09-05 15:05:45.034204 using the following config:
+Data generated at 2026-09-05 15:10:11.067458 using the following config:
 
 {
   "output_directory": "charts/",
@@ -65,8 +65,8 @@ Data generated at 2026-09-05 15:05:45.034204 using the following config:
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
         },
         {
-          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
-          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
         }
       ]
     },
@@ -82,8 +82,8 @@ Data generated at 2026-09-05 15:05:45.034204 using the following config:
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
         },
         {
-          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
-          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
         }
       ]
     },
@@ -99,8 +99,8 @@ Data generated at 2026-09-05 15:05:45.034204 using the following config:
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
         },
         {
-          "series_name": "Tuple-vs-tuple, with `-chunkify func`",
-          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_func"
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
         }
       ]
     }
