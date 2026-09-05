@@ -360,7 +360,7 @@ at \texttt{bb0}):
 \begin{minted}{python}
   def fib(n: int): int =
     block bb0():
-      isEq: bool = prim Word32_equal (n, 0)
+      isEq: boo = prim Word32_equal (n, 0)
       case isEq of true => goto bb1 | false => goto bb2
 
     block bb1():
