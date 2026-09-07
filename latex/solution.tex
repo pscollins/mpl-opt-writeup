@@ -2860,8 +2860,6 @@ For the evaluation below, we use the following configuration:
 
 \subsubsection{MLton Benchmarks}
 
-\hl{TODO: NEED TO INVESTIGATE BIG REGRESSION: SEEMS REAL}
-
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[b]{0.32\textwidth}
@@ -2888,12 +2886,41 @@ For the evaluation below, we use the following configuration:
   \label{fig:con_mlton}
 \end{figure}
 
+The MLton benchmark suite shows modest $\approx 5\%$ regressions on a number of
+benchmarks, for an overall geomean loss. We'll investiage the large loss to
+\texttt{wc-input1} in the next section.
 
-\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+\subsubsection{\texttt{wc-input1}: detailed analysis}
 
-\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+The benchmark itself is simply a loop that reads from a buffered IO stream and
+counts newlines:
+\begin{minted}{sml}
+fun loop (i: int): int =
+  case input1 ins of
+    NONE => i
+  | SOME c => loop (if c = #"\n" then i + 1 else i)
+\end{minted}
+where \texttt{input1} is a standard library function that reads a single
+character from a provided input stream (here, a temporary file).
 
-\hl{TODO: SKIPPED COMPILE SIZE}
+The \texttt{ConApp} flattening pass makes the following changes:
+\begin{itemize}
+\item During initialization, it flattens the call to a string-concatenation routine
+\item During runtime, it flattens calls to various functions that report errors
+  in case of e.g. IO failure when reading the file.
+\end{itemize}
+No hot codepaths whatsoever are impacted. What is the cause of the regression?
+
+Like above, we can run in \texttt{-chunkify one} in order to control for the
+effect of chunkification, which is impacted by the introduction of any new
+functons.
+
+\hl{TODO: ADD DATA}
+
+
+\subsection{\texttt{wc-input1}: controlling for \texttt{Chunkify}}
+
+\subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[htbp]
   \centering
