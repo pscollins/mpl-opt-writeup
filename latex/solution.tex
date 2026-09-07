@@ -2769,24 +2769,48 @@ benchmarks (\texttt{ocaml-lu-decomp}, \texttt{tokens}), it is otherwise
 neutral-to-positive, with an impact of $< 2\%$ on performance in most cases.
 
 
-\hl{TODO(agy): Add the charts ``tuple exp bfs'' and ``tuple exp delaunay'' side
-  by side in a figure with the label fig:tuple\_standouts\_only}
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_bfs.pdf}
+    \caption{\texttt{bfs}}
+    \label{fig:tuple_exp_bfs}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_delaunay.pdf}
+    \caption{\texttt{delaunay}}
+    \label{fig:tuple_exp_delaunay}
+  \end{subfigure}
+  \caption{Comparison of speedups across core counts for \texttt{bfs} and \texttt{delaunay} under three configurations: baseline tuple-vs-tuple, baseline with fixup, and with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_standouts_only}
+\end{figure}
 
-\hl{TODO(agy): Add the chart ``tuple exp geomeans'' in a figure with the name
-  fig:tuple\_exp\_geomeans}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_geomeans.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for the baseline tuple configuration, baseline with fixup, and with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_exp_geomeans}
+\end{figure}
 
-\hl{TODO(agy): Add the chart Tuple chunkify one run time comparison across core
-  counts (trellis) in a figure with the name fig:tuple\_all\_chunkify\_one}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for tuple flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_all_chunkify_one}
+\end{figure}
 
-\hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
-  culprit. Link to an appendix with the full table of results from these
-  experiments and conclude that there are more unexplained effects}.
+%% \hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
+%%   culprit. Link to an appendix with the full table of results from these
+%%   experiments and conclude that there are more unexplained effects}.
 
 %% As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
 %% is a fairly consistent loss across the benchmark suite; with the most striking
 %% example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
 
-\hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
+%% \hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
 
 \subsection{\texttt{ConApp} Flattening}
 
