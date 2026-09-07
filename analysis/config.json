@@ -105,5 +105,20 @@
         }
       ]
     }
-  }
+  },
+    "compare_bar_charts": {
+        "mlton_con_chunkify_one": {
+            "source_series": [
+                {
+                    "series_name": "Baseline MLton ConApp-vs-ConApp",
+                    "series_name": "mlton_benchmarks_mlton_vs_mlton.con"
+                },
+                {
+                    "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+                    "series_name": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
+                },
+            ]
+        }
+
+    }
 }
