@@ -2947,7 +2947,7 @@ is this measurement impacted by chunkification noise, as we saw above?
 
 The chart \cref{fig:con_parallel_bench_mlton_chunkify} plots the relative
 performance of the default experimental setup alongside the relative performance
-in a setup with \texttt{-chunkify one}. As we can see, teh largest wins in
+in a setup with \texttt{-chunkify one}. As we can see, the largest wins in
 \texttt{linearrec} and \texttt{quickhull} persist: this suggests an
 individually-meaningful impact of the \texttt{ConApp} flattening transformation,
 unlike the \texttt{tuple} case.
@@ -2955,11 +2955,15 @@ unlike the \texttt{tuple} case.
 However, it surfaces one significant loss on \texttt{mcss-opt} that likely
 requires further investigation. We also see a number of significant wins
 disappear (e.g. \texttt{primes} and \texttt{sparse-mxv-opt}), suggesting that
-the baseline measurement does contain sigificant incidental performance changes
+the baseline measurement does contain significant incidental performance changes
 due to chunkification.
 
-\hl{TODO(agy): Add in con\_parallel\_bench\_mlton\_chunkify following the
-  example of all\_charts}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_con_chunkify_one.pdf}
+  \caption{Comparison of benchmark performance for \texttt{ConApp} flattening on \texttt{parallel-ml-bench} under MLton, comparing the baseline configuration against \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench_mlton_chunkify}
+\end{figure}
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
@@ -2998,24 +3002,50 @@ Re-running this particular benchmark under \texttt{-chunkify one} shows that the
 effect disappears, as we can see in \cref{fig:con_chunkify_one_outliers}:
 \texttt{suffix-array} is roughly neutral under \texttt{ConApp} flattening once
 we control for chunkification. We can also see how the large swings reported by
-\texttt{linearrec} change under \texttt{-chunkfiy one} in
+\texttt{linearrec} change under \texttt{-chunkify one} in
 \cref{fig:con_chunkify_one_outliers}: here, it appears that there is a
-legitimate effect on the benchmakr at higher core counts which merits further
+legitimate effect on the benchmark at higher core counts which merits further
 investigation.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_exp_suffix_array.pdf}
+    \caption{\texttt{suffix-array}}
+    \label{fig:con_exp_suffix_array}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_exp_linearrec.pdf}
+    \caption{\texttt{linearrec}}
+    \label{fig:con_exp_linearrec}
+  \end{subfigure}
+  \caption{Comparison of speedups across core counts for \texttt{suffix-array} and \texttt{linearrec} under baseline \texttt{ConApp} flattening versus with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_chunkify_one_outliers}
+\end{figure}
 
 In \cref{fig:con_chunkify_one_geomeans}, we see that (like \texttt{tuple}
 flattening), the \texttt{ConApp} flattening transformation is broadly
-neutral-to-positive when exlcuding chunk overhead. See
-\cref{mpl_con_chunkify_one_all} for the full set of experimental data for the
+neutral-to-positive when excluding chunk overhead. See
+\cref{fig:mpl_con_chunkify_one_all} for the full set of experimental data for the
 \texttt{-chunkify one} configuration.
 
-\hl{TODO(agy): Include the charts ``con exp suffix array'' and ``con exp
-  linearrec'' in a new figure fig:con\_chunkify\_one\_outliers}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/con_exp_geomean.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for baseline \texttt{ConApp} flattening versus with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_chunkify_one_geomeans}
+\end{figure}
 
-\hl{TODO(agy): Include ``con exp geomeans'' in a new chart fig:con\_chunkfiy\_one\_geomeans}
-
-\hl{TODO(agy): Include the full trellis chart for ``con\_chunkify\_one run time
-  comparison across core counts as fig:mpl\_con\_chunkify\_one\_all}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/con_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{ConApp} flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mpl_con_chunkify_one_all}
+  \label{mpl_con_chunkify_one_all}
+\end{figure}
 
 \subsection{AoS Flattening}
 
