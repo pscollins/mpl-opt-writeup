@@ -5,6 +5,7 @@
     "suite": "mlton",
     "tuple": "test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl",
     "con": "test_conapp_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_193112.jsonl",
+    "con_chunkify_one": "mlton_con_vs_con_chunkify_one:260907-185802:flattening-tests:b043c5ca58b04eebc09b15abe9bdf2dacf1ab0f0:260907-185802.processed.jsonl",
     "aos": "test_aos_flatten_set_width_3:flattening-tests:8e04c8184:20260822_005802.jsonl",
     "soa": "test_soa_flatten_set_width_3:flattening-tests:8e04c8184:20260822_025807.jsonl"
   },
