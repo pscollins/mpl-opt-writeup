@@ -2415,14 +2415,22 @@ effect of the tuple flattening optimzation.
     \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:tuple_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mpl_vs_mpl.pdf}
-    \caption{Binary size}
-    \label{fig:tuple_parallel_bench_size_mpl_vs_mpl}
-  \end{subfigure}
+  \end{subfigure}\hfill
+  \begin{minipage}[b]{0.48\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+      \caption{Geomean only}
+      \label{fig:tuple_parallel_bench_geomean_mpl_vs_mpl}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mpl_vs_mpl.pdf}
+      \caption{Binary size}
+      \label{fig:tuple_parallel_bench_size_mpl_vs_mpl}
+    \end{subfigure}
+  \end{minipage}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
@@ -2915,14 +2923,22 @@ For the evaluation below, we use the following configuration:
     \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:con_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mpl_vs_mpl.pdf}
-    \caption{Binary size}
-    \label{fig:con_parallel_bench_size_mpl_vs_mpl}
-  \end{subfigure}
+  \end{subfigure}\hfill
+  \begin{minipage}[b]{0.48\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+      \caption{Geomean only}
+      \label{fig:con_parallel_bench_geomean_mpl_vs_mpl}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mpl_vs_mpl.pdf}
+      \caption{Binary size}
+      \label{fig:con_parallel_bench_size_mpl_vs_mpl}
+    \end{subfigure}
+  \end{minipage}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
 \end{figure}
@@ -2993,14 +3009,22 @@ For the evaluation below, we use the following configuration:
     \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:aos_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mpl_vs_mpl.pdf}
-    \caption{Binary size}
-    \label{fig:aos_parallel_bench_size_mpl_vs_mpl}
-  \end{subfigure}
+  \end{subfigure}\hfill
+  \begin{minipage}[b]{0.48\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+      \caption{Geomean only}
+      \label{fig:aos_parallel_bench_geomean_mpl_vs_mpl}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mpl_vs_mpl.pdf}
+      \caption{Binary size}
+      \label{fig:aos_parallel_bench_size_mpl_vs_mpl}
+    \end{subfigure}
+  \end{minipage}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
@@ -3071,14 +3095,22 @@ For the evaluation below, we use the following configuration:
     \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
     \caption{Run time}
     \label{fig:soa_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mpl_vs_mpl.pdf}
-    \caption{Binary size}
-    \label{fig:soa_parallel_bench_size_mpl_vs_mpl}
-  \end{subfigure}
+  \end{subfigure}\hfill
+  \begin{minipage}[b]{0.48\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+      \caption{Geomean only}
+      \label{fig:soa_parallel_bench_geomean_mpl_vs_mpl}
+    \end{subfigure}
+
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mpl_vs_mpl.pdf}
+      \caption{Binary size}
+      \label{fig:soa_parallel_bench_size_mpl_vs_mpl}
+    \end{subfigure}
+  \end{minipage}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
