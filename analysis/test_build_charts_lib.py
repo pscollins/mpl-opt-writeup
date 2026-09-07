@@ -14,6 +14,8 @@ from build_charts_lib import (
     compute_parallel_bench_benchmark,
     plot_compare_geomeans,
     plot_compare_series,
+    plot_compare_bar_charts,
+    compute_bar_series,
     resolve_series_path,
     plot_parallel_bench_size,
     plot_parallel_bench_trellis,
@@ -1230,6 +1232,120 @@ def test_latex_templates_compare_series():
     tbl_tex = render_compare_series_tables_subsection("tuple_exp_delaunay")
     assert r"\subsubsection{Tuple Exp Delaunay}" in tbl_tex
     assert r"\importcsv{tuple_exp_delaunay.csv}" in tbl_tex
+
+
+def test_plot_compare_bar_charts(tmp_path):
+    df1 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'config': ['mlton-baseline', 'mlton-con', 'mlton-baseline', 'mlton-con'],
+        'test_results_secs': [[2.0, 2.2], [1.8, 1.9], [1.0, 1.1], [0.8, 0.9]],
+        'binary_md5': ['h1', 'h2', 'h3', 'h4'],
+    })
+    df2 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'config': ['mlton-baseline', 'mlton-con', 'mlton-baseline', 'mlton-con'],
+        'test_results_secs': [[2.0, 2.2], [1.5, 1.6], [1.0, 1.1], [0.7, 0.8]],
+        'binary_md5': ['h1', 'h2', 'h3', 'h4'],
+    })
+
+    series_specs = [
+        {"series_name": "Series 1", "df": df1},
+        {"series_name": "Series 2", "df": df2},
+    ]
+
+    out_file = "test_compare_bar_output"
+    plot_compare_bar_charts(
+        series_specs=series_specs,
+        title="Compare Bar Output",
+        out_filename=out_file,
+        out_dir=str(tmp_path),
+    )
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert list(csv_df.columns) == ['series', 'bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert len(csv_df) == 4
+    assert set(csv_df['series']) == {'Series 1', 'Series 2'}
+    assert set(csv_df['bench']) == {'benchA', 'benchB'}
+
+
+def test_process_config_compare_bar_charts(tmp_path):
+    output_dir = tmp_path / "charts_compare_bars"
+    test_config_path = tmp_path / "test_config_compare_bars.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
+            "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl"
+        },
+        "compare_bar_charts": {
+            "tuple_vs_con": {
+                "source_series": [
+                    {
+                        "series_name": "Tuple",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.tuple"
+                    },
+                    {
+                        "series_name": "Con",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+                    }
+                ]
+            }
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "tuple_vs_con.pdf",
+        "tuple_vs_con.csv",
+        "chart_info.md",
+        "all_charts.tex",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"File {fname} is empty."
+
+    csv_df = pd.read_csv(output_dir / "tuple_vs_con.csv")
+    assert list(csv_df.columns) == ['series', 'bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert set(csv_df['series']) == {'Tuple', 'Con'}
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert r"\section{Compare Bar Charts}" in tex_content
+    assert r"tuple_vs_con.pdf" in tex_content
+    assert r"\importcsv{tuple_vs_con.csv}" in tex_content
+
+
+def test_latex_templates_compare_bar_charts():
+    from latex_templates import (
+        render_compare_bar_charts_subsection,
+        render_compare_bar_charts_tables_subsection,
+    )
+    sub_tex = render_compare_bar_charts_subsection("mlton_con_chunkify_one", series_paths=["f1.jsonl", "f2.jsonl"])
+    assert r"\subsection{Mlton Con Chunkify One}" in sub_tex
+    assert r"mlton_con_chunkify_one.pdf" in sub_tex
+    assert r"Comparison of benchmark performance for \texttt{mlton\_con\_chunkify\_one}" in sub_tex
+
+    tbl_tex = render_compare_bar_charts_tables_subsection("mlton_con_chunkify_one")
+    assert r"\subsubsection{Mlton Con Chunkify One}" in tbl_tex
+    assert r"\importcsv{mlton_con_chunkify_one.csv}" in tbl_tex
 
 
 

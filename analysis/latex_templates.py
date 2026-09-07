@@ -218,6 +218,10 @@ COMPARE_GEOMEANS_TABLES_TEMPLATE = r"""\subsubsection{${name_display}}
 
 COMPARE_SERIES_TABLES_TEMPLATE = COMPARE_GEOMEANS_TABLES_TEMPLATE
 
+COMPARE_BAR_CHARTS_SUBSECTION_TEMPLATE = COMPARE_GEOMEANS_SUBSECTION_TEMPLATE
+
+COMPARE_BAR_CHARTS_TABLES_TEMPLATE = COMPARE_GEOMEANS_TABLES_TEMPLATE
+
 
 def format_caption(base_caption: str, data_file: str) -> str:
     return fr'{base_caption} Data: \protect\nolinkurl{{{data_file}}}. <0\% represents an improvement, >0\% represents a regression.'
@@ -323,5 +327,32 @@ def render_compare_geomeans_subsection(name: str, title: str = '', series_paths:
 
 def render_compare_geomeans_tables_subsection(name: str, title: str = '') -> str:
     return render_compare_series_tables_subsection(name=name, title=title)
+
+
+def render_compare_bar_charts_subsection(name: str, title: str = '', series_paths: list = None) -> str:
+    name_display = title if title else name.replace('_', ' ').title()
+    name_escaped = name.replace('_', r'\_')
+    if series_paths:
+        paths_str = ', '.join([fr'\protect\nolinkurl{{{p}}}' for p in series_paths])
+        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
+    else:
+        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}. <0\% represents an improvement, >0\% represents a regression.'
+    return Template(COMPARE_BAR_CHARTS_SUBSECTION_TEMPLATE).substitute(
+        name_display=name_display,
+        out_filename=name,
+        caption=caption,
+    )
+
+
+def render_compare_bar_charts_tables_subsection(name: str, title: str = '') -> str:
+    name_display = title if title else name.replace('_', ' ').title()
+    return Template(COMPARE_BAR_CHARTS_TABLES_TEMPLATE).substitute(
+        name_display=name_display,
+        out_filename=name,
+    )
+
+
+render_compare_bars_subsection = render_compare_bar_charts_subsection
+render_compare_bars_tables_subsection = render_compare_bar_charts_tables_subsection
 
 

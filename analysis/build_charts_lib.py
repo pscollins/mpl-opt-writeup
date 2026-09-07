@@ -23,6 +23,8 @@ from latex_templates import (
     render_compare_series_tables_subsection,
     render_compare_geomeans_subsection,
     render_compare_geomeans_tables_subsection,
+    render_compare_bar_charts_subsection,
+    render_compare_bar_charts_tables_subsection,
 )
 
 # Use system latex
@@ -1201,11 +1203,293 @@ def plot_compare_series(
 plot_compare_geomeans = plot_compare_series
 
 
+def compute_bar_series(item, config=None, values='test_results_secs', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
+    series_name = item.get('series_name', '')
+    if 'series_df' in item:
+        df_res = item['series_df']
+        geomean_pct = item.get('geomean_pct', np.nan)
+        return series_name, df_res, geomean_pct
+
+    if 'df' in item:
+        df = item['df']
+    elif 'series_path' in item or 'path' in item:
+        if config is None:
+            raise ValueError("Config must be provided to resolve 'series_path'")
+        p = item.get('series_path') or item.get('path')
+        file_name = resolve_series_path(config, p)
+        df = load_df(file_name)
+    elif 'source' in item or 'data' in item or 'file' in item:
+        file_name = item.get('source') or item.get('data') or item.get('file')
+        df = load_df(file_name)
+    else:
+        raise ValueError(f"Series specification must contain 'series_path', 'df', or 'source': {item}")
+
+    abbrevs = item.get('abbrevs')
+    val_col = item.get('values', values)
+
+    # If df already contains precomputed benchmark results
+    if 'bench' in df.columns and 'relative_pct' in df.columns:
+        geomean_pct = item.get('geomean_pct', np.nan)
+        return series_name, df, geomean_pct
+
+    # Determine suite format: parallel_bench or mlton
+    if COMPILER_NAME_FIELD_PARALLEL in df.columns or 'test_results_secs' in df.columns:
+        # parallel_bench format
+        base_key, test_key = infer_configs(df, abbrevs)
+        config_col = COMPILER_NAME_FIELD_PARALLEL
+        checksum_col = CHECKSUM_FIELD_PARALLEL if CHECKSUM_FIELD_PARALLEL in df.columns else 'binaryChecksum'
+        if val_col not in df.columns:
+            val_col = 'test_results_secs' if 'test_results_secs' in df.columns else 'binary_bytes'
+
+        cols_to_keep = ['bench', config_col, val_col]
+        if checksum_col in df.columns:
+            cols_to_keep.append(checksum_col)
+        if 'procs' in df.columns:
+            cols_to_keep.append('procs')
+
+        filtered = df[cols_to_keep].copy()
+        if 'procs' in filtered.columns:
+            proc_val = item.get('procs', 1)
+            if (filtered['procs'] == proc_val).any():
+                filtered = filtered[filtered['procs'] == proc_val]
+
+        filtered = filtered[filtered[config_col].isin([base_key, test_key])]
+        if checksum_col in filtered.columns:
+            filtered = filtered[filtered.groupby('bench')[checksum_col].transform('nunique') > 1]
+        if filtered.empty:
+            print(f"No benchmarks with differing binary hash found for {series_name}.")
+            return series_name, pd.DataFrame(), np.nan
+
+        filtered = filtered.drop_duplicates(subset=['bench', config_col], keep='last')
+        pivot = filtered.pivot(index='bench', columns=config_col, values=val_col)
+        pivot = pivot.dropna(subset=[base_key, test_key])
+        if pivot.empty:
+            print(f"No matching benchmark runs found for comparison in {series_name}.")
+            return series_name, pd.DataFrame(), np.nan
+
+    elif 'compilerAbbrev' in df.columns:
+        # MLton suite format
+        base_key, test_key = abbrevs if abbrevs is not None else ('MLton0', 'MLton1')
+        config_col = 'compilerAbbrev'
+        checksum_col = 'binaryChecksum'
+        if val_col not in df.columns:
+            val_col = 'runTime' if 'runTime' in df.columns else ('compileTime' if 'compileTime' in df.columns else 'binarySize')
+
+        cols_to_keep = ['bench', config_col, val_col]
+        if checksum_col in df.columns:
+            cols_to_keep.append(checksum_col)
+
+        filtered = df[cols_to_keep].copy()
+        if checksum_col in filtered.columns:
+            filtered = filtered[filtered.groupby('bench')[checksum_col].transform('nunique') > 1]
+        if filtered.empty:
+            print(f"No benchmarks with differing binary hash found for {series_name}.")
+            return series_name, pd.DataFrame(), np.nan
+
+        filtered = filtered.drop_duplicates(subset=['bench', config_col], keep='last')
+        pivot = filtered.pivot(index='bench', columns=config_col, values=val_col)
+        pivot = pivot.dropna(subset=[base_key, test_key])
+        if pivot.empty:
+            print(f"No matching benchmark runs found for comparison in {series_name}.")
+            return series_name, pd.DataFrame(), np.nan
+    else:
+        raise ValueError(f"Unrecognized dataframe format with columns: {df.columns}")
+
+    if use_new_analysis_style:
+        mean_abs_ratios = pivot.apply(
+            lambda row: np.mean(row[test_key]) / np.mean(row[base_key]),
+            axis=1
+        )
+        err_minus, err_plus = calculate_error_bars(pivot[test_key], pivot[base_key])
+        err_minus_pct = np.asarray(err_minus) * 100
+        err_plus_pct = np.asarray(err_plus) * 100
+        relative_pct = (mean_abs_ratios - 1) * 100
+        abs_ratio = mean_abs_ratios
+
+        res_df = pd.DataFrame({
+            'bench': pivot.index,
+            'relative_pct': relative_pct.values,
+            'err_minus_pct': err_minus_pct,
+            'err_plus_pct': err_plus_pct,
+        })
+    else:
+        first_val = pivot[test_key].iloc[0] if len(pivot) > 0 else None
+        if isinstance(first_val, (list, np.ndarray)):
+            all_abs_ratios = pivot.apply(
+                lambda row: np.array(row[test_key]) / np.array(row[base_key]),
+                axis=1
+            )
+            mean_abs_ratios = all_abs_ratios.apply(np.mean)
+            std_abs_ratios = all_abs_ratios.apply(safe_std)
+            relative_pct = (mean_abs_ratios - 1) * 100
+            std_pct = std_abs_ratios * 100
+            abs_ratio = mean_abs_ratios
+        else:
+            abs_ratio = pivot[test_key] / pivot[base_key]
+            relative_pct = (abs_ratio - 1) * 100
+            std_pct = np.zeros(len(pivot))
+
+        res_df = pd.DataFrame({
+            'bench': pivot.index,
+            'relative_pct': relative_pct.values,
+            'std_pct': std_pct if isinstance(std_pct, (list, np.ndarray)) else std_pct.values,
+        })
+
+    valid_ratios = abs_ratio.dropna()
+    if not valid_ratios.empty and (valid_ratios > 0).all():
+        abs_geomean = np.exp(np.mean(np.log(valid_ratios)))
+        geomean_pct = (abs_geomean - 1) * 100
+    else:
+        geomean_pct = np.nan
+
+    return series_name, res_df, geomean_pct
+
+
+def plot_compare_bar_charts(
+    series_specs,
+    config=None,
+    values='test_results_secs',
+    title='',
+    out_filename='',
+    out_dir='charts',
+    use_new_analysis_style=USE_NEW_ANALYSIS_STYLE
+):
+    computed_series = []
+    for item in series_specs:
+        if not isinstance(item, dict):
+            continue
+        series_name, res_df, geomean_pct = compute_bar_series(
+            item,
+            config=config,
+            values=values,
+            use_new_analysis_style=use_new_analysis_style
+        )
+        if res_df is not None and not res_df.empty:
+            computed_series.append((series_name, res_df, geomean_pct))
+
+    if not computed_series:
+        print(f"No series data found for compare bar charts ({out_filename}).")
+        return
+
+    all_benchmarks_set = set()
+    for _, res_df, _ in computed_series:
+        all_benchmarks_set.update(res_df['bench'])
+    benchmarks = sorted(list(all_benchmarks_set))
+    N = len(benchmarks)
+    M = len(computed_series)
+
+    if N == 0:
+        print(f"No benchmarks found for compare bar charts ({out_filename}).")
+        return
+
+    fig_width = max(8.0, N * 0.35)
+    fig, ax = plt.subplots(figsize=(fig_width, 5.5))
+    bar_width = 0.8 / M
+    colors = plt.cm.tab10.colors
+
+    for i, (name, res_df, geomean_pct) in enumerate(computed_series):
+        df_map = res_df.set_index('bench')
+        x_coords = np.arange(N) + (i - (M - 1) / 2.0) * bar_width
+        y_vals = []
+        em_vals = []
+        ep_vals = []
+        std_vals = []
+        has_error_bars = False
+
+        for b in benchmarks:
+            if b in df_map.index:
+                row = df_map.loc[b]
+                y_vals.append(row['relative_pct'])
+                if use_new_analysis_style and 'err_minus_pct' in row and 'err_plus_pct' in row:
+                    em_vals.append(row['err_minus_pct'])
+                    ep_vals.append(row['err_plus_pct'])
+                    has_error_bars = True
+                elif 'std_pct' in row:
+                    std_vals.append(row['std_pct'])
+                    has_error_bars = True
+            else:
+                y_vals.append(np.nan)
+                em_vals.append(0.0)
+                ep_vals.append(0.0)
+                std_vals.append(0.0)
+
+        label = name
+        if pd.notna(geomean_pct):
+            label = fr'{name} (geomean: {geomean_pct:+.1f}\%)'
+
+        if has_error_bars:
+            yerr = [em_vals, ep_vals] if use_new_analysis_style else std_vals
+            ax.bar(
+                x_coords,
+                y_vals,
+                width=bar_width,
+                yerr=yerr,
+                label=label,
+                color=colors[i % len(colors)],
+                capsize=2.5,
+                error_kw=dict(capthick=0.8, elinewidth=0.8),
+                edgecolor='black',
+                linewidth=0.5,
+                alpha=0.85
+            )
+        else:
+            ax.bar(
+                x_coords,
+                y_vals,
+                width=bar_width,
+                label=label,
+                color=colors[i % len(colors)],
+                edgecolor='black',
+                linewidth=0.5,
+                alpha=0.85
+            )
+
+    ax.axhline(0, color='grey', linestyle='--', linewidth=0.8, alpha=0.7)
+    ax.set_xticks(np.arange(N))
+    ax.set_xticklabels(benchmarks, rotation=90, ha='center', fontsize=9)
+    ax.set_xlabel('Benchmark name')
+    ax.set_ylabel(r'Relative \% $\frac{\mathrm{test}}{\mathrm{base}} - 1 \times 100\%$')
+    ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+    if title:
+        ax.set_title(title)
+    ax.grid(True, linestyle=':', alpha=0.5, axis='y')
+    ax.legend(loc='best', framealpha=0.9)
+
+    plt.tight_layout()
+    os.makedirs(out_dir, exist_ok=True)
+    if out_filename:
+        rows = []
+        for name, res_df, _ in computed_series:
+            csv_series_name = name.replace(',', '')
+            for _, row in res_df.iterrows():
+                r_dict = {'series': csv_series_name, 'bench': row['bench'], 'relative_pct': row['relative_pct']}
+                if use_new_analysis_style and 'err_minus_pct' in row and pd.notna(row['err_minus_pct']):
+                    r_dict['err_minus_pct'] = row['err_minus_pct']
+                if use_new_analysis_style and 'err_plus_pct' in row and pd.notna(row['err_plus_pct']):
+                    r_dict['err_plus_pct'] = row['err_plus_pct']
+                if 'std_pct' in row and pd.notna(row['std_pct']):
+                    r_dict['std_pct'] = row['std_pct']
+                rows.append(r_dict)
+        results_df = pd.DataFrame(rows).round(3)
+
+        csv_path = os.path.join(out_dir, f'{out_filename}.csv')
+        print(f'Saving data to {csv_path}')
+        results_df.to_csv(csv_path, index=False)
+
+        path = os.path.join(out_dir, f'{out_filename}.pdf')
+        print(f'Saving chart to {path}')
+        plt.savefig(path, format='pdf', bbox_inches='tight', metadata={'CreationDate': None})
+    plt.close()
+
+
+plot_compare_bars = plot_compare_bar_charts
+
+
 def generate_all_charts_tex(config: dict) -> str:
     types_order = ['tuple', 'con', 'aos', 'soa']
     found_types = []
     for sec_k, sec_v in config.items():
-        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series') or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series', 'compare_bar_charts', 'compare_bars') or not isinstance(sec_v, dict):
             continue
         for t in sec_v:
             if t not in METADATA_KEYS and t not in found_types:
@@ -1216,7 +1500,7 @@ def generate_all_charts_tex(config: dict) -> str:
     # Collect section entries per type
     type_entries = {}
     for sec_k, sec_v in config.items():
-        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series') or not isinstance(sec_v, dict):
+        if sec_k in ('output_directory', 'trial_scatter_plots', 'compare_geomeans', 'compare_series', 'compare_bar_charts', 'compare_bars') or not isinstance(sec_v, dict):
             continue
         suite = sec_v.get('suite', 'mlton')
         compiler = sec_v.get('compiler', 'mlton')
@@ -1328,7 +1612,47 @@ def generate_all_charts_tex(config: dict) -> str:
             ))
         sections_tex.append('\n'.join(compare_sec_parts))
 
-    # 4. Data Tables section at the end of the document
+    # Compare Bar Charts section (if present)
+    compare_bar_charts = config.get('compare_bar_charts') or config.get('compare_bars')
+    has_compare_bars = isinstance(compare_bar_charts, dict) and bool(compare_bar_charts)
+    if has_compare_bars:
+        compare_bars_parts = []
+        if sections_tex:
+            compare_bars_parts.append(r'\clearpage')
+        compare_bars_parts.append(r'\section{Compare Bar Charts}' + '\n')
+        for name, spec in compare_bar_charts.items():
+            if isinstance(spec, dict):
+                series_list = spec.get('source_series') or spec.get('series') or []
+                title = spec.get('title', '')
+            elif isinstance(spec, list):
+                series_list = spec
+                title = ''
+            else:
+                continue
+
+            series_files = []
+            for item in series_list:
+                if isinstance(item, dict) and ('series_path' in item or 'path' in item):
+                    p = item.get('series_path') or item.get('path')
+                    try:
+                        resolved = resolve_series_path(config, p)
+                        if isinstance(resolved, str):
+                            series_files.append(resolved)
+                    except Exception:
+                        pass
+                elif isinstance(item, dict) and ('source' in item or 'data' in item or 'file' in item):
+                    f = item.get('source') or item.get('data') or item.get('file')
+                    if isinstance(f, str):
+                        series_files.append(f)
+
+            compare_bars_parts.append(render_compare_bar_charts_subsection(
+                name=name,
+                title=title,
+                series_paths=series_files,
+            ))
+        sections_tex.append('\n'.join(compare_bars_parts))
+
+    # Data Tables section at the end of the document
     tables_parts = []
     has_any_tables = False
     for idx, t in enumerate(ordered_types):
@@ -1386,6 +1710,17 @@ def generate_all_charts_tex(config: dict) -> str:
         tables_parts.append('\n'.join(compare_tbl_parts))
         has_any_tables = True
 
+    if has_compare_bars:
+        compare_bars_tbl_parts = []
+        if has_any_tables:
+            compare_bars_tbl_parts.append(r'\clearpage')
+        compare_bars_tbl_parts.append(r'\subsection{Compare Bar Charts}' + '\n')
+        for name, spec in compare_bar_charts.items():
+            title = spec.get('title', '') if isinstance(spec, dict) else ''
+            compare_bars_tbl_parts.append(render_compare_bar_charts_tables_subsection(name=name, title=title))
+        tables_parts.append('\n'.join(compare_bars_tbl_parts))
+        has_any_tables = True
+
     if has_any_tables:
         sections_tex.append(r'\clearpage' + '\n' + r'\section{Data Tables}' + '\n')
         sections_tex.append('\n'.join(tables_parts))
@@ -1405,7 +1740,7 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
         f.write(f"Data generated at {timestamp} using the following config:\n\n{json.dumps(config, indent=2)}\n")
 
     for section_key, section_val in config.items():
-        if section_key in ("output_directory", "trial_scatter_plots", "compare_geomeans", "compare_series"):
+        if section_key in ("output_directory", "trial_scatter_plots", "compare_geomeans", "compare_series", "compare_bar_charts", "compare_bars"):
             continue
         if not isinstance(section_val, dict):
             continue
@@ -1464,6 +1799,29 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
                 series_specs=series_list,
                 series_type=stype,
                 config=config,
+                title=title,
+                out_filename=name,
+                out_dir=out_dir,
+                use_new_analysis_style=use_new_analysis_style,
+            )
+
+    compare_bars = config.get("compare_bar_charts") or config.get("compare_bars")
+    if isinstance(compare_bars, dict):
+        for name, spec in compare_bars.items():
+            if isinstance(spec, dict):
+                series_list = spec.get('source_series') or spec.get('series') or []
+                title = spec.get('title') or name.replace("_", " ").title()
+                val_col = spec.get('values', 'test_results_secs')
+            elif isinstance(spec, list):
+                series_list = spec
+                title = name.replace("_", " ").title()
+                val_col = 'test_results_secs'
+            else:
+                continue
+            plot_compare_bar_charts(
+                series_specs=series_list,
+                config=config,
+                values=val_col,
                 title=title,
                 out_filename=name,
                 out_dir=out_dir,

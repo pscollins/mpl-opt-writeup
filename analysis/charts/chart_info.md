@@ -1,4 +1,4 @@
-Data generated at 2026-09-07 17:16:55.497004 using the following config:
+Data generated at 2026-09-07 17:37:57.726651 using the following config:
 
 {
   "output_directory": "charts/",
@@ -104,6 +104,20 @@ Data generated at 2026-09-07 17:16:55.497004 using the following config:
         {
           "series_name": "Tuple-vs-tuple, with `-chunkify one`",
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
+        }
+      ]
+    }
+  },
+  "compare_bar_charts": {
+    "mlton_con_chunkify_one": {
+      "source_series": [
+        {
+          "series_name": "Baseline MLton ConApp-vs-ConApp",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+        },
+        {
+          "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con_chunkify_one"
         }
       ]
     }
