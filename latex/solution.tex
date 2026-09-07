@@ -2713,12 +2713,36 @@ extremely poorly with the CPU's branch predictor.
 Briefly examining the poor branch predictor behavior: one potential hypothesis
 is that the observed behavior is the result of the heavy use of the jump table
 structure of the generated C code described above. We can drill down into this
-further by examinining \hl{TODO: finish}
+further by examinining the types of mispredicted branches: conditional
+(taken/not-taken) vs indirect. If the high mispredict rate is a consequence of
+the jump table structure in the emitted C, we would expect to see it manifest as
+a high mispredict rate for indirect branches. If, on the other hand, the high
+mispredict rate is simply a property of how the algorithm operates on the input
+data, we would expect to see a high rate of mispredictions for conditional
+branches.
 
-\hl{TODO: dig into the mispredict data}
+Measuring using the lower-level \texttt{perf} events, we get the following data
+(in \cref{tab:badspec_hierarchical_tuple}):
+\begin{table}[htbp]
+  \centering
+  \caption{Branch mispredictions breakdown as a percentage of total mispredictions, for the \texttt{tuple} configuration.}
+  \label{tab:badspec_hierarchical_tuple}
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Branch Type} & \textbf{Delaunay (1 core)} & \textbf{BFS (1 core)} \\
+    \midrule
+    \textbf{Conditional (Total)} & \textbf{95.32\%} & \textbf{99.87\%} \\
+    \quad Taken                  & 52.41\%          & 48.45\%          \\
+    \quad Not-taken              & 42.91\%          & 51.42\%          \\
+    \textbf{Indirect}            &  \textbf{4.64\%} &  \textbf{0.06\%} \\
+    \textbf{Return (\texttt{ret})}& \textbf{0.04\%} &  \textbf{0.08\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+Given that nearly all mispredictions are conditional rather than indirect, we
+can conclude that the high mispredict rate is an inherent property of the
+algorithm and the input data rather than a deficiency of MLton codegen.
 
-
-\hl{TODO: LOOK AT PERF OUTPUT. Discuss high mispredict rate. Conclude that this is not an answer}.
 
 \subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for known effects}
 Another strategy we can use to understand how the pass impacted performance
