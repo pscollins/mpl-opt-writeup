@@ -2669,77 +2669,85 @@ Next, for \texttt{bfs}, at one core we have (in \cref{tab:perf_comparison_bfs_1c
   \end{tabular}
 \end{table}
 and at 160 cores (in \cref{tab:perf_comparison_bfs_160cores}):
-        \begin{table}[htbp]
-          \centering
-          \caption{Performance metric comparison on 160 cores (BFS, 160 cores)}
-          \label{tab:perf_comparison_bfs_160cores}
-          \begin{tabular}{lrrr}
-            \toprule
-            \textbf{Metric} & \textbf{Baseline} & \textbf{Test} & \textbf{Diff / Change} \\
-            \midrule
-            \multicolumn{4}{l}{\textit{Execution Overview}} \\
-            \quad Task Clock (s)           & 822.65 s   & 816.26 s   & -0.78\%   \\
-            \quad Instructions ($10^9$)    & 1454.22 B  & 1423.12 B  & -2.14\%   \\
-            \quad IPC                      & 0.61       & 0.60       & -1.64\%   \\
-            \midrule
-            \multicolumn{4}{l}{\textit{Rates and Miss Percentages}} \\
-            \quad Branch Miss Rate         & 0.6\%      & 0.7\%      & +0.1 pp   \\
-            \quad L1 D-Cache Miss Rate     & 7.8\%      & 8.0\%      & +0.2 pp   \\
-            \quad LLC Load Miss Rate       & 44.6\%     & 44.7\%     & +0.1 pp   \\
-            \quad dTLB Load Miss Rate      & 1.2\%      & 1.3\%      & +0.1 pp   \\
-            \midrule
-            \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-            \quad Retiring                 & 3.3\%      & 3.0\%      & -0.3 pp   \\
-            \quad Bad Speculation          & 77.0\%     & 79.7\%     & +2.7 pp   \\
-            \quad Frontend Bound           & 1.2\%      & 1.2\%      & 0.0 pp    \\
-            \quad Backend Bound            & 18.6\%     & 16.1\%     & -2.5 pp   \\
-            \bottomrule
-          \end{tabular}
-        \end{table}
+\begin{table}[htbp]
+  \centering
+  \caption{Performance metric comparison on 160 cores (BFS, 160 cores)}
+  \label{tab:perf_comparison_bfs_160cores}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Metric} & \textbf{Baseline} & \textbf{Test} & \textbf{Diff / Change} \\
+    \midrule
+    \multicolumn{4}{l}{\textit{Execution Overview}} \\
+    \quad Task Clock (s)           & 822.65 s   & 816.26 s   & -0.78\%   \\
+    \quad Instructions ($10^9$)    & 1454.22 B  & 1423.12 B  & -2.14\%   \\
+    \quad IPC                      & 0.61       & 0.60       & -1.64\%   \\
+    \midrule
+    \multicolumn{4}{l}{\textit{Rates and Miss Percentages}} \\
+    \quad Branch Miss Rate         & 0.6\%      & 0.7\%      & +0.1 pp   \\
+    \quad L1 D-Cache Miss Rate     & 7.8\%      & 8.0\%      & +0.2 pp   \\
+    \quad LLC Load Miss Rate       & 44.6\%     & 44.7\%     & +0.1 pp   \\
+    \quad dTLB Load Miss Rate      & 1.2\%      & 1.3\%      & +0.1 pp   \\
+    \midrule
+    \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
+    \quad Retiring                 & 3.3\%      & 3.0\%      & -0.3 pp   \\
+    \quad Bad Speculation          & 77.0\%     & 79.7\%     & +2.7 pp   \\
+    \quad Frontend Bound           & 1.2\%      & 1.2\%      & 0.0 pp    \\
+    \quad Backend Bound            & 18.6\%     & 16.1\%     & -2.5 pp   \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+Here, we can see:
+\begin{itemize}
+\item While we still have instruction bloat, the increase to IPC / retiring
+  pipeline slots was large enough to improve performance overall (showing as a
+  decrease in ``Task Clock'').
+\item This benchmark still suffers from extreme utilization loss due to bad speculation.
+\item \hl{TODO: miss rates?}
+\end{itemize}
+
+On the whole, the microarchitectural data is not particularly enlightening in
+terms of understanding the output of the \texttt{tuple} transformation: the main
+interesting finding here is that the generated code evidently interacts
+extremely poorly with the CPU's branch predictor.
 
 
-
-
- %% \begin{table}[htbp]
- %%      \centering
- %%      \caption{Performance counter comparison on 1 core with secondary rates (Delaunay, 1 core)}
- %%      \label{tab:perf_comparison_delaunay_1core_annotated}
- %%      \begin{tabular}{lrrr}
- %%        \toprule
- %%        \textbf{Metric} & \textbf{Baseline} & \textbf{Test} & \textbf{\% change} \\
- %%        \midrule
- %%        \texttt{Context Switches}      & 1,272 (8.6 cs/s)               & 1,347 (8.4 cs/s)               & +5.90\%  \\
- %%        \texttt{CPU Migrations}        & 0                              & 0                              & 0.00\%   \\
- %%        \texttt{Page Faults}           & 24,441 (164.4 faults/s)        & 24,380 (152.7 faults/s)        & -0.25\%  \\
- %%        \texttt{Task Clock}            & 148,676.39 ms (0.7 CPUs)       & 159,664.47 ms (0.7 CPUs)       & +7.39\%  \\
- %%        \texttt{L1 DCache misses} & 14,843,646,185 (10.6\% miss)   & 14,661,564,995 (9.3\% miss)    & -1.23\%  \\
- %%        \texttt{LLC loads}             & 5,542,176,212 (15.8\% miss)    & 5,479,606,658 (15.5\% miss)    & -1.13\%  \\
- %%        \texttt{branch-misses}         & 1,812,940,657 (2.6\% miss)     & 1,971,535,259 (2.6\% miss)     & +8.75\%  \\
- %%        \texttt{branches}              & 70,707,111,213 (475.6 M/s)     & 75,882,797,716 (475.3 M/s)     & +7.32\%  \\
- %%        \texttt{cpu-cycles}            & 441,050,563,951 (3.0 GHz)      & 473,755,616,034 (3.0 GHz)      & +7.42\%  \\
- %%        \texttt{instructions}          & 410,485,010,219 (0.90 IPC)     & 464,517,505,361 (0.98 IPC)     & +13.16\% \\
- %%        \texttt{dTLB-loads}            & 139,899,988,530 (2.3\% miss)   & 157,643,709,937 (2.0\% miss)   & +12.68\% \\
- %%        \midrule
- %%        \multicolumn{4}{l}{\textit{Topdown L1 metrics}} \\
- %%        \texttt{Backend bound}   & 1.8\%                          & 1.7\%                          & -5.56\%  \\
- %%        \texttt{Bad speculation} & 97.3\%                         & 97.3\%                         & 0.00\%   \\
- %%        \texttt{Frontend bound}  & 0.0\%                          & 0.0\%                          & 0.00\%   \\
- %%        \texttt{Retiring}         & 0.9\%                          & 1.0\%                          & +11.11\% \\
- %%        \bottomrule
- %%      \end{tabular}
- %%    \end{table}
-
-\hl{TODO: need to make this a table}
-
+\hl{TODO: dig into the mispredict data}
 
 
 \hl{TODO: LOOK AT PERF OUTPUT. Discuss high mispredict rate. Conclude that this is not an answer}.
 
-\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Simplify} effects}
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for known effects}
+Another strategy we can use to understand how the pass impacted performance
+(trying to compensate for the lack of source-level profiling with MPL that we
+might use to understand performance in another language) is to try to separate
+out the actual intended change implemented by the pass (as described above) from
+other downstream effects.
 
-\hl{TODO: Look at output from base-fixup. Conclude that simplify is not the culprit}.
+Digging more deeply into the action of the pass, we can identify three direct
+consequences:
+\begin{enumerate}
+\item The actual function duplication/tuple-flattening change (described above).
 
-\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Chunkify} effects}
+\item The post-change IR cleanup, running the generic MLton \texttt{Simplify}
+  pass to perform optimizations after flattening: perhaps the \texttt{tuple}
+  optimization itself is unhelpful, and the win is just from running
+  \texttt{Simplify} again. We can control for this by running \texttt{Simplify}
+  on both the baseline and the test.
+
+\item Later on, during the \texttt{Chunkify} pass, introducing the new,
+  flattened functions: perhaps the \texttt{tuple} optimization's change to tuple
+  layout has no direct impact, but the new functions happen to move around chunk
+  boundaries in a way that is helpful/unhelpful. We can control for this by
+  using the compiler flag \texttt{-chunkify one} to force all functions into a
+  single C chunk (improving performance at the cost of C compile time).
+
+\end{enumerate}
+
+In \cref{fig:tuple_standouts_only}, we see the impact of these three different configu
+
+
+\hl{TODO(agy): Add the charts ``tuple exp bfs'' and ``tuple exp delaunay'' side
+  by side in a figure with the label described above}
 
 \hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
   culprit. Link to an appendix with the full table of results from these
