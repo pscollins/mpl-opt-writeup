@@ -2958,6 +2958,9 @@ disappear (e.g. \texttt{primes} and \texttt{sparse-mxv-opt}), suggesting that
 the baseline measurement does contain sigificant incidental performance changes
 due to chunkification.
 
+\hl{TODO(agy): Add in con\_parallel\_bench\_mlton\_chunkify following the
+  example of all\_charts}
+
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[htbp]
@@ -2986,6 +2989,33 @@ due to chunkification.
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
 \end{figure}
+
+In the default experiment configuration, we see an overall loss for
+\texttt{ConApp} flattening in MPL, driven primarily by a large, consistent
+regression against \texttt{suffix-array}.
+
+Re-running this particular benchmark under \texttt{-chunkify one} shows that the
+effect disappears, as we can see in \cref{fig:con_chunkify_one_outliers}:
+\texttt{suffix-array} is roughly neutral under \texttt{ConApp} flattening once
+we control for chunkification. We can also see how the large swings reported by
+\texttt{linearrec} change under \texttt{-chunkfiy one} in
+\cref{fig:con_chunkify_one_outliers}: here, it appears that there is a
+legitimate effect on the benchmakr at higher core counts which merits further
+investigation.
+
+In \cref{fig:con_chunkify_one_geomeans}, we see that (like \texttt{tuple}
+flattening), the \texttt{ConApp} flattening transformation is broadly
+neutral-to-positive when exlcuding chunk overhead. See
+\cref{mpl_con_chunkify_one_all} for the full set of experimental data for the
+\texttt{-chunkify one} configuration.
+
+\hl{TODO(agy): Include the charts ``con exp suffix array'' and ``con exp
+  linearrec'' in a new figure fig:con\_chunkify\_one\_outliers}
+
+\hl{TODO(agy): Include ``con exp geomeans'' in a new chart fig:con\_chunkfiy\_one\_geomeans}
+
+\hl{TODO(agy): Include the full trellis chart for ``con\_chunkify\_one run time
+  comparison across core counts as fig:mpl\_con\_chunkify\_one\_all}
 
 \subsection{AoS Flattening}
 

@@ -649,6 +649,33 @@
   \label{fig:tuple_exp_bfs}
 \end{figure}
 
+\subsection{Con Exp Suffix Array}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{con_exp_suffix_array.pdf}
+  \caption{Comparison of \texttt{suffix-array} speedups across core counts for \texttt{con\_exp\_suffix\_array}. Data: \protect\nolinkurl{mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl}, \protect\nolinkurl{mpl_con_vs_con_chunkify_one:260906-000633:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260906-000633.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_exp_suffix_array}
+\end{figure}
+
+\subsection{Con Exp Linearrec}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{con_exp_linearrec.pdf}
+  \caption{Comparison of \texttt{linearrec} speedups across core counts for \texttt{con\_exp\_linearrec}. Data: \protect\nolinkurl{mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl}, \protect\nolinkurl{mpl_con_vs_con_chunkify_one:260906-000633:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260906-000633.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_exp_linearrec}
+\end{figure}
+
+\subsection{Con Exp Geomean}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{con_exp_geomean.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for \texttt{con\_exp\_geomean}. Data: \protect\nolinkurl{mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl}, \protect\nolinkurl{mpl_con_vs_con_chunkify_one:260906-000633:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260906-000633.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_exp_geomean}
+\end{figure}
+
 \clearpage
 \section{Compare Bar Charts}
 
@@ -875,6 +902,18 @@
 \subsubsection{Tuple Exp Bfs}
 
 \importcsv{tuple_exp_bfs.csv}
+
+\subsubsection{Con Exp Suffix Array}
+
+\importcsv{con_exp_suffix_array.csv}
+
+\subsubsection{Con Exp Linearrec}
+
+\importcsv{con_exp_linearrec.csv}
+
+\subsubsection{Con Exp Geomean}
+
+\importcsv{con_exp_geomean.csv}
 
 \clearpage
 \subsection{Compare Bar Charts}

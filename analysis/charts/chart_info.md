@@ -1,4 +1,4 @@
-Data generated at 2026-09-07 17:37:57.726651 using the following config:
+Data generated at 2026-09-07 17:54:02.727885 using the following config:
 
 {
   "output_directory": "charts/",
@@ -104,6 +104,45 @@ Data generated at 2026-09-07 17:37:57.726651 using the following config:
         {
           "series_name": "Tuple-vs-tuple, with `-chunkify one`",
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_suffix_array": {
+      "source_series_type": "suffix-array",
+      "source_series": [
+        {
+          "series_name": "Baseline con-vs-con",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+        },
+        {
+          "series_name": "Con-vs-con, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "Baseline con-vs-con",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+        },
+        {
+          "series_name": "Con-vs-con, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "Baseline con-vs-con",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+        },
+        {
+          "series_name": "Con-vs-con, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
         }
       ]
     }
