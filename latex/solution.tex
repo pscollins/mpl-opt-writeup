@@ -2941,6 +2941,23 @@ functons.
   \label{fig:con_parallel_bench}
 \end{figure}
 
+On \cref{fig:con_parallel_bench}, we see strong wins across a number of
+benchmarks, and few losses, for a strong geomean win of $4.1\%$. To what degree
+is this measurement impacted by chunkification noise, as we saw above?
+
+The chart \cref{fig:con_parallel_bench_mlton_chunkify} plots the relative
+performance of the default experimental setup alongside the relative performance
+in a setup with \texttt{-chunkify one}. As we can see, teh largest wins in
+\texttt{linearrec} and \texttt{quickhull} persist: this suggests an
+individually-meaningful impact of the \texttt{ConApp} flattening transformation,
+unlike the \texttt{tuple} case.
+
+However, it surfaces one significant loss on \texttt{mcss-opt} that likely
+requires further investigation. We also see a number of significant wins
+disappear (e.g. \texttt{primes} and \texttt{sparse-mxv-opt}), suggesting that
+the baseline measurement does contain sigificant incidental performance changes
+due to chunkification.
+
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[htbp]
