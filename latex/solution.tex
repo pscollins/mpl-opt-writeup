@@ -50,6 +50,8 @@
 %% \citet command
 \usepackage[numbers]{natbib}
 
+%% nicer table formatting
+\usepackage{booktabs}
 
 %% nicely formatted references (must load last)
 \usepackage{cleveref}
@@ -2488,6 +2490,7 @@ and flattening one of the two \texttt{parfor} recursive calls, i.e.:
     # launch left + right in parallel
     par (left, right)
 \end{minted}
+\end{enumerate}
 
 Based on the action of the transformation, we would probably expect to see (for
 \texttt{delaunay}):
@@ -2533,18 +2536,71 @@ all other nodes in the graph). The pass applies the following transformations to
     reduce(do_reduce, all_nodes)
 \end{minted}
 
-where we flatten the \texttt{do_reduce} call and avoid building the intermediate
+where we flatten the \texttt{do\_reduce} call and avoid building the intermediate
 \texttt{env} argument.
 
 \end{enumerate}
 
+These changes seem broadly consistent with the observed data, apart from the
+observation that the win disappears at higher core counts: given the large error
+bars, we can probably explain that effect as either pure noise, or changed GC
+behavior (since GC pauses show up as outliers in the trial data).
+
+Next, we'll dig into these results in more detail in order to further explain
+the observed trends.
 
 
-
-
-\hl{TODO: descibe that they change irrelevant portions}
+%% \hl{TODO: descibe that they change irrelevant portions}
 
 \subsubsection{\texttt{delaunay} vs \texttt{bfs}: microarchitectural effects}
+A first quick test is to run the microbenchmarks under \texttt{perf} and observe
+what (if any) microarchitectural bottlenecks have shifted under the
+transformation: did we introduce extra memory traffic, causing the workload to
+become backend-bound? Did we introduce code bloat that caused the workload to
+become backend bound? One standard methodology for analyzing CPU performance
+counter events in order to draw these conflusions is the ``top-down'' method,
+introduced by \citet{topdown-paper}, and now supported by the standard Linux
+\texttt{perf} tool. The data in this section was collected by running:
+\begin{minted}{bash}
+  $ perf stat -dd -D $DELAY ... benchmark invocation...
+\end{minted}
+with the value \texttt{\$DELAY} manually adjusted in order to exclude benchmark
+initialization.
+
+
+Beginning with \texttt{delaunay}, we have:
+ \begin{table}[htbp]
+      \centering
+      \caption{Performance counter comparison on 1 core with secondary rates (Delaunay, 1 core)}
+      \label{tab:perf_comparison_delaunay_1core_annotated}
+      \begin{tabular}{lrrr}
+        \toprule
+        \textbf{Metric} & \textbf{Baseline} & \textbf{Test} & \textbf{\% change} \\
+        \midrule
+        \texttt{Context Switches}      & 1,272 (8.6 cs/s)               & 1,347 (8.4 cs/s)               & +5.90\%  \\
+        \texttt{CPU Migrations}        & 0                              & 0                              & 0.00\%   \\
+        \texttt{Page Faults}           & 24,441 (164.4 faults/s)        & 24,380 (152.7 faults/s)        & -0.25\%  \\
+        \texttt{Task Clock}            & 148,676.39 ms (0.7 CPUs)       & 159,664.47 ms (0.7 CPUs)       & +7.39\%  \\
+        \texttt{L1 DCache misses} & 14,843,646,185 (10.6\% miss)   & 14,661,564,995 (9.3\% miss)    & -1.23\%  \\
+        \texttt{LLC loads}             & 5,542,176,212 (15.8\% miss)    & 5,479,606,658 (15.5\% miss)    & -1.13\%  \\
+        \texttt{branch-misses}         & 1,812,940,657 (2.6\% miss)     & 1,971,535,259 (2.6\% miss)     & +8.75\%  \\
+        \texttt{branches}              & 70,707,111,213 (475.6 M/s)     & 75,882,797,716 (475.3 M/s)     & +7.32\%  \\
+        \texttt{cpu-cycles}            & 441,050,563,951 (3.0 GHz)      & 473,755,616,034 (3.0 GHz)      & +7.42\%  \\
+        \texttt{instructions}          & 410,485,010,219 (0.90 IPC)     & 464,517,505,361 (0.98 IPC)     & +13.16\% \\
+        \texttt{dTLB-loads}            & 139,899,988,530 (2.3\% miss)   & 157,643,709,937 (2.0\% miss)   & +12.68\% \\
+        \midrule
+        \multicolumn{4}{l}{\textit{Topdown L1 metrics}} \\
+        \texttt{Backend bound}   & 1.8\%                          & 1.7\%                          & -5.56\%  \\
+        \texttt{Bad speculation} & 97.3\%                         & 97.3\%                         & 0.00\%   \\
+        \texttt{Frontend bound}  & 0.0\%                          & 0.0\%                          & 0.00\%   \\
+        \texttt{Retiring}         & 0.9\%                          & 1.0\%                          & +11.11\% \\
+        \bottomrule
+      \end{tabular}
+    \end{table}
+
+\hl{TODO: need to make this a table}
+
+
 
 \hl{TODO: LOOK AT PERF OUTPUT. Discuss high mispredict rate. Conclude that this is not an answer}.
 
