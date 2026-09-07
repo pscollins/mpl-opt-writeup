@@ -2710,6 +2710,10 @@ terms of understanding the output of the \texttt{tuple} transformation: the main
 interesting finding here is that the generated code evidently interacts
 extremely poorly with the CPU's branch predictor.
 
+Briefly examining the poor branch predictor behavior: one potential hypothesis
+is that the observed behavior is the result of the heavy use of the jump table
+structure of the generated C code described above. We can drill down into this
+further by examinining \hl{TODO: finish}
 
 \hl{TODO: dig into the mispredict data}
 
@@ -2743,11 +2747,36 @@ consequences:
 
 \end{enumerate}
 
-In \cref{fig:tuple_standouts_only}, we see the impact of these three different configu
+In \cref{fig:tuple_standouts_only}, we see the impact of these three different
+configurations: the relative performance when enabling ``baseline fixup'' is
+generally the same as our standard experimental configuration, the performance
+under \texttt{-chunkify one} is virtually identical between the baseline and the
+test.
+
+Therefore, on these two benchmarks, the actual transformation of the pass has
+nearly zero impact on performance: the most important driver of performance
+changes is simply the accidental permutation of chunk boundaries by creating new
+functions. Looking at a comparison of the geomeans across all benchmarks in
+\cref{fig:tuple_exp_geomeans} broadly confirms that this observation holds
+across the entire benhcmark suite, showing roughly identical performance between
+the regular configuration and the with-baseline-fixup configuration, and
+neutral-to-positive impact from tuple flattening.
+
+See the full set of benchmark data for \texttt{-chunkify one} in
+\cref{fig:tuple_all_chunkify_one}. This data indicates that while the
+transformation does appear to have a significant impact on a handful of
+benchmarks (\texttt{ocaml-lu-decomp}, \texttt{tokens}), it is otherwise
+neutral-to-positive, with an impact of $< 2\%$ on performance in most cases.
 
 
 \hl{TODO(agy): Add the charts ``tuple exp bfs'' and ``tuple exp delaunay'' side
-  by side in a figure with the label described above}
+  by side in a figure with the label fig:tuple\_standouts\_only}
+
+\hl{TODO(agy): Add the chart ``tuple exp geomeans'' in a figure with the name
+  fig:tuple\_exp\_geomeans}
+
+\hl{TODO(agy): Add the chart Tuple chunkify one run time comparison across core
+  counts (trellis) in a figure with the name fig:tuple\_all\_chunkify\_one}.
 
 \hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
   culprit. Link to an appendix with the full table of results from these
