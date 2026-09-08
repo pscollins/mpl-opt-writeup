@@ -1,22 +1,22 @@
-Data generated at 2026-09-07 17:54:02.727885 using the following config:
+Data generated at 2026-09-07 20:20:10.761934 using the following config:
 
 {
   "output_directory": "charts/",
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl",
-    "con": "test_conapp_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_193112.jsonl",
-    "aos": "test_aos_flatten_set_width_3:flattening-tests:8e04c8184:20260822_005802.jsonl",
-    "soa": "test_soa_flatten_set_width_3:flattening-tests:8e04c8184:20260822_025807.jsonl"
+    "tuple": "test_tuple_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_064158.jsonl",
+    "con": "test_conapp_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_044217.jsonl",
+    "aos": "test_aos_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_004326.jsonl",
+    "soa": "test_soa_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_024259.jsonl"
   },
   "parallel_bench_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "parallel_bench",
-    "tuple": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl",
-    "con": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl",
-    "aos": "mlton_aos_set_width_3:260822-125845:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-125845.processed.jsonl",
-    "soa": "mlton_soa_set_width_3:260822-132730:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-132730.processed.jsonl",
+    "tuple": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl",
+    "con": "mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl",
+    "aos": "mlton_aos_mlton_parallel_o3:260824-220328:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-220328.processed.jsonl",
+    "soa": "mlton_soa_mlton_parallel_o3:260824-234803:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-234803.processed.jsonl",
     "con_chunkify_one": "mlton_con_vs_con_chunkify_one:260907-185802:flattening-tests:b043c5ca58b04eebc09b15abe9bdf2dacf1ab0f0:260907-185802.processed.jsonl"
   },
   "parallel_bench_benchmarks_mpl_vs_mpl": {
@@ -38,21 +38,21 @@ Data generated at 2026-09-07 17:54:02.727885 using the following config:
       "suite": "parallel_bench",
       "experiment_type": "tuple",
       "benchmark": "delunay",
-      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+      "source": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl"
     },
     "dedup_mlton_parallel_ml_bench_scatter": {
       "compiler": "mlton",
       "suite": "parallel_bench",
       "experiment_type": "con",
       "benchmark": "dedup",
-      "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+      "source": "mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl"
     },
     "reverb_mlton_parallel_ml_bench_scatter": {
       "compiler": "mlton",
       "suite": "parallel_bench",
       "experiment_type": "tuple",
       "benchmark": "reverb",
-      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+      "source": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl"
     }
   },
   "compare_series": {
