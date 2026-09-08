@@ -2932,7 +2932,12 @@ the inded purpose of the pass -- the majr wins on \texttt{wc-input1} and
 \texttt{wc-scanStream} disappear, and we are left with a small geomean loss
 rather than a win.
 
-\hl{TODO(agy): add ``mlton con chunkify one mlton bench'' as the figure referenced above}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_con_chunkify_one_mlton_bench.pdf}
+  \caption{Comparison of benchmark performance for \texttt{ConApp} flattening on the MLton benchmark suite under MLton, comparing the baseline configuration against \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mlton_bench_mlton_con_chunkify_one}
+\end{figure}
 
 
 \FloatBarrier
