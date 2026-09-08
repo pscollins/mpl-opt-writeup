@@ -618,6 +618,82 @@
 \end{figure}
 
 \clearpage
+\section{Aos Chunkify Func Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Chunkify Func Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_chunkify_func_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:aos_chunkify_func_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_chunkify_func_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:aos_chunkify_func_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{aos\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_func_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_chunkify_func_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{aos\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_func_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_chunkify_func_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{aos\_chunkify\_func} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_func_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
+\section{Aos Chunkify One Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Chunkify One Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_chunkify_one_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:aos_chunkify_one_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_chunkify_one_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:aos_chunkify_one_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{aos\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_one_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_chunkify_one_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{aos\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_one_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{aos\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_chunkify_one_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
 \section{Trial Scatter Plots}
 
 \subsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
@@ -707,13 +783,13 @@
 \clearpage
 \section{Compare Bar Charts}
 
-\subsection{Mlton Con Chunkify One}
+\subsection{Mlton Con Chunkify One Parallel Bench}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{mlton_con_chunkify_one.pdf}
-  \caption{Comparison of benchmark performance for \texttt{mlton\_con\_chunkify\_one} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl}, \protect\nolinkurl{mlton_con_vs_con_chunkify_one:260907-185802:flattening-tests:b043c5ca58b04eebc09b15abe9bdf2dacf1ab0f0:260907-185802.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
-  \label{fig:mlton_con_chunkify_one}
+  \includegraphics[width=\textwidth,keepaspectratio]{mlton_con_chunkify_one_parallel_bench.pdf}
+  \caption{Comparison of benchmark performance for \texttt{mlton\_con\_chunkify\_one\_parallel\_bench} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl}, \protect\nolinkurl{mlton_con_vs_con_chunkify_one:260907-185802:flattening-tests:b043c5ca58b04eebc09b15abe9bdf2dacf1ab0f0:260907-185802.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mlton_con_chunkify_one_parallel_bench}
 \end{figure}
 
 \subsection{Mlton Con Chunkify One Mlton Bench}
@@ -922,6 +998,28 @@
 \importcsv{con_chunkify_func_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
+\subsection{Aos Chunkify Func Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Chunkify Func Flattening)}
+
+\paragraph*{Run time}
+\importcsv{aos_chunkify_func_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_chunkify_func_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{Aos Chunkify One Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Chunkify One Flattening)}
+
+\paragraph*{Run time}
+\importcsv{aos_chunkify_one_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_chunkify_one_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
 \subsection{Trial Scatter Plots}
 
 \subsubsection{\texttt{delunay} (\texttt{parallel-ml-bench}: MLton (Tuple Flattening))}
@@ -966,9 +1064,9 @@
 \clearpage
 \subsection{Compare Bar Charts}
 
-\subsubsection{Mlton Con Chunkify One}
+\subsubsection{Mlton Con Chunkify One Parallel Bench}
 
-\importcsv{mlton_con_chunkify_one.csv}
+\importcsv{mlton_con_chunkify_one_parallel_bench.csv}
 
 \subsubsection{Mlton Con Chunkify One Mlton Bench}
 

@@ -1,4 +1,4 @@
-Data generated at 2026-09-07 20:46:10.194444 using the following config:
+Data generated at 2026-09-08 08:40:22.697189 using the following config:
 
 {
   "output_directory": "charts/",
@@ -31,6 +31,8 @@ Data generated at 2026-09-07 20:46:10.194444 using the following config:
     "con_chunkify_func": "mpl_con_vs_con_chunkify_func:260905-191722:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260905-191722.processed.jsonl",
     "con_chunkify_one": "mpl_con_vs_con_chunkify_one:260906-000633:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260906-000633.processed.jsonl",
     "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
+    "aos_chunkify_func": "mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl",
+    "aos_chunkify_one": "mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl",
     "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
   },
   "trial_scatter_plots": {
@@ -149,7 +151,7 @@ Data generated at 2026-09-07 20:46:10.194444 using the following config:
     }
   },
   "compare_bar_charts": {
-    "mlton_con_chunkify_one": {
+    "mlton_con_chunkify_one_parallel_bench": {
       "suite": "parallel_bench",
       "source_series": [
         {

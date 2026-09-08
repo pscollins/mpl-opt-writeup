@@ -136,15 +136,32 @@
       ]
     },
     "con_exp_geomean": {
+        "source_series_type": "geomean",
+        "source_series": [
+            {
+                "series_name": "Baseline con-vs-con",
+                "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+            },
+            {
+                "series_name": "Con-vs-con, with `-chunkify one`",
+                "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+            }
+        ]
+    },
+    "aos_exp_geomean": {
       "source_series_type": "geomean",
       "source_series": [
         {
-          "series_name": "Baseline con-vs-con",
-          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+          "series_name": "Baseline aos-vs-aos",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
         },
         {
-          "series_name": "Con-vs-con, with `-chunkify one`",
-          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+          "series_name": "Aos-vs-aos, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        },
+        {
+          "series_name": "Aos-vs-aos, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_func"
         }
       ]
     }
