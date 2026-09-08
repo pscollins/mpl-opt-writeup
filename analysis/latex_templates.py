@@ -329,14 +329,23 @@ def render_compare_geomeans_tables_subsection(name: str, title: str = '') -> str
     return render_compare_series_tables_subsection(name=name, title=title)
 
 
-def render_compare_bar_charts_subsection(name: str, title: str = '', series_paths: list = None) -> str:
+def render_compare_bar_charts_subsection(name: str, title: str = '', series_paths: list = None, suite: str = None) -> str:
     name_display = title if title else name.replace('_', ' ').title()
     name_escaped = name.replace('_', r'\_')
+    if suite == 'parallel_bench':
+        suite_desc = r' on the \texttt{parallel-ml-bench} benchmark suite'
+    elif suite == 'mlton':
+        suite_desc = ' on the MLton benchmark suite'
+    elif suite:
+        suite_desc = fr' on the {suite} benchmark suite'
+    else:
+        suite_desc = ''
+
     if series_paths:
         paths_str = ', '.join([fr'\protect\nolinkurl{{{p}}}' for p in series_paths])
-        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
+        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}{suite_desc}. Data: {paths_str}. <0\% represents an improvement, >0\% represents a regression.'
     else:
-        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}. <0\% represents an improvement, >0\% represents a regression.'
+        caption = fr'Comparison of benchmark performance for \texttt{{{name_escaped}}}{suite_desc}. <0\% represents an improvement, >0\% represents a regression.'
     return Template(COMPARE_BAR_CHARTS_SUBSECTION_TEMPLATE).substitute(
         name_display=name_display,
         out_filename=name,
@@ -344,7 +353,7 @@ def render_compare_bar_charts_subsection(name: str, title: str = '', series_path
     )
 
 
-def render_compare_bar_charts_tables_subsection(name: str, title: str = '') -> str:
+def render_compare_bar_charts_tables_subsection(name: str, title: str = '', suite: str = None) -> str:
     name_display = title if title else name.replace('_', ' ').title()
     return Template(COMPARE_BAR_CHARTS_TABLES_TEMPLATE).substitute(
         name_display=name_display,

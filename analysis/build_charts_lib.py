@@ -34,7 +34,11 @@ plt.rcParams.update({
     "font.serif": ["Computer Modern Roman"]
 })
 
-DATA_ROOT = 'data'
+DATA_ROOT = 'data' if os.path.exists('data') else (
+    os.path.join(os.path.dirname(__file__), 'data')
+    if os.path.exists(os.path.join(os.path.dirname(__file__), 'data'))
+    else 'data'
+)
 METADATA_KEYS = {'compiler', 'suite'}
 CHECKSUM_FIELD_PARALLEL = 'binary_md5'
 COMPILER_NAME_FIELD_PARALLEL = 'config'
@@ -1203,12 +1207,14 @@ def plot_compare_series(
 plot_compare_geomeans = plot_compare_series
 
 
-def compute_bar_series(item, config=None, values='test_results_secs', use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
+def compute_bar_series(item, config=None, values=None, suite=None, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     series_name = item.get('series_name', '')
     if 'series_df' in item:
         df_res = item['series_df']
         geomean_pct = item.get('geomean_pct', np.nan)
         return series_name, df_res, geomean_pct
+
+    series_suite = item.get('suite', suite)
 
     if 'df' in item:
         df = item['df']
@@ -1216,6 +1222,10 @@ def compute_bar_series(item, config=None, values='test_results_secs', use_new_an
         if config is None:
             raise ValueError("Config must be provided to resolve 'series_path'")
         p = item.get('series_path') or item.get('path')
+        if series_suite is None and '.' in p:
+            root_section = p.split('.')[0]
+            if root_section in config and isinstance(config[root_section], dict):
+                series_suite = config[root_section].get('suite')
         file_name = resolve_series_path(config, p)
         df = load_df(file_name)
     elif 'source' in item or 'data' in item or 'file' in item:
@@ -1225,15 +1235,29 @@ def compute_bar_series(item, config=None, values='test_results_secs', use_new_an
         raise ValueError(f"Series specification must contain 'series_path', 'df', or 'source': {item}")
 
     abbrevs = item.get('abbrevs')
-    val_col = item.get('values', values)
 
     # If df already contains precomputed benchmark results
     if 'bench' in df.columns and 'relative_pct' in df.columns:
         geomean_pct = item.get('geomean_pct', np.nan)
         return series_name, df, geomean_pct
 
+    if series_suite is not None and series_suite not in ('mlton', 'parallel_bench'):
+        raise ValueError(f"Unknown suite: {series_suite}")
+
+    # Determine default metric if not provided
+    if values is not None:
+        default_val = values
+    elif series_suite == 'mlton':
+        default_val = 'runTime'
+    else:
+        default_val = 'test_results_secs'
+    val_col = item.get('values', default_val)
+
     # Determine suite format: parallel_bench or mlton
-    if COMPILER_NAME_FIELD_PARALLEL in df.columns or 'test_results_secs' in df.columns:
+    is_parallel = series_suite == 'parallel_bench' or (series_suite is None and (COMPILER_NAME_FIELD_PARALLEL in df.columns or 'test_results_secs' in df.columns))
+    is_mlton = series_suite == 'mlton' or (series_suite is None and 'compilerAbbrev' in df.columns)
+
+    if is_parallel:
         # parallel_bench format
         base_key, test_key = infer_configs(df, abbrevs)
         config_col = COMPILER_NAME_FIELD_PARALLEL
@@ -1267,7 +1291,7 @@ def compute_bar_series(item, config=None, values='test_results_secs', use_new_an
             print(f"No matching benchmark runs found for comparison in {series_name}.")
             return series_name, pd.DataFrame(), np.nan
 
-    elif 'compilerAbbrev' in df.columns:
+    elif is_mlton:
         # MLton suite format
         base_key, test_key = abbrevs if abbrevs is not None else ('MLton0', 'MLton1')
         config_col = 'compilerAbbrev'
@@ -1348,10 +1372,11 @@ def compute_bar_series(item, config=None, values='test_results_secs', use_new_an
 def plot_compare_bar_charts(
     series_specs,
     config=None,
-    values='test_results_secs',
+    values=None,
     title='',
     out_filename='',
     out_dir='charts',
+    suite=None,
     use_new_analysis_style=USE_NEW_ANALYSIS_STYLE
 ):
     computed_series = []
@@ -1362,6 +1387,7 @@ def plot_compare_bar_charts(
             item,
             config=config,
             values=values,
+            suite=suite,
             use_new_analysis_style=use_new_analysis_style
         )
         if res_df is not None and not res_df.empty:
@@ -1403,10 +1429,12 @@ def plot_compare_bar_charts(
                 if use_new_analysis_style and 'err_minus_pct' in row and 'err_plus_pct' in row:
                     em_vals.append(row['err_minus_pct'])
                     ep_vals.append(row['err_plus_pct'])
-                    has_error_bars = True
+                    if row['err_minus_pct'] > 0 or row['err_plus_pct'] > 0:
+                        has_error_bars = True
                 elif 'std_pct' in row:
                     std_vals.append(row['std_pct'])
-                    has_error_bars = True
+                    if row['std_pct'] > 0:
+                        has_error_bars = True
             else:
                 y_vals.append(np.nan)
                 em_vals.append(0.0)
@@ -1624,9 +1652,11 @@ def generate_all_charts_tex(config: dict) -> str:
             if isinstance(spec, dict):
                 series_list = spec.get('source_series') or spec.get('series') or []
                 title = spec.get('title', '')
+                suite = spec.get('suite')
             elif isinstance(spec, list):
                 series_list = spec
                 title = ''
+                suite = None
             else:
                 continue
 
@@ -1649,6 +1679,7 @@ def generate_all_charts_tex(config: dict) -> str:
                 name=name,
                 title=title,
                 series_paths=series_files,
+                suite=suite,
             ))
         sections_tex.append('\n'.join(compare_bars_parts))
 
@@ -1717,7 +1748,8 @@ def generate_all_charts_tex(config: dict) -> str:
         compare_bars_tbl_parts.append(r'\subsection{Compare Bar Charts}' + '\n')
         for name, spec in compare_bar_charts.items():
             title = spec.get('title', '') if isinstance(spec, dict) else ''
-            compare_bars_tbl_parts.append(render_compare_bar_charts_tables_subsection(name=name, title=title))
+            suite = spec.get('suite') if isinstance(spec, dict) else None
+            compare_bars_tbl_parts.append(render_compare_bar_charts_tables_subsection(name=name, title=title, suite=suite))
         tables_parts.append('\n'.join(compare_bars_tbl_parts))
         has_any_tables = True
 
@@ -1809,12 +1841,16 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
     if isinstance(compare_bars, dict):
         for name, spec in compare_bars.items():
             if isinstance(spec, dict):
+                suite = spec.get('suite')
                 series_list = spec.get('source_series') or spec.get('series') or []
                 title = spec.get('title') or name.replace("_", " ").title()
-                val_col = spec.get('values', 'test_results_secs')
+                val_col = spec.get('values')
+                if val_col is None:
+                    val_col = 'runTime' if suite == 'mlton' else 'test_results_secs'
             elif isinstance(spec, list):
                 series_list = spec
                 title = name.replace("_", " ").title()
+                suite = None
                 val_col = 'test_results_secs'
             else:
                 continue
@@ -1825,6 +1861,7 @@ def process_config(config: dict, use_new_analysis_style=USE_NEW_ANALYSIS_STYLE):
                 title=title,
                 out_filename=name,
                 out_dir=out_dir,
+                suite=suite,
                 use_new_analysis_style=use_new_analysis_style,
             )
 

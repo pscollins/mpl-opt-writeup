@@ -1,4 +1,4 @@
-Data generated at 2026-09-07 20:20:10.761934 using the following config:
+Data generated at 2026-09-07 20:46:10.194444 using the following config:
 
 {
   "output_directory": "charts/",
@@ -7,6 +7,7 @@ Data generated at 2026-09-07 20:20:10.761934 using the following config:
     "suite": "mlton",
     "tuple": "test_tuple_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_064158.jsonl",
     "con": "test_conapp_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_044217.jsonl",
+    "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",
     "aos": "test_aos_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_004326.jsonl",
     "soa": "test_soa_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_024259.jsonl"
   },
@@ -149,6 +150,7 @@ Data generated at 2026-09-07 20:20:10.761934 using the following config:
   },
   "compare_bar_charts": {
     "mlton_con_chunkify_one": {
+      "suite": "parallel_bench",
       "source_series": [
         {
           "series_name": "Baseline MLton ConApp-vs-ConApp",
@@ -157,6 +159,19 @@ Data generated at 2026-09-07 20:20:10.761934 using the following config:
         {
           "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
           "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con_chunkify_one"
+        }
+      ]
+    },
+    "mlton_con_chunkify_one_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "Baseline MLton ConApp-vs-ConApp",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con"
+        },
+        {
+          "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
         }
       ]
     }

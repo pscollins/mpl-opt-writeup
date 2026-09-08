@@ -2920,11 +2920,12 @@ Like above, we can run in \texttt{-chunkify one} in order to control for the
 effect of chunkification, which is impacted by the introduction of any new
 functons.
 
-\hl{TODO: ADD DATA -- RUN NOT DONE}
-
 
 \FloatBarrier
 \subsection{\texttt{wc-input1}: controlling for \texttt{Chunkify}}
+
+\hl{TODO: ADD DATA: IMPORTED BUT NOT RENDERED}
+
 
 \FloatBarrier
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
@@ -3092,6 +3093,11 @@ transformation to all containers-of-tuples of less than or equal to 3 elements.
   \label{fig:aos_mlton}
 \end{figure}
 
+As we can see in \cref{fig:aos_mlton}, this transformation is essentially a
+no-op on the MLton benchmark suite, impacting only a single benchmark for a win
+smaller than 1\%.
+
+
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \hl{TODO: DESCRIBE CONFIG, ANALYSIS}
@@ -3182,11 +3188,9 @@ transformation to all containers-of-tuples of less than or equal to 3 elements.
   \label{fig:soa_mlton}
 \end{figure}
 
+The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
+
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
-
-\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
-
-\hl{TODO: SKIPPED COMPILE SIZE}
 
 \begin{figure}[htbp]
   \centering
