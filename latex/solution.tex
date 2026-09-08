@@ -2920,11 +2920,19 @@ Like above, we can run in \texttt{-chunkify one} in order to control for the
 effect of chunkification, which is impacted by the introduction of any new
 functons.
 
+\hl{TODO: THE DATA CHANGED AND WE NEED TO REWORK THE ANALYSIS A BIT}
 
 \FloatBarrier
 \subsection{\texttt{wc-input1}: controlling for \texttt{Chunkify}}
 
-\hl{TODO: ADD DATA: IMPORTED BUT NOT RENDERED}
+As we can see in \cref{fig:mlton_bench_mlton_con_chunkify_one}, nearly the
+entire positive effect of the transformation observed on the MLton benchmark
+suite is actually due to accidental permutation of chunk boundaries rather than
+the inded purpose of the pass -- the majr wins on \texttt{wc-input1} and
+\texttt{wc-scanStream} disappear, and we are left with a small geomean loss
+rather than a win.
+
+\hl{TODO(agy): add ``mlton con chunkify one mlton bench'' as the figure referenced above}
 
 
 \FloatBarrier
