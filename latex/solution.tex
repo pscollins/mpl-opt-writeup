@@ -2889,6 +2889,8 @@ For the evaluation below, we use the following configuration:
   \label{fig:con_mlton}
 \end{figure}
 
+\hl{TODO: THIS IS NOW A WIN}
+
 The MLton benchmark suite shows modest $\approx 5\%$ regressions on a number of
 benchmarks, for an overall geomean loss. We'll investiage the large loss to
 \texttt{wc-input1} in the next section.
@@ -3057,6 +3059,8 @@ neutral-to-positive when excluding chunk overhead. See
 \FloatBarrier
 \subsection{AoS Flattening}
 
+\hl{TODO: CHECK -- 3 or 4 elements?}
+
 In the data below, we applied the Array-of-Struct \texttt{ShallowFlatten}
 transformation to all containers-of-tuples of less than or equal to 3 elements.
 
@@ -3145,7 +3149,9 @@ transformation to all containers-of-tuples of less than or equal to 3 elements.
 \FloatBarrier
 \subsection{SoA Flattening}
 
-In the data below, we applied the Array-of-Struct \texttt{ShallowFlatten}
+\hl{TODO: CHECK -- 3 or 4 elements?}
+
+In the data below, we applied the Struct-of-Array \texttt{ShallowFlatten}
 transformation to all containers-of-tuples of less than or equal to 3 elements.
 
 \subsubsection{MLton Benchmarks}

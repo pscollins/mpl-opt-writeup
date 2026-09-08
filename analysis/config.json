@@ -147,14 +147,28 @@
   },
   "compare_bar_charts": {
     "mlton_con_chunkify_one": {
+        "suite": "parallel_bench",
+        "source_series": [
+            {
+                "series_name": "Baseline MLton ConApp-vs-ConApp",
+                "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+            },
+            {
+                "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+                "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con_chunkify_one"
+            }
+        ]
+    },
+    "mlton_con_chunkify_one_mlton_bench": {
+      "suite": "mlton",
       "source_series": [
         {
           "series_name": "Baseline MLton ConApp-vs-ConApp",
-          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con"
         },
         {
           "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
-          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con_chunkify_one"
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
         }
       ]
     }
