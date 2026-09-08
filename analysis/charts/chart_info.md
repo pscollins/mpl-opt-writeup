@@ -1,4 +1,4 @@
-Data generated at 2026-09-08 08:40:22.697189 using the following config:
+Data generated at 2026-09-08 09:03:48.793526 using the following config:
 
 {
   "output_directory": "charts/",
@@ -146,6 +146,23 @@ Data generated at 2026-09-08 08:40:22.697189 using the following config:
         {
           "series_name": "Con-vs-con, with `-chunkify one`",
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+        }
+      ]
+    },
+    "aos_exp_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "Baseline aos-vs-aos",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "Aos-vs-aos, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        },
+        {
+          "series_name": "Aos-vs-aos, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_func"
         }
       ]
     }
