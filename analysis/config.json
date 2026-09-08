@@ -148,7 +148,7 @@
     }
   },
   "compare_bar_charts": {
-    "mlton_con_chunkify_one": {
+    "mlton_con_chunkify_one_parallel_bench": {
         "suite": "parallel_bench",
         "source_series": [
             {
