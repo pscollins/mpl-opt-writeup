@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{mathrsfs}
 \usepackage{float}
+\usepackage{placeins}
 
 
 \usepackage{bm}
@@ -2320,6 +2321,7 @@ All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
 
 \hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
 
+\FloatBarrier
 \subsection{Tuple Flattening}
 For the evaluation below, we use the following configuration:
 \begin{itemize}
@@ -2844,6 +2846,7 @@ neutral-to-positive, with an impact of $< 2\%$ on performance in most cases.
 
 %% \hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
 
+\FloatBarrier
 \subsection{\texttt{ConApp} Flattening}
 
 For the evaluation below, we use the following configuration:
@@ -2918,8 +2921,10 @@ functons.
 \hl{TODO: ADD DATA -- RUN NOT DONE}
 
 
+\FloatBarrier
 \subsection{\texttt{wc-input1}: controlling for \texttt{Chunkify}}
 
+\FloatBarrier
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[htbp]
@@ -3049,9 +3054,11 @@ neutral-to-positive when excluding chunk overhead. See
   \label{mpl_con_chunkify_one_all}
 \end{figure}
 
+\FloatBarrier
 \subsection{AoS Flattening}
 
-\hl{TODO: DESCRIBE}
+In the data below, we applied the Array-of-Struct \texttt{ShallowFlatten}
+transformation to all containers-of-tuples of less than or equal to 3 elements.
 
 \subsubsection{MLton Benchmarks}
 
@@ -3135,9 +3142,11 @@ neutral-to-positive when excluding chunk overhead. See
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
 
+\FloatBarrier
 \subsection{SoA Flattening}
 
-\hl{TODO: DESCRIBE}
+In the data below, we applied the Array-of-Struct \texttt{ShallowFlatten}
+transformation to all containers-of-tuples of less than or equal to 3 elements.
 
 \subsubsection{MLton Benchmarks}
 
@@ -3221,6 +3230,7 @@ neutral-to-positive when excluding chunk overhead. See
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
 
+\FloatBarrier
 \section{Related Work}
 
 This work directly builds on the original \texttt{Flattening} transformation of
