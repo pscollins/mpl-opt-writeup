@@ -3113,10 +3113,6 @@ smaller than 1\%.
 
 \subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
-\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
-
-\hl{TODO: SKIPPED COMPILE SIZE}
-
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
@@ -3135,6 +3131,10 @@ smaller than 1\%.
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench}
 \end{figure}
+
+AOS flattening has a largely poisitive impact on MLton for the
+\texttt{parallel\_bench} suite. We'll focus on MPL for a more detailed analysis,
+in the style of the previous sections.
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
@@ -3164,6 +3164,44 @@ smaller than 1\%.
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
+
+For MPL, the AOS transformation is overwhelmingly positive. For a deep dive,
+we'll focus on two cases with large effects: \texttt{quickhull} (a large,
+consistent win) and \texttt{linearrec} (a win at low core counts that becomes a
+noisy loss at high core counts.
+
+\subsubsection{\texttt{quickhull}, \texttt{linearrec}: observed IR change}
+The \texttt{quickhull} benchmark calculates the convex hull of a 2D set of
+points. In the particular implementation used in \texttt{parallel\_ml\_bench},
+the core of the algorithm involves filtering a set of indices into two smaller
+sets, e.g., very roughly:
+\begin{minted}{python}
+  points: (float * float) array = ...initialized on startup...
+  def partition(indices: int list) -> (int array) * (int array):
+    def is_left(index: int) -> bool:
+      # Indexed load into `points`
+      p: (float * float) = points[index]
+      ...some 2D geometry calculation that loads points...
+
+    def is_right(index: int) -> bool:
+      ...similar...
+
+    lefts: int list = filter(is_left, indices)
+    right: int list = filter(is_right, indices)
+    return (filter(is_left, indices), filter(is_right, indices))
+  def quickhull(indices: int array, ...) -> int array:
+    if len(indices) < C:
+      ...base case...
+    else:
+      left, right = partition(indices)
+      left_result = quickhull(left)
+      right_result = quickhull(right)
+      ...merge...
+      return result
+\end{minted}
+
+\subsubsection{\texttt{quickhull}, \texttt{linearrec}: microarchitectural effects}
+
 \hl{TODO: WRITEUP}
 
   1. Quickhull on 1 Core
@@ -3285,6 +3323,8 @@ smaller than 1\%.
         \bottomrule
       \end{tabular}
     \end{table}
+
+\subsubsection{\texttt{quickhull}, \texttt{linearrec}: control for known effects}
 
 \FloatBarrier
 \subsection{SoA Flattening}
