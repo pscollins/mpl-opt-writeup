@@ -3200,7 +3200,82 @@ sets, e.g., very roughly:
       return result
 \end{minted}
 
+The \texttt{linearrec} benchmark is quite simple, calculating a first-order
+linear recurrence across a sequence of 2D points, i.e., in the scalar code:
+\begin{minted}{python}
+  points: (float * float) array = ...
+
+  def linearrec(points):
+    def combine(left: (float * float), right: (float * float)) -> (float * float):
+      l_x, l_y = left
+      r_x, r_y = right
+      return (l_x * r_x, l_y * r_x + r_y)
+
+    def select(point: float * float) -> float:
+      l, r = point
+      return l
+
+    identity = (1.0, 0.0)
+    # Prefix scan over pairs with `combine`
+    points' = list(prefix_scan(pairs, combine))
+    return [select(p) for p in points']
+\end{minted}
+where \texttt{prefix\_scan} is an MPL primitive that calculates the parallel
+prefix scan of the associative \texttt{combine} operator, i.e. the sequence:
+\begin{minted}{python}
+  identity = (1.0, 0.0)
+  points' = [combine(identity, points[0]),
+             combine(points'[0], points[1]),
+             combine(points'[1], points[2]),
+             ...]
+\end{minted}
+through a standard paralell prefix scan algorithm that completes the task in
+$O(n)$ total work and a critical path length of $O(\log n)$ operations.
+
+The transformations here are straightforward: for \texttt{quickhull}, we rewrite
+the global \texttt{points} array into array-of-structs format:
+\begin{minted}{python}
+  points: float array = ...initialized on startup...
+  def partition(indices: int list) -> (int array) * (int array):
+    def is_left(index: int) -> bool:
+      # Indexed load into `points`
+      p_x: float = points[index * 2]
+      p_y: float = points[index * 2 + 1]
+      # Temporary tuple produced by the `ShallowFlatten` transformation
+      p: float * float = (p_x, p_y)
+      ...some 2D geometry calculation that loads points...
+
+    def is_right(index: int) -> bool:
+      ...similar...
+
+  ...as above...
+\end{minted}
+where the temporary tuple \texttt{p} is successfully eliminated by later passes,
+allowing the 2D geometry calculation operate directly on the unboxed values.
+
+The transformation on \texttt{linearrec} is similarly obvious -- however, the IR
+snippet from above remains unchaned because the transformation changes the body
+of \texttt{parallel\_scan} to calculate a prefix sum over a flat \texttt{float *
+  float} array.
+
+\hl{TODO: CONFIRM -- DOES THE PARALLEL SCAN PRODUCE TEMPORARY ARRAYS OF TUPLES?
+  DO THE TEMPORARY TUPLES GET ELIDED?}
+
+
 \subsubsection{\texttt{quickhull}, \texttt{linearrec}: microarchitectural effects}
+Next, we walk through the same \texttt{perf}-centered analysis to determine how
+the AOS transformation impacted the workload at a microarchitectural level. In
+both cases, the effect we expect to see is the one described in the sections
+above \hl{TODO LINK TO THE MEAT SECTION} -- in the cases where loading from the
+2D point arrays is important for performance, saving the intermediate tuple
+should save both memory latency (i.e. an extra dependent load operation --
+shortening the chain length from 3 to 2 for \texttt{quickhull} and from 2 to 1
+for \texttt{linearrec}) and memory bandwidth (we should be able to use the whole
+cacheline that each point is allocated on).
+
+For \texttt{quickhull}, we can see the single-threaded effect in \cref{tab:perf_comparison_aos_quickhull_1core}
+
+\hl{TODO: CONTINUE}
 
 \hl{TODO: WRITEUP}
 
