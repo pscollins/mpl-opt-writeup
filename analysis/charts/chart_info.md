@@ -1,4 +1,4 @@
-Data generated at 2026-09-13 16:32:37.412278 using the following config:
+Data generated at 2026-09-13 16:46:01.423764 using the following config:
 
 {
   "output_directory": "charts/",
@@ -33,7 +33,9 @@ Data generated at 2026-09-13 16:32:37.412278 using the following config:
     "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
     "aos_chunkify_func": "mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl",
     "aos_chunkify_one": "mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl",
-    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
+    "aos_sync_gc": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl",
+    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl",
+    "soa_sync_gc": "mpl_soa_vs_soa_sync_gc:260912-205545:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-205545.processed.jsonl"
   },
   "trial_scatter_plots": {
     "delunay_mlton_parallel_ml_bench_scatter": {
@@ -56,6 +58,34 @@ Data generated at 2026-09-13 16:32:37.412278 using the following config:
       "experiment_type": "tuple",
       "benchmark": "reverb",
       "source": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl"
+    },
+    "linearrec_default_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos",
+      "benchmark": "linearrec",
+      "source": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl"
+    },
+    "linearrec_sync_gc_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_sync_gc",
+      "benchmark": "linearrec",
+      "source": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl"
+    },
+    "quickhull_default_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos",
+      "benchmark": "quickhull",
+      "source": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl"
+    },
+    "quickhull_sync_gc_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_sync_gc",
+      "benchmark": "quickhull",
+      "source": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl"
     }
   },
   "compare_series": {
@@ -163,6 +193,45 @@ Data generated at 2026-09-13 16:32:37.412278 using the following config:
         {
           "series_name": "Aos-vs-aos, with `-chunkify func`",
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_func"
+        }
+      ]
+    },
+    "aos_sync_gc_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
+        }
+      ]
+    },
+    "aos_sync_gc_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
+        }
+      ]
+    },
+    "aos_sync_gc_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
         }
       ]
     }

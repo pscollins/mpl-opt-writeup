@@ -3280,9 +3280,37 @@ shortening the chain length from 3 to 2 for \texttt{quickhull} and from 2 to 1
 for \texttt{linearrec}) and memory bandwidth (we should be able to use the whole
 cacheline that each point is allocated on).
 
-For \texttt{quickhull}, we can see the single-threaded effect in \cref{tab:perf_comparison_aos_quickhull_1core}
+For \texttt{quickhull}, we can see the single-threaded effect in
+\cref{tab:perf_comparison_aos_quickhull_1core}. We observe, broadly, the effect
+that we expect: we see better locality show up as a lower miss rate in both L1
+and L3, translating into higher IPC. In additon to higher IPC, we also see a
+reduction in total instructions, matching out expectations (since the packed AOS
+loads require fewer instructions than the unpacked tuple loads, so long as the
+intermediate tuples are optimized away). \hl{TODO: WHY BAD SPEC? LOWER MISS RATE
+  SHOUHD SHOW UP AS LESS BACKEND BOUND}
 
-\hl{TODO: CONTINUE}
+Comparing with the 160 core data in
+\cref{tab:perf_comparison_aos_quickhull_160cores}, trend for \texttt{quickhull}
+is similar to the benchmarks we analyzed above, with the microarchitectural
+bottleneck shifting from bad speculation towards backend bound as contention on
+the memory subsystem increases.
+
+For \texttt{linearrec}, the primary effect we observe in the single core data
+from \cref{tab:perf_comparison_aos_linearrec_1core} is a massive reduction in
+instruction count, which again corresponds with what we expect based on the
+action of the transformation. Here, we see a slightly higher L1 miss rate
+alongside a lower L3 miss rate, which we could explain as follows: for the
+baseline verison, we tend to keep the pointers-to-tuples in L1 (i.e. the array
+of pointers is small and has good locality) and miss in L3 when we load through
+the poiners, whereas in the AOS version, the packed array is large enough to
+exceed the size of L1, but we still have enough locality to keep it in lower
+levels of the cache hierachy.
+
+
+
+\hl{TODO: EXPLAIN THE INSTRUCTIONS / IPC / BADSPEC FOR LINEARREC AS GC}
+
+\hl{TODO: DIG INTO THIS FURTHER USING PERF RECORD TO COLLECT THE ACTUAL DATA}
 
 \hl{TODO: WRITEUP}
 
