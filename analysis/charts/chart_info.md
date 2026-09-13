@@ -1,4 +1,4 @@
-Data generated at 2026-09-10 09:12:54.808965 using the following config:
+Data generated at 2026-09-13 16:32:37.412278 using the following config:
 
 {
   "output_directory": "charts/",
