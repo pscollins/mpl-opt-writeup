@@ -3256,10 +3256,17 @@ allowing the 2D geometry calculation operate directly on the unboxed values.
 The transformation on \texttt{linearrec} is similarly obvious -- however, the IR
 snippet from above remains unchaned because the transformation changes the body
 of \texttt{parallel\_scan} to calculate a prefix sum over a flat \texttt{float *
-  float} array.
+  float} array. Later passes ensure that all temporary tuples are optimized
+away, such that \texttt{ShallowFlatten} introduces no new allocations.
 
-\hl{TODO: CONFIRM -- DOES THE PARALLEL SCAN PRODUCE TEMPORARY ARRAYS OF TUPLES?
-  DO THE TEMPORARY TUPLES GET ELIDED?}
+One important difference to note between \texttt{linearrec} and
+\texttt{quickhull} is that, while \texttt{quickhull} only allocates
+arrays-of-tuples at startup, \texttt{linearrec} allocates arrays of tuples at
+runtime as well -- temporary arrays while computing the prefix scan. Thus for
+\texttt{quickhull}, we observe only the effect of the transformation on the
+generated code, but in \texttt{linearrec} we can also observe the interaction
+with the garbage collector.
+
 
 
 \subsubsection{\texttt{quickhull}, \texttt{linearrec}: microarchitectural effects}
