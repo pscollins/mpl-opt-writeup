@@ -780,6 +780,7 @@ def test_generate_all_charts_tex_includes_filenames():
     assert r"\protect\nolinkurl{my_mlton_data_file.jsonl}" in tex
     assert r"\protect\nolinkurl{my_pb_mlton_data_file.jsonl}" in tex
     assert r"\protect\nolinkurl{my_pb_mpl_data_file.jsonl}" in tex
+    assert r"\tableofcontents" in tex
     assert r"\section{Tuple Flattening}" in tex
     assert r"\subsection{MLton Benchmarks (Tuple Flattening)}" in tex
     assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton (Tuple Flattening)}" in tex

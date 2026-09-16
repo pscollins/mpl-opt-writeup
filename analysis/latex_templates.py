@@ -34,6 +34,9 @@ DOCUMENT_PREAMBLE = r"""\documentclass[leqno,11pt]{article}
 \begin{document}
 
 \maketitle
+
+\tableofcontents
+\clearpage
 """
 
 DOCUMENT_POSTAMBLE = r"""\end{document}

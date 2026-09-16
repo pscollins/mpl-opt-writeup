@@ -31,6 +31,9 @@
 
 \maketitle
 
+\tableofcontents
+\clearpage
+
 \section{Tuple Flattening}
 
 \subsection{MLton Benchmarks (Tuple Flattening)}
@@ -732,6 +735,44 @@
 \end{figure}
 
 \clearpage
+\section{Aos Fixed Iters Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Fixed Iters Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_fixed_iters_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:aos_fixed_iters_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{aos_fixed_iters_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:aos_fixed_iters_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{aos\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_fixed_iters_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{aos\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{aos_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{aos\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
 \section{Soa Sync Gc Flattening}
 
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Soa Sync Gc Flattening)}
@@ -767,6 +808,44 @@
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{soa_sync_gc_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for \texttt{soa\_sync\_gc} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_vs_soa_sync_gc:260912-205545:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-205545.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_sync_gc_parallel_bench_mpl_trellis}
+\end{figure}
+
+\clearpage
+\section{Soa Fixed Iters Flattening}
+
+\subsection{\texttt{parallel-ml-bench}: MPL vs MPL (Soa Fixed Iters Flattening)}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{soa_fixed_iters_parallel_bench_run_mpl_vs_mpl.pdf}
+    \caption{Run time}
+    \label{fig:soa_fixed_iters_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{soa_fixed_iters_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:soa_fixed_iters_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for \texttt{soa\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_vs_soa_fixed_iters:260914-135505:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-135505.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_fixed_iters_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{soa_fixed_iters_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
+  \caption{Relative performance for \texttt{soa\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_vs_soa_fixed_iters:260914-135505:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-135505.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_fixed_iters_parallel_bench_mpl_geomean}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{soa_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for \texttt{soa\_fixed\_iters} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. Data: \protect\nolinkurl{mpl_soa_vs_soa_fixed_iters:260914-135505:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-135505.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_fixed_iters_parallel_bench_mpl_trellis}
 \end{figure}
 
 \clearpage
@@ -833,6 +912,24 @@
   \includegraphics[width=\textwidth,keepaspectratio]{quickhull_sync_gc_aos_mpl_parallel_ml_bench_scatter.pdf}
   \caption{Per-trial execution times for \texttt{quickhull} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl}.}
   \label{fig:quickhull_sync_gc_aos_mpl_parallel_ml_bench_scatter}
+\end{figure}
+
+\subsection{\texttt{linearrec} (\texttt{parallel-ml-bench}: MPL (Aos Fixed Iters Flattening))}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{linearrec_fixed_iters_aos_mpl_parallel_ml_bench_scatter.pdf}
+  \caption{Per-trial execution times for \texttt{linearrec} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}.}
+  \label{fig:linearrec_fixed_iters_aos_mpl_parallel_ml_bench_scatter}
+\end{figure}
+
+\subsection{\texttt{quickhull} (\texttt{parallel-ml-bench}: MPL (Aos Fixed Iters Flattening))}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{quickhull_fixed_iters_aos_mpl_parallel_ml_bench_scatter.pdf}
+  \caption{Per-trial execution times for \texttt{quickhull} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}.}
+  \label{fig:quickhull_fixed_iters_aos_mpl_parallel_ml_bench_scatter}
 \end{figure}
 
 \clearpage
@@ -926,6 +1023,33 @@
   \includegraphics[width=\textwidth,keepaspectratio]{aos_sync_gc_quickhull.pdf}
   \caption{Comparison of \texttt{quickhull} speedups across core counts for \texttt{aos\_sync\_gc\_quickhull}. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}, \protect\nolinkurl{mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_sync_gc_quickhull}
+\end{figure}
+
+\subsection{Aos Fixed Iters Geomean}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{aos_fixed_iters_geomean.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for \texttt{aos\_fixed\_iters\_geomean}. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}, \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_geomean}
+\end{figure}
+
+\subsection{Aos Fixed Iters Linearrec}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{aos_fixed_iters_linearrec.pdf}
+  \caption{Comparison of \texttt{linearrec} speedups across core counts for \texttt{aos\_fixed\_iters\_linearrec}. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}, \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_linearrec}
+\end{figure}
+
+\subsection{Aos Fixed Iters Quickhull}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{aos_fixed_iters_quickhull.pdf}
+  \caption{Comparison of \texttt{quickhull} speedups across core counts for \texttt{aos\_fixed\_iters\_quickhull}. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}, \protect\nolinkurl{mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_fixed_iters_quickhull}
 \end{figure}
 
 \clearpage
@@ -1179,6 +1303,17 @@
 \importcsv{aos_sync_gc_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
+\subsection{Aos Fixed Iters Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Aos Fixed Iters Flattening)}
+
+\paragraph*{Run time}
+\importcsv{aos_fixed_iters_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{aos_fixed_iters_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
 \subsection{Soa Sync Gc Flattening}
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Soa Sync Gc Flattening)}
@@ -1188,6 +1323,17 @@
 
 \paragraph*{Binary size}
 \importcsv{soa_sync_gc_parallel_bench_size_mpl_vs_mpl.csv}
+
+\clearpage
+\subsection{Soa Fixed Iters Flattening}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL (Soa Fixed Iters Flattening)}
+
+\paragraph*{Run time}
+\importcsv{soa_fixed_iters_parallel_bench_run_mpl_vs_mpl.csv}
+
+\paragraph*{Binary size}
+\importcsv{soa_fixed_iters_parallel_bench_size_mpl_vs_mpl.csv}
 
 \clearpage
 \subsection{Trial Scatter Plots}
@@ -1219,6 +1365,14 @@
 \subsubsection{\texttt{quickhull} (\texttt{parallel-ml-bench}: MPL (Aos Sync Gc Flattening))}
 
 \importcsv{quickhull_sync_gc_aos_mpl_parallel_ml_bench_scatter.csv}
+
+\subsubsection{\texttt{linearrec} (\texttt{parallel-ml-bench}: MPL (Aos Fixed Iters Flattening))}
+
+\importcsv{linearrec_fixed_iters_aos_mpl_parallel_ml_bench_scatter.csv}
+
+\subsubsection{\texttt{quickhull} (\texttt{parallel-ml-bench}: MPL (Aos Fixed Iters Flattening))}
+
+\importcsv{quickhull_fixed_iters_aos_mpl_parallel_ml_bench_scatter.csv}
 
 \clearpage
 \subsection{Compare Series}
@@ -1262,6 +1416,18 @@
 \subsubsection{Aos Sync Gc Quickhull}
 
 \importcsv{aos_sync_gc_quickhull.csv}
+
+\subsubsection{Aos Fixed Iters Geomean}
+
+\importcsv{aos_fixed_iters_geomean.csv}
+
+\subsubsection{Aos Fixed Iters Linearrec}
+
+\importcsv{aos_fixed_iters_linearrec.csv}
+
+\subsubsection{Aos Fixed Iters Quickhull}
+
+\importcsv{aos_fixed_iters_quickhull.csv}
 
 \clearpage
 \subsection{Compare Bar Charts}
