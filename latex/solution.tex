@@ -3509,6 +3509,17 @@ show performance improvements that increase monotonically with core count. This
 effect holds for the other benchmarks in the suite: see
 \cref{fig:aos_full_sync_gc} for the complete dataset.
 
+Finally, as a quick test of methodology, we examine the effect of the
+\texttt{-chunkify one} transformation on the AOS benchmark: given that the
+transformation does not impact function boundaries, we should expect to see no
+effect here, and this data point would help to confirm that ``controlling for
+function boundary effects'' in the previous experiments did not have other,
+unintended effects.
+
+See \cref{fig:quickhull_linearrec_aos_chunkify_one} for the results on the focus
+benchmarks. As expected, the effect is broadly neutral. See
+\cref{fig:aos_full_chunkify_one} for the complete results in this configuration.
+
 
 \hl{TODO(agy): fill in the charts ``quickhull MPL AOS flattening scatter chart''
   + ``linearrec MPL AOS flattening scatter chart'' as
@@ -3522,7 +3533,7 @@ effect holds for the other benchmarks in the suite: see
   Fill in in teh charts that compare geomean/quickhull/linearrec for
   fig:quickhull_linearrec_aos_sync_gc
 
-}
+  Fill in the other missing charts in this following the same pattern}
 
 \FloatBarrier
 \subsection{SoA Flattening}
@@ -3583,6 +3594,8 @@ The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
   \label{fig:soa_parallel_bench}
 \end{figure}
 
+\hl{TODO: NEED SOME ANALYSIS}
+
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[htbp]
@@ -3611,6 +3624,8 @@ The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
+
+\hl{TODO: ADD COMPARISON CHART FOR GEOMEAN AND CONCLUDE THAT IT IS THE SAME}
 
 \FloatBarrier
 \section{Related Work}
