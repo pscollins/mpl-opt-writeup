@@ -3435,6 +3435,94 @@ levels of the cache hierachy.
     \end{table}
 
 \subsubsection{\texttt{quickhull}, \texttt{linearrec}: control for known effects}
+Looking at per-trial data in \cref{fig:quickhull_linearrec_aos_scatter_plot}, we
+see a clear difference between the two benchmarks: while \texttt{quickhull} has
+fairly stable performance from trial to trial at all core counts,
+\texttt{linearrec} shows a clear bimodal pattern, alternating between fast and
+slow iterations on both sides.
+
+It seems likely that this is an effect from the garbage collector: as described
+in \citet{mpl-orig}, running hte MPL garbage collector has the effect of pausing
+one of the worker threads, and hence for workloads with a uniform balance of
+work between worker threads (like \texttt{linearrec}, whose innermost loop is
+identical across processors), we should expect the GC pause to land on the
+critical path. Since all units of work take nearly the same time, there is no
+option to hide latency.
+
+For the \texttt{linearrec} case, we can make an argument that changing
+allocation patterns introduces ``noise'' by permuting the location of GC pauses:
+executing the prefix scan algorithm involves a fanout of tasks, where each node
+consumes some roughly-fixed time. For any given node, there is some probability
+that a GC pause ``lands'' on that node, and the higher up in the tree the GC
+pause lands, the more parallelism is wasted (since the GC pause blocks child
+tasks at lower levels in the tree from spawing). \hl{TODO: need a diagram here}
+
+Noting from \cref{fig:quickhull_linearrec_aos_scatter_plot} note that the
+benchmarks run for a fixed time, the faster AOS-transformed version runes for
+many more trials than the baseline. If there is a fixed chance that any
+particular trial encounters an unlucky GC pause, then we should expect to see
+both a larger number of unlucky trials and more-unlucky GC pauses on the side
+whose non-unlucky runs are faster.
+
+Thus we can attempt to isolate the effect of the GC in two ways:
+\begin{enumerate}
+\item We can run the benchmarks for a fixed trial count rather than a fixed
+  duration: this tries to control for only the unlucky-trials effect, but
+  retains some ``noise,'' since the AOS side will still have different
+  allocation patterns and so generally tend to pause in a slightly different
+  location.
+
+\item We can eliminate the effect of GC pause placement entirely by running a
+  synchronous GC at the beginning of each trial iteration. This, unfortunately,
+  ``controls for too much'' by entirely removing the MPL GC heuristics from the
+  benchmark, but still provides useful signal.
+\end{enumerate}
+
+Starting from the first point,
+\cref{fig:quickhull_linearrec_aos_fixed_trials} compares our default
+configuration against a configuration where all benchmarks run for a fixed trial
+count. As we observe, the fixed trial conunt consistently reports larger wins
+than the fixed time, but still shows noisy losses for \texttt{linearrec} at high
+core counts. This experiment was run by changing the benchmark framework to use
+a fixed iteration count for both trials and warmup, and selecting the trial
+count based on the previously-observed completed runs in the non-AOS plain MPL
+configuration -- the number of trials is consequently smaller than in the
+default experiment configuration, and hence the error bars are larger. The shape
+of this data is broadly the same as our baseline configuration; see
+\cref{fig:aos_full_fixed_trial} for the complete dataset.
+
+For the second point, we arrange for a synchronous GC by:
+\begin{enumerate}
+\item Passing \texttt{max-cc-depth 0 min-collection-depth 1} to the MPL runtime
+  on both sides
+\item Adding a call to \texttt{MLton.GC.Collect} at the start of each benchmark iteration
+\end{enumerate}
+
+The \texttt{MLton.GC.Collect} call is included in the timed region, and hence
+the effect is simply to control the placement of GC pauses, not to remove the GC
+effect entirely.
+
+See \cref{fig:quickhull_linearrec_aos_sync_gc} for the results on our focus
+benchmarks: as we see, the effect of worse relative performance at high core
+counts is completley eliminated; both \texttt{quickhull} and \texttt{linearrec}
+show performance improvements that increase monotonically with core count. This
+effect holds for the other benchmarks in the suite: see
+\cref{fig:aos_full_sync_gc} for the complete dataset.
+
+
+\hl{TODO(agy): fill in the charts ``quickhull MPL AOS flattening scatter chart''
+  + ``linearrec MPL AOS flattening scatter chart'' as
+  fig:quickhull\_linearrec\_aos\_scatter\_plot
+
+  Fill in the charts that compare geomean/quickhull/linearrec for
+  fig\_quickhull\_linearrec\_aos\_fixed\_trials
+
+  Fill in the full ``AOS fixed trial'' plots for fig:aos\_full\_fixed\_trial
+
+  Fill in in teh charts that compare geomean/quickhull/linearrec for
+  fig:quickhull_linearrec_aos_sync_gc
+
+}
 
 \FloatBarrier
 \subsection{SoA Flattening}
