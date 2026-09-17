@@ -355,6 +355,32 @@
           "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
         }
       ]
+    },
+    "mlton_aos_vs_soa_parallel_bench": {
+      "suite": "parallel_bench",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.soa"
+        }
+      ]
+    },
+    "mlton_aos_vs_soa_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.soa"
+        }
+      ]
     }
   }
 }

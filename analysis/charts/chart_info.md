@@ -1,4 +1,4 @@
-Data generated at 2026-09-16 08:55:22.131273 using the following config:
+Data generated at 2026-09-17 09:06:56.748111 using the following config:
 
 {
   "output_directory": "charts/",
@@ -289,6 +289,45 @@ Data generated at 2026-09-16 08:55:22.131273 using the following config:
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_fixed_iters"
         }
       ]
+    },
+    "aos_chunkify_one_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
     }
   },
   "compare_bar_charts": {
@@ -315,6 +354,32 @@ Data generated at 2026-09-16 08:55:22.131273 using the following config:
         {
           "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
           "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
+        }
+      ]
+    },
+    "mlton_aos_vs_soa_parallel_bench": {
+      "suite": "parallel_bench",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.soa"
+        }
+      ]
+    },
+    "mlton_aos_vs_soa_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.soa"
         }
       ]
     }

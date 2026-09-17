@@ -1100,6 +1100,24 @@
   \label{fig:mlton_con_chunkify_one_mlton_bench}
 \end{figure}
 
+\subsection{Mlton Aos Vs Soa Parallel Bench}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{mlton_aos_vs_soa_parallel_bench.pdf}
+  \caption{Comparison of benchmark performance for \texttt{mlton\_aos\_vs\_soa\_parallel\_bench} on the \texttt{parallel-ml-bench} benchmark suite. Data: \protect\nolinkurl{mlton_aos_mlton_parallel_o3:260824-220328:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-220328.processed.jsonl}, \protect\nolinkurl{mlton_soa_mlton_parallel_o3:260824-234803:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-234803.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mlton_aos_vs_soa_parallel_bench}
+\end{figure}
+
+\subsection{Mlton Aos Vs Soa Mlton Bench}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{mlton_aos_vs_soa_mlton_bench.pdf}
+  \caption{Comparison of benchmark performance for \texttt{mlton\_aos\_vs\_soa\_mlton\_bench} on the MLton benchmark suite. Data: \protect\nolinkurl{test_aos_flatten_test_o3:flattening-tests:cd5550ce5:20260909_131724.jsonl}, \protect\nolinkurl{test_soa_flatten_test_o3:flattening-tests:cd5550ce5:20260909_151708.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mlton_aos_vs_soa_mlton_bench}
+\end{figure}
+
 \clearpage
 \section{Data Tables}
 
@@ -1478,5 +1496,13 @@
 \subsubsection{Mlton Con Chunkify One Mlton Bench}
 
 \importcsv{mlton_con_chunkify_one_mlton_bench.csv}
+
+\subsubsection{Mlton Aos Vs Soa Parallel Bench}
+
+\importcsv{mlton_aos_vs_soa_parallel_bench.csv}
+
+\subsubsection{Mlton Aos Vs Soa Mlton Bench}
+
+\importcsv{mlton_aos_vs_soa_mlton_bench.csv}
 
 \end{document}

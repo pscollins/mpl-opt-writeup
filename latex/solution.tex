@@ -3699,7 +3699,18 @@ The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
   \label{fig:soa_parallel_bench}
 \end{figure}
 
-\hl{TODO: NEED SOME ANALYSIS}
+See \cref{fig:soa_mlton_bench} for the impact of the SoA transformation on the
+\texttt{parallel\_bench} suite for the MLton compiler.
+
+While the geomean impact of the transformation is broadly the same between AoS
+and SoA, we can see directionally-different results in some cases -- most
+significantly, \texttt{delaunay} is a small win for the AoS configuration, but a
+significant loss for the SoA configuration. See
+\cref{fig:mlton_aos_vs_soa_parallel_bench} for a side-by-side comparison.
+
+\hl{TODO(agy): add the chart}
+
+\hl{TODO(pscollins): SOME ANALYSIS}
 
 \subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
@@ -3729,6 +3740,9 @@ The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
+
+See \cref{fig:soa_parallel_bench_mpl} for measurements 
+
 
 \hl{TODO: ADD COMPARISON CHART FOR GEOMEAN AND CONCLUDE THAT IT IS THE SAME}
 
