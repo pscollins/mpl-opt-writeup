@@ -1079,6 +1079,15 @@
   \label{fig:aos_chunkify_one_quickhull}
 \end{figure}
 
+\subsection{Soa Vs Aos Geomean}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{soa_vs_aos_geomean.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for \texttt{soa\_vs\_aos\_geomean}. Data: \protect\nolinkurl{mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl}, \protect\nolinkurl{mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_vs_aos_geomean}
+\end{figure}
+
 \clearpage
 \section{Compare Bar Charts}
 
@@ -1485,6 +1494,10 @@
 \subsubsection{Aos Chunkify One Quickhull}
 
 \importcsv{aos_chunkify_one_quickhull.csv}
+
+\subsubsection{Soa Vs Aos Geomean}
+
+\importcsv{soa_vs_aos_geomean.csv}
 
 \clearpage
 \subsection{Compare Bar Charts}

@@ -327,6 +327,19 @@
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
         }
       ]
+    },
+    "soa_vs_aos_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AoS",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "SoA",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa"
+        }
+      ]
     }
   },
   "compare_bar_charts": {

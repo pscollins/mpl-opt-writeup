@@ -1,4 +1,4 @@
-Data generated at 2026-09-17 09:06:56.748111 using the following config:
+Data generated at 2026-09-17 09:10:38.969666 using the following config:
 
 {
   "output_directory": "charts/",
@@ -326,6 +326,19 @@ Data generated at 2026-09-17 09:06:56.748111 using the following config:
         {
           "series_name": "AOS-chunkify one",
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "soa_vs_aos_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AoS",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "SoA",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa"
         }
       ]
     }
