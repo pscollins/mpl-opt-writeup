@@ -98,11 +98,20 @@ echo "Clouds Config   : $OS_CLIENT_CONFIG_FILE"
 echo "Cloud Account   : $OS_CLOUD"
 echo "=========================================="
 
-# Check Glance connectivity
+# Check Keystone and Glance connectivity
 if [[ "$DRY_RUN" == false ]]; then
   echo "Verifying OpenStack / Glance connectivity..."
-  if ! openstack image list >/dev/null 2>&1; then
-    echo "Error: Unable to contact OpenStack Glance. Please verify credentials." >&2
+  # Allow stderr through on token check so OIDC device auth instructions are visible
+  if ! openstack token issue >/dev/null; then
+    echo "Error: Unable to authenticate with OpenStack. Please verify credentials." >&2
+    exit 1
+  fi
+  # Ensure token cache permissions are restored if refreshed under sudo
+  if [[ -n "${ORIGINAL_USER:-}" && -d "${USER_HOME}/.cache/ccauth" ]]; then
+    chown -R "${ORIGINAL_USER}:${ORIGINAL_USER}" "${USER_HOME}/.cache/ccauth" 2>/dev/null || true
+  fi
+  if ! openstack image list --limit 1 >/dev/null 2>&1; then
+    echo "Error: Unable to contact OpenStack Glance service." >&2
     exit 1
   fi
   echo "Glance connection OK."
