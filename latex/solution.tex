@@ -3521,19 +3521,124 @@ benchmarks. As expected, the effect is broadly neutral. See
 \cref{fig:aos_full_chunkify_one} for the complete results in this configuration.
 
 
-\hl{TODO(agy): fill in the charts ``quickhull MPL AOS flattening scatter chart''
-  + ``linearrec MPL AOS flattening scatter chart'' as
-  fig:quickhull\_linearrec\_aos\_scatter\_plot
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/quickhull_default_aos_mpl_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{quickhull}}
+    \label{fig:quickhull_default_aos_mpl_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/linearrec_default_aos_mpl_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{linearrec}}
+    \label{fig:linearrec_default_aos_mpl_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \caption{Trial-by-trial execution time for \texttt{quickhull} and \texttt{linearrec} across core counts under default AoS flattening versus baseline for the MPL compiler.}
+  \label{fig:quickhull_linearrec_aos_scatter_plot}
+\end{figure}
 
-  Fill in the charts that compare geomean/quickhull/linearrec for
-  fig\_quickhull\_linearrec\_aos\_fixed\_trials
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_geomean.pdf}
+    \caption{Geometric mean}
+    \label{fig:aos_fixed_iters_geomean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_quickhull.pdf}
+    \caption{\texttt{quickhull}}
+    \label{fig:aos_fixed_iters_quickhull}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_linearrec.pdf}
+    \caption{\texttt{linearrec}}
+    \label{fig:aos_fixed_iters_linearrec}
+  \end{subfigure}
+  \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus fixed iteration count (fixed trials). <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:quickhull_linearrec_aos_fixed_trials}
+  \label{fig_quickhull_linearrec_aos_fixed_trials}
+\end{figure}
 
-  Fill in the full ``AOS fixed trial'' plots for fig:aos\_full\_fixed\_trial
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for AoS flattening with fixed trial counts on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_full_fixed_trial}
+\end{figure}
 
-  Fill in in teh charts that compare geomean/quickhull/linearrec for
-  fig:quickhull_linearrec_aos_sync_gc
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_geomean.pdf}
+    \caption{Geometric mean}
+    \label{fig:aos_sync_gc_geomean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_quickhull.pdf}
+    \caption{\texttt{quickhull}}
+    \label{fig:aos_sync_gc_quickhull}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_linearrec.pdf}
+    \caption{\texttt{linearrec}}
+    \label{fig:aos_sync_gc_linearrec}
+  \end{subfigure}
+  \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus synchronous GC. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:quickhull_linearrec_aos_sync_gc}
+\end{figure}
 
-  Fill in the other missing charts in this following the same pattern}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_sync_gc_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for AoS flattening with synchronous GC on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_full_sync_gc}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_geomean.pdf}
+    \caption{Geometric mean}
+    \label{fig:aos_chunkify_one_geomean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_quickhull.pdf}
+    \caption{\texttt{quickhull}}
+    \label{fig:aos_chunkify_one_quickhull}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_linearrec.pdf}
+    \caption{\texttt{linearrec}}
+    \label{fig:aos_chunkify_one_linearrec}
+  \end{subfigure}
+  \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus AoS with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:quickhull_linearrec_aos_chunkify_one}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative performance for AoS flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_full_chunkify_one}
+\end{figure}
 
 \FloatBarrier
 \subsection{SoA Flattening}

@@ -288,6 +288,45 @@
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_fixed_iters"
         }
       ]
+    },
+    "aos_chunkify_one_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
     }
   },
   "compare_bar_charts": {
