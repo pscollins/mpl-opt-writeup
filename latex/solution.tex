@@ -3697,6 +3697,7 @@ The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
   \end{subfigure}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench}
+  \label{fig:soa_mlton_bench}
 \end{figure}
 
 See \cref{fig:soa_mlton_bench} for the impact of the SoA transformation on the
@@ -3708,7 +3709,12 @@ significantly, \texttt{delaunay} is a small win for the AoS configuration, but a
 significant loss for the SoA configuration. See
 \cref{fig:mlton_aos_vs_soa_parallel_bench} for a side-by-side comparison.
 
-\hl{TODO(agy): add the chart}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_aos_vs_soa_parallel_bench.pdf}
+  \caption{Comparison of benchmark performance for AoS versus SoA flattening on the \texttt{parallel-ml-bench} benchmark suite under MLton. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:mlton_aos_vs_soa_parallel_bench}
+\end{figure}
 
 \hl{TODO(pscollins): SOME ANALYSIS}
 
@@ -3744,9 +3750,15 @@ significant loss for the SoA configuration. See
 See \cref{fig:soa_parallel_bench_mpl} for measurements of the SoA transformation
 on the \texttt{parallel\_bench} benchmark suite. As we can see from
 \cref{fig:soa_vs_aos_parallel_bench_geomean}, the impact of the SoA
-transformation is broadly the same as the SoA transformation.
+transformation is broadly the same as the AoS transformation.
 
-\hl{TODO(agy): add the chart}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/soa_vs_aos_geomean.pdf}
+  \caption{Comparison of geometric mean speedups across core counts for AoS versus SoA flattening on the \texttt{parallel-ml-bench} benchmark suite for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_vs_aos_parallel_bench_geomean}
+  \label{fig:soa_vs_aos_geomean}
+\end{figure}
 
 \FloatBarrier
 \section{Related Work}
