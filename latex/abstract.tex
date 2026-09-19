@@ -1,3 +1,10 @@
 %% Abstract placeholder
 
-Standard ML compilers deploy flattening optimizations to eliminate heap allocations and indirections across function calls and inside containers. In this dissertation, we explore two novel flattening strategies for the MLton and MaPLe whole-program optimizing compilers: \texttt{PreFlatten}, which specializes functions to aggressively eliminate heap allocations at callsites, and \texttt{ShallowFlatten}, which eliminates heap allocations within containers. We evaluate their impact across a suite of sequential and parallel benchmarks.
+Standard ML compilers deploy flattening optimizations to eliminate heap
+allocations and indirections across function calls and inside containers. In
+this dissertation, we explore two novel flattening strategies for the MLton and
+MaPLe whole-program optimizing compilers: \texttt{PreFlatten}, which specializes
+functions to aggressively eliminate heap allocations at callsites,
+and \texttt{ShallowFlatten}, which eliminates heap allocations within
+containers. We evaluate their impact across a suite of sequential and parallel
+benchmarks, demonstrating performance wins of up to 50\%.
