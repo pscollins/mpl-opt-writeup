@@ -1,10 +1,10 @@
 solution:
-	pdflatex -shell-escape solution.tex
-	bibtex solution.aux
-	pdflatex -shell-escape solution.tex
-	pdflatex -shell-escape solution.tex
+	pdflatex -shell-escape -interaction=nonstopmode solution.tex
+	biber solution
+	pdflatex -shell-escape -interaction=nonstopmode solution.tex
+	pdflatex -shell-escape -interaction=nonstopmode solution.tex
 
 clean:
-	rm -f *.aux *.log *.out *.toc *.lof *.lot *.synctex.gz *.fls *.fdb_latexmk *.bbl *.blg *.bcf *.run.xml *.nav *.snm *.vrb *.idx *.ind *.ilg
+	rm -f *.aux *.log *.out *.toc *.lof *.lot *.synctex.gz *.fls *.fdb_latexmk *.bbl *.blg *.bcf *.run.xml *.nav *.snm *.vrb *.idx *.ind *.ilg solution.pdf
 
-.PHONY: clean
+.PHONY: solution clean

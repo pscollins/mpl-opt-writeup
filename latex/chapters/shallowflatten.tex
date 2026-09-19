@@ -1,0 +1,636 @@
+\section{Motivation}
+As outlined above, the MLton default array-of-pointers is disasterous from the
+perspective of efficiently utilizing the memory controller, in terms of both
+bandwidth and latency. The MLton priorities in the MLton approach appear to be
+inverted: rather than treating array-of-pointers elimination as the
+highest-priority among the potential flattening options, it is treated as a
+final, best-effort transformation. For common array-oriented workloads (HPC,
+graphics, etc), this has demonstrably-poor results. These workloads appear to be
+under-represented in the MLton benchmark suite, but they have good coverage in
+parallel-ml-bench, as we'll see below.
+
+How can we generalize the argument-centric \texttt{Flatten} transformation to
+arrays? In the \texttt{SSA} representation, the action of the \texttt{Flatten}
+transformation is to dissovle the association between the conjoined elements by
+providing them separate names, i.e.;
+\begin{minted}{python}
+  t: a * b * c * ... -->
+  x: a, y: b, z: c, ...
+\end{minted}
+Mapping this on to arrays, we would, likewise, provide a name for each element
+in the tuple, i.e.:
+\begin{minted}{python}
+  arr: (a * b * c * ...) array -->
+  arr_x: a array, arr_y: b array, arr_z: c array * ...
+\end{minted}
+Considering the \texttt{Flatten} transformation on the \texttt{Machine}
+representation (focusing on the non-tail-recursive case), the action is to copy
+the \hl{conjoined elements} themselves into the buffer carrying on the function
+arguments (rather than a pointer to them), i.e.:
+\begin{minted}{cpp}
+  *stack.Push<void*>() = t ->
+  *stack.Push<typeA>() = t[0], 
+  *stack.Push<typeB>() = t[1],
+   ...
+\end{minted}
+The analogue for arrays is to copy the elements themselves into the array, i.e.:
+\begin{minted}{cpp}
+  arr[i] = t ->
+  arr[i * tuplelen(*t)] = t[0],
+  arr[i * tuplelen(*t) + 1] = t[1],
+  ...
+\end{minted}
+Speaking somewhat loosely, these two choices of strategies correspond to the
+familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
+layout is the natural default for a C++ programmer, i.e.:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point> array_of_structs;
+\end{minted}
+SoA is the natural default for SIMD operations, since it makes it simple to load
+contiguous chunks of data into SIMD registers:
+\begin{minted}{cpp}
+  struct PointSoA {
+    std::vector<int> xs;
+    std::vector<int> ys;
+  };
+\end{minted}
+Libraries and frameworks to support SIMD CPU programming commonly offer support
+for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
+introduced in \cite{ispc-paper}. ``Manual'' SoA layouts are also a standard
+technique in high-performance GPU programming, as discussed in e.g.
+\cite{cuda-textbook}.
+
+The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
+described above, our default memory layout is an array-of-pointers:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point*> array_of_pointers;
+\end{minted}
+which lacks a name in standard performance-engineering parlance, since it is
+virtually never the right choice to achieve high \hl{performance}. We will refer
+to it here as AoP when necessary.
+
+In order to handle the case where the consuming operations of the array elements
+cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
+operations for elements read from the AoS/SoA versions of the containers, and
+``unpack'' operations for elements written to the AoS/SoA versions. This lets us
+preserve the pre-existing names and types in the consuming code (for the
+elements), simplifying the transformation at the cost of some
+potentially-unnecessary heap operations if the intermediate tuples can't be
+optimzied away by later passes. While this can in theory result in a net
+performance loss, choosing the right heuristic for flattening is a question for
+the benchmarks, and the high cost of the AoP layout means that the bar to clear
+is very low.
+
+For the containers themselves, however, we need to update the types everywhere
+that they appear: not only in variable bindings and function arguments, but also
+in \texttt{datatype} declarations, including \texttt{datatype}s introduced as
+part of closure conversion. This makes it difficult to support partial versions
+of the transformation in order to enable cases where some, but not all AoP
+containers in the program are \texttt{ShallowFlatten}ed: the implementation
+below assumes all-or-nothing conversion.
+
+
+%% deep flatten would be great but we observe that it often doesn't work in
+%% practice. the priority seems to be inverted: deepflatten thinks of container
+%% flattening as a minor best-effort win, but really it's crucial for HPC
+%% workloads. these workloads seem to be under-represented in the MLton
+%% benchmark suite, but they appear in parallel-ml-bench
+
+%% what are the natural generalizatons of flattening? one strategy is that we
+%% pull the pointers out of the containers and drop the association between
+%% elements. this seems like the natural generalization of tuple flattening.
+%% another strategy is that we push the elements inside the container and drop
+%% the tuple structure. this is closer to what deep flatten does
+
+%% these two strategies coincide with AoS vs SoA. SoA is the preferred format
+%% for SIMD. it is a little odd to call the other version AoS (C++ programmers
+%% would think of AoS as "the default" rather than something you can opt-into),
+%% but it helps to make the distinction clear
+
+%% in order to preserve the nearby types, we insert pack/unpack operations. this
+%% allows us to be more aggressive than deep flatten. by running before the
+%% other flattening passes (in SSA IR rather than SSA2) we create opportunities
+%% for those tuples to be eliminated anyway (though this choice introduces some
+%% fixable limitations -- specifically about uniform types). it's possible in
+%% theory to imagine that the more-aggressive choice is worse if it requires us
+%% to do a lot of extra pack/unpack, but that's a question for the benchmarks
+
+\hl{TODO: NEED A BETTER DIAGRAM}
+
+\section{Implementation}
+%% ---whole section outline --
+
+%% visit all statements/types
+
+%%   define a heuristic for the element type (e.g. tuple width), then find all
+%%   references to arrays/vectors of that type
+
+%%   recursively, deeply rewrite types of array/vector so long as there is an
+%%   array/vector over a matched type. iterate until convergence to catch bugs
+%%   that we'll describe. this step is for non-statement types (TODO: list them)
+
+%%   rewrite all statements: prims are transformed in a container-/prim-specific
+%%   way (which we outline below). statements and their attached types are
+%%   transformed jointy. some are pass-through (type only), some need
+%%   transformation
+
+%%   unlike PreFlatten, there is no need ot iterate, we always converge after 1
+%%   step
+
+First, we will outline the high-level steps of the transformation (which are
+identical for the two flattening strategies). Second, we will provide a detailed
+description of the transformation that this pass applies to the types in the
+program. Finally, we will provide the detailed \texttt{prim}-by-\texttt{prim}
+transformation, \hl{specialized} for the AoS and SoA flavors of the
+transformation
+
+\subsection{High-level overview}
+
+\hl{TODO: PROBABLY NEED A FORMAL GRAMMAR OF SSA TO MOTIVATE THIS}
+
+\begin{enumerate}
+\item Fix a heuristic that divides all SSA types into ``flattenable'' and
+  ``un-flattenable.'' In this work, we define the ``tuple type width'' of any
+  SSA type \texttt{t} as: if \texttt{t} is a tuple with $n$ members, its width
+  its $n$, otherwise the width is 0.
+
+\item Visit all non-\texttt{Statement} IR constructs (\texttt{datatype}
+  constructors, function argument/return types, and block arguments) and
+  iteratively flatten all flattenable types until convergence.
+
+\item Visit all \texttt{Statement} IR constructs and iteratively flatten until
+  convergence (i.e. flatten each \texttt{Statement}, perhaps emitting more
+  \texttt{Statement}s, and then apply the flattening transformation to all
+  emitted statements until they can no longer be further flattened).
+
+\end{enumerate}
+
+\subsection{Type transformation}
+The core transformation is to rewrite an array-of-tuple to a tuple-of-array:
+\begin{minted}{python}
+  (a * b * c * ...) array ->
+  a array * b array * c array * ...
+\end{minted}
+Since there exist constructs that convert the type \texttt{a array} to \texttt{a
+  vector} (which is effectively a cast, for which MLTon inserts a copy in order
+to prersve the property that \texttt{vector} objects are immutable after
+construction), applying the optimization to \texttt{array} requires a either
+matching transformation for \texttt{vector}, or a complicated re-un-flattening
+in order to construct the contents of the un-flattened \texttt{vector} type.
+
+In this document, we choose the former strategy, rewriting \texttt{vector} types
+in addition to \texttt{array} types:
+\begin{minted}{python}
+  (a * b * c * ...) vector ->
+  a vector * b vector * c vector * ...
+\end{minted}
+
+Likewise, it is necessary to traverse ``deeply'' inside of types, i.e. we need
+to do the transformation:
+\begin{minted}{python}
+  ((a * b) array * c) ->
+  ((a array * b array) * c)
+\end{minted}
+since, in order to construct an object of type \texttt{(a * b) array * c}, we
+need an input object of type \texttt{(a * b) array}, which will be flattened by
+the transformation below.
+
+It is similarly necessary to apply the transformation iteratively, i.e. we need:
+\begin{minted}{python}
+  ((a * b) array * c) array ->
+  ((a * b) array) array * c array ->
+  (a array array * b array array) * c array
+\end{minted}
+since in order to construct the original type, we needed to have an object of
+type \texttt{(a * b) array} in hand, and this object was transformed into an
+\texttt{a array * b array} by the earlier action of the pass.
+
+\subsection{Statement transformation}
+The general form of an \texttt{SSA} statement is:
+\begin{minted}{python}
+  lhs: lhsTy = exp
+\end{minted}
+where \texttt{lhs} is a variable name, \texttt{lhsTy} is its type, and
+\texttt{exp} is an expression.
+
+The transformation on statements is divided into two cases: ``passthrough'' and
+``rewrite.'' Every non-\texttt{PrimApp} statement is a ``passthrough''
+statement. Taking \texttt{fTy} as the transformation on types above, these cases
+are all
+\begin{minted}{python}
+  lhs: lhsTy = exp ->
+  lhs: fTy(lhsTy) = exp
+\end{minted}
+where \texttt{exp} is some expression that contains no type expressions.
+
+The general form of a \texttt{PrimApp} is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+\end{minted}
+where \texttt{PrimName} is the name of a particular primitive operation (e.g.
+\texttt{Word32\_add}, \texttt{Word32\_equal}, etc), \texttt{targ1, targ2, ...}
+is a sequence of zero or more type arguments, and \texttt{arg1, arg2, ...} is a
+sequence of zero or more variable names.
+
+
+The ``passthrough'' case for \texttt{PrimApp} applies to all \texttt{PrimApp}s
+that do not manipulate flattened containers. Its general form is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+  lhs: fTy(lhsTy) = prim PrimName[fTy(targ1), fTy(targ2), ...](arg1, arg2, ...)
+\end{minted}
+i.e.: leave all non-type portions of the expression unchanged, and transform all
+type expressions according to the type transformation above.
+
+The non-``passthrough,'' ``rewrite'' case applies to \texttt{PrimApp}s that
+manipulate flattened containers. These transformations differ between the SoA
+and AoS cases.
+
+Beginning with the SoA case, the general form of the transformation is ``find
+all containers of tuples, rewrite them to be tuples of containers.'' Beginning
+with container-creation as an illustrative example, a single step of the
+transformation is:
+\begin{minted}{python}
+  x: (a * b * ...) array = prim Array_alloc[a * b * ...](n) ->
+  # Construct per-member arrays
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  ...
+  # Bind the tuple-of-arrays to the original name
+  x: a array * b array * ... = tuple(arr_a, arr_b, ...)
+\end{minted}
+and now the other transformations of the pass are responsible for ensuring that
+other uses of \texttt{x} in the program use the updated type (e.g. any function
+signatures must be rewritten according to \texttt{tTy}, etc).
+
+\hl{TODO: WE REALLY DO ONE MORE ITERATION AFTER THIS (i.e. first update
+  statements until convergence, then update types, then run again). EXPLAIN?
+  MIGHT BE WRONG}
+
+Like as in the case of types, it is necessary to apply the transformation
+iteratively until convergence in order to correctly handle the case of nested
+types, e.g. after one round, we get:
+\begin{minted}{python}
+  arr: ((a * b) * c) array = prim Array_alloc[(a * b) * c](n) ->
+  arr_ab: (a * b) array = prim Array_alloc[a * b]
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Now the type of \texttt{x} still admits flattening: this is a problem, since, as
+we described above, the type transformation will eliminate all ocurrences of
+flattenable types in the program. Hence any users of \texttt{a} will fail to
+typecheck, and the resulting program is ill-formed. Applying another round of
+``rewrite''-flattening to each of the resulting expressions resolves the issue:
+\begin{minted}{python}
+  arr_ab: (a * b) array = prim Array_alloc[a * b](n)
+  arr_c: c array = prim Array_alloc[a * b](n)
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+  ->
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  arr_ab: a array * b array = tuple(arr_a, arr_b)
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a array * b array) * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO: CAN RETHINK ORDER}
+\begin{enumerate}
+\item \texttt{Array\_length} picks an arbitrary tuple member to pass the call on to)
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  n: int = Array_length[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a = select (arr, 0)
+  n: int = Array_length[a](arr_a)
+\end{minted}
+
+\item \texttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
+  elements, and constructs the final output tuple:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  # Read element i
+  x: (a * b * ...) = Array_sub[a * b * ...](arr, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  x_a: a = Array_sub[a](arr_a, i)
+  arr_b: b array = select (arr, 1)
+  x_b: b = Array_sub[b](arr_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
+\end{minted}
+
+\item \texttt{Array\_update} unpacks the tuple-of-arrays and writes in the
+  necessary elements:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  x: (a * b * ...) = ...
+  _ = Array_update[a * b * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  x_a: a = select (x, 0)
+  _ = Array_update[a](arr_a, i, x_a)
+  arr_b: b array = select (arr, 1)
+  x_b: b = select (x, 1)
+  _ = Array_update[b](arr_b, i, x_b)
+  ...
+\end{minted}
+
+\item \texttt{Array\_uninitIsNop} (which checks to see if raw data is dangerous
+  for the garbage collector for the specified array type) is hardcoded to
+  \texttt{false} for simplicity:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * b * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
+
+\item \texttt{Array\_uninit} (which fills an array with garbage data that is
+  safe for the garbage collector) is passed on to the constituent members:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  _ = Array_uninit[a * b * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  _ = Array_uninit[a](arr_a, n)
+  arr_b: b array = select (arr, 1)
+  _ = Array_uninit[b](arr_b, n)
+  ...
+\end{minted}
+
+\item \texttt{Array\_toArray} (which marks an array as initialized, and so safe
+  for the garbage collector) is also passed on to the constituent members:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  arr': (a * b * ...) array = Array_toArray[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  arr'_a: a array = Array_toArray[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  arr'_b: b array = Array_toArray[b](arr_b)
+  ...
+  arr': a array * b array * ... = tuple(arr'_a, arr'_b, ...)
+\end{minted}
+
+\end{enumerate}
+
+The transformation additionally handles the \texttt{array -> vector}
+transformation primitive (a copy into an immutable container); i.e.:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  vec: (a * b * ...) vector = Array_toVector[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  vec_a: a vector = Array_toVector[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  vec_b: b vector = Array_toVector[b](arr_b)
+  ...
+  vec: a vector * b vector * ... = tuple(vec_a, vec_b, ...)
+\end{minted}
+
+Consequently, it is necessary to handle the full set of operations on
+\texttt{vector}, i.e.:
+\begin{enumerate}
+\item \texttt{Vector\_length}: like \texttt{Array\_length}, arbitrarily forwards
+  the call to the first tuple element:
+
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  n: int = Vector_length[a * b * ...](vec)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a = select (vec, 0)
+  n: int = Vector_length[a](vec_a)
+\end{minted}
+
+\item \texttt{Vector\_sub}: analogous to \texttt{Array\_sub}
+
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  # Read element i
+  x: (a * b * ...) = Vector_sub[a * b * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a: a vector = select (vec, 0)
+  x_a: a = Vector_sub[a](vec_a, i)
+  vec_b: b vector = select (vec, 1)
+  x_b: b = Vector_sub[b](vec_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
+\end{minted}
+
+\end{enumerate}
+
+For the AoS version, we ``flatten'' by reinterpreting the AoP data as consective
+elements in a larger array. Taking \texttt{Array\_alloc} again as a
+representative example, this means:
+\begin{minted}{python}
+  x: (a * a * ...) array = prim Array_alloc[a * a * ...](n)
+  -->
+  # Scale up the array by the \# of tuple elements
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = n * tupleWidth
+  # Bind `x` to a flat array of the scaled-up size
+  x: a array = Array_alloc[a](n')
+\end{minted}
+
+The other operations follow in the obvious way:
+\begin{enumerate}
+\item \texttt{Array\_length} scales down the length of the flattened array
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  n: int = Array_length[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = Array_length[a](arr)
+  n: int = n' / tupleSize
+\end{minted}
+
+\item \texttt{Array\_sub} reads out a slice from the flattened array and packs
+  it into a tuple:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  # Read element i
+  x: (a * a * ...) = Array_sub[a * a * ...](arr, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Array_sub[a](arr, i * tupleSize)
+  x_1: a = Array_sub[a](arr, i * tupleSize + 1)
+  ...
+  x_n: a = Array_sub[a](arr, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
+
+\item \texttt{Array\_sub} unpacks the input tuple and writes it into a slice:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  x: (a * a * ...) = ...
+  _ = Array_update[a * a * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = select(x, 0)
+  x_1: a = select(x, 1)
+  ...
+  _ = Array_update[a](arr, i * tupleSize + 0, x_0)
+  _ = Array_update[a](arr, i * tupleSize + 1, x_1)
+  ...
+\end{minted}
+
+\item \texttt{Array\_uninitIsNop} is hardcoded to \texttt{false}
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * a * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
+
+\item \texttt{Array\_uninit} is passed on to the slice of the flattened array
+  corresponding to the provided index:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  _ = Array_uninit[a * a * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  _ = Array_uninit[a](arr, n * tupleSize)
+  _ = Array_uninit[a](arr, n * tupleSize + 1)
+  ...
+  _ = Array_uninit[a](arr, n * tupleSize + tupleSize - 1)
+\end{minted}
+
+\item \texttt{Array\_toVector} is passed on to the flattned array:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  vec: (a * a * ...) vector = Array_toVector[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  vec: a vector = Array_toVector[a](arr)
+\end{minted}
+
+\item \texttt{Vector\_sub} works analogously to \texttt{Array\_sub}
+
+\begin{minted}{python}
+  vec: (a * a * ...) vector = ...
+  # Read element i
+  x: (a * a * ...) = Vector_sub[a * a * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: a vector = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Vector_sub[a](vec, i * tupleSize)
+  x_1: a = Vector_sub[a](vec, i * tupleSize + 1)
+  ...
+  x_n: a = Vector_sub[a](vec, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
+
+\end{enumerate}
+
+\hl{TODO: DISCUSS SECOND CALL TO PROPAGATE TYPES?}
+
+\section{Limitations}
+As outlined above, this implementation only supports the case when all AoP
+containers of a given type are flattened -- we cannot support a mix of flattened
+and unflattened AoP containers with a given type using the strategy above. The
+implementation discussed in this document simply emits an error if it encounters
+an un-flattenable construct, none of which appear in the benchmark suites that
+we evaluated this optimization against.
+
+It is debatable whether supporting a fallback is required for the transformation
+to be usable by real developers. The problem to worry about is that the
+AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
+an SML program like:
+\begin{minted}{sml}
+  val arr : (int * int) array = Array.array (3, (0, 0))
+  val element = (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Are \texttt{element} and \texttt{element'} physically identical? If this element
+is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
+equality, since the write/read result in pack/unpack operations that construct a
+new tuple. From the perspective of strict StandardML as defined in the language
+specification \cite{sml-def}, this is a non-issue: there is no way to observe
+pointer equality of tuples in the source language, and so the compiler has
+complete freedom. The only spec-compliant way to write this test would be to
+wrap the element type in \texttt{ref}:
+\begin{minted}{sml}
+  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+  val element = ref (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+by \texttt{PreFlatten}.
+
+However, both MLton and MPL extend the source language with constructs that
+allow user programs to observe this behavior: both have \texttt{MLton.eq}
+(physical equality for arbitrary values), and MPL additionally offers
+compare-and-swap primitives to support implementing lock-free parallel
+algorithms.
+
+Since physical equality of tuples is not defined in \cite{sml-def}, one option
+to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
+to return \texttt{false} in these cases. Another simple option would to be
+disable \texttt{ShallowFlatten} for all values of any types that participate in
+one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
+\texttt{int * int} tuple anywhere in the program disables
+\texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
+refined by a dataflow analysis to determine if the elements in the forbidden
+comparison may have originated in a container.
+
+This results in a potentially-unpleasant performance cliff for users, but there
+are various simple workarounds -- e.g. users can wrap any objects that must be
+tested for pointer equality in \texttt{ref} cells (which are not impacted by
+\texttt{ShallowFlatten}).
+
+%% \hl{TODO}
+
+
+\section{Comparison to more-agressive \texttt{DeepFlatten}}
+
+\hl{TODO: implement an benchmark a version of deepflatten that kicks in for this
+  case (i.e. no restriction on nested immutable types) / determine why it
+  doesn't work}
+

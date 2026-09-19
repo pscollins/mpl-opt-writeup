@@ -1,0 +1,331 @@
+
+Like \texttt{Flatten}, \texttt{PreFlatten} runs on the \texttt{SSA} IR:
+currently, it runs before \texttt{Flatten}, so that the lattice-based
+\texttt{Flatten} analysis has a better chance to pick up on opportunities to
+completely flatten particular uses.
+
+\section{Motivation}
+The basic intuition is that if we see a sequence like:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      t: 'a * 'b = tuple(x0, x1)
+      # call g(t) and return to some other block bbM
+      call bbM g(t)
+
+    ...other blocks...
+
+  def g(t: 'a * 'b) -> ...:
+    block bb0():
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+then we can eliminate the intermediate tuple \texttt{t} with a simple peephole
+optimization that ``pushes down'' the tuple allocation from the caller into the
+callee, i.e.:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      # call g(x0, x1) and return to some other block bbM
+      call bbM g_flat(x0, x1)
+
+    ...other blocks...
+
+  def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    block bb0():
+      t: 'a * 'b = tuple(x0_flat, x1_flat)
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+and then rely on existing optimization machinery to \hl{remove the allocation
+  completely}.
+
+In case all callers of \texttt{g} satisfy the pattern above, then the result of
+this transformation is equivalent to the existing \texttt{Flatten} pass.
+However, since we want to phrase this optimization as a simple, purely-local
+transformation, we need a solution for the case when not all callers of
+\texttt{g} are \texttt{PreFlatten}-able: we resolve this problem by emitting a
+fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
+for callers that require it, i.e. for something like:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # call g(t1) and return to some other block bbM
+      call bbM g(t1)
+
+    block bbN2():
+      t2 = tuple (x1, x2)
+      # call g(t2) and return to some other block bbM
+      call bbM g(t2)
+
+    ...other blocks...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+We can emit:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # Unflattenable caller: no tuple allocation to ``push down''
+      call bbM g(t1)
+
+    block bbN2():
+      # Flattenable caller: can ``push down'' the allocation
+      call bbM g_flat(x1, x2)
+
+    ...other blocks...
+
+ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    ...as above...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+By iteratively applying this strategy, we can ``push together'' distant pairs of
+flatten/unflatten operations, and so try to ensure that the maximum possible
+number of callsites in the program are flattened -- even in cases where the
+global \texttt{Flatten} transformation would fail.
+
+This strategy also naturally extends to eliminating \texttt{ConApp}s: starting
+from a pattern like:
+\begin{minted}{python}
+  datatype Env = Env1 of 'a * 'b | ...
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      env: Env = Env1 (t)
+      call bbM g(env)
+    ...
+
+  def g(e: Env) -> ...:
+    block bb0():
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive at:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      call bbM g(t)
+    ...
+
+  def g_flat_env1(t: 'a * 'b) -> ...:
+    block bb0():
+      e: Env = Env1 (t)
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+and, again, rely on existing optimization patterns to eliminate the
+\texttt{ConApp} completely, in addition to elimating now-dead blocks
+corresponding to \texttt{Env} cases that are no longer reachable, etc. For
+higher order functions, this subsumes the action of the existing
+\texttt{Polyvariance} pass.
+
+\hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
+
+\section{Implementation}
+The two type flattening implementations share a common framework, differing only
+in the types of operations that they match on:
+
+\begin{enumerate}
+\item Find all \texttt{call} statements with a ``pack'' operation that feeds
+  directly into a \texttt{call}: for the \texttt{tuple} case, this corresponds
+  to \texttt{tuple} constructor applications:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+  ....
+  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+\end{minted}
+and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
+\begin{minted}{python}
+  datatype ConType = Con1 of a * b * ... | Con2 of ...
+  ...
+  t: a * b * ... = ...
+  ...
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+  ...
+  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+\end{minted}
+\item Tag each such \texttt{call} statement with a per-argument flattening
+  decision, to indicate which arguments are valid targets to flatten, and
+  associate the tagged \texttt{call}s with their callee. For the flattenable
+  arguments, we include the information necessary to construct the flattened
+  call (i.e. the arguments to the \texttt{tuple} / \texttt{ConApp} call).
+  Continuing the examples from above, we would have:
+\begin{minted}{python}
+    f_tuple_caller_info = {
+      'call1': [FlattenVar(x1, x1, ...), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+    f_con_caller_info = {
+      'call2': [FlattenVar(t), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+\end{minted}
+\item Traverse all function-callee-decision collections and apply heuristics to
+  ``downgrade'' \texttt{FlattenVar} decisions to \texttt{PreserveVar} decisions
+  when specialization would be unprofitable.
+
+\item Traverse all function-callee-decision collections and emit the new
+  required specialized versions: an all-\texttt{PreserveVar} decision
+  corresponds to the original function. Any \texttt{FlattenVar(...)} decisions
+  result in a new specialization whose formal parameters include the flat
+  arguments in the appropriate location, and whose first block re-binds the
+  flattened names to the old, un-flattened name before jumping to the original
+  first block. That is, for the \texttt{tuple} example above, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_tuple_flat0(x1: a, x2: b, ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      t: a * b * ... = tuple(x1, x2, ...)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+and for the \texttt{ConApp} example, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_con_flat0(t: a * b * ..., ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      c: ConType = con Con1(t)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+
+\item Traverse the program to visit all \texttt{call} statements again, and
+  redirect the call target to the appropriate specialization that we identified
+  in the previous step (perhaps the original function). For non-identity
+  flattening decisions, use the contents of the \texttt{FlattenVar(...)}
+  argument to construct the appropriate flat call, i.e. for \texttt{tuple}:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_tuple_flat0(x1, x2, ..., y, z, ...)
+\end{minted}
+and for \texttt{ConApp}, 
+\begin{minted}{python}
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_con_flat0(t, y, z, ...)
+\end{minted}
+
+\item With the callsite-flattening mapping still intact and with the duplicated
+  functions retaining the original variable names, iteratively re-apply the
+  process above on all newly-emitted functions until either convergence or a
+  user-specified iteration limit is reached. This fixes an issue with (mutually)
+  recursive functions, where a collection of $n$ mutually recursive calls
+  require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for
+  a source program like:
+\begin{minted}{python}
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g(t0)
+
+  g(t: a * b) -> ...:
+    ...
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      call bbK g(t2)
+\end{minted}
+The action of the pass is as follows: for both the call in \texttt{f} and
+\texttt{g}, we can flatten the function argument, and so we emit a new
+specialization of the function, \texttt{g\_flat}
+\begin{minted}{python}
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g_flat(x, y)  # pointed to flat specialization
+
+  g(t: a * b) -> ...:
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+      goto bb0()
+
+    ...
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      # This call is not flattened, but it could be!
+      call bbK g(t2)
+\end{minted}
+In this step, we re-run the flattening logic using the already-emitted set of
+specializations to remove the unflattened call in the specialized function, i.e.:
+\begin{minted}{python}
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+     goto bb0()
+
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+\end{minted}
+Multiple iterations are required to handle the case of mutually recursive
+functions, in a similar way. \hl{TODO: EXAMPLE?}
+
+\item Introduce fresh names for the symbols (specifically block labels and
+  variable names) in all duplicated functions. This is a requirement from MLton,
+  which expects that symbols' names are globally unique.
+
+\item Signal either ``progress'' (if we emitted a new specialization) or
+  ``done'' to the caller. Repeat until either convergence or a user-specified
+  iteration limit is reached.
+\end{enumerate}
+
+\section{Cost Heuristics}
+
+\hl{TODO: SHOULD RUN EXPERIMENTS WHERE WE RUN AFTER FLATTEN AND ALSO ONLY
+  FLATTEN NON-TAIL CALLS}
+
+%% \subsection{Tuple-flattening}
+
+%% \subsection{Constructor-flattening}
+
+\section{Limitations}
+Note that the worst-case bloat in IR size is quadratic in a single iteration:
+the very upper bound is that every statement in the program causes us to
+duplicate the entire program. This is clearly problematic in practice, and it
+interacts particularly poorly with chunkification (since flattened tuples can be
+more expensive than non-flat tuples to pass across chunk boundaries, due to the
+required stack writes that are linear in the number of tuple elements).
+
+\hl{TODO: EXPAND}
+

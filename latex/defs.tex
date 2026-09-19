@@ -1,0 +1,141 @@
+%% defs.tex - Package imports, math macros, TikZ libraries, and theorem environments
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[shortlabels]{enumitem}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{float}
+\usepackage{placeins}
+
+\usepackage{bm}
+\usepackage{bbm}
+
+\usepackage{changepage}
+\usepackage{mleftright}
+
+%% TikZ and geometry setup
+\usepackage{tkz-euclide}
+\usetikzlibrary{angles,patterns,calc,arrows,automata,shapes.gates.logic.US,shapes.geometric,arrows.meta,positioning,backgrounds,decorations.pathreplacing,fit}
+\usepackage{tikz-cd}
+
+%% Code listing and syntax highlighting
+\usepackage{pythonhighlight}
+\usepackage{listings}
+\usepackage{minted}
+
+%% Captions and tables
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{blkarray}
+
+%% Fonts, markup, and special math symbols
+\usepackage{accents}
+\usepackage{esint}
+\usepackage{soul}
+\usepackage[T1]{fontenc}
+
+%% ----------------------------------------
+%% Math Operators and Macros
+%% ----------------------------------------
+
+\newcommand{\cof}{\textrm{cof}\, }
+\newcommand{\tr}{\textrm{tr}}
+
+\newcommand{\Ker}{\textnormal{Ker}\, }
+\newcommand{\Img}{\textnormal{Img}\, }
+\newcommand{\D}{\textnormal{\textbf{D}}\, }
+\newcommand{\Hessian}{\textnormal{\textbf{H}}\, }
+\newcommand{\J}{\textnormal{\textbf{J}}\, }
+\newcommand{\vecnab}{\vec{\nabla}}
+\newcommand{\point}[1]{\bm{#1}}
+
+\DeclareMathOperator{\vol}{vol}
+\DeclareMathOperator{\osc}{osc}
+\DeclareMathOperator{\Area}{Area}
+\DeclareMathOperator{\Mat}{Mat}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\grad}{grad}
+\DeclareMathOperator{\curl}{curl}
+\DeclareMathOperator{\Div}{div}
+
+\DeclareMathOperator{\Imag}{Im}
+\DeclareMathOperator{\Real}{Re}
+
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\Res}{Res}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\normsub}{\triangleleft}
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\stab}{stab}
+
+\newcommand*\Laplace{\mathop{}\!\mathbin\bigtriangleup}
+\DeclareMathOperator{\supp}{supp}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Ind}{\mathbbm{1}}
+
+\newcommand\avec[1]{\underline{\point{#1}}}
+\newcommand\pointhat[1]{\point{\hat{#1}}}
+
+\newcommand{\relmiddle}[1]{\mathrel{}\middle#1\mathrel{}}
+
+%% Support for augmented matrices
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+
+%% Contradiction symbol
+\newcommand{\contradiction}{%
+  \begin{tikzpicture}[rotate=45,x=0.5ex,y=0.5ex]
+    \draw[line width=.2ex] (0,2) -- (3,2) (0,1) -- (3,1) (1,3) -- (1,0) (2,3) -- (2,0);
+  \end{tikzpicture}
+}
+
+%% Check mark
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+%% Brackets for math in a finite field
+\newcommand{\inZ}[2]{\ensuremath{[#2]_{#1}}}
+\newcommand{\inZU}[2]{\ensuremath{[#1]}}
+
+%% Vector derivative
+\newcommand{\vecd}[1]{\ensuremath{\dot{\vec{#1}}}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
+\newcommand{\hatvec}[1]{\ensuremath{\hat{\vec{#1}}}}
+
+%% skip items
+\makeatletter
+\newcommand\nextitem[1]{%
+  \setcounter{\@enumctr}{#1}%
+  \addtocounter{\@enumctr}{-1}%
+}
+\makeatother
+
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\hodge}{{*}}
+\newcommand{\conj}[1]{\overline{#1}}
+
+\newcommand{\kabs}{\ensuremath{\kappa_{\textrm{abs}}}}
+\newcommand{\krel}{\ensuremath{\kappa_{\textrm{rel}}}}
+
+%% Cleveref must be loaded last
+\usepackage{cleveref}
