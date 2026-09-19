@@ -20,13 +20,13 @@ Items to follow up on from discussions:
     the attempt to unify them as ``fast disk format'' is not really a match.
     Something like ``manual control of serialized formats'' is better
 
-  \item Don't use raw /cite -- the sentences should read like the footnote
-    numbers don't exist. Use /citet to get better auto-formatat
+  \item \st{Don't use raw /cite -- the sentences should read like the footnote
+    numbers don't exist. Use /citet to get better auto-formatat}
 
   \item To cite the Jane Street slide deck, best to try to make a bibtex entry
     that includes the talk as well
 
-  \item Consider using multiple /subsection or /paragraph blocks
+  \item \st{Consider using multiple /subsection or /paragraph blocks}
 
   \item Be sure to tie every cited paper exactly to what we did
 
@@ -40,6 +40,7 @@ Items to follow up on from discussions:
 \item Tuple-flattening ``meat''
 
   \begin{itemize}
+
   \item Aim for text to be standalone! The english should stand alone. Be sure
     that we have concise, compact statements that describe what we do
 
@@ -72,15 +73,20 @@ Items to follow up on from discussions:
 \section{6/29}
 \begin{itemize}
 \item Code snippets should be diagrams rather than inlined
+
 \item A bulleted list should generally be compact on a single page
+
 \item Introducing both C and python flavor pseudo-IRs up front is wordy and
   confusing. Also, using a C-flavor can be distracting in that it's unclear what
   we should ``interpret literally.'' Consider sticking to a single,
   Python-flavor IR
+
 \item For the IR we do choose to pick, add an explicit grammar up-front
+
 \item Add more ``signposting'' up-front to support hte nfo dump
-\item Probably worth adding a section on polyvariance / defunctionalization to
-  motivate the con flattening
+
+\item \st{Probably worth adding a section on polyvariance / defunctionalization to
+  motivate the con flattening}
 
 \item With con flattening, maybe emphasize: MLton creates opportunites for
   specialization to happen downstream; we do the opposite -- explicitly
@@ -95,7 +101,7 @@ Items to follow up on from discussions:
   generated code; e.g. ``tuples are allocated om the heap'' -- only when
   flattening fails
 
-\item Ok to introduce more sections -- e.g. separate for each optimization type
+\item \st{Ok to introduce more sections -- e.g. separate for each optimization type}
 
 \item Need to dig into why DeepFlatten is failing in our case or at least
   explicitly call out that we tried and couldn't do it. One useful thing to
