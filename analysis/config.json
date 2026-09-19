@@ -3,18 +3,21 @@
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_tuple_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_213111.jsonl",
-    "con": "test_conapp_flatten_full_mlton_mlton:flattening-tests:457f53e:20260816_193112.jsonl",
-    "aos": "test_aos_flatten_set_width_3:flattening-tests:8e04c8184:20260822_005802.jsonl",
-    "soa": "test_soa_flatten_set_width_3:flattening-tests:8e04c8184:20260822_025807.jsonl"
+    "tuple": "test_tuple_flatten_test_o3:flattening-tests:cd5550ce5:20260909_191612.jsonl",
+
+    "con": "test_conapp_flatten_test_o3:flattening-tests:cd5550ce5:20260909_171650.jsonl",
+    "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",
+    "aos": "test_aos_flatten_test_o3:flattening-tests:cd5550ce5:20260909_131724.jsonl",
+    "soa": "test_soa_flatten_test_o3:flattening-tests:cd5550ce5:20260909_151708.jsonl"
   },
   "parallel_bench_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "parallel_bench",
-    "tuple": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl",
-    "con": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl",
-    "aos": "mlton_aos_set_width_3:260822-125845:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-125845.processed.jsonl",
-    "soa": "mlton_soa_set_width_3:260822-132730:flattening-tests:3855ae7a634096471da6aca8b30777d75010108d:260822-132730.processed.jsonl"
+    "tuple": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl",
+    "con": "mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl",
+    "aos": "mlton_aos_mlton_parallel_o3:260824-220328:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-220328.processed.jsonl",
+    "soa": "mlton_soa_mlton_parallel_o3:260824-234803:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-234803.processed.jsonl",
+    "con_chunkify_one": "mlton_con_vs_con_chunkify_one:260907-185802:flattening-tests:b043c5ca58b04eebc09b15abe9bdf2dacf1ab0f0:260907-185802.processed.jsonl"
   },
   "parallel_bench_benchmarks_mpl_vs_mpl": {
     "compiler": "mpl",
@@ -24,8 +27,16 @@
     "tuple_chunkify_func": "mpl_tuple_vs_tuple_chunkify_func:260831-110020:flattening-tests:0ac21b0883f7a3f6d5c5d768fe100c155bb9274b:260831-110020.processed.jsonl",
     "tuple_chunkify_one": "mpl_tuple_vs_tuple_chunkify_one:260901-143537:flattening-tests:2f9a1783de7de96b78f4a934a8afc1d7ebf8c3c6:260901-143537.processed.jsonl",
     "con": "mpl_con_mpl_parallel_o3_morecores:260825-142321:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-142321.processed.jsonl",
+    "con_chunkify_func": "mpl_con_vs_con_chunkify_func:260905-191722:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260905-191722.processed.jsonl",
+    "con_chunkify_one": "mpl_con_vs_con_chunkify_one:260906-000633:flattening-tests:c36731376758f74b21aca81e0b86e47af0135308:260906-000633.processed.jsonl",
     "aos": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl",
-    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl"
+    "aos_chunkify_func": "mpl_aos_vs_aos_chunkify_func:260908-012113:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-012113.processed.jsonl",
+    "aos_chunkify_one": "mpl_aos_vs_aos_chunkify_one:260908-025502:flattening-tests:ab3558968f943135eaa66e7738b2363ca2b81f71:260908-025502.processed.jsonl",
+    "aos_sync_gc": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl",
+    "aos_fixed_iters": "mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl",
+    "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl",
+    "soa_sync_gc": "mpl_soa_vs_soa_sync_gc:260912-205545:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-205545.processed.jsonl",
+    "soa_fixed_iters": "mpl_soa_vs_soa_fixed_iters:260914-135505:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-135505.processed.jsonl"
   },
   "trial_scatter_plots": {
     "delunay_mlton_parallel_ml_bench_scatter": {
@@ -33,74 +44,356 @@
       "suite": "parallel_bench",
       "experiment_type": "tuple",
       "benchmark": "delunay",
-      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+      "source": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl"
     },
     "dedup_mlton_parallel_ml_bench_scatter": {
       "compiler": "mlton",
       "suite": "parallel_bench",
       "experiment_type": "con",
       "benchmark": "dedup",
-      "source": "mlton_con_full_parallel_mlton:260816-131352:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-131352.processed.jsonl"
+      "source": "mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl"
     },
     "reverb_mlton_parallel_ml_bench_scatter": {
       "compiler": "mlton",
       "suite": "parallel_bench",
       "experiment_type": "tuple",
       "benchmark": "reverb",
-      "source": "mlton_tuple_full_parallel_mlton:260816-150321:flattening-tests:c3def9c964dc7d927f01861817cdc614debfebfd:260816-150321.processed.jsonl"
+      "source": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl"
+    },
+    "linearrec_default_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos",
+      "benchmark": "linearrec",
+      "source": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl"
+    },
+    "linearrec_sync_gc_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_sync_gc",
+      "benchmark": "linearrec",
+      "source": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl"
+    },
+    "quickhull_default_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos",
+      "benchmark": "quickhull",
+      "source": "mpl_aos_mpl_parallel_o3_morecores:260825-125551:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-125551.processed.jsonl"
+    },
+    "quickhull_sync_gc_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_sync_gc",
+      "benchmark": "quickhull",
+      "source": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl"
+    },
+    "linearrec_fixed_iters_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_fixed_iters",
+      "benchmark": "linearrec",
+      "source": "mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl"
+    },
+    "quickhull_fixed_iters_aos_mpl_parallel_ml_bench_scatter": {
+      "compiler": "mpl",
+      "suite": "parallel_bench",
+      "experiment_type": "aos_fixed_iters",
+      "benchmark": "quickhull",
+      "source": "mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl"
     }
   },
-    "compare_series": {
-        "tuple_exp_geomeans": {
-            "source_series_type": "geomeans",
-            "source_series": [
-                {
-                    "series_name": "Baseline tuple-vs-tuple",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with basline fixup",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with `-chunkify one`",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
-                }
-            ]
+  "compare_series": {
+    "tuple_exp_geomeans": {
+      "source_series_type": "geomeans",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
         },
-        "tuple_exp_delaunay": {
-            "source_series_type": "delaunay",
-            "source_series": [
-                {
-                    "series_name": "Baseline tuple-vs-tuple",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with basline fixup",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with `-chunkify one`",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
-                }
-            ]
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
         },
-        "tuple_exp_bfs": {
-            "source_series_type": "bfs",
-            "source_series": [
-                {
-                    "series_name": "Baseline tuple-vs-tuple",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with basline fixup",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
-                },
-                {
-                    "series_name": "Tuple-vs-tuple, with `-chunkify one`",
-                    "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
-                }
-            ]
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
         }
+      ]
+    },
+    "tuple_exp_delaunay": {
+      "source_series_type": "delaunay",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
+        }
+      ]
+    },
+    "tuple_exp_bfs": {
+      "source_series_type": "bfs",
+      "source_series": [
+        {
+          "series_name": "Baseline tuple-vs-tuple",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with basline fixup",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_vs_fixup"
+        },
+        {
+          "series_name": "Tuple-vs-tuple, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.tuple_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_suffix_array": {
+      "source_series_type": "suffix-array",
+      "source_series": [
+        {
+          "series_name": "Baseline con-vs-con",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+        },
+        {
+          "series_name": "Con-vs-con, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "Baseline con-vs-con",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+        },
+        {
+          "series_name": "Con-vs-con, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+        }
+      ]
+    },
+    "con_exp_geomean": {
+        "source_series_type": "geomean",
+        "source_series": [
+            {
+                "series_name": "Baseline con-vs-con",
+                "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con"
+            },
+            {
+                "series_name": "Con-vs-con, with `-chunkify one`",
+                "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.con_chunkify_one"
+            }
+        ]
+    },
+    "aos_exp_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "Baseline aos-vs-aos",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "Aos-vs-aos, with `-chunkify one`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        },
+        {
+          "series_name": "Aos-vs-aos, with `-chunkify func`",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_func"
+        }
+      ]
+    },
+    "aos_sync_gc_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
+        }
+      ]
+    },
+    "aos_sync_gc_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
+        }
+      ]
+    },
+    "aos_sync_gc_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-sync GC",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_sync_gc"
+        }
+      ]
+    },
+    "aos_fixed_iters_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-fixed iters",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_fixed_iters"
+        }
+      ]
+    },
+    "aos_fixed_iters_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-fixed iters",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_fixed_iters"
+        }
+      ]
+    },
+    "aos_fixed_iters_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-fixed iters",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_fixed_iters"
+        }
+      ]
+    },
+    "aos_chunkify_one_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_linearrec": {
+      "source_series_type": "linearrec",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "aos_chunkify_one_quickhull": {
+      "source_series_type": "quickhull",
+      "source_series": [
+        {
+          "series_name": "AOS-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "AOS-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos_chunkify_one"
+        }
+      ]
+    },
+    "soa_vs_aos_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "AoS",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.aos"
+        },
+        {
+          "series_name": "SoA",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa"
+        }
+      ]
     }
+  },
+  "compare_bar_charts": {
+    "mlton_con_chunkify_one_parallel_bench": {
+        "suite": "parallel_bench",
+        "source_series": [
+            {
+                "series_name": "Baseline MLton ConApp-vs-ConApp",
+                "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+            },
+            {
+                "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+                "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con_chunkify_one"
+            }
+        ]
+    },
+    "mlton_con_chunkify_one_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "Baseline MLton ConApp-vs-ConApp",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con"
+        },
+        {
+          "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
+        }
+      ]
+    },
+    "mlton_aos_vs_soa_parallel_bench": {
+      "suite": "parallel_bench",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.soa"
+        }
+      ]
+    },
+    "mlton_aos_vs_soa_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "MLton AOS",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.aos"
+        },
+        {
+          "series_name": "MLton SOA",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.soa"
+        }
+      ]
+    }
+  }
 }

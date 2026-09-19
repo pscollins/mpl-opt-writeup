@@ -1,4 +1,5 @@
 import json
+import numpy as np
 import pandas as pd
 import pytest
 from build_charts_lib import (
@@ -14,6 +15,8 @@ from build_charts_lib import (
     compute_parallel_bench_benchmark,
     plot_compare_geomeans,
     plot_compare_series,
+    plot_compare_bar_charts,
+    compute_bar_series,
     resolve_series_path,
     plot_parallel_bench_size,
     plot_parallel_bench_trellis,
@@ -777,6 +780,7 @@ def test_generate_all_charts_tex_includes_filenames():
     assert r"\protect\nolinkurl{my_mlton_data_file.jsonl}" in tex
     assert r"\protect\nolinkurl{my_pb_mlton_data_file.jsonl}" in tex
     assert r"\protect\nolinkurl{my_pb_mpl_data_file.jsonl}" in tex
+    assert r"\tableofcontents" in tex
     assert r"\section{Tuple Flattening}" in tex
     assert r"\subsection{MLton Benchmarks (Tuple Flattening)}" in tex
     assert r"\subsection{\texttt{parallel-ml-bench}: MLton vs MLton (Tuple Flattening)}" in tex
@@ -1230,6 +1234,280 @@ def test_latex_templates_compare_series():
     tbl_tex = render_compare_series_tables_subsection("tuple_exp_delaunay")
     assert r"\subsubsection{Tuple Exp Delaunay}" in tbl_tex
     assert r"\importcsv{tuple_exp_delaunay.csv}" in tbl_tex
+
+
+def test_plot_compare_bar_charts(tmp_path):
+    df1 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'config': ['mlton-baseline', 'mlton-con', 'mlton-baseline', 'mlton-con'],
+        'test_results_secs': [[2.0, 2.2], [1.8, 1.9], [1.0, 1.1], [0.8, 0.9]],
+        'binary_md5': ['h1', 'h2', 'h3', 'h4'],
+    })
+    df2 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'config': ['mlton-baseline', 'mlton-con', 'mlton-baseline', 'mlton-con'],
+        'test_results_secs': [[2.0, 2.2], [1.5, 1.6], [1.0, 1.1], [0.7, 0.8]],
+        'binary_md5': ['h1', 'h2', 'h3', 'h4'],
+    })
+
+    series_specs = [
+        {"series_name": "Series 1", "df": df1},
+        {"series_name": "Series 2", "df": df2},
+    ]
+
+    out_file = "test_compare_bar_output"
+    plot_compare_bar_charts(
+        series_specs=series_specs,
+        title="Compare Bar Output",
+        out_filename=out_file,
+        out_dir=str(tmp_path),
+    )
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert list(csv_df.columns) == ['series', 'bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert len(csv_df) == 4
+    assert set(csv_df['series']) == {'Series 1', 'Series 2'}
+    assert set(csv_df['bench']) == {'benchA', 'benchB'}
+
+
+def test_process_config_compare_bar_charts(tmp_path):
+    output_dir = tmp_path / "charts_compare_bars"
+    test_config_path = tmp_path / "test_config_compare_bars.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
+            "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl"
+        },
+        "compare_bar_charts": {
+            "tuple_vs_con": {
+                "source_series": [
+                    {
+                        "series_name": "Tuple",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.tuple"
+                    },
+                    {
+                        "series_name": "Con",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+                    }
+                ]
+            }
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    expected_files = [
+        "tuple_vs_con.pdf",
+        "tuple_vs_con.csv",
+        "chart_info.md",
+        "all_charts.tex",
+    ]
+
+    for fname in expected_files:
+        output_file = output_dir / fname
+        assert output_file.exists(), f"Expected file {fname} was not created."
+        assert output_file.stat().st_size > 0, f"File {fname} is empty."
+
+    csv_df = pd.read_csv(output_dir / "tuple_vs_con.csv")
+    assert list(csv_df.columns) == ['series', 'bench', 'relative_pct', 'err_minus_pct', 'err_plus_pct']
+    assert set(csv_df['series']) == {'Tuple', 'Con'}
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert r"\section{Compare Bar Charts}" in tex_content
+    assert r"tuple_vs_con.pdf" in tex_content
+    assert r"\importcsv{tuple_vs_con.csv}" in tex_content
+
+
+def test_latex_templates_compare_bar_charts():
+    from latex_templates import (
+        render_compare_bar_charts_subsection,
+        render_compare_bar_charts_tables_subsection,
+    )
+    sub_tex = render_compare_bar_charts_subsection("mlton_con_chunkify_one", series_paths=["f1.jsonl", "f2.jsonl"])
+    assert r"\subsection{Mlton Con Chunkify One}" in sub_tex
+    assert r"mlton_con_chunkify_one.pdf" in sub_tex
+    assert r"Comparison of benchmark performance for \texttt{mlton\_con\_chunkify\_one}" in sub_tex
+
+    tbl_tex = render_compare_bar_charts_tables_subsection("mlton_con_chunkify_one")
+    assert r"\subsubsection{Mlton Con Chunkify One}" in tbl_tex
+    assert r"\importcsv{mlton_con_chunkify_one.csv}" in tbl_tex
+
+
+def test_latex_templates_compare_bar_charts_suite():
+    from latex_templates import (
+        render_compare_bar_charts_subsection,
+        render_compare_bar_charts_tables_subsection,
+    )
+    sub_tex_pb = render_compare_bar_charts_subsection(
+        "mlton_con_chunkify_one",
+        series_paths=["f1.jsonl", "f2.jsonl"],
+        suite="parallel_bench"
+    )
+    assert r"on the \texttt{parallel-ml-bench} benchmark suite" in sub_tex_pb
+
+    sub_tex_mlton = render_compare_bar_charts_subsection(
+        "mlton_con_chunkify_one_mlton_bench",
+        series_paths=["f1.jsonl", "f2.jsonl"],
+        suite="mlton"
+    )
+    assert "on the MLton benchmark suite" in sub_tex_mlton
+
+    tbl_tex = render_compare_bar_charts_tables_subsection("mlton_con_chunkify_one_mlton_bench", suite="mlton")
+    assert r"\subsubsection{Mlton Con Chunkify One Mlton Bench}" in tbl_tex
+    assert r"\importcsv{mlton_con_chunkify_one_mlton_bench.csv}" in tbl_tex
+
+
+def test_plot_compare_bar_charts_suite_mlton(tmp_path):
+    df1 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'compilerAbbrev': ['MLton0', 'MLton1', 'MLton0', 'MLton1'],
+        'runTime': [10.0, 8.0, 20.0, 19.0],
+        'binaryChecksum': ['h0', 'h1', 'h2', 'h3'],
+    })
+    df2 = pd.DataFrame({
+        'bench': ['benchA', 'benchA', 'benchB', 'benchB'],
+        'compilerAbbrev': ['MLton0', 'MLton1', 'MLton0', 'MLton1'],
+        'runTime': [10.0, 7.5, 20.0, 18.0],
+        'binaryChecksum': ['h0', 'h1', 'h2', 'h3'],
+    })
+
+    series_specs = [
+        {"series_name": "MLton Baseline", "df": df1},
+        {"series_name": "MLton Chunkify One", "df": df2},
+    ]
+
+    out_file = "test_mlton_compare_bar_output"
+    plot_compare_bar_charts(
+        series_specs=series_specs,
+        title="MLton Compare Bar Output",
+        out_filename=out_file,
+        out_dir=str(tmp_path),
+        suite="mlton",
+    )
+
+    pdf_path = tmp_path / f"{out_file}.pdf"
+    csv_path = tmp_path / f"{out_file}.csv"
+    assert pdf_path.exists()
+    assert pdf_path.stat().st_size > 0
+    assert csv_path.exists()
+    assert csv_path.stat().st_size > 0
+
+    csv_df = pd.read_csv(csv_path)
+    assert set(csv_df['series']) == {'MLton Baseline', 'MLton Chunkify One'}
+    assert set(csv_df['bench']) == {'benchA', 'benchB'}
+    # benchA for series 1: 8.0 / 10.0 - 1 = -20%
+    row = csv_df[(csv_df['series'] == 'MLton Baseline') & (csv_df['bench'] == 'benchA')].iloc[0]
+    assert np.isclose(row['relative_pct'], -20.0, atol=0.1)
+
+
+def test_compute_bar_series_suite():
+    df_mlton = pd.DataFrame({
+        'bench': ['benchA', 'benchA'],
+        'compilerAbbrev': ['MLton0', 'MLton1'],
+        'runTime': [10.0, 9.0],
+        'binaryChecksum': ['h0', 'h1'],
+    })
+    name, res_df, geomean = compute_bar_series(
+        {"series_name": "MLton Test", "df": df_mlton},
+        suite="mlton"
+    )
+    assert name == "MLton Test"
+    assert len(res_df) == 1
+    assert np.isclose(res_df.iloc[0]['relative_pct'], -10.0, atol=0.1)
+
+    with pytest.raises(ValueError, match="Unknown suite: invalid_suite"):
+        compute_bar_series(
+            {"series_name": "Bad Suite", "df": df_mlton},
+            suite="invalid_suite"
+        )
+
+
+def test_process_config_compare_bar_charts_with_suite(tmp_path):
+    output_dir = tmp_path / "charts_suite"
+    test_config_path = tmp_path / "test_config_suite.json"
+
+    config_data = {
+        "output_directory": str(output_dir),
+        "parallel_bench_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "parallel_bench",
+            "tuple": "cc_tuple_flatten_fixed_hash:260813-220330:flattening-tests:e957206262ad2a8b93398cdf777dd91275a74fbd:260813-220330.processed.jsonl",
+            "con": "cc_conapp_flatten_fixed_hash:260814-000801:flattening-tests:dfcc9e1798eddbe9a3d884b806fa2a946f27000d:260814-000801.processed.jsonl"
+        },
+        "mlton_benchmarks_mlton_vs_mlton": {
+            "compiler": "mlton",
+            "suite": "mlton",
+            "con": "test_conapp_flatten_mlton_mlton_o3:flattening-tests:fd9a06c:20260825_044217.jsonl",
+            "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl"
+        },
+        "compare_bar_charts": {
+            "parallel_bench_compare": {
+                "suite": "parallel_bench",
+                "source_series": [
+                    {
+                        "series_name": "Tuple",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.tuple"
+                    },
+                    {
+                        "series_name": "Con",
+                        "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.con"
+                    }
+                ]
+            },
+            "mlton_con_chunkify_one_mlton_bench": {
+                "suite": "mlton",
+                "source_series": [
+                    {
+                        "series_name": "Baseline MLton ConApp-vs-ConApp",
+                        "series_path": "mlton_benchmarks_mlton_vs_mlton.con"
+                    },
+                    {
+                        "series_name": "MLton ConApp-vs-ConApp, with -chunkify one",
+                        "series_path": "mlton_benchmarks_mlton_vs_mlton.con_chunkify_one"
+                    }
+                ]
+            }
+        }
+    }
+
+    with open(test_config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f)
+
+    with open(test_config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    process_config(config)
+
+    assert (output_dir / "mlton_con_chunkify_one_mlton_bench.pdf").exists()
+    assert (output_dir / "mlton_con_chunkify_one_mlton_bench.csv").exists()
+    assert (output_dir / "parallel_bench_compare.pdf").exists()
+    assert (output_dir / "parallel_bench_compare.csv").exists()
+
+    csv_df = pd.read_csv(output_dir / "mlton_con_chunkify_one_mlton_bench.csv")
+    assert "wc-input1" in set(csv_df['bench'])
+    assert "Baseline MLton ConApp-vs-ConApp" in set(csv_df['series'])
+
+    tex_content = (output_dir / "all_charts.tex").read_text(encoding="utf-8")
+    assert "on the MLton benchmark suite" in tex_content
+    assert r"on the \texttt{parallel-ml-bench} benchmark suite" in tex_content
+
 
 
 
