@@ -60,9 +60,9 @@ contiguous chunks of data into SIMD registers:
 \end{minted}
 Libraries and frameworks to support SIMD CPU programming commonly offer support
 for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
-introduced in \cite{ispc-paper}. ``Manual'' SoA layouts are also a standard
+introduced in \citet{ispc-paper}. ``Manual'' SoA layouts are also a standard
 technique in high-performance GPU programming, as discussed in e.g.
-\cite{cuda-textbook}.
+\citet{cuda-textbook}.
 
 The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
 described above, our default memory layout is an array-of-pointers:
@@ -591,7 +591,7 @@ Are \texttt{element} and \texttt{element'} physically identical? If this element
 is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
 equality, since the write/read result in pack/unpack operations that construct a
 new tuple. From the perspective of strict StandardML as defined in the language
-specification \cite{sml-def}, this is a non-issue: there is no way to observe
+specification \citet{sml-def}, this is a non-issue: there is no way to observe
 pointer equality of tuples in the source language, and so the compiler has
 complete freedom. The only spec-compliant way to write this test would be to
 wrap the element type in \texttt{ref}:
@@ -610,7 +610,7 @@ allow user programs to observe this behavior: both have \texttt{MLton.eq}
 compare-and-swap primitives to support implementing lock-free parallel
 algorithms.
 
-Since physical equality of tuples is not defined in \cite{sml-def}, one option
+Since physical equality of tuples is not defined in \citet{sml-def}, one option
 to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
 to return \texttt{false} in these cases. Another simple option would to be
 disable \texttt{ShallowFlatten} for all values of any types that participate in

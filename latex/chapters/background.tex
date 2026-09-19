@@ -3,8 +3,8 @@
 
 \subsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced in
-\cite{mlton-proj}, with a parallel variant MaPLe intreoduced in
-\cite{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
+\citet{mlton-proj}, with a parallel variant MaPLe intreoduced in
+\citet{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
 to support parallel programming (e.g. fork/join, atomics) along with runtime
 support for managing pools of green threads and a sophisticated parallel garbage
 collector. For the purposes of the exploration in this document, MLton and MPL
@@ -13,7 +13,7 @@ that they support: unless explicitly noted otherwise, any statements about one
 compiler will also apply to the other.
 
 The MLton compilation pipeline passes through 8 distinct IRs on the way to
-codegen (as documented on \cite{mlton-website}):
+codegen (as documented on \citet{mlton-website}):
 
 %% http://mlton.org/IntermediateLanguage
 
@@ -28,7 +28,7 @@ codegen (as documented on \cite{mlton-website}):
 \item \texttt{SXML} (``Simply typed \texttt{XML}''): removes polymorphism (but
   retains higher-order functions)
 \item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
-  guarntees the usual SSA properties (as described in e.g. \cite{ssa-paper})
+  guarntees the usual SSA properties (as described in e.g. \citet{ssa-paper})
 \item \texttt{SSA2}: simplifies representations of \texttt{ref}s and container types \hl{??}
 \item \texttt{RSSA}: introduces explicit memory layouts
 \item \texttt{Machine}: 1:1 with generated code
@@ -399,9 +399,9 @@ spill/fetch onto the (implicit, OS-level) C stack.
 \section{Flattening optimizations}
 The following section will outline two of the existing ``flattening
 optimizations'' performed by MLton. In the context of MLton, this class of
-optimization was originally explored by \cite{flat-paper}. Additional
+optimization was originally explored by \citet{flat-paper}. Additional
 optimizations of this type were implemented by later contributors without
-corresponding publications, as discussed in e.g. \cite{deep-flat-email}.
+corresponding publications, as discussed in e.g. \citet{deep-flat-email}.
 
 \subsection{Motivation}
 
@@ -532,11 +532,11 @@ single function call must
 \end{enumerate}
 These penalties apply even in the fast intra-chunk call case. Compared to the
 usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
-registers \cite{amd64-abi}), we pay the price of a heap allocation per function
+registers \citet{amd64-abi}), we pay the price of a heap allocation per function
 call and two memory accesses per argument, hurting locality and wasting memory
 bandwidth.
 
-The \texttt{Flatten} transformation of \cite{flat-paper} operates on the SSA
+The \texttt{Flatten} transformation of \citet{flat-paper} operates on the SSA
 representation, which supports true $n$-ary functions and blocks, contrasting:
 \begin{minted}{python}
   # Unary tuple-based representation
@@ -584,7 +584,7 @@ is linear in the size of \texttt{'a} -- copying a 1KB tuple requires
 \hl{BAD SUMMARY: DOESN'T MATCH PAPER. LET'S CIRCLE BACK AFTER DISCUSSING OUR OWN
   VERSION}
 
-The insight of \cite{flat-paper} is to adopt a lattice-based analysis that
+The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
 ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
 we can guarantee that all uses are compatible with flattening, avoiding
 pathogical cases (like the one above) that result from applying purely-local
