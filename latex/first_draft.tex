@@ -1,0 +1,2979 @@
+%% Delete "draft" to make images render
+\documentclass[leqno,11pt]{article}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[shortlabels]{enumitem}
+
+\usepackage{amsmath}
+
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{float}
+
+
+\usepackage{bm}
+\usepackage{bbm}
+
+\usepackage{geometry}
+\usepackage{changepage}
+
+%% https://tex.stackexchange.com/questions/2607/spacing-around-left-and-right
+\usepackage{mleftright}
+
+\usepackage{tkz-euclide}
+\usetikzlibrary{angles,patterns,calc}
+\usetikzlibrary{arrows,automata,shapes.gates.logic.US,shapes.geometric,arrows.meta}
+\usetikzlibrary{calc, positioning, backgrounds, decorations.pathreplacing, fit}
+
+%% https://tex.stackexchange.com/questions/643287
+\usetikzlibrary{positioning}
+
+%% https://tex.stackexchange.com/questions/399829
+\usepackage{tikz-cd}
+
+%% https://tex.stackexchange.com/questions/475826
+\usepackage{pythonhighlight}
+
+%% hyperlinks
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=red,
+  filecolor=magenta,
+  urlcolor=blue,
+}
+
+\usepackage{subcaption}
+
+%% \citet command
+\usepackage[numbers]{natbib}
+
+
+%% nicely formatted references (must load last)
+\usepackage{cleveref}
+
+\newcommand{\cof}{\textrm{cof}\, }
+\newcommand{\tr}{\textrm{tr}}
+
+\newcommand{\Ker}{\textnormal{Ker}\, }
+\newcommand{\Img}{\textnormal{Img}\, }
+\newcommand{\D}{\textnormal{\textbf{D}}\, }
+\newcommand{\Hessian}{\textnormal{\textbf{H}}\, }
+\newcommand{\J}{\textnormal{\textbf{J}}\, }
+\newcommand{\vecnab}{\vec{\nabla}}
+%% bm is required for symbols, rather than mathbf
+%% https://tex.stackexchange.com/questions/595/
+\newcommand{\point}[1]{\bm{#1}}
+
+
+\DeclareMathOperator{\vol}{vol}
+\DeclareMathOperator{\osc}{osc}
+\DeclareMathOperator{\Area}{Area}
+\DeclareMathOperator{\Mat}{Mat}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\grad}{grad}
+\DeclareMathOperator{\curl}{curl}
+\DeclareMathOperator{\Div}{div}
+
+\DeclareMathOperator{\Imag}{Im}
+\DeclareMathOperator{\Real}{Re}
+
+%% rank of a matrix
+\DeclareMathOperator{\rank}{rank}
+
+%% residual
+\DeclareMathOperator{\Res}{Res}
+
+%% span of a set of vectors
+\DeclareMathOperator{\Span}{span}
+
+%% normal subgroup
+\DeclareMathOperator{\normsub}{\triangleleft}
+
+%% automorphism
+\DeclareMathOperator{\Aut}{Aut}
+
+%% stabilizer
+\DeclareMathOperator{\stab}{stab}
+
+%% Laplacian: https://tex.stackexchange.com/questions/76553/
+\newcommand*\Laplace{\mathop{}\!\mathbin\bigtriangleup}
+
+%% support
+\DeclareMathOperator{\supp}{supp}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Ind}{\mathbbm{1}}
+
+\usepackage{accents}           % underbar
+%% abstract vectors
+%% https://tex.stackexchange.com/questions/163280
+\newcommand\avec[1]{\underline{\point{#1}}}
+
+%% bold (vector) variable with overhat
+\newcommand\pointhat[1]{\point{\hat{#1}}}
+
+\usepackage{listings}
+\usepackage{minted}
+
+%% integral with a bar for "average"
+\usepackage{esint}
+
+%% Better spacing for \middle|
+%% https://tex.stackexchange.com/questions/5502
+\newcommand{\relmiddle}[1]{\mathrel{}\middle#1\mathrel{}}
+
+%% Support for augmented matrices
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+\usepackage{tikz}
+
+%% Contradiction symbol
+\newcommand{\contradiction}{%
+  \begin{tikzpicture}[rotate=45,x=0.5ex,y=0.5ex]
+    \draw[line width=.2ex] (0,2) -- (3,2) (0,1) -- (3,1) (1,3) -- (1,0) (2,3) -- (2,0);
+  \end{tikzpicture}
+}
+
+%% Check mark
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+
+%% Brackets for math in a finite field
+\newcommand{\inZ}[2]{\ensuremath{[#2]_{#1}}}
+\newcommand{\inZU}[2]{\ensuremath{[#1]}}
+
+%% Vector derivative
+\newcommand{\vecd}[1]{\ensuremath{\dot{\vec{#1}}}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+%% ceil and floor
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+%% argmin operator
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+%% scale a matrix
+%% https://tex.stackexchange.com/questions/43065
+\newcommand\scalemath[2]{\scalebox{#1}{\mbox{\ensuremath{\displaystyle #2}}}}
+
+%% move the margin for an equation
+%% https://tex.stackexchange.com/questions/287239/
+\usepackage{changepage}
+
+%% matrix with labels
+%% https://tex.stackexchange.com/questions/59517
+\usepackage{blkarray}
+
+\newcommand{\hatvec}[1]{\ensuremath{\hat{\vec{#1}}}}
+
+
+%% skip items
+%% https://tex.stackexchange.com/questions/226609/
+\makeatletter
+\newcommand\nextitem[1]{%
+  \setcounter{\@enumctr}{#1}%
+  \addtocounter{\@enumctr}{-1}%
+}
+
+%% partial derivative
+%% https://tex.stackexchange.com/questions/29179/partial-derivative-macro
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+
+%% Correct spacing for hodge star
+%% https://tex.stackexchange.com/questions/632798/
+\newcommand{\hodge}{{*}}
+
+%% Complex conjugate
+\newcommand{\conj}[1]{\overline{#1}}
+
+%% absolute condition number
+\newcommand{\kabs}{\ensuremath{\kappa_{\textrm{abs}}}}
+%% relative condition number
+\newcommand{\krel}{\ensuremath{\kappa_{\textrm{rel}}}}
+
+%% highlight via \hl{}
+\usepackage{xcolor}
+\usepackage{soul}
+
+%% Fix incorrect rendering for <> in figure labels
+\usepackage[T1]{fontenc}
+
+\begin{document}
+
+\title{MPL Optimization Writeup}
+\author{Patrick Collins}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+In the source language, Standard ML offers the programmer no direct control over
+the memory layout for data structures in the generated code: consequently, it is
+the compiler's responsibility to choose a memory layout that efficiently
+utilizes the hardware of the target platform. However, the most ``literal''
+translation of the source language to machine code (i.e. the one which preserves
+exactly the data structures present in the user's original input) has
+disasterous performance characteristics on modern CPUs: every function call and
+every access into a (non-primitive) container incurs a cache miss at an
+unpredictable address in the heap.
+
+Each Standard ML compiler chooses different strategies to mitigate these costs:
+MLton \cite{mlton-website} deploys a class of optimizations that it calls
+``flattening,'' first introduced in \cite{flat-paper}. These strategies are also
+used in MLton's parallel-friendly fork, MaPLe, introduced in \cite{mpl-orig}.
+
+In this document, we will explore two novel ``flattening'' strategies: the
+first, \texttt{PreFlatten} (building on top of the existing \texttt{Flatten}
+pass from \cite{flat-paper}), specializes functions in order to enable
+more-aggressive elimination of heap allocations at callsites. The second,
+\texttt{ShallowFlatten} (building on top of the existing \texttt{DeepFlatten}
+pass) applies well-known optimization techniques from C-like languages in order
+to eliminate heap allocations inside of containers.
+
+\hl{TODO: SUMMARIZE IMPACT}
+
+%% in this document, we will 
+
+%% in this document, we will explore the impact of two new strategies on the
+%% (broadly-shared) codebase of MLton and its parallel fork, MaPLe. 
+
+\section{Background}
+
+\subsection{MLton/MaPLe Compilation Pipeline}
+
+\subsubsection{Pipeline Overview}
+MLton is a whole-program optimizing compiler for Standard ML introduced in
+\cite{mlton-proj}, with a parallel variant MaPLe intreoduced in
+\cite{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
+to support parallel programming (e.g. fork/join, atomics) along with runtime
+support for managing pools of green threads and a sophisticated parallel garbage
+collector. For the purposes of the exploration in this document, MLton and MPL
+broadly interchangeable, differing primarily in terms of the benchmark workloads
+that they support: unless explicitly noted otherwise, any statements about one
+compiler will also apply to the other.
+
+The MLton compilation pipeline passes through 8 distinct IRs on the way to
+codegen (as documented on \cite{mlton-website}):
+
+%% http://mlton.org/IntermediateLanguage
+
+\hl{Add a diagram (in addition to text)}
+
+\begin{itemize}
+\item \texttt{AST}: isomorphic to the source
+\item \texttt{CoreML}: removes module constructs (\texttt{structure}, \texttt{signature},
+  \texttt{functor}) from \texttt{AST}
+\item \texttt{XML} (``eXplicitly typed ML''): adds explicit typing to \texttt{CoreML} (but retains
+  polymorphism)
+\item \texttt{SXML} (``Simply typed \texttt{XML}''): removes polymorphism (but
+  retains higher-order functions)
+\item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
+  guarntees the usual SSA properties (as described in e.g. \cite{ssa-paper})
+\item \texttt{SSA2}: simplifies representations of \texttt{ref}s and container types \hl{??}
+\item \texttt{RSSA}: introduces explicit memory layouts
+\item \texttt{Machine}: 1:1 with generated code
+\end{itemize}
+
+MLton supports a variety of codgen backends (including x86 and LLVM), but for
+the purposes of this document, we will consider only on the C backend (which is
+the only backend supported by MPL).
+
+The optimizations that we will explore all target the \texttt{SSA}
+representation, so in the following sections we will talk through the SML
+$\Rightarrow$ \texttt{SSA} transformation (in order to motivate the source-language
+constructs that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarrow$
+\texttt{Machine} ($\approx$ C codegen) transformation (in order to motivate the
+performance implications of each optimization). \hl{NOT GREAT WORDING}
+
+\subsubsection{SML $\Rightarrow$ \texttt{SSA}}
+
+\hl{CUT! Just say ``we'll show it this way'' and don't bother explaining what
+  actually exists, it's not helpful for our purpose}
+
+The \texttt{SSA} IR is defined
+\href{https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245}{here}.
+Since MLton is a whole-program compiler, the textual format of the IR can be
+rather difficult to read: a trivial SML program like
+
+%% Compile command:
+%% ➜  lit-tests git:(f6e8544f3) /bin/rm -rf /tmp/out/*; OVERRIDE_OUTDIR=/tmp/out tools/mlton-compile.sh -verbose 3 -keep-pass '.*' -diag-pass '.*' examples/fib.sml &> /tmp/log
+
+\begin{minted}{sml}
+  fun fib(n) =
+    if n = 0 then 1
+    else n * fib(n -1)
+
+  val _ = print (Int.toString (fib 4))
+\end{minted}
+
+is transformed to a whopping ~1 MB of text in the first \texttt{SSA} pass
+(shrinking down to a still-substantial 125KB by the last \texttt{SSA} pass).
+Apart from verbosity, the actual textual format is rather difficult to read,
+e.g. for the \texttt{fib} function alone, we get:
+\begin{minted}{sml}
+fun fib_4 (x_51048: word32): {returns = Some (word32), raises = Some (exn_27)} =
+L_6736 ()
+  block L_6736 ()
+    val x_55402: bool = prim Word32_equal (x_51048, global_160 (*0x0:w32*))
+    case x_55402 of
+      true => L_7010 | false => L_1761
+  block L_7010 ()
+    return (global_69 (*0x1:w32*))
+  block L_1761 ()
+    val x_55002: word32 = prim Word32_sub (x_51048, global_69 (*0x1:w32*))
+    val x_55001: bool = prim WordS32_subCheckP (x_51048, global_69 (*0x1:w32*))
+    case x_55001 of
+      true => L_7011 | false => L_6366
+  block L_7011 ()
+    raise (global_912 (*con Overflow_4*))
+  block L_6366 ()
+    call L_1766 (fib_4 (x_55002)) handle _ => raise
+  block L_1766 (x_51053: word32)
+    val x_51055: word32 = prim WordS32_mul (x_51053, x_51048)
+    val x_51054: bool = prim WordS32_mulCheckP (x_51053, x_51048)
+    case x_51054 of
+      true => L_7011 | false => L_1767
+  block L_1767 ()
+    return (x_51055)
+\end{minted}
+so we'll instead work here with a loose, Python-inspired pseudocode, and assert
+that the \texttt{fib} function is lowered to \texttt{SSA} as something like the
+following (where we'll adopt the simplifying convention that all functions begin
+at \texttt{bb0}):
+\begin{minted}{python}
+  def fib(n: int): int =
+    block bb0():
+      isEq: boo = prim Word32_equal (n, 0)
+      case isEq of true => goto bb1 | false => goto bb2
+
+    block bb1():
+      return 1
+
+    block bb2():
+      callArg: int = prim Word32_sub (n, 1)
+      # call fib(n-1) and return to bb3
+      call bb3 (fib (callArg))
+
+    block bb3(callResult: int):
+      funcResult: int = prim Word32_mul (callResult, n)
+      return funcResult
+
+  def main(): unit =
+    block bb0():
+      initVal: int = 4
+      # call fib(initVal) and return to bb1
+      call bb1 (fib (initVal))
+
+    block bb1(fibResult: int):
+      ...call print and exit...
+\end{minted}
+A few features of this representation are worth noting:
+
+\begin{itemize}
+\item Concrete operations on particular types are implemented as ``primitive
+  applications,'' \texttt{prim \$PRIM\_NAME (\dots)}. \texttt{prim}s are
+  eliminated at various different compilation phases, and come equipped with type
+  checkers to ensure that the IR is well-formed.
+\item Basic blocks carry explicit arguments. These arguments take the place of
+  $\phi$ nodes in compilers for imperative languages: within each block
+  \texttt{bbN} all names defined in blocks that strictly dominate \texttt{bbN}
+  are available, including block arguments. To conditionally bind a value to a
+  name, then, we add a conditional jump to a block that takes the desired name
+  as an argument, i.e.
+
+  \begin{minted}{python}
+    block bb0():
+      cond: bool = ...
+      lhs: int = ...
+      rhs: int = ...
+      case cond of true => goto bb1 | false => goto bb2
+
+    block bb1():
+      # `lhs` is available because `bb0` dominates `bb1`
+      goto bb3(lhs)
+
+    block bb2():
+      # `rhs` is available because `bb0` dominates `bb2`
+      goto bb3(rhs)
+
+    block bb3(boundValue: int):
+      # All blocks dominated by bb3 now have `boundValue` available
+      ...
+  \end{minted}
+
+\end{itemize}
+
+\subsubsection{\texttt{SSA} $\Rightarrow$ C}
+Zooming out to the most abstract level, we might end up with something like the
+following for the snippet above (where we'll continue to use pseudocode in order
+to elide some of the syntactic complexity, now with a C++ flavor):
+
+\hl{TODO: This seems too long}
+
+\begin{minted}{cpp}
+  GCState gc_state;  // Global garbage collector state
+  Stack stack;  // Global stack
+
+  struct Stack {
+    template <typename T>
+    T* Push() {
+      // Append `sizeof(T)` bytes to `data` and cast
+    }
+
+    template <typename T>
+    T* Peek(int offset) {
+      // Copy a `T` out of `data` and shrink
+    }
+
+    void Pop(int bytes) {
+      // Drop the last `bytes` of the stack
+    }
+
+    vector<int8_t> data;  // Backing memory; dynamically-resizable
+  };
+
+
+  // Labels for all blocks in the program
+  enum Label {
+    fib_bb0,
+    fib_bb1,
+    ...
+  };
+
+  Label fib_chunk(Label nextBlock) {
+    // Locals used across all blocks
+    bool isEq;
+    bool callArg;
+    int funcResult;
+    int n;
+
+    // Jump table for all blocks in this chunk
+  doSwitchNextBlock:
+    switch (nextBlock) {
+      case fib_bb0: goto L_fib_bb0;
+      case fib_bb1: goto L_fib_bb1;
+      ...
+    }
+
+  L_fib_bb0:
+    // Read function argument from `stack`
+    n = stack.Pop<int>();
+    isEq = Word32_equal(n, 0);  // `prim` translated to C call
+    if (isEq)
+      goto l_fib_bb1;
+    else
+      goto l_fib_bb2;
+
+  L_fib_bb1:  // return 1
+    // Write function return value to `stack`
+    *stack.Push<int>() = 1;
+    // Stack frame size known at compile time
+    nextBlock = stack.Peek<Label>(/*offset=*/-fibStackFrameSize);
+    goto doSwitchNextBlock;
+
+  L_fib_bb1:  // recursive call
+    callArg = Word32_sub(n, 1);
+    // Write return label to `stack`
+    *stack.Push<Label>(fib_bb2);
+    // Write function argument to `stack`
+    *stack.Push<int>(callArg);
+    goto fib_4;
+
+  L_fib_bb3: // return from recursive call
+    // Pop the caller result off the stack
+    callResult = stack.Pop<int>();
+    funcResult = Word32_mul(callResult, n);
+    // Write return value to stack and return to caller
+    *stack.Push<int>() = funcResult;
+    nextBlock = stack.Peek<Label>(/*offset=*/-fibStackFrameSize);
+    goto doSwitchNextBlock;
+
+    ... other `fibChunk` logic ...
+  }
+
+  ... other chunks ...
+
+  ... runtime-provided `Main` ...
+
+\end{minted}
+We'll again highlight a few notable features of the generated code:
+
+%% TODO:
+%%   1. prims are C calls
+%%   2. data passes in C-temps when possible, otherwise via explicit stack
+%%   3. SML funcs are collapsed into chunks
+
+\begin{itemize}
+%% \item SML control flow becomes 
+\item SML functions are collapsed into ``chunks'' in the generated C code
+\item Within a ``chunk,'' data passes between blocks either by explicit stack
+  operations, or by ``registers'' as C-function locals.
+\end{itemize}
+
+\hl{TODO: Better transition}
+
+We'll discuss these in more detail below
+
+%% \paragraph{Jump }
+
+\paragraph{Chunkification}
+
+Rather than maintaining a mapping between SML functions and C functions, the
+compiler instead attempts to implement procedure calls as either a direct
+\texttt{goto} (for statically-known branch targets) or a computation to find the
+appropriate entry in a jump table: this strategy makes it possible to e.g.
+naturally guarantee that tail-recursive SML functions do not consume a C stack
+frame per call.
+
+For maximum performance, MLton would ideally compile the entire SML program into
+a single C function: C function boundaries serve no purpose in the generated
+code, and so any such boundaries are pure overhead. However, C compilation time
+scales superlinearly with function size, and so this strategy can be
+prohibitively expensive in practice (20+ minutes to compile a single benchmark).
+
+As a workaround, MLton trades off improved runtime performance for decreased C
+compile time by dividing the generated user program into ``chunks,'' each with
+their own local jump table, local ``registers,'' and so on. Control flow between
+chunks is orchestrated by returning the target block ID to the runtime, which
+looks up the containing chunk in a global map, i.e.:
+\begin{minted}{cpp}
+  typedef enum Label {
+    chunk_1_bb0,
+    ...,
+    chunk_2_bb0,
+    ...
+    doneLabel,  // Indicates program termination
+  };
+
+  Label Chunk_1(...) {
+    ...local variables, jump table...
+
+L_chunk_1_bb0:
+  ...some computation...
+  return chunk2_bb0;  // return to ``trampoline''
+}
+
+  Label Chunk_2(...) {
+    ...local variables, jump table...
+
+L_chunk_2_bb0:
+  ...some computation...
+  return chunk2_bb0;  // return to ``trampoline''
+}
+
+  typedef ChunkFn = ...; // Type of &Chunk_1, &Chunk_2, etc
+  void MLton_trampoline(...) {  // Outer loop over executing chunks
+    ChunkFn chunkMap[] = {
+      &Chunk_1, // index == chunk_0_bb0,
+      ...
+      &Chunk_2, // index == chunk_1_bb0
+      ...
+    };
+    Label nextBlock = chunk_0_bb0; // Distinguished 'start' block
+    do {
+      // Call into the chunk corresponding to the requested block
+      nextBlock = *chunkMap[nextBlock](...);
+    } while (nextBLock != doneLabel);
+  }
+\end{minted}
+
+
+\paragraph{Stack vs ``registers''}
+As we can see in the samples above, there are two possible mechanisms to pass
+data between blocks in the generated C, either in ``registers,'' which are
+compiled down to function-local C variables:
+\begin{minted}{cpp}
+  Label Chunk(...) {
+    int x;
+    int y;
+    ...
+   L_bb0:
+    x = 1; // write to a "register"
+    goto L_bb1;
+
+   L_bb1:
+    y = f(x); // read from a "register"
+    ...
+\end{minted}
+or through manipulation of an explicit C-level \texttt{Stack} data structure:
+\begin{minted}{cpp}
+  Label Chunk(...) {
+    ....
+   L_bb0:
+    *Stack.Push<int>() = 1; // Bump `top` pointer and initialize memory
+    goto L_bb1;
+
+   L_bb1:
+    y = Stack.Peek<int>();  // Sized read from `top` pointer
+    ...
+\end{minted}
+
+It is mandatory to pass data via the \texttt{Stack} in the following situations:
+
+\begin{itemize}
+\item All calls to non-tail-recursive functions: a non-tail-recursive function
+  necessarily passes e.g. the return address to the callee via the stack, and so
+  for the sake of simplicity, MLton chooses to pass all arguments across the
+  stack in this case. \hl{TODO: CHECK}
+ 
+\item All function calls across chunk boundaries: all generated chunks take the
+  same arguments (GC state, stack state, and the target block), so there is no
+  way to pass data across chunks in ``registers.''
+
+\item All values that remain live across a GC point: for simplicity, the garbage
+  collector does not examine ``registers'' when tracing live objects, hence all
+  data must be spilled to the stack before the GC runs.
+
+\end{itemize}
+
+It is worth noting, furthermore, that passing data via C temporaries does not
+\textit{guarantee} that the data remains in host machine registers: it merely
+offers the C compiler's register allocator the opportunity to do so. MLton makes
+no attempt to pack temporaries into available registers, and so blocks with a
+large number of live-in/live-out variables will pay a performance penalty to
+spill/fetch onto the (implicit, OS-level) C stack.
+
+%% \hl{TODO}
+
+
+\subsection{Flattening optimizations}
+The following section will outline two of the existing ``flattening
+optimizations'' performed by MLton. In the context of MLton, this class of
+optimization was originally explored by \cite{flat-paper}. Additional
+optimizations of this type were implemented by later contributors without
+corresponding publications, as discussed in e.g. \cite{deep-flat-email}.
+
+\subsubsection{Motivation}
+
+\hl{CONTAINERS?}
+
+In the source language, we have three basic species of data types (ignoring
+\texttt{ref}, which is not relevant for the optimizations that we'll discuss)
+\begin{itemize}
+\item Primitive values: \texttt{int}, \texttt{bool}, \texttt{real}, etc
+\item Tuples: a fixed-sized collection of zero or more values of a
+  statically-known type, e.g. \texttt{int * int}, \texttt{real * bool * int},
+  etc
+\item Vectors/arrays: an immutable/mutable (respectively) variable-sized
+  container for elements of a uniform, statically-known type, e.g. \texttt{int
+    array}, \texttt{(int * bool) array}, etc.
+\end{itemize}
+In C codegen, these are translated as follows:
+
+\hl{DIAGRAMS WOULD BE NICE}
+\begin{itemize}
+\item Primitive values are mapped to corresponding primitive C types, and
+  reads/writes are plain C load/store operations. Primitive values can be
+  allocated on the \texttt{Stack} or in local temporaries:
+\begin{minted}{cpp}
+  int tmp1;
+  float tmp2;
+  ...
+  tmp1 = 42;
+  tmp2 = 3.14f;
+  ...
+\end{minted}
+
+\item The tuple type is mapped to a C struct type:
+
+\begin{minted}{cpp}
+  struct TupleT1 {
+    struct Metadata {
+      GC_header gc_header;  // Metadata tag for GC
+    } metadata;
+    struct Members {
+      int field1;
+      float field2;
+      ...
+    } members;
+  };
+\end{minted}
+
+\hl{Add a diagram of the struct layout |header| |field1, field2,...| with arrow
+  pointing to `t1`}
+
+Unlike primitive types, tuple types are always allocated on the heap. Any
+references in the generated code read/write through a pointer, e.g.
+\begin{minted}{cpp}
+  TupleT1::Members* t1 = nullptr; // Tuple of type T1
+  float tmp;
+  ...
+  tmp = *bit_cast<float*>(bit_cast<uint8_t*>(t1) +
+                          offsetof(TupleT1::Members, field2));
+  *bit_cast<int*>(bit_cast<uint8_t*>(t1) +
+                  offsetof(TupleT1::Members, field1)) = 13;
+\end{minted}
+
+\item Similarly to tuples, array types and vector types are translated to C
+  struct types:
+
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      int el;
+    } elements[];  // "Flex array" extends according to array length
+  };
+\end{minted}
+and operations are always through pointers to data allocated on the heap:
+\begin{minted}{cpp}
+  ArrTypeT1::Element* arr = nullptr;  // Array of type T1
+  int length;
+  int tmp;
+  ...
+  // Element read
+  tmp = bit_cast<ArrTypeT1::Element*>(bit_cast<uint8_t*>(arr) +
+                                      sizeof(ArrTypeT1::Element) * 15)->el;
+  // Metadata read
+  length = bit_cast<ArrTypeT1::Metadata*>(bit_cast<uint8_t*>(arr) -
+                                          offsetof(ArrTypeT1, Element))->length;
+
+\end{minted}
+
+\end{itemize}
+
+For both the tuple and container case, nested heap-allocated data structures are
+represented by \texttt{void*} members, i.e.:
+\begin{minted}{cpp}
+  struct TupleT2 {
+    ...
+    struct Members {
+      void* field1;
+      ...
+\end{minted}
+Because MLton is a whole-program compiler, all types are known statically: there
+is no runtime polymorphism in the generated code. Headers carrying type
+information exist only for the benefit of the GC. \hl{CUT?}
+
+
+\subsubsection{\texttt{Flatten}}
+In the source language, all functions are unary, with support for multiple
+arguments implemented via tuple types, i.e. for:
+\begin{minted}{sml}
+  fun add(a, b) = a + b
+\end{minted}
+The function \texttt{add} has the type \texttt{(int * int) -> int}. This
+convention is desirable in terms of simplifying language design, by removing the
+need for a \hl{special construct to represent function arguments} outside of the
+regular type system.
+
+However, naively lowering \hl{this construct} to C according to the rules that
+we have described above has disasterous performance characteristics: every
+single function call must
+\begin{enumerate}
+\item Allocate a new tuple on the heap to store the function arguments
+\item Copy the function arguments into the heap-allocated memory
+\item Pass the address of the new tuple to the callee (on either the stack or a temporary)
+\item Jump to the callee
+\item Read the call arguments out of the tuple, into local variables
+\item (Eventually) garbage collect the allocated tuple
+\end{enumerate}
+These penalties apply even in the fast intra-chunk call case. Compared to the
+usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
+registers \cite{amd64-abi}), we pay the price of a heap allocation per function
+call and two memory accesses per argument, hurting locality and wasting memory
+bandwidth.
+
+The \texttt{Flatten} transformation of \cite{flat-paper} operates on the SSA
+representation, which supports true $n$-ary functions and blocks, contrasting:
+\begin{minted}{python}
+  # Unary tuple-based representation
+  def add_tuple(ab: (int * int)): int =
+    block bb0():
+      a: int = select (ab, 0)  # tuple member read
+      b: int = select (ab, 1)  # tuple member read
+      ret: int = prim Word32_add (a, b)
+      return ret
+\end{minted}
+with:
+\begin{minted}{python}
+  # Binary "flat" representation
+  def add(a: int, b: int): int =
+    block bb0():
+      ret: int = prim Word32_add (a, b)
+      return ret
+\end{minted}
+
+A naive solution to the problem would be to interpret all SML-level functions as
+$n$-ary functions over their arguments. However, this strategy can introduce
+unnecessary pack/unpack operations in cases where the natural representation for
+data really is a tuple, e.g.:
+\begin{minted}{sml}
+  val toArray: 'a array = .... (* global array value *)
+
+  fun writeFirstElementTo (el: 'a) =
+      Array.update (toArray, 0, el)
+
+  fun readFirstElement (arr: 'a array): 'a =
+    Array.sub (fromArray, 0)
+
+  fun copyFirstElement (fromArray: 'a array) =
+    writeFirstElementTo (readFirstElement fromArray)
+\end{minted}
+For the ``non-flat'' representation, the cost of \texttt{copyFirstElement} is
+independent of the \texttt{'a} type that we instantiate the function at: even
+for 1KB tuple elements, all we need to copy is a pointer to the tuple.
+
+For the ``flat'' representation, however, the cost of \texttt{copyFirstElement}
+is linear in the size of \texttt{'a} -- copying a 1KB tuple requires
+``unpacking'' the entire 1KB via writes to the \texttt{Stack}, then
+``re-packing'' via other 1KB worth of writes into a newly-allocated tuple.
+
+\hl{BAD SUMMARY: DOESN'T MATCH PAPER. LET'S CIRCLE BACK AFTER DISCUSSING OUR OWN
+  VERSION}
+
+The insight of \cite{flat-paper} is to adopt a lattice-based analysis that
+ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
+we can guarantee that all uses are compatible with flattening, avoiding
+pathogical cases (like the one above) that result from applying purely-local
+heuristics.
+
+This approach has the advantage that it handles more general \hl{cases of
+  tuples}, including nested tuples, e.g. supporting a transformation like:
+\begin{minted}{python}
+  fun add_vec(input: ((int * int) * (int * int))): int =
+    block bb0():
+      lhs: int * int = select (input, 0)
+      rhs: int * int = select (input, 1)
+      lhs_x: int = select (lhs, 0)
+      lhs_y: int = select (lhs, 1)
+      rhs_x: int = select (rhs, 0)
+      rhs_y: int = select (rhs, 1)
+      ... add elements ...
+\end{minted}
+mapping to:
+\begin{minted}{python}
+  fun add_vec_flat(lhs_x: int, lhs_y: int, rhs_x: int, rhs_y: int): int =
+    block bb0():
+      ... add elements ...
+\end{minted}
+It is worth noting, however, that due to the structure of the generated C
+discussed above, the savings may be less large in practice \hl{than they appear}
+based on the transformation in the SSA format: a naive reading suggests that by
+translating from \texttt{add\_vec} to \texttt{add\_vec\_flat}, we have saved a
+total of 6 writes into temporary tuples (2 per inner tuple and 2 for the outer
+tuple), eliding them naturally into register writes.
+
+This is not true in the general case, however: if a call to
+\texttt{add\_vec\_flat} crosses a C chunk boundary, then we still need to pay the
+cost to write all 4 values to the \texttt{Stack}, and pay the same cost again to
+pass the data on to any further flattened callers. Therefore, for nested tuple
+types, it is perhaps more correct to think of flattening as a tradeoff of
+bandwidth for locality (passing data through hot \texttt{Stack} memory rather
+than cold heap) instead of a pure savings.
+
+\hl{TODO: BAD DISCUSSION ABOVE; WE DON'T NECESSARILY CONSTRUCT A TEMPORARY
+  TUPLE}
+
+%% TODO:
+%%   flatten: 'peels apart' tuples (in arguments)
+
+%%     unintuitively, because of the structure of the generated C, flattening
+%%     *does not* guarantee that data is passed in registers, even when the
+%%     argument count is small (unlike the usual e.g. Linux calling convention)
+%%
+%%     in the general case it's really a tradeoff between BW and locality (the
+%%     stack is always "hot" but we need to copy into it
+%%
+%%     chunk boundaries are not known until late so we need to make uncertain
+%%     decisions
+
+\subsubsection{\texttt{DeepFlatten}}
+The \texttt{Flatten} transformation fixes the problem that the source language
+does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
+solves the problem that the source language does not support unboxed tuple types.
+
+As discussed above, the normal MLton lowering for tuple types in containers is
+\texttt{void*}, i.e. for an SML type like \texttt{(int * int) array}, we get the
+C type:
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      // C-level type erasure
+      void* el;
+    } elements[]
+  };
+\end{minted}
+Maniupulating elements in this kind of container corresponds to manipulating
+pointers to pre-constructed tuples, stored out-of-line from the container
+itself.
+
+In terms of the local efficiency of the container operations themselves, this is
+optimal: we pay a flat O(1) cost regardless of the contained element type, and
+we never need to store more than a single copy of a particular tuple's data
+regardness of how many containers we insert it into.
+
+\hl{Add a diagram -- array with arrows pointing to scatterd boxes}
+
+In terms of global program efficiency on modern CPU architectures, however, this
+layout is disasterous. As an illustration, compare the following C++ snippets:
+suppose we have a type:
+\begin{minted}{cpp}
+  struct Point {
+    float x;
+    float y;
+  };
+\end{minted}
+The non-flat SML-like layout corresponds to:
+\begin{minted}{cpp}
+  float GetDistance(const vector<Point*>& lhs, const vector<Point*>& rhs) {
+    float sum = 0.0;
+    for (int i = 0; i < lhs.size(); ++i) {
+      const float x = lhs[i]->x - rhs[i]->x;
+      const float y = lhs[i]->y - rhs[i]->y;
+      sum += x * x + y * y;
+    }
+    return sum;
+  }
+\end{minted}
+Suppose that \texttt{lhs.size() = rhs.size() = n}. Then the memory bandwidth
+requirement for this implementation is:
+\begin{enumerate}
+\item Cost to load $2n$ pointers: \texttt{$2n$ * sizeof(uintptr\_t)}. These
+  values are laid out contiguously in memory, so we can assume perfect
+  efficiency while loading them. \hl{REPHRASE}
+\item Cost to load $2n$ \texttt{Point} objects: \texttt{$2n$ * cacheline size}.
+  Since these \texttt{Point} objects are unlikely to have any particular spatial
+  locality in the heap when travsered in their order in the \texttt{vector}s,
+  the most likely case is that we only get \texttt{sizeof(Point) == 8} useful
+  bytes out of each read from DRAM.
+\end{enumerate}
+
+Given that most modern CPU architectures have 64B cachelines and 8B pointers,
+combining the two estimates above, we observe that we pay a total of 72B for
+each 8B \texttt{Point} object (one 8B pointer plus one 64B cacheline), wasting a
+whopping $\approx 89\%$ of the memory bandwidth that we expend on each input.
+
+Aside from the bandwidth cost, there is also a latency cost: the load of the
+pointer data (e.g. \texttt{lhs[i]->x}) cannot be pipelined with the load of the
+pointer itself -- no matter how cleverly we design our out-of-order CPU, we
+simply cannot issue a load to an address that we do not yet know. We thus must
+wait at least a few cycles to complete a load in L1, risking a hit to our
+instructions-per-cycle without heroics from the C compiler. \hl{TODO: REFERENCE}
+
+\hl{Add a matching diagram}
+
+In C++, the solution to this problem is to eliminate the indirection in the
+source language, i.e.:
+\begin{minted}{cpp}
+  float GetDistanceFlat(const vector<Point>& lhs, const vector<Point>& rhs) {
+    float sum = 0.0;
+    for (int i = 0; i < lhs.size(); ++i) {
+      const float x = lhs[i].x - rhs[i].x;
+      const float y = lhs[i].y - rhs[i].y;
+      sum += x * x + y * y;
+    }
+    return sum;
+  }
+\end{minted}
+From the perspective of the memory access pattern of the consuming code, this
+strategy is optimal: since the \texttt{Point} data is in a dense, contiguous
+layout, we get 100\% efficient utilization of memory bandwidth, and we eliminate
+the pipeline-hostile chain of dependent loads from the inner loop of the
+program.
+
+MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
+-- for an \texttt{(int * int) array} corresponding to the \texttt{Point} type
+above, we get:
+\begin{minted}{cpp}
+  struct ArrTypeT1 {
+    struct Metadata {
+      ... GC info, length ...
+    } metadata;
+    struct Element {
+      // Flattened, inlined tuple members
+      int x;
+      int y;
+    } elements[]
+  };
+\end{minted}
+Unlike \texttt{Flatten}, which operates on the SSA representation (where
+containers are either \texttt{'a array} or \texttt{'b array} -- both unary type
+constructors), \texttt{DeepFlatten} operates on the SSA2 representation, where
+we distinguish between a \texttt{((int * int) tuple) sequence} (for the non-flat
+representation) vs \texttt{(int * int) sequence} (for the flat representation).
+
+Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
+flattening the types associated with particular variables only when all of their
+uses are compatible with the transformation. In particular, 
+
+\hl{Consider adding a small benchmark to confirm the napkin math}
+
+\hl{If we want to discuss SSA vs SSA2, we need to flesh out SSA2 more. Consider
+  just using SSA2 as our target IR for the whole thing. (downside: we actually
+  target SSA with the optimizations later, it will raise awkward questions why
+  we didn't use a different representation). Biggest conceptual difference: SSA2
+  allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x =
+  A[i, 1]}
+
+%% TODO:
+%%   deepFlatten: 'squashes' tuples in arrays
+
+%%   arrays are very performance sensitive for flattening because we pay the
+%%   cost of an extra indirection on every access. arrays are not touched by the
+%%   transformation above, which is motivated by function arguments
+
+%%   relies on the particular structure defined above: a PackedRepresentation
+%%   that squashes elements into the array. it runs on SSA2, a slight variant
+%%   that gives us this exact property
+
+%%   downsides: basically free when it works, but doesn't always work. also,
+%%   since it runs after flatten, we can miss out on opportunities to do
+%%   flattening that we would otherwise be able to do
+
+%%   TODO: what does it target? when is it forbidden?
+
+%% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
+
+\subsubsection{\texttt{Polyvariance}}
+\hl{TODO: SHOULD PROBABLY MOVE THIS INTO AN SML -> SXML SECTION ABOVE}
+
+Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
+pass is also relevant to the optimizations we will explore here.
+\texttt{Polyvariance} runs on the \texttt{SXML} IR, where the IR still has
+higher order functions and implicit closure captures (all that has been removed
+are the \texttt{module} constructs, which are irrelevant from the perspective of
+performance). Beginning from an SML program like:
+\begin{minted}{sml}
+  def doOp(l: int, r: int, f: int * int -> int): int =
+    f(l, r)
+
+  def add(l: int, r: int): int =
+    l + r
+
+  def sub(l: int, r: int): int =
+    l - r
+
+  def call1(): int =
+    doOp (2, 2, add)
+
+  def call2(): int =
+    doOp (2, 2, sub)
+\end{minted}
+we might end up with \texttt{SXML} IR like the following (using the same
+Python-style pseudocode as before):
+\begin{minted}{python}
+  def do_op(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def add(l: int, r: int) -> int:
+    return l + r
+
+  def sub(l: int, r: int) -> int:
+    return l - r
+
+  def call1() -> int:
+    return do_op(2, 2, add)
+
+  def call2() -> bool:
+    return do_op(2, 2, sub)
+\end{minted}
+The \texttt{Polyvariance} pass duplicates function definitions at callsites
+(limited by a cost heuristic that is calculated as the product of how many times
+the function is called and a measure of the size of the function related to the
+number of nodes in the program graph). Thus for the preceeding example, we might
+end up with:
+\begin{minted}{python}
+  def do_op_add(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def do_op_sub(l: int, r: int, f: int * int -> int) -> int:
+    return f(l, r)
+
+  def add(l: int, r: int) -> int:
+    return l + r
+
+  def sub(l: int, r: int) -> int:
+    return l - r
+
+  def call1() -> int:
+    return do_op_add(2, 2, add)
+
+  def call2() -> int:
+    return do_op_sub(2, 2, sub)
+\end{minted}
+The benefit of this pass that is relevant to our discussion here is the impact
+on closure conversion, which takes places as part of the $\texttt{SXML}
+\Rightarrow \texttt{SSA}$ conversion.
+
+While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
+around all function calls in the SSA representation, \hl{closure capture}
+introduces \texttt{datatype} pack/unpack pairs around calls to higher-order
+functions specifically. So for the pre-\texttt{Polyvariance} snippet from above,
+we might end up with the following SSA IR:
+\begin{minted}{python}
+  datatype lambda1 = xEnv_add | xEnv_sub
+  def doOp(l: int, r: int, env: lambda1) -> int:
+    block bb0():
+      case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
+
+    block bb1():
+      result: int = prim Word32_add (l, r)
+      return result
+
+    block bb2():
+      result: int = prim Word32_sub (l, r)
+      return result
+\end{minted}
+The contents of each \texttt{datatype} case corresponds to the capture
+environment of the function argument that it maps to, e.g. for a call like:
+\begin{minted}{sml}
+  fun buildAddWithBias(bias: int): int -> int = let
+    fun addWithBias (l: int, r: int): int =
+      return l + r + bias
+  ...
+
+  fun call3() -> int:
+    doOp (2, 2, buildAddWithBias 4)
+\end{minted}
+we would end up with a case in the declaration like:
+\begin{minted}{python}
+  datatype lambda1 = xEnv_addWithBias of int | xEnv_add | xEnv_sub
+\end{minted}
+and a callsite like:
+\begin{minted}{python}
+  def call3() -> int:
+    block bb0():
+      biasArg: int = 5
+      env: lambda_1 = xEnv_addWithBias (biasArg)
+      call bbN doOp (2, 2, env)
+    ...
+\end{minted}
+In the generated C, \texttt{datatype} objects correspond to tagged unions,
+roughly:
+\begin{minted}{cpp}
+  struct Lambda1 {
+    enum Case {
+      xEnv_addWithBias,
+      xEnv_add,
+      xEnv_sub,
+    } case;
+    // Interpretation of the payload depends on the tag
+    void *paylod;
+  };
+\end{minted}
+The representation of \texttt{payload} depends on the particular
+\texttt{datatype}: small types and other special cases may be allocated inline,
+but the general case with a \hl{large payload} corresponds to allocating a
+nested tuple, i.e. for:
+\begin{minted}{sml}
+  datatype env = xEnvLarge of int * int | ...
+\end{minted}
+the callers (in \texttt{SSA}) will look like:
+\begin{minted}{python}
+  l: int = ...
+  r: int = ...
+  t: int * int = tuple (l, r)
+  e: Env = xEnvLarge t
+\end{minted}
+The relevance of the closure conversion transformation to flattening, then, is
+that it introduces further nested tuples at callsites of higher order functions.
+In the case when these nested tuples make it through to the \texttt{SSA}
+representation, this indirection cannot be optimized away by \texttt{Flatten},
+\texttt{DeepFlatten}, or any of the other flattening passes in MLton (since
+``peeling apart'' the tuple elements is only possible when we know the value of
+the tag).
+
+The existing solution to this problem is \texttt{Polyvariance}: by duplicating
+higher-order functions at their callsite, for each caller like:
+\begin{minted}{python}
+  def call1() -> int:
+    return do_op_add(2, 2, add)
+
+  def call2() -> int:
+    return do_op_sub(2, 2, sub)
+\end{minted}
+the duplicated functions \texttt{do\_op\_add}, \texttt{do\_op\_sub} each end up
+with a single-variant \texttt{datatype} that can easily be optimized away by
+later passes (since the tag is statically known), allowing \texttt{Flatten} /
+\texttt{DeepFlatten} to act on the embedded tuple as normal.
+
+\texttt{Polyvariance} is limited, however: since it acts by duplicating
+functions across all callsites, it imposes a risk of severe code bloat beyond
+what is necessary just for the sake of eliminating the \texttt{datatype}. The
+cost heuristic also implies the potential for a sharp performance cliff around
+minor changes to the source-language program: a program that calls \texttt{map}
+$N$ times might have significantly worse performance than a program that calls
+\texttt{map} $N-1$ times if it pushes the \texttt{map} beyond the
+\texttt{Polyvariance} threshold.
+
+
+%% \hl{TODO: FINISH}
+
+%% TODO: explain polyvariance
+
+%%   defunctionalization runs as part of the SXML -> SSA transformation, we
+%% replace higher order functions/closures with datatypes
+
+%%   datatypes are tagged unions; the "data" portion is (maybe?) also a
+%% heap-allocated tuple (give a C struct) example
+
+%%    like how the unary-function restriction introduces tuple pack/unpack
+%%  around callsites, the closure-conversion restriction of SSA introduces
+%%  ConApp statements at callsites followed by case statements in callees (give
+%%  a code example with a datatype + ConApp along with matching SML).
+
+%%    these are relevant to us because they prevent tuple flattening: Flatten
+%%  can't act on a type that is buried inside of a datatype (we'd need to know
+%%  which case it applied to); DeepFlatten will (?) choose not to since it is an
+%%  immutable member (?)
+
+%%    the existing workaround is the polyvariance pass: according to some simple
+%%  knobs, running in SXML, we (lexically) duplicate function bodies so that we
+%%  end up with a single-case datatype that can be optimized away
+
+\section{\texttt{PreFlatten}}
+
+Like \texttt{Flatten}, \texttt{PreFlatten} runs on the \texttt{SSA} IR:
+currently, it runs before \texttt{Flatten}, so that the lattice-based
+\texttt{Flatten} analysis has a better chance to pick up on opportunities to
+completely flatten particular uses.
+
+\subsection{Motivation}
+The basic intuition is that if we see a sequence like:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      t: 'a * 'b = tuple(x0, x1)
+      # call g(t) and return to some other block bbM
+      call bbM g(t)
+
+    ...other blocks...
+
+  def g(t: 'a * 'b) -> ...:
+    block bb0():
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+then we can eliminate the intermediate tuple \texttt{t} with a simple peephole
+optimization that ``pushes down'' the tuple allocation from the caller into the
+callee, i.e.:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...other blocks...
+
+    block bbN():
+      # call g(x0, x1) and return to some other block bbM
+      call bbM g_flat(x0, x1)
+
+    ...other blocks...
+
+  def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    block bb0():
+      t: 'a * 'b = tuple(x0_flat, x1_flat)
+      x0: 'a = select(t, 0)
+      x1: 'b = select(t, 1)
+      ...etc...
+
+    ...other blocks...
+\end{minted}
+and then rely on existing optimization machinery to \hl{remove the allocation
+  completely}.
+
+In case all callers of \texttt{g} satisfy the pattern above, then the result of
+this transformation is equivalent to the existing \texttt{Flatten} pass.
+However, since we want to phrase this optimization as a simple, purely-local
+transformation, we need a solution for the case when not all callers of
+\texttt{g} are \texttt{PreFlatten}-able: we resolve this problem by emitting a
+fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
+for callers that require it, i.e. for something like:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # call g(t1) and return to some other block bbM
+      call bbM g(t1)
+
+    block bbN2():
+      t2 = tuple (x1, x2)
+      # call g(t2) and return to some other block bbM
+      call bbM g(t2)
+
+    ...other blocks...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+We can emit:
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # Unflattenable caller: no tuple allocation to ``push down''
+      call bbM g(t1)
+
+    block bbN2():
+      # Flattenable caller: can ``push down'' the allocation
+      call bbM g_flat(x1, x2)
+
+    ...other blocks...
+
+ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    ...as above...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+By iteratively applying this strategy, we can ``push together'' distant pairs of
+flatten/unflatten operations, and so try to ensure that the maximum possible
+number of callsites in the program are flattened -- even in cases where the
+global \texttt{Flatten} transformation would fail.
+
+This strategy also naturally extends to eliminating \texttt{ConApp}s: starting
+from a pattern like:
+\begin{minted}{python}
+  datatype Env = Env1 of 'a * 'b | ...
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      env: Env = Env1 (t)
+      call bbM g(env)
+    ...
+
+  def g(e: Env) -> ...:
+    block bb0():
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive at:
+\begin{minted}{python}
+  def f(...) -> ...:
+    ...
+    block bbN():
+      t: 'a * 'b = ...
+      call bbM g(t)
+    ...
+
+  def g_flat_env1(t: 'a * 'b) -> ...:
+    block bb0():
+      e: Env = Env1 (t)
+      case e of Env1 => goto bb1 | ...
+\end{minted}
+and, again, rely on existing optimization patterns to eliminate the
+\texttt{ConApp} completely, in addition to elimating now-dead blocks
+corresponding to \texttt{Env} cases that are no longer reachable, etc. For
+higher order functions, this subsumes the action of the existing
+\texttt{Polyvariance} pass.
+
+\hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
+
+\subsection{Implementation}
+The two type flattening implementations share a common framework, differing only
+in the types of operations that they match on:
+
+\begin{enumerate}
+\item Find all \texttt{call} statements with a ``pack'' operation that feeds
+  directly into a \texttt{call}: for the \texttt{tuple} case, this corresponds
+  to \texttt{tuple} constructor applications:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+  ....
+  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+\end{minted}
+and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
+\begin{minted}{python}
+  datatype ConType = Con1 of a * b * ... | Con2 of ...
+  ...
+  t: a * b * ... = ...
+  ...
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+  ...
+  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+\end{minted}
+\item Tag each such \texttt{call} statement with a per-argument flattening
+  decision, to indicate which arguments are valid targets to flatten, and
+  associate the tagged \texttt{call}s with their callee. For the flattenable
+  arguments, we include the information necessary to construct the flattened
+  call (i.e. the arguments to the \texttt{tuple} / \texttt{ConApp} call).
+  Continuing the examples from above, we would have:
+\begin{minted}{python}
+    f_tuple_caller_info = {
+      'call1': [FlattenVar(x1, x1, ...), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+    f_con_caller_info = {
+      'call2': [FlattenVar(t), PreserveVar, PreserveVar, ...]
+      ...other callers...
+    }
+\end{minted}
+\item Traverse all function-callee-decision collections and apply heuristics to
+  ``downgrade'' \texttt{FlattenVar} decisions to \texttt{PreserveVar} decisions
+  when specialization would be unprofitable.
+
+\item Traverse all function-callee-decision collections and emit the new
+  required specialized versions: an all-\texttt{PreserveVar} decision
+  corresponds to the original function. Any \texttt{FlattenVar(...)} decisions
+  result in a new specialization whose formal parameters include the flat
+  arguments in the appropriate location, and whose first block re-binds the
+  flattened names to the old, un-flattened name before jumping to the original
+  first block. That is, for the \texttt{tuple} example above, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_tuple_flat0(x1: a, x2: b, ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      t: a * b * ... = tuple(x1, x2, ...)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+and for the \texttt{ConApp} example, we emit:
+\begin{minted}{python}
+  # Specialization for [FlattenVar(...), PreserveVar, ...]
+  def f_con_flat0(t: a * b * ..., ..., y: c, z: d, ...) -> ...:
+    block bbBind():
+      # Re-introduce the original, unflattened name
+      c: ConType = con Con1(t)
+      # Jump to the original first block
+      goto bb0()
+\end{minted}
+
+\item Traverse the program to visit all \texttt{call} statements again, and
+  redirect the call target to the appropriate specialization that we identified
+  in the previous step (perhaps the original function). For non-identity
+  flattening decisions, use the contents of the \texttt{FlattenVar(...)}
+  argument to construct the appropriate flat call, i.e. for \texttt{tuple}:
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # call1
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_tuple_flat0(x1, x2, ..., y, z, ...)
+\end{minted}
+and for \texttt{ConApp}, 
+\begin{minted}{python}
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # call2
+\end{minted}
+becomes:
+\begin{minted}{python}
+  call bbN f_con_flat0(t, y, z, ...)
+\end{minted}
+
+\item With the callsite-flattening mapping still intact and with the duplicated
+  functions retaining the original variable names, iteratively re-apply the
+  process above on all newly-emitted functions until either convergence or a
+  user-specified iteration limit is reached. This fixes an issue with (mutually)
+  recursive functions, where a collection of $n$ mutually recursive calls
+  require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for
+  a source program like:
+\begin{minted}{python}
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g(t0)
+
+  g(t: a * b) -> ...:
+    ...
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      call bbK g(t2)
+\end{minted}
+The action of the pass is as follows: for both the call in \texttt{f} and
+\texttt{g}, we can flatten the function argument, and so we emit a new
+specialization of the function, \texttt{g\_flat}
+\begin{minted}{python}
+  f(...) -> ...:
+    ...
+    # flat call to `g`
+    t0 = (x, y)
+    call bbN g_flat(x, y)  # pointed to flat specialization
+
+  g(t: a * b) -> ...:
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+      goto bb0()
+
+    ...
+    block bbM():
+      # arguments for recursive call
+      t2: a * b = (w, z)
+      # This call is not flattened, but it could be!
+      call bbK g(t2)
+\end{minted}
+In this step, we re-run the flattening logic using the already-emitted set of
+specializations to remove the unflattened call in the specialized function, i.e.:
+\begin{minted}{python}
+  g_flat(x: a, y: b) -> ...:
+    block bbBind():
+      # reintroduce original, unflattened name
+      t = tuple(x, y)
+      # jump to original first block
+     goto bb0()
+
+    ...
+    block bbM():
+      call bbK g_flat(w, z) # pointed to flat specialization
+\end{minted}
+Multiple iterations are required to handle the case of mutually recursive
+functions, in a similar way. \hl{TODO: EXAMPLE?}
+
+\item Introduce fresh names for the symbols (specifically block labels and
+  variable names) in all duplicated functions. This is a requirement from MLton,
+  which expects that symbols' names are globally unique.
+
+\item Signal either ``progress'' (if we emitted a new specialization) or
+  ``done'' to the caller. Repeat until either convergence or a user-specified
+  iteration limit is reached.
+\end{enumerate}
+
+\subsection{Cost Heuristics}
+
+\hl{TODO: SHOULD RUN EXPERIMENTS WHERE WE RUN AFTER FLATTEN AND ALSO ONLY
+  FLATTEN NON-TAIL CALLS}
+
+%% \subsubsection{Tuple-flattening}
+
+%% \subsubsection{Constructor-flattening}
+
+\subsection{Limitations}
+Note that the worst-case bloat in IR size is quadratic in a single iteration:
+the very upper bound is that every statement in the program causes us to
+duplicate the entire program. This is clearly problematic in practice, and it
+interacts particularly poorly with chunkification (since flattened tuples can be
+more expensive than non-flat tuples to pass across chunk boundaries, due to the
+required stack writes that are linear in the number of tuple elements).
+
+\hl{TODO: EXPAND}
+
+\section{\texttt{ShallowFlatten}}
+\subsection{Motivation}
+As outlined above, the MLton default array-of-pointers is disasterous from the
+perspective of efficiently utilizing the memory controller, in terms of both
+bandwidth and latency. The MLton priorities in the MLton approach appear to be
+inverted: rather than treating array-of-pointers elimination as the
+highest-priority among the potential flattening options, it is treated as a
+final, best-effort transformation. For common array-oriented workloads (HPC,
+graphics, etc), this has demonstrably-poor results. These workloads appear to be
+under-represented in the MLton benchmark suite, but they have good coverage in
+parallel-ml-bench, as we'll see below.
+
+How can we generalize the argument-centric \texttt{Flatten} transformation to
+arrays? In the \texttt{SSA} representation, the action of the \texttt{Flatten}
+transformation is to dissovle the association between the conjoined elements by
+providing them separate names, i.e.;
+\begin{minted}{python}
+  t: a * b * c * ... -->
+  x: a, y: b, z: c, ...
+\end{minted}
+Mapping this on to arrays, we would, likewise, provide a name for each element
+in the tuple, i.e.:
+\begin{minted}{python}
+  arr: (a * b * c * ...) array -->
+  arr_x: a array, arr_y: b array, arr_z: c array * ...
+\end{minted}
+Considering the \texttt{Flatten} transformation on the \texttt{Machine}
+representation (focusing on the non-tail-recursive case), the action is to copy
+the \hl{conjoined elements} themselves into the buffer carrying on the function
+arguments (rather than a pointer to them), i.e.:
+\begin{minted}{cpp}
+  *stack.Push<void*>() = t ->
+  *stack.Push<typeA>() = t[0], 
+  *stack.Push<typeB>() = t[1],
+   ...
+\end{minted}
+The analogue for arrays is to copy the elements themselves into the array, i.e.:
+\begin{minted}{cpp}
+  arr[i] = t ->
+  arr[i * tuplelen(*t)] = t[0],
+  arr[i * tuplelen(*t) + 1] = t[1],
+  ...
+\end{minted}
+Speaking somewhat loosely, these two choices of strategies correspond to the
+familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
+layout is the natural default for a C++ programmer, i.e.:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point> array_of_structs;
+\end{minted}
+SoA is the natural default for SIMD operations, since it makes it simple to load
+contiguous chunks of data into SIMD registers:
+\begin{minted}{cpp}
+  struct PointSoA {
+    std::vector<int> xs;
+    std::vector<int> ys;
+  };
+\end{minted}
+Libraries and frameworks to support SIMD CPU programming commonly offer support
+for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
+introduced in \cite{ispc-paper}. ``Manual'' SoA layouts are also a standard
+technique in high-performance GPU programming, as discussed in e.g.
+\cite{cuda-textbook}.
+
+The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
+described above, our default memory layout is an array-of-pointers:
+\begin{minted}{cpp}
+  struct Point {
+    int x;
+    int y;
+  };
+  std::vector<Point*> array_of_pointers;
+\end{minted}
+which lacks a name in standard performance-engineering parlance, since it is
+virtually never the right choice to achieve high \hl{performance}. We will refer
+to it here as AoP when necessary.
+
+In order to handle the case where the consuming operations of the array elements
+cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
+operations for elements read from the AoS/SoA versions of the containers, and
+``unpack'' operations for elements written to the AoS/SoA versions. This lets us
+preserve the pre-existing names and types in the consuming code (for the
+elements), simplifying the transformation at the cost of some
+potentially-unnecessary heap operations if the intermediate tuples can't be
+optimzied away by later passes. While this can in theory result in a net
+performance loss, choosing the right heuristic for flattening is a question for
+the benchmarks, and the high cost of the AoP layout means that the bar to clear
+is very low.
+
+For the containers themselves, however, we need to update the types everywhere
+that they appear: not only in variable bindings and function arguments, but also
+in \texttt{datatype} declarations, including \texttt{datatype}s introduced as
+part of closure conversion. This makes it difficult to support partial versions
+of the transformation in order to enable cases where some, but not all AoP
+containers in the program are \texttt{ShallowFlatten}ed: the implementation
+below assumes all-or-nothing conversion.
+
+
+%% deep flatten would be great but we observe that it often doesn't work in
+%% practice. the priority seems to be inverted: deepflatten thinks of container
+%% flattening as a minor best-effort win, but really it's crucial for HPC
+%% workloads. these workloads seem to be under-represented in the MLton
+%% benchmark suite, but they appear in parallel-ml-bench
+
+%% what are the natural generalizatons of flattening? one strategy is that we
+%% pull the pointers out of the containers and drop the association between
+%% elements. this seems like the natural generalization of tuple flattening.
+%% another strategy is that we push the elements inside the container and drop
+%% the tuple structure. this is closer to what deep flatten does
+
+%% these two strategies coincide with AoS vs SoA. SoA is the preferred format
+%% for SIMD. it is a little odd to call the other version AoS (C++ programmers
+%% would think of AoS as "the default" rather than something you can opt-into),
+%% but it helps to make the distinction clear
+
+%% in order to preserve the nearby types, we insert pack/unpack operations. this
+%% allows us to be more aggressive than deep flatten. by running before the
+%% other flattening passes (in SSA IR rather than SSA2) we create opportunities
+%% for those tuples to be eliminated anyway (though this choice introduces some
+%% fixable limitations -- specifically about uniform types). it's possible in
+%% theory to imagine that the more-aggressive choice is worse if it requires us
+%% to do a lot of extra pack/unpack, but that's a question for the benchmarks
+
+\hl{TODO: NEED A BETTER DIAGRAM}
+
+\subsection{Implementation}
+%% ---whole section outline --
+
+%% visit all statements/types
+
+%%   define a heuristic for the element type (e.g. tuple width), then find all
+%%   references to arrays/vectors of that type
+
+%%   recursively, deeply rewrite types of array/vector so long as there is an
+%%   array/vector over a matched type. iterate until convergence to catch bugs
+%%   that we'll describe. this step is for non-statement types (TODO: list them)
+
+%%   rewrite all statements: prims are transformed in a container-/prim-specific
+%%   way (which we outline below). statements and their attached types are
+%%   transformed jointy. some are pass-through (type only), some need
+%%   transformation
+
+%%   unlike PreFlatten, there is no need ot iterate, we always converge after 1
+%%   step
+
+First, we will outline the high-level steps of the transformation (which are
+identical for the two flattening strategies). Second, we will provide a detailed
+description of the transformation that this pass applies to the types in the
+program. Finally, we will provide the detailed \texttt{prim}-by-\texttt{prim}
+transformation, \hl{specialized} for the AoS and SoA flavors of the
+transformation
+
+\subsubsection{High-level overview}
+
+\hl{TODO: PROBABLY NEED A FORMAL GRAMMAR OF SSA TO MOTIVATE THIS}
+
+\begin{enumerate}
+\item Fix a heuristic that divides all SSA types into ``flattenable'' and
+  ``un-flattenable.'' In this work, we define the ``tuple type width'' of any
+  SSA type \texttt{t} as: if \texttt{t} is a tuple with $n$ members, its width
+  its $n$, otherwise the width is 0.
+
+\item Visit all non-\texttt{Statement} IR constructs (\texttt{datatype}
+  constructors, function argument/return types, and block arguments) and
+  iteratively flatten all flattenable types until convergence.
+
+\item Visit all \texttt{Statement} IR constructs and iteratively flatten until
+  convergence (i.e. flatten each \texttt{Statement}, perhaps emitting more
+  \texttt{Statement}s, and then apply the flattening transformation to all
+  emitted statements until they can no longer be further flattened).
+
+\end{enumerate}
+
+\subsubsection{Type transformation}
+The core transformation is to rewrite an array-of-tuple to a tuple-of-array:
+\begin{minted}{python}
+  (a * b * c * ...) array ->
+  a array * b array * c array * ...
+\end{minted}
+Since there exist constructs that convert the type \texttt{a array} to \texttt{a
+  vector} (which is effectively a cast, for which MLTon inserts a copy in order
+to prersve the property that \texttt{vector} objects are immutable after
+construction), applying the optimization to \texttt{array} requires a either
+matching transformation for \texttt{vector}, or a complicated re-un-flattening
+in order to construct the contents of the un-flattened \texttt{vector} type.
+
+In this document, we choose the former strategy, rewriting \texttt{vector} types
+in addition to \texttt{array} types:
+\begin{minted}{python}
+  (a * b * c * ...) vector ->
+  a vector * b vector * c vector * ...
+\end{minted}
+
+Likewise, it is necessary to traverse ``deeply'' inside of types, i.e. we need
+to do the transformation:
+\begin{minted}{python}
+  ((a * b) array * c) ->
+  ((a array * b array) * c)
+\end{minted}
+since, in order to construct an object of type \texttt{(a * b) array * c}, we
+need an input object of type \texttt{(a * b) array}, which will be flattened by
+the transformation below.
+
+It is similarly necessary to apply the transformation iteratively, i.e. we need:
+\begin{minted}{python}
+  ((a * b) array * c) array ->
+  ((a * b) array) array * c array ->
+  (a array array * b array array) * c array
+\end{minted}
+since in order to construct the original type, we needed to have an object of
+type \texttt{(a * b) array} in hand, and this object was transformed into an
+\texttt{a array * b array} by the earlier action of the pass.
+
+\subsubsection{Statement transformation}
+The general form of an \texttt{SSA} statement is:
+\begin{minted}{python}
+  lhs: lhsTy = exp
+\end{minted}
+where \texttt{lhs} is a variable name, \texttt{lhsTy} is its type, and
+\texttt{exp} is an expression.
+
+The transformation on statements is divided into two cases: ``passthrough'' and
+``rewrite.'' Every non-\texttt{PrimApp} statement is a ``passthrough''
+statement. Taking \texttt{fTy} as the transformation on types above, these cases
+are all
+\begin{minted}{python}
+  lhs: lhsTy = exp ->
+  lhs: fTy(lhsTy) = exp
+\end{minted}
+where \texttt{exp} is some expression that contains no type expressions.
+
+The general form of a \texttt{PrimApp} is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+\end{minted}
+where \texttt{PrimName} is the name of a particular primitive operation (e.g.
+\texttt{Word32\_add}, \texttt{Word32\_equal}, etc), \texttt{targ1, targ2, ...}
+is a sequence of zero or more type arguments, and \texttt{arg1, arg2, ...} is a
+sequence of zero or more variable names.
+
+
+The ``passthrough'' case for \texttt{PrimApp} applies to all \texttt{PrimApp}s
+that do not manipulate flattened containers. Its general form is:
+\begin{minted}{python}
+  lhs: lhsTy = prim PrimName[targ1, targ2, ...](arg1, arg2, ...) ->
+  lhs: fTy(lhsTy) = prim PrimName[fTy(targ1), fTy(targ2), ...](arg1, arg2, ...)
+\end{minted}
+i.e.: leave all non-type portions of the expression unchanged, and transform all
+type expressions according to the type transformation above.
+
+The non-``passthrough,'' ``rewrite'' case applies to \texttt{PrimApp}s that
+manipulate flattened containers. These transformations differ between the SoA
+and AoS cases.
+
+Beginning with the SoA case, the general form of the transformation is ``find
+all containers of tuples, rewrite them to be tuples of containers.'' Beginning
+with container-creation as an illustrative example, a single step of the
+transformation is:
+\begin{minted}{python}
+  x: (a * b * ...) array = prim Array_alloc[a * b * ...](n) ->
+  # Construct per-member arrays
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  ...
+  # Bind the tuple-of-arrays to the original name
+  x: a array * b array * ... = tuple(arr_a, arr_b, ...)
+\end{minted}
+and now the other transformations of the pass are responsible for ensuring that
+other uses of \texttt{x} in the program use the updated type (e.g. any function
+signatures must be rewritten according to \texttt{tTy}, etc).
+
+\hl{TODO: WE REALLY DO ONE MORE ITERATION AFTER THIS (i.e. first update
+  statements until convergence, then update types, then run again). EXPLAIN?
+  MIGHT BE WRONG}
+
+Like as in the case of types, it is necessary to apply the transformation
+iteratively until convergence in order to correctly handle the case of nested
+types, e.g. after one round, we get:
+\begin{minted}{python}
+  arr: ((a * b) * c) array = prim Array_alloc[(a * b) * c](n) ->
+  arr_ab: (a * b) array = prim Array_alloc[a * b]
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Now the type of \texttt{x} still admits flattening: this is a problem, since, as
+we described above, the type transformation will eliminate all ocurrences of
+flattenable types in the program. Hence any users of \texttt{a} will fail to
+typecheck, and the resulting program is ill-formed. Applying another round of
+``rewrite''-flattening to each of the resulting expressions resolves the issue:
+\begin{minted}{python}
+  arr_ab: (a * b) array = prim Array_alloc[a * b](n)
+  arr_c: c array = prim Array_alloc[a * b](n)
+  x: ((a * b) array * c array) = tuple(arr_ab, arr_c)
+  ->
+  arr_a: a array = prim Array_alloc[a](n)
+  arr_b: b array = prim Array_alloc[b](n)
+  arr_ab: a array * b array = tuple(arr_a, arr_b)
+  arr_c: c array = prim Array_alloc[a * b]
+  x: ((a array * b array) * c array) = tuple(arr_ab, arr_c)
+\end{minted}
+Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO: CAN RETHINK ORDER}
+\begin{enumerate}
+\item \texttt{Array\_length} picks an arbitrary tuple member to pass the call on to)
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  n: int = Array_length[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a = select (arr, 0)
+  n: int = Array_length[a](arr_a)
+\end{minted}
+
+\item \texttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
+  elements, and constructs the final output tuple:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  # Read element i
+  x: (a * b * ...) = Array_sub[a * b * ...](arr, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  x_a: a = Array_sub[a](arr_a, i)
+  arr_b: b array = select (arr, 1)
+  x_b: b = Array_sub[b](arr_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
+\end{minted}
+
+\item \texttt{Array\_update} unpacks the tuple-of-arrays and writes in the
+  necessary elements:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  x: (a * b * ...) = ...
+  _ = Array_update[a * b * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  x_a: a = select (x, 0)
+  _ = Array_update[a](arr_a, i, x_a)
+  arr_b: b array = select (arr, 1)
+  x_b: b = select (x, 1)
+  _ = Array_update[b](arr_b, i, x_b)
+  ...
+\end{minted}
+
+\item \texttt{Array\_uninitIsNop} (which checks to see if raw data is dangerous
+  for the garbage collector for the specified array type) is hardcoded to
+  \texttt{false} for simplicity:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * b * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
+
+\item \texttt{Array\_uninit} (which fills an array with garbage data that is
+  safe for the garbage collector) is passed on to the constituent members:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  _ = Array_uninit[a * b * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  _ = Array_uninit[a](arr_a, n)
+  arr_b: b array = select (arr, 1)
+  _ = Array_uninit[b](arr_b, n)
+  ...
+\end{minted}
+
+\item \texttt{Array\_toArray} (which marks an array as initialized, and so safe
+  for the garbage collector) is also passed on to the constituent members:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  arr': (a * b * ...) array = Array_toArray[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  arr'_a: a array = Array_toArray[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  arr'_b: b array = Array_toArray[b](arr_b)
+  ...
+  arr': a array * b array * ... = tuple(arr'_a, arr'_b, ...)
+\end{minted}
+
+\end{enumerate}
+
+The transformation additionally handles the \texttt{array -> vector}
+transformation primitive (a copy into an immutable container); i.e.:
+
+\begin{minted}{python}
+  arr: (a * b * ...) array = ...
+  vec: (a * b * ...) vector = Array_toVector[a * b * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: (a array * b array * ...) = ...
+  arr_a: a array = select (arr, 0)
+  vec_a: a vector = Array_toVector[a](arr_a)
+  arr_b: b array = select (arr, 1)
+  vec_b: b vector = Array_toVector[b](arr_b)
+  ...
+  vec: a vector * b vector * ... = tuple(vec_a, vec_b, ...)
+\end{minted}
+
+Consequently, it is necessary to handle the full set of operations on
+\texttt{vector}, i.e.:
+\begin{enumerate}
+\item \texttt{Vector\_length}: like \texttt{Array\_length}, arbitrarily forwards
+  the call to the first tuple element:
+
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  n: int = Vector_length[a * b * ...](vec)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a = select (vec, 0)
+  n: int = Vector_length[a](vec_a)
+\end{minted}
+
+\item \texttt{Vector\_sub}: analogous to \texttt{Array\_sub}
+
+\begin{minted}{python}
+  vec: (a * b * ...) vector = ...
+  # Read element i
+  x: (a * b * ...) = Vector_sub[a * b * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: (a vector * b vector * ...) = ...
+  vec_a: a vector = select (vec, 0)
+  x_a: a = Vector_sub[a](vec_a, i)
+  vec_b: b vector = select (vec, 1)
+  x_b: b = Vector_sub[b](vec_b, i)
+  ...
+  x: (a * b * ...) = tuple(x_a, x_b, ...)
+\end{minted}
+
+\end{enumerate}
+
+For the AoS version, we ``flatten'' by reinterpreting the AoP data as consective
+elements in a larger array. Taking \texttt{Array\_alloc} again as a
+representative example, this means:
+\begin{minted}{python}
+  x: (a * a * ...) array = prim Array_alloc[a * a * ...](n)
+  -->
+  # Scale up the array by the \# of tuple elements
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = n * tupleWidth
+  # Bind `x` to a flat array of the scaled-up size
+  x: a array = Array_alloc[a](n')
+\end{minted}
+
+The other operations follow in the obvious way:
+\begin{enumerate}
+\item \texttt{Array\_length} scales down the length of the flattened array
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  n: int = Array_length[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  n': int = Array_length[a](arr)
+  n: int = n' / tupleSize
+\end{minted}
+
+\item \texttt{Array\_sub} reads out a slice from the flattened array and packs
+  it into a tuple:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  # Read element i
+  x: (a * a * ...) = Array_sub[a * a * ...](arr, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Array_sub[a](arr, i * tupleSize)
+  x_1: a = Array_sub[a](arr, i * tupleSize + 1)
+  ...
+  x_n: a = Array_sub[a](arr, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
+
+\item \texttt{Array\_sub} unpacks the input tuple and writes it into a slice:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  x: (a * a * ...) = ...
+  _ = Array_update[a * a * ...](arr, i, x)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = select(x, 0)
+  x_1: a = select(x, 1)
+  ...
+  _ = Array_update[a](arr, i * tupleSize + 0, x_0)
+  _ = Array_update[a](arr, i * tupleSize + 1, x_1)
+  ...
+\end{minted}
+
+\item \texttt{Array\_uninitIsNop} is hardcoded to \texttt{false}
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  isNop: bool = Array_uninitIsNop[(a * a * ...) array](arr)
+  -->
+  isNop: bool = false
+\end{minted}
+
+\item \texttt{Array\_uninit} is passed on to the slice of the flattened array
+  corresponding to the provided index:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  _ = Array_uninit[a * a * ...](arr, n)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  _ = Array_uninit[a](arr, n * tupleSize)
+  _ = Array_uninit[a](arr, n * tupleSize + 1)
+  ...
+  _ = Array_uninit[a](arr, n * tupleSize + tupleSize - 1)
+\end{minted}
+
+\item \texttt{Array\_toVector} is passed on to the flattned array:
+
+\begin{minted}{python}
+  arr: (a * a * ...) array = ...
+  vec: (a * a * ...) vector = Array_toVector[a * a * ...](arr)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   arr: a array = ...
+  vec: a vector = Array_toVector[a](arr)
+\end{minted}
+
+\item \texttt{Vector\_sub} works analogously to \texttt{Array\_sub}
+
+\begin{minted}{python}
+  vec: (a * a * ...) vector = ...
+  # Read element i
+  x: (a * a * ...) = Vector_sub[a * a * ...](vec, i)
+  -->
+  # Earlier action of the pass means that now we have:
+  #   vec: a vector = ...
+  tupleSize: int = tupleWidth(a * a * ...)
+  x_0: a = Vector_sub[a](vec, i * tupleSize)
+  x_1: a = Vector_sub[a](vec, i * tupleSize + 1)
+  ...
+  x_n: a = Vector_sub[a](vec, i * tupleSize + tupleSize - 1)
+  x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
+\end{minted}
+
+\end{enumerate}
+
+\hl{TODO: DISCUSS SECOND CALL TO PROPAGATE TYPES?}
+
+\subsection{Limitations}
+As outlined above, this implementation only supports the case when all AoP
+containers of a given type are flattened -- we cannot support a mix of flattened
+and unflattened AoP containers with a given type using the strategy above. The
+implementation discussed in this document simply emits an error if it encounters
+an un-flattenable construct, none of which appear in the benchmark suites that
+we evaluated this optimization against.
+
+It is debatable whether supporting a fallback is required for the transformation
+to be usable by real developers. The problem to worry about is that the
+AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
+an SML program like:
+\begin{minted}{sml}
+  val arr : (int * int) array = Array.array (3, (0, 0))
+  val element = (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Are \texttt{element} and \texttt{element'} physically identical? If this element
+is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
+equality, since the write/read result in pack/unpack operations that construct a
+new tuple. From the perspective of strict StandardML as defined in the language
+specification \cite{sml-def}, this is a non-issue: there is no way to observe
+pointer equality of tuples in the source language, and so the compiler has
+complete freedom. The only spec-compliant way to write this test would be to
+wrap the element type in \texttt{ref}:
+\begin{minted}{sml}
+  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+  val element = ref (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+by \texttt{PreFlatten}.
+
+However, both MLton and MPL extend the source language with constructs that
+allow user programs to observe this behavior: both have \texttt{MLton.eq}
+(physical equality for arbitrary values), and MPL additionally offers
+compare-and-swap primitives to support implementing lock-free parallel
+algorithms.
+
+Since physical equality of tuples is not defined in \cite{sml-def}, one option
+to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
+to return \texttt{false} in these cases. Another simple option would to be
+disable \texttt{ShallowFlatten} for all values of any types that participate in
+one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
+\texttt{int * int} tuple anywhere in the program disables
+\texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
+refined by a dataflow analysis to determine if the elements in the forbidden
+comparison may have originated in a container.
+
+This results in a potentially-unpleasant performance cliff for users, but there
+are various simple workarounds -- e.g. users can wrap any objects that must be
+tested for pointer equality in \texttt{ref} cells (which are not impacted by
+\texttt{ShallowFlatten}).
+
+%% \hl{TODO}
+
+
+\subsection{Comparison to more-agressive \texttt{DeepFlatten}}
+
+\hl{TODO: implement an benchmark a version of deepflatten that kicks in for this
+  case (i.e. no restriction on nested immutable types) / determine why it
+  doesn't work}
+
+\section{Evaluation}
+
+\subsection{Methodology}
+In the evalutation below, we will use two sets of benchmarks:
+\begin{enumerate}
+\item \texttt{parallel-ml-bench}: an MPL-specific benchmark suite introduced as
+  part of \cite{mpl-orig}. This benchmark suite is focused largely on
+  parallelism-friendly workloads, i.e. HPC, computational geometry, etc.
+
+\item The MLton benchmark suite: shipped as part of the MLton codebase, this
+  benchmark suite captures only single-core performance, and emphasizes some
+  more synthetic workloads to capture particular compiler capabilities (e.g. a
+  comparison between tail-recursive and non-tail-recursive Fibonacci
+  implementations).
+
+\end{enumerate}
+
+As we will see below, while the MLton benchmark suite does try to explicitly
+cover array flattening, the workloads it exhibits seem to under-weight the
+importance of the transformation.
+
+All measurements were performed using the same compiler binary on both test
+sides (MLton or MPL, respectively), using compiler flags to enable/disable
+passes as needed to test the impact of each optimization. All ratios are
+reported as \texttt{test / base}, i.e. <1.0 means ``smaller number on the test
+side'' (the ``good'' outcome) and >1.0 means ``bigger number on the test side
+(the ``bad'' outcome). Here \texttt{test} corresponds to the average across all
+trials on the test side, and \texttt{base} corresponds to the average across all
+trials on the base side. The number of trials is managed by the respective
+benchmark frameworks in order to collect on the order of a few seconds of data
+in each configuration.
+
+All benchmarks use the C backend of MLton/MPL for codegen, calling into GCC
+(version 15.2.0) to emit the final binary. We found that it was necessary to
+compile the benchmarks under \texttt{-O2} (rather than the MLton default of
+\texttt{-O1}) in order to obtain stable, interpretable performance data: with
+\texttt{-O1}, we observed that the same compiler configuration would yield
+dramatically different results on similar host CPUs (Intel Icelake vs AMD Ryzen
+9), e.g. a 40\% slowdown on Intel vs a 10\% speedup on AMD. These differences
+went away after supplying C compiler flags that controlled low-level code layout
+options, e.g. \texttt{-falign-loops}. We also chose to enable
+\texttt{-march=native} because it reduced the strange variance described above.
+
+As we'll discuss in more detail below, directly examining the experiment data
+makes it clear that trial runtimes are not normally distributed: as can be seen
+examining \cref{fig:example_scatter_trials}, the measured runtimes often exhibit
+a bimodal distribution, presumably related to the effect of the GC. As argued in
+\citet{bootstrap-paper}, it is consequently incorrect to estimate uncertainty
+using the standard deviation to construct a symmetric confidence interval --
+instead, we (for the \texttt{parallel\_bench} suite) report 95\% confidence
+intervals estimated using the bootstrap method.
+
+The MLton benchmark framework does not report per-trial numbers, and so no
+confidence intervals are included for the MLton data. Conversely, the parallel
+ML bench framework does not measure compilation times, and so compilation time
+impact is included only for MLton.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/delunay_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{delunay}}
+    \label{fig:delunay_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/dedup_mlton_parallel_ml_bench_scatter.pdf}
+    \caption{\texttt{dedup}}
+    \label{fig:dedup_mlton_parallel_ml_bench_scatter}
+  \end{subfigure}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \texttt{ConApp}-flattening for \texttt{dedup}.}
+  \label{fig:example_scatter_trials}
+\end{figure}
+
+
+In order to more-faithfully measure cases where our optimizations impacted only
+a small number of benchmarks (and to avoid including confusing noise in the
+geomean results), we exclude cases where the optimization under test did not
+change the generated code. In order to achieve bit-identical output binaries in
+this case, it was necessary to:
+\begin{itemize}
+
+\item Pass \texttt{-link-opt -s} to strip debug info (otherwise the C compiler
+  inserts strings into the binary that contain non-deterministic temporary
+  filenames)
+
+\item Manually override the ``magic number'' inserted by MLton into the
+  generated binary to a fixed, deterministic value: this magic number is formed
+  from hash of the compiler binary version (deterministic) and a call to
+  \texttt{Random.word ()} (not necessarily fixed, in case the optimization pass
+  advanced the state of the random number generator).
+
+The purpose of this value is just to enable MLton to more easily correlate its
+generated C code with the compiled binaries (for profiling and state
+serialization), so our choice to hardcode \texttt{0x0} has no impact on
+performance.
+
+\end{itemize}
+
+All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
+
+\hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
+
+\subsection{Tuple Flattening}
+For the evaluation below, we use the following configuration:
+\begin{itemize}
+
+\item \texttt{PreFlatten} runs after \texttt{Flatten} (in order to avoid
+  introducing duplication in the case where the \texttt{Flatten} global analysis
+  can already fix all callers)
+
+\item \texttt{PreFlatten} only transforms non-tail-recursive functions
+
+\item \texttt{PreFlatten} runs 10 ``recursive steps'' (\hl{TODO: EXPLAIN? REMOVE?}
+
+\end{itemize}
+
+
+\subsubsection{MLton benchmarks}
+\hl{TODO: FORMATTING IS BAD, HOW TO CONDENSE?}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:tuple_mlton_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_compile_mlton_vs_mlton.pdf}
+    \caption{Compile time}
+    \label{fig:tuple_mlton_compile_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_mlton_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten} on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_mlton}
+\end{figure}
+
+As seen in \cref{fig:tuple_mlton}, the tuple flattning optimization is broadly
+neutral for MLton on the MLton benchmark suite, with <5\% impact on all metrics.
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:tuple_parallel_bench_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_parallel_bench_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_parallel_bench}
+\end{figure}
+
+As in the previous section, the impact of the tuple optimization on MLton for
+parallel ML bench is also broadly neutral, as seen in
+\cref{fig:tuple_parallel_bench}.
+
+One exception is \texttt{reverb}, which shows a huge (40\%) confidence interval.
+Examining the raw data in \cref{fig:reverb_tuple_scatter} makes it clear that
+both the base and test sides exhibit extreme run-to-run variance (more than a
+factor of 2) and so the noise is inherent to the benchmark rather than a new
+effect of the tuple flattening optimzation.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/reverb_mlton_parallel_ml_bench_scatter.pdf}
+  \caption{Trial-by-trial execution time for \texttt{reverb} in the \texttt{tuple}-flattening configuration.}
+  \label{fig:reverb_tuple_scatter}
+\end{figure}
+
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+    \caption{Run time}
+    \label{fig:tuple_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:tuple_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_parallel_bench_mpl}
+\end{figure}
+
+As we see in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple}
+optimization has a mixed effect, with some benchmarks showing consistent wins
+across core counts, and others showing losses. In order to further investigate
+this effect, we'll select two representative benchmarks: \texttt{bfs} (a
+consistent win) and \texttt{delaunay} (a consistent loss).
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: observed IR change}
+
+The \texttt{delaunay} benchmark solves the computational geometry problem of
+\textit{Delaunay triangulation}, which partitions the convex hull of a set of
+points into triangles whose smallest angles are maximal. In \texttt{delaunay},
+the pass flattens arguments to 3 called functions (via duplication):
+
+\begin{enumerate}
+\item \texttt{flushArr}: part of the implementation of the \texttt{print} function
+\item \texttt{makeTreeBounded}: part of the initialization logic, not included
+  in the benchmarked region.
+\item \texttt{parfor}: Transforms one branch of MPL's parallel \texttt{for} loop
+  construct, going from:
+
+\begin{minted}{python}
+  # Parallel for loop on the range (lo, hi) with parallel grain size `grain`
+  def parfor(f: 'a -> 'b, lo_hi: int * int, grain: int):
+    (lo, hi) = lo_hi # unpack tuple
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      parfor (f, (lo, mid), grain)
+    def right():
+      parfor (f, (mid, hi), grain)
+    # launch left + right in parallel
+    par (left, right)
+\end{minted}
+and flattening one of the two \texttt{parfor} recursive calls, i.e.:
+\begin{minted}{python}
+  # Parallel for loop on the range (lo, hi) with parallel grain size `grain`
+  def parfor(f: 'a -> 'b, lo_hi: int * int, grain: int):
+    (lo, hi) = lo_hi # unpack tuple
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      parfor (f, (lo, mid), grain)
+    def right():
+      parfor_flat (f, mid, hi, grain)  # flattened recursive call
+    # launch left + right in parallel
+      par (left, right)
+
+  # flattened specialization of `parfor`
+  def parfor_flat(f: 'a -> b, lo: int, hi: int, grain: int): ...
+    # ...end conditions...
+    # recursive spawn
+    mid = lo + (hi - lo) / 2
+    def left():
+      # construct tuple for unflattened call
+      lohi = (lo, mid)
+      parfor (f, lo_hi, grain)
+    def right():
+      parfor_flat (f, mid, hi, grain)  # flattened recursive call
+    # launch left + right in parallel
+    par (left, right)
+\end{minted}
+
+Based on the action of the transformation, we would probably expect to see (for
+\texttt{delaunay}):
+\begin{enumerate}
+\item A small win inside of \texttt{parfor} calls: while we could imagine the
+  duplication adding some overhead due to instruction cache effects, the
+  duplicated code is fairly small.
+
+\item More-or-less no impact on any other part of the benchmark (test setup and
+  \texttt{print} shouldn't have any impact on the per-trial runtime).
+\end{enumerate}
+
+%% Doing some arithmetic with the benchmark configuration, we can estimate on the
+%% order of 500,000 calls to \texttt{parfor}, and so a $\approx 1$ \mu sec change
+%% in this function's performance (which seems like a conservative upper bound for
+%% the performance impact of the IR transformation above) should yield a change of
+%% $\approx .5$ seconds of CPU time over the full benchmark (on the order of 7\%
+%% out of the benchmark's full $\approx 7$ second runtime).
+
+A savings materialized in \texttt{parfor} is consistent with what we see in the
+benchmark: overhead in \texttt{parfor} adds delay in spwaning new tasks, and so
+we would expect a larger savings at higher core counts. However, the consistent
+loss at lower core counts is hard to explain on the basis of the observed IR
+transformation.
+
+In the \texttt{bfs} benchmark, the program calculates the BFS tree of an input
+graph (i.e. the undirected distance between some distinguished source node and
+all other nodes in the graph). The pass applies the following transformations to
+\texttt{bfs}:
+\begin{enumerate}
+\item \texttt{parfor}: the same inline-the-right-hand-branch as above
+
+\item \texttt{parVisitMany}: structurally identical to \texttt{parfor}, manages
+  parallel fanout across graph nodes based on their indices
+
+\item \texttt{sumOfOutDegrees}: avoids constructing a temporary tuple to pass as
+  an argument to a paralllel reduce operation, roughly:
+
+\begin{minted}{python}
+  def sumOfOutDegrees(all_nodes: int array):
+    def do_reduce(env: (...complex, 7-element tuple type...)):
+      ... calculate sum ...
+    reduce(do_reduce, all_nodes)
+\end{minted}
+
+where we flatten the \texttt{do_reduce} call and avoid building the intermediate
+\texttt{env} argument.
+
+\end{enumerate}
+
+
+
+
+
+\hl{TODO: descibe that they change irrelevant portions}
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: microarchitectural effects}
+
+\hl{TODO: LOOK AT PERF OUTPUT. Discuss high mispredict rate. Conclude that this is not an answer}.
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Simplify} effects}
+
+\hl{TODO: Look at output from base-fixup. Conclude that simplify is not the culprit}.
+
+\subsubsection{\texttt{delaunay} vs \texttt{bfs}: control for \texttt{Chunkify} effects}
+
+\hl{TODO: Look at output from chunkify one. Conclude that chunkify is the
+  culprit. Link to an appendix with the full table of results from these
+  experiments and conclude that there are more unexplained effects}.
+
+%% As seen in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple} optimization
+%% is a fairly consistent loss across the benchmark suite; with the most striking
+%% example \texttt{dense-matmul} displaying a 30\% loss for lower core count tests.
+
+\hl{TODO: NEED ANALYSIS. MAYBE HYPERTHREADING IS RELEVANT?}
+
+\subsection{\texttt{ConApp} Flattening}
+
+For the evaluation below, we use the following configuration:
+
+\begin{itemize}
+\item \texttt{PreFlatten} runs before \texttt{Flatten} (so that \texttt{Flatten}
+  has the chance to optimize away the tuples that remain after eliding the ADT
+  tags)
+
+\item \texttt{PreFlatten} transforms all functions (both tail-recurisve and not)
+
+\item \texttt{PreFlatten} runs 10 ``recurisve steps'' (\hl{TODO: LIKE ABOVE?})
+\end{itemize}
+
+\subsubsection{MLton Benchmarks}
+
+\hl{TODO: NEED TO INVESTIGATE BIG REGRESSION: SEEMS REAL}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:con_mlton_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_compile_mlton_vs_mlton.pdf}
+    \caption{Compile time}
+    \label{fig:con_mlton_compile_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:con_mlton_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_mlton}
+\end{figure}
+
+\hl{TODO: SUSPECT THE MEASUREMENTS ABOVE WERE IN A BAD STATE. NEED TO RERUN ON CHAMELEON}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+
+\hl{TODO: SKIPPED COMPILE SIZE}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:con_parallel_bench_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:con_parallel_bench_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+    \caption{Run time}
+    \label{fig:con_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:con_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench_mpl}
+\end{figure}
+
+\subsection{AoS Flattening}
+
+\hl{TODO: DESCRIBE}
+
+\subsubsection{MLton Benchmarks}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:aos_mlton_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_compile_mlton_vs_mlton.pdf}
+    \caption{Compile time}
+    \label{fig:aos_mlton_compile_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:aos_mlton_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_mlton}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+
+\hl{TODO: SKIPPED COMPILE SIZE}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:aos_parallel_bench_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:aos_parallel_bench_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_parallel_bench}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+    \caption{Run time}
+    \label{fig:aos_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:aos_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_parallel_bench_mpl}
+\end{figure}
+
+\subsection{SoA Flattening}
+
+\hl{TODO: DESCRIBE}
+
+\subsubsection{MLton Benchmarks}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:soa_mlton_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_compile_mlton_vs_mlton.pdf}
+    \caption{Compile time}
+    \label{fig:soa_mlton_compile_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:soa_mlton_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_mlton}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MLton vs MLton}
+
+\hl{TODO: DESCRIBE CONFIG, ANALYSIS}
+
+\hl{TODO: SKIPPED COMPILE SIZE}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mlton_vs_mlton.pdf}
+    \caption{Run time}
+    \label{fig:soa_parallel_bench_run_mlton_vs_mlton}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mlton_vs_mlton.pdf}
+    \caption{Binary size}
+    \label{fig:soa_parallel_bench_size_mlton_vs_mlton}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_parallel_bench}
+\end{figure}
+
+\subsubsection{\texttt{parallel-ml-bench}: MPL vs MPL}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+    \caption{Run time}
+    \label{fig:soa_parallel_bench_run_mpl_vs_mpl}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mpl_vs_mpl.pdf}
+    \caption{Binary size}
+    \label{fig:soa_parallel_bench_size_mpl_vs_mpl}
+  \end{subfigure}
+  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_parallel_bench_mpl}
+\end{figure}
+
+\section{Related Work}
+
+This work directly builds on the original \texttt{Flattening} transformation of
+\cite{flat-paper}, but extends it to a) handle additional cases where the
+callers cannot be ``unified'' to a single flat/non-flat representation (for
+non-array types), and b) more-agressively flatten cases related to arrays.
+
+%% ConApp-focused examples
+
+\cite{mlton-closure-paper} introduced the MLton defunctionalization pass, whose \texttt{datatype} objects we seek to eliminate through our \texttt{PreFlatten} pass. We, effectively, repurpose their control flow analysis in order to drive function specialization decisions.
+
+\cite{local-paper} and \cite{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format)
+
+\cite{double-steal-paper} also investigates a similar problem to our \texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the source language); however their contribution focuses on a novel, lossless in-memory representation for the ADT rather than optimize-out the ADT metadata entirely.
+
+\cite{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to "clean up" in the specialized blocks).
+
+\cite{manticore-arity-paper} treats a problem very similar to \cite{flat-paper}. Much of their complexity stems from performing the transformation on an higher-order IR, whereas we (like \cite{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
+
+The recent work \cite{closure-sharing-paper} examines the opposite optimization strategy to the one discussed here – introducing new layers of indirection in closure representations as a performance optimization. Like \cite{manticore-arity-paper}, their analysis differs substantially from anything in MLton, since MLton implements higher-order functions via defunctionalization rather than closure conversion.
+\cite{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
+
+%% DeepFlatten-focused examples
+
+\cite{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their "data-only flattening" is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations
+
+Various work at jane street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \cite{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
+
+\cite{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \cite{mpl-sched-paper}.
+
+\cite{realtime-sml-paper} also investigates the impact of deep flattening optimizations on performance: the authors there disable \texttt{DeepFlatten} in order to avoid complexity when computing byte offsets for post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of different sizes. We avoid this issue by simply restricting ourselves to tuples with uniform element types and observe that this is sufficient for all opportunities in our benchmark suites.
+
+
+
+\hl{TODO}
+
+\section{Conclusion}
+
+\hl{TODO}
+
+\section{TODO}
+
+Items to follow up on from discussions:
+
+\subsection{7/14}
+\begin{itemize}
+\item Lit review
+
+  \begin{itemize}
+
+  \item Generally: say more! Can spend e.g. a full page on how we differ from
+    the flattening paper
+
+  \item The lit review should stand alone (readers may start with it)
+
+  \item Want to be superexplicit ``we pursue a more aggressive flattening
+    strategy'' -- how? what makes it more agressive? what do we do that they
+    don't?
+
+  \item Avoid lumping stuff toether: e.g. the two ``serialized data papers,''
+    the attempt to unify them as ``fast disk format'' is not really a match.
+    Something like ``manual control of serialized formats'' is better
+
+  \item Don't use raw /cite -- the sentences should read like the footnote
+    numbers don't exist. Use /citet to get better auto-formatat
+
+  \item To cite the Jane Street slide deck, best to try to make a bibtex entry
+    that includes the talk as well
+
+  \item Consider using multiple /subsection or /paragraph blocks
+
+  \item Be sure to tie every cited paper exactly to what we did
+
+  \item When contrasting, aim to emphasize fundamental differences of approach
+    rather than just incidental implementation differences (e.g. we are using
+    MLton and so we get some passes for free, but that doesn't make our strategy
+    conceptually simpler)
+
+  \end{itemize}
+
+\item Tuple-flattening ``meat''
+
+  \begin{itemize}
+  \item Aim for text to be standalone! The english should stand alone. Be sure
+    that we have concise, compact statements that describe what we do
+
+  \item E.g. from ``the basic intution is'' -- just state ``the intuition is
+    that we can optimize away matching pack/unpack operations by pushing them
+    through function calls'' and then call out to diagrams that describe what we
+    want to do
+
+  \item Extend the example to show how the later \texttt{simplify} passes
+    actually eliminate the tuple
+
+  \item Consider a single, complex example rather than starting off with an easy
+    case and adding complexity. We want it to be clear why we are necessary from
+    the very start.
+
+  \item For the algorithm part, we need to sketch it out more formally as
+    transformations on an AST (in addition to perhaps an informal English
+    description). Certainly the rewrite itself, maybe also the analysis (might
+    be OK for that to be more informal)
+
+  \item A useful way to write the AST transformation is ``[|foo bar = baz|] =
+    [|foo bar|] = [|baz|], where ....'' followed by a detailed explanation. The
+    transformation brackets can be subscripted by some symbol that indicates the
+    result of the analysis 
+
+  \end{itemize}
+
+\end{itemize}
+
+\subsection{6/29}
+\begin{itemize}
+\item Code snippets should be diagrams rather than inlined
+\item A bulleted list should generally be compact on a single page
+\item Introducing both C and python flavor pseudo-IRs up front is wordy and
+  confusing. Also, using a C-flavor can be distracting in that it's unclear what
+  we should ``interpret literally.'' Consider sticking to a single,
+  Python-flavor IR
+\item For the IR we do choose to pick, add an explicit grammar up-front
+\item Add more ``signposting'' up-front to support hte nfo dump
+\item Probably worth adding a section on polyvariance / defunctionalization to
+  motivate the con flattening
+
+\item With con flattening, maybe emphasize: MLton creates opportunites for
+  specialization to happen downstream; we do the opposite -- explicitly
+  specializing where we see a win
+
+\item C struct definitions can be confusing because they imply stuff about
+  alignment and packing that doesn't really hold
+
+\item For diagrams: draw.io ?
+
+\item Be careful to distinguish source language constructs from guarantees about
+  generated code; e.g. ``tuples are allocated om the heap'' -- only when
+  flattening fails
+
+\item Ok to introduce more sections -- e.g. separate for each optimization type
+
+\item Need to dig into why DeepFlatten is failing in our case or at least
+  explicitly call out that we tried and couldn't do it. One useful thing to
+  note: lattice-based ``poisoning'' analysis can be difficult to track
+
+\item Add an intro where we make it more explicit what our contribution is
+
+\item Think of the evaluation section as a reference to refer to throughout the
+  other sections
+
+\end{itemize}
+
+Other items:
+\begin{itemize}
+\item We should avoid writing \texttt{'a} in SSA IR since it's monomorphic
+\end{itemize}
+
+%% \section{ 
+
+
+\nocite{*}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
+
