@@ -3,21 +3,54 @@
 
 \subsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced in
-\citet{mlton-proj}, with a parallel variant MaPLe intreoduced in
+\citet{mlton-proj}, with a parallel variant MaPLe introduced in
 \citet{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
 to support parallel programming (e.g. fork/join, atomics) along with runtime
-support for managing pools of green threads and a sophisticated parallel garbage
-collector. For the purposes of the exploration in this document, MLton and MPL
-broadly interchangeable, differing primarily in terms of the benchmark workloads
-that they support: unless explicitly noted otherwise, any statements about one
-compiler will also apply to the other.
+support for managing pools of green threads and a parallel garbage collector.
+For the purposes of this document, MLton and MPL broadly interchangeable,
+differing primarily in terms of the benchmark workloads that they support:
+unless explicitly noted otherwise, any statements about one compiler will also
+apply to the other.
 
-The MLton compilation pipeline passes through 8 distinct IRs on the way to
-codegen (as documented on \citet{mlton-website}):
+The MLton compilation pipeline passes through 8 distinct IRs
+\cite{mlton-website} on the way to codegen, illustrated in
+Figure~\ref{fig:mlton-ir-pipeline}:
 
 %% http://mlton.org/IntermediateLanguage
 
-\hl{TODO(agy): Add a diagram (in addition to text) that shows this flow}
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    irnode/.style={
+      rectangle, rounded corners=6pt,
+      draw=colorXBorder, fill=colorX, line width=0.75pt,
+      minimum height=0.75cm,
+      inner xsep=8pt, inner ysep=4pt,
+      font=\small\ttfamily,
+      text=black!90
+    },
+    arr/.style={-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.8pt, draw=black!55}
+  ]
+    \node[irnode] (ast) {AST};
+    \node[irnode, right=0.4cm of ast] (coreml) {CoreML};
+    \node[irnode, right=0.4cm of coreml] (xml) {XML};
+    \node[irnode, right=0.4cm of xml] (sxml) {SXML};
+    \node[irnode, right=0.4cm of sxml] (ssa) {SSA};
+    \node[irnode, right=0.4cm of ssa] (ssa2) {SSA2};
+    \node[irnode, right=0.4cm of ssa2] (rssa) {RSSA};
+    \node[irnode, right=0.4cm of rssa] (mach) {Machine};
+
+    \draw[arr] (ast) -- (coreml);
+    \draw[arr] (coreml) -- (xml);
+    \draw[arr] (xml) -- (sxml);
+    \draw[arr] (sxml) -- (ssa);
+    \draw[arr] (ssa) -- (ssa2);
+    \draw[arr] (ssa2) -- (rssa);
+    \draw[arr] (rssa) -- (mach);
+  \end{tikzpicture}
+  \caption{The MLton intermediate representation (IR) compilation pipeline.}
+  \label{fig:mlton-ir-pipeline}
+\end{figure}
 
 \begin{itemize}
 \item \texttt{AST}: isomorphic to the source
@@ -29,19 +62,19 @@ codegen (as documented on \citet{mlton-website}):
   retains higher-order functions)
 \item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
   guarntees the usual SSA properties (as described in e.g. \citet{ssa-paper})
-\item \texttt{SSA2}: simplifies representations of \texttt{ref}s and container types \hl{??}
+\item \texttt{SSA2}: optimizes representations of \texttt{ref}s and container types
 \item \texttt{RSSA}: introduces explicit memory layouts
 \item \texttt{Machine}: 1:1 with generated code
 \end{itemize}
 
-MLton supports a variety of codgen backends (including x86 and LLVM), but for
-the purposes of this document, we will consider only on the C backend (which is
-the only backend supported by MPL).
+MLton supports a variety of codgen backends (including x86 and LLVM). In this
+document, we will consider only on the C backend, since it is the only backend
+supported by MaPLe.
 
-The optimizations that we will explore all target the \texttt{SSA}
-representation, so in the following sections we will talk through the SML
-$\Rightarrow$ \texttt{SSA} transformation (in order to motivate the source-language
-constructs that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarrow$
+The optimizations that we will explore target the \texttt{SSA} representation,
+so in the following sections we will talk through the SML $\Rightarrow$
+\texttt{SSA} transformation (in order to motivate the source-language constructs
+that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarrow$
 \texttt{Machine} ($\approx$ C codegen) transformation (in order to motivate the
 performance implications of each optimization). \hl{NOT GREAT WORDING}
 
