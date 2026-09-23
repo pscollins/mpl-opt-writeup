@@ -72,25 +72,33 @@ document, we will consider only on the C backend, since it is the only backend
 supported by MaPLe.
 
 The optimizations that we will explore target the \texttt{SSA} representation,
-so in the following sections we will talk through the SML $\Rightarrow$
-\texttt{SSA} transformation (in order to motivate the source-language constructs
-that we aim to \hl{improve}), as well as the \texttt{SSA} $\Rightarrow$
-\texttt{Machine} ($\approx$ C codegen) transformation (in order to motivate the
-performance implications of each optimization). \hl{NOT GREAT WORDING}
+so in the following sections we will give a high-level overview of the mapping
+from source-level SML to \texttt{SSA} (in order to capture the source-level
+constructs that our optimizations target) as well as the mapping from
+\texttt{SSA} to \texttt{Machine} (in order to motivate the expected performance
+impact of our optimizations).
 
 \subsection{SML $\Rightarrow$ \texttt{SSA}}
+%% Regenerating code in this section:
+%% 
+%% Compile command:
+%% ➜  lit-tests git:(f6e8544f3) /bin/rm -rf /tmp/out/*; OVERRIDE_OUTDIR=/tmp/out tools/mlton-compile.sh -verbose 3 -keep-pass '.*' -diag-pass '.*' examples/fib.sml &> /tmp/log
+%%
+%% Also note that the SSA IR is defined in
+%% https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245
 
 \hl{CUT! Just say ``we'll show it this way'' and don't bother explaining what
   actually exists, it's not helpful for our purpose}
 
-The \texttt{SSA} IR is defined
-\href{https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245}{here}.
-Since MLton is a whole-program compiler, the textual format of the IR can be
-rather difficult to read: a trivial SML program like
+Since MLton is a whole-program compiler, it is difficult to extract small
+snippets of its IRs for demonstration purposes: the trivial SML program in
+\cref{fig:fib_sml} expands to a whopping 1 MB of text in the first SSA pass.
+Apart from verbosity, the textual format of the IR is rather difficult to read
+because it uses an unusual SML-inspired synax -- a snippet of this IR
+corresponding to our example \texttt{fib} program is depicted in
+\cref{fig:fib_sml_ssa}.
 
-%% Compile command:
-%% ➜  lit-tests git:(f6e8544f3) /bin/rm -rf /tmp/out/*; OVERRIDE_OUTDIR=/tmp/out tools/mlton-compile.sh -verbose 3 -keep-pass '.*' -diag-pass '.*' examples/fib.sml &> /tmp/log
-
+\hl{TODO(agy): move this code into a figure named fig:fib_sml}
 \begin{minted}{sml}
   fun fib(n) =
     if n = 0 then 1
@@ -99,10 +107,7 @@ rather difficult to read: a trivial SML program like
   val _ = print (Int.toString (fib 4))
 \end{minted}
 
-is transformed to a whopping ~1 MB of text in the first \texttt{SSA} pass
-(shrinking down to a still-substantial 125KB by the last \texttt{SSA} pass).
-Apart from verbosity, the actual textual format is rather difficult to read,
-e.g. for the \texttt{fib} function alone, we get:
+\hl{TODO(agy): move this into a figure named fig:fib_sml_ssa}
 \begin{minted}{sml}
 fun fib_4 (x_51048: word32): {returns = Some (word32), raises = Some (exn_27)} =
 L_6736 ()
