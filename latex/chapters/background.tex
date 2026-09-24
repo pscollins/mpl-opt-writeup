@@ -87,57 +87,63 @@ impact of our optimizations).
 %% Also note that the SSA IR is defined in
 %% https://github.com/MLton/mlton/blob/e44f16ca8cbe1eea16657bf5bd9208f7de158436/mlton/ssa/ssa-tree.sig#L15-L245
 
-\hl{CUT! Just say ``we'll show it this way'' and don't bother explaining what
-  actually exists, it's not helpful for our purpose}
-
 Since MLton is a whole-program compiler, it is difficult to extract small
 snippets of its IRs for demonstration purposes: the trivial SML program in
 \cref{fig:fib_sml} expands to a whopping 1 MB of text in the first SSA pass.
-Instead, we will work here with a loose, Python-inspired pseudocode, and assert
-that the \texttt{fib} function is lowered to \texttt{SSA} as the the snippet in
-\cref{fig:fib_ssa}.
+Instead, we will work here with a loose, Python-inspired pseudocode (whose
+structure mirrors the real SSA IR), and assert that the \texttt{fib} function is
+lowered to \texttt{SSA} as the snippet in \cref{fig:fib_ssa}.
 
 \begin{figure}[htbp]
   \centering
-\begin{minted}{sml}
-  fun fib(n) =
-    if n = 0 then 1
-    else n * fib(n -1)
+  \begin{subfigure}[t]{0.33\textwidth}
+    \caption{Standard ML source}
+    \label{fig:fib_sml}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+fun fib(n) =
+  if n = 0 then 1
+  else n * fib(n - 1)
 
-  val _ = print (Int.toString (fib 4))
+val _ = print (
+  Int.toString (fib 4))
 \end{minted}
-  \caption{A simple \texttt{fib} program in Standard ML.}
-  \label{fig:fib_sml}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.64\textwidth}
+    \caption{Lowered \texttt{SSA} pseudocode}
+    \label{fig:fib_ssa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def fib(n: int): int =
+  block bb0():
+    isEq: boo = prim Word32_equal (n, 0)
+    case isEq of true => goto bb1 | false => goto bb2
+
+  block bb1():
+    return 1
+
+  block bb2():
+    callArg: int = prim Word32_sub (n, 1)
+    # call fib(n-1) and return to bb3
+    call bb3 (fib (callArg))
+
+  block bb3(callResult: int):
+    funcResult: int = prim Word32_mul (callResult, n)
+    return funcResult
+
+def main(): unit =
+  block bb0():
+    initVal: int = 4
+    # call fib(initVal) and return to bb1
+    call bb1 (fib (initVal))
+
+  block bb1(fibResult: int):
+    ...call print and exit...
+\end{minted}
+  \end{subfigure}
+  \caption{A simple \texttt{fib} program in Standard ML alongside its representation lowered to \texttt{SSA} (in pseudocode).}
+  \label{fig:fib_comparison}
 \end{figure}
-
-%% TODO(agy): put this side-by-side in a box with the figure above
-\begin{minted}{python}
-  def fib(n: int): int =
-    block bb0():
-      isEq: boo = prim Word32_equal (n, 0)
-      case isEq of true => goto bb1 | false => goto bb2
-
-    block bb1():
-      return 1
-
-    block bb2():
-      callArg: int = prim Word32_sub (n, 1)
-      # call fib(n-1) and return to bb3
-      call bb3 (fib (callArg))
-
-    block bb3(callResult: int):
-      funcResult: int = prim Word32_mul (callResult, n)
-      return funcResult
-
-  def main(): unit =
-    block bb0():
-      initVal: int = 4
-      # call fib(initVal) and return to bb1
-      call bb1 (fib (initVal))
-
-    block bb1(fibResult: int):
-      ...call print and exit...
-\end{minted}
 A few features of this representation are worth noting:
 
 \begin{itemize}
