@@ -80,7 +80,7 @@ impact of our optimizations).
 
 \subsection{SML $\Rightarrow$ \texttt{SSA}}
 %% Regenerating code in this section:
-%% 
+%%
 %% Compile command:
 %% ➜  lit-tests git:(f6e8544f3) /bin/rm -rf /tmp/out/*; OVERRIDE_OUTDIR=/tmp/out tools/mlton-compile.sh -verbose 3 -keep-pass '.*' -diag-pass '.*' examples/fib.sml &> /tmp/log
 %%
@@ -116,7 +116,7 @@ val _ = print (
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
 def fib(n: int): int =
   block bb0():
-    isEq: boo = prim Word32_equal (n, 0)
+    isEq: bool = prim Word32_equal (n, 0)
     case isEq of true => goto bb1 | false => goto bb2
 
   block bb1():
@@ -144,6 +144,45 @@ def main(): unit =
   \caption{A simple \texttt{fib} program in Standard ML alongside its representation lowered to \texttt{SSA} (in pseudocode).}
   \label{fig:fib_comparison}
 \end{figure}
+
+\hl{TODO: grammar is misisng constants, also missing tuple/container types. What
+  do we call the SSA?}
+
+A grammar for this language is provided in \cref{fig:ssa_grammar}. Mirroring
+MLton's representation of \texttt{SSA}, this language 
+
+\begin{figure}
+  \begin{align*}
+\langle\textit{program}\rangle &\Coloneqq \langle\textit{function\_def}\rangle^+ \\[0.4em]
+\langle\textit{function\_def}\rangle &\Coloneqq \texttt{def} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \;\texttt{:} \;\langle\textit{type}\rangle \;\texttt{=} \;\textsc{newline} \\
+&\qquad \textsc{indent} \;\langle\textit{block}\rangle^+ \;\textsc{dedent} \\[0.4em]
+\langle\textit{param\_list}\rangle &\Coloneqq \langle\textit{param}\rangle \;(\texttt{,} \;\langle\textit{param}\rangle)^* \\[0.4em]
+\langle\textit{param}\rangle &\Coloneqq \langle\textit{id}\rangle \;\texttt{:} \;\langle\textit{type}\rangle \\[0.4em]
+\langle\textit{type}\rangle &\Coloneqq  \langle\textit{id}\rangle \\[0.4em]
+\langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \;\texttt{:} \;\textsc{newline} \\
+&\qquad \textsc{indent} \;\langle\textit{stmt}\rangle^* \;\langle\textit{terminator}\rangle \;\textsc{newline} \;\textsc{dedent} \\[0.4em]
+\langle\textit{stmt}\rangle &\Coloneqq \langle\textit{id}\rangle \;\texttt{:} \;\langle\textit{type}\rangle \mathrel{\texttt{=}} \langle\textit{rhs\_expr}\rangle \;\textsc{newline} \\[0.4em]
+\langle\textit{rhs\_expr}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
+&\quad \mid \texttt{prim} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\[0.4em]
+\langle\textit{terminator}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
+&\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
+&\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\texttt{(} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \;\texttt{)} \\
+&\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arms}\rangle \\[0.4em]
+\langle\textit{case\_arms}\rangle &\Coloneqq \langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.4em]
+\langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \langle\textit{terminator}\rangle \\[0.4em]
+\langle\textit{pattern}\rangle &\Coloneqq \langle\textit{integer}\rangle \mid \langle\textit{id}\rangle \\[0.4em]
+\langle\textit{arg\_list}\rangle &\Coloneqq \langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^* \\[0.4em]
+\langle\textit{operand}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{integer}\rangle \mid \texttt{true} \mid \texttt{false} \\[0.4em]
+\langle\textit{id}\rangle &\Coloneqq \texttt{[a-zA-Z\_][a-zA-Z0-9\_]*} \\[0.4em]
+\langle\textit{integer}\rangle &\Coloneqq \texttt{[0-9]+}
+\end{align*}
+  \label{fig:ssa_grammar}
+
+  \caption{A grammar for \texttt{SSA}}
+\end{figure}
+
+\hl{TODO: collapse this section into the previous section about the grammar}
+
 A few features of this representation are worth noting:
 
 \begin{itemize}
