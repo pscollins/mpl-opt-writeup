@@ -98,7 +98,8 @@ because it uses an unusual SML-inspired synax -- a snippet of this IR
 corresponding to our example \texttt{fib} program is depicted in
 \cref{fig:fib_sml_ssa}.
 
-\hl{TODO(agy): move this code into a figure named fig:fib_sml}
+\begin{figure}[htbp]
+  \centering
 \begin{minted}{sml}
   fun fib(n) =
     if n = 0 then 1
@@ -106,8 +107,12 @@ corresponding to our example \texttt{fib} program is depicted in
 
   val _ = print (Int.toString (fib 4))
 \end{minted}
+  \caption{A simple \texttt{fib} program in Standard ML.}
+  \label{fig:fib_sml}
+\end{figure}
 
-\hl{TODO(agy): move this into a figure named fig:fib_sml_ssa}
+\begin{figure}[htbp]
+  \centering
 \begin{minted}{sml}
 fun fib_4 (x_51048: word32): {returns = Some (word32), raises = Some (exn_27)} =
 L_6736 ()
@@ -134,6 +139,9 @@ L_6736 ()
   block L_1767 ()
     return (x_51055)
 \end{minted}
+  \caption{MLton's \texttt{SSA} intermediate representation for the \texttt{fib} function.}
+  \label{fig:fib_sml_ssa}
+\end{figure}
 so we'll instead work here with a loose, Python-inspired pseudocode, and assert
 that the \texttt{fib} function is lowered to \texttt{SSA} as something like the
 following (where we'll adopt the simplifying convention that all functions begin
