@@ -93,10 +93,9 @@ impact of our optimizations).
 Since MLton is a whole-program compiler, it is difficult to extract small
 snippets of its IRs for demonstration purposes: the trivial SML program in
 \cref{fig:fib_sml} expands to a whopping 1 MB of text in the first SSA pass.
-Apart from verbosity, the textual format of the IR is rather difficult to read
-because it uses an unusual SML-inspired synax -- a snippet of this IR
-corresponding to our example \texttt{fib} program is depicted in
-\cref{fig:fib_sml_ssa}.
+Instead, we will work here with a loose, Python-inspired pseudocode, and assert
+that the \texttt{fib} function is lowered to \texttt{SSA} as the the snippet in
+\cref{fig:fib_ssa}.
 
 \begin{figure}[htbp]
   \centering
@@ -111,41 +110,7 @@ corresponding to our example \texttt{fib} program is depicted in
   \label{fig:fib_sml}
 \end{figure}
 
-\begin{figure}[htbp]
-  \centering
-\begin{minted}{sml}
-fun fib_4 (x_51048: word32): {returns = Some (word32), raises = Some (exn_27)} =
-L_6736 ()
-  block L_6736 ()
-    val x_55402: bool = prim Word32_equal (x_51048, global_160 (*0x0:w32*))
-    case x_55402 of
-      true => L_7010 | false => L_1761
-  block L_7010 ()
-    return (global_69 (*0x1:w32*))
-  block L_1761 ()
-    val x_55002: word32 = prim Word32_sub (x_51048, global_69 (*0x1:w32*))
-    val x_55001: bool = prim WordS32_subCheckP (x_51048, global_69 (*0x1:w32*))
-    case x_55001 of
-      true => L_7011 | false => L_6366
-  block L_7011 ()
-    raise (global_912 (*con Overflow_4*))
-  block L_6366 ()
-    call L_1766 (fib_4 (x_55002)) handle _ => raise
-  block L_1766 (x_51053: word32)
-    val x_51055: word32 = prim WordS32_mul (x_51053, x_51048)
-    val x_51054: bool = prim WordS32_mulCheckP (x_51053, x_51048)
-    case x_51054 of
-      true => L_7011 | false => L_1767
-  block L_1767 ()
-    return (x_51055)
-\end{minted}
-  \caption{MLton's \texttt{SSA} intermediate representation for the \texttt{fib} function.}
-  \label{fig:fib_sml_ssa}
-\end{figure}
-so we'll instead work here with a loose, Python-inspired pseudocode, and assert
-that the \texttt{fib} function is lowered to \texttt{SSA} as something like the
-following (where we'll adopt the simplifying convention that all functions begin
-at \texttt{bb0}):
+%% TODO(agy): put this side-by-side in a box with the figure above
 \begin{minted}{python}
   def fib(n: int): int =
     block bb0():
