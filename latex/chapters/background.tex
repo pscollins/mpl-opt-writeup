@@ -145,16 +145,33 @@ def main(): unit =
   \label{fig:fib_comparison}
 \end{figure}
 
-\hl{TODO(pscollins): fix naming for SSA}
+%% \hl{TODO(pscollins): fix naming for SSA}
 
 %% \hl{TODO: grammar is misisng constants, also missing tuple/container types. What
 %%   do we call the SSA?}
 
-A grammar for this intermediate representation is provided in \cref{fig:ssa_grammar}. Mirroring
-MLton's representation of \texttt{SSA}, a program consists of datatype declarations,
-global statement bindings, and a collection of first-order functions. Each function body
-is represented as a control flow graph of basic blocks carrying explicit block arguments in place
-of $\phi$-nodes.
+A grammar for this intermediate representation is provided in
+\cref{fig:ssa_grammar}. Mirroring MLton's representation of \texttt{SSA}, a
+program consists of datatype declarations, global statement bindings, and a
+collection of first-order functions.
+
+Each function body is represented as a control flow graph of basic blocks
+carrying (optional) block arguments. MLton uses block arguments combined with
+dominator-based scoping to replace the $\phi$ nodes used in other variants of
+SSA: bound variables are available for use in any program position that they
+strictly dominate, and conditionally binding variables to names is implemented
+with a conditional \texttt{goto}.
+
+The \texttt{call} statement 
+
+Concrete operations on particular types are implemented in MLton as ``primitive
+applications,'' denoted in the IR by the keyword \texttt{prim}. MLton defines on
+the order of 500 distinct \texttt{prim}s, implemeting arithmetic operations,
+container manipulation, casts, and so on. Different \texttt{prim}s are
+eliminated in different compiler passes by either a decomposition into simpler
+\texttt{prim}s or a direct C call. MLton helpfully provides a type-checker for
+\texttt{prim}s in each IR, ensuring that the program remains well-formed after
+each compiler pass.
 
 \begin{figure}[htbp]
   \centering
