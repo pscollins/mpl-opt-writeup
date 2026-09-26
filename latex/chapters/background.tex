@@ -125,7 +125,7 @@ def fib(n: int): int =
   block bb2():
     callArg: int = prim Word32_sub (n, 1)
     # call fib(n-1) and return to bb3
-    call bb3 (fib (callArg))
+    call bb3 fib (callArg)
 
   block bb3(callResult: int):
     funcResult: int = prim Word32_mul (callResult, n)
@@ -135,7 +135,7 @@ def main(): unit =
   block bb0():
     initVal: int = 4
     # call fib(initVal) and return to bb1
-    call bb1 (fib (initVal))
+    call bb1 fib (initVal)
 
   block bb1(fibResult: int):
     ...call print and exit...
@@ -193,7 +193,7 @@ each compiler pass.
     &\quad \mid \texttt{con} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
     \langle\textit{transfer}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
     &\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
-    &\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{call} \;\langle\textit{id}\rangle \;\texttt{(} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \;\texttt{)} \\
+    &\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
     &\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.3em]
     \langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
     \langle\textit{pattern}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \mid \texttt{\_} \\[0.3em]

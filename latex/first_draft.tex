@@ -372,7 +372,7 @@ at \texttt{bb0}):
     block bb2():
       callArg: int = prim Word32_sub (n, 1)
       # call fib(n-1) and return to bb3
-      call bb3 (fib (callArg))
+      call bb3 fib (callArg)
 
     block bb3(callResult: int):
       funcResult: int = prim Word32_mul (callResult, n)
@@ -382,7 +382,7 @@ at \texttt{bb0}):
     block bb0():
       initVal: int = 4
       # call fib(initVal) and return to bb1
-      call bb1 (fib (initVal))
+      call bb1 fib (initVal)
 
     block bb1(fibResult: int):
       ...call print and exit...
