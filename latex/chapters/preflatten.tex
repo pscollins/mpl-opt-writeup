@@ -66,7 +66,7 @@ for callers that require it, i.e. for something like:
       call bbM g(t1)
 
     block bbN2():
-      t2 = tuple (x1, x2)
+      t2: 'a * 'b = tuple (x1, x2)
       # call g(t2) and return to some other block bbM
       call bbM g(t2)
 
@@ -245,7 +245,7 @@ becomes:
   f(...) -> ...:
     ...
     # flat call to `g`
-    t0 = (x, y)
+    t0: a * b = (x, y)
     call bbN g(t0)
 
   g(t: a * b) -> ...:
@@ -262,7 +262,7 @@ specialization of the function, \texttt{g\_flat}
   f(...) -> ...:
     ...
     # flat call to `g`
-    t0 = (x, y)
+    t0: a * b = (x, y)
     call bbN g_flat(x, y)  # pointed to flat specialization
 
   g(t: a * b) -> ...:
@@ -273,7 +273,7 @@ specialization of the function, \texttt{g\_flat}
   g_flat(x: a, y: b) -> ...:
     block bbBind():
       # reintroduce original, unflattened name
-      t = tuple(x, y)
+      t: a * b = tuple(x, y)
       # jump to original first block
       goto bb0()
 
@@ -290,9 +290,9 @@ specializations to remove the unflattened call in the specialized function, i.e.
   g_flat(x: a, y: b) -> ...:
     block bbBind():
       # reintroduce original, unflattened name
-      t = tuple(x, y)
+      t: a * b = tuple(x, y)
       # jump to original first block
-     goto bb0()
+      goto bb0()
 
     ...
     block bbM():

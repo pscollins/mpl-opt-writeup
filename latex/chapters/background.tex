@@ -185,7 +185,7 @@ each compiler pass.
     \langle\textit{param\_list}\rangle &\Coloneqq \langle\textit{param}\rangle \;(\texttt{,} \;\langle\textit{param}\rangle)^* \\[0.3em]
     \langle\textit{param}\rangle &\Coloneqq \langle\textit{id}\rangle \mathbin{\texttt{:}} \langle\textit{type}\rangle \\[0.3em]
     \langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{stmt}\rangle^* \;\langle\textit{transfer}\rangle \\[0.3em]
-    \langle\textit{stmt}\rangle &\Coloneqq (\langle\textit{id}\rangle \;[\mathbin{\texttt{:}} \langle\textit{type}\rangle] \mid \texttt{\_}) \mathrel{\texttt{=}} \langle\textit{exp}\rangle \\[0.3em]
+    \langle\textit{stmt}\rangle &\Coloneqq (\langle\textit{id}\rangle \mathbin{\texttt{:}} \langle\textit{type}\rangle \mid \texttt{\_}) \mathrel{\texttt{=}} \langle\textit{exp}\rangle \\[0.3em]
     \langle\textit{exp}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
     &\quad \mid \texttt{prim} \;\langle\textit{id}\rangle \,[\texttt{[}\langle\textit{type\_list}\rangle\texttt{]}] \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
     &\quad \mid \texttt{tuple} \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{(} \;\langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^+ \;\texttt{)} \\

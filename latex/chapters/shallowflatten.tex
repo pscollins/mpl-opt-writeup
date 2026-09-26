@@ -429,7 +429,7 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
-  arr_a = select (arr, 0)
+  arr_a: a array = select (arr, 0)
   n: int = prim Array_length[a](arr_a)
 \end{minted}
 
@@ -545,7 +545,7 @@ Consequently, it is necessary to handle the full set of operations on
   -->
   # Earlier action of the pass means that now we have:
   #   vec: (a vector * b vector * ...) = ...
-  vec_a = select (vec, 0)
+  vec_a: a vector = select (vec, 0)
   n: int = prim Vector_length[a](vec_a)
 \end{minted}
 
