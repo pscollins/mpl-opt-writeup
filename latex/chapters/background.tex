@@ -145,12 +145,19 @@ def main(): unit =
   \label{fig:fib_comparison}
 \end{figure}
 
-\hl{TODO: grammar is misisng constants, also missing tuple/container types. What
+\hl{TODO(pscollins): fix naming for SSA}
+
+%% \hl{TODO: grammar is misisng constants, also missing tuple/container types. What
   do we call the SSA?}
 
 A grammar for this language is provided in \cref{fig:ssa_grammar}. Mirroring
 MLton's representation of \texttt{SSA}, this language 
 
+\hl{TODO(agy): review all uses of ``pseduo-ssa'' in this document (across all
+  chapters) and update the grammar below to cover the full set of cases
+  required. Formulate the grammar for the purposes of reasoning about the AST
+  rather than as a parser -- we don't care about whitespace, for example}
+  
 \begin{figure}
   \begin{align*}
 \langle\textit{program}\rangle &\Coloneqq \langle\textit{function\_def}\rangle^+ \\[0.4em]
