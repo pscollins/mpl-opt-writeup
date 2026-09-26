@@ -224,43 +224,43 @@ immutable container of objects of type \texttt{a'}, respectively.
   \label{fig:ssa_grammar}
 \end{figure}
 
-\hl{TODO: collapse this section into the previous section about the grammar}
+%% \hl{TODO: collapse this section into the previous section about the grammar}
 
-A few features of this representation are worth noting:
+%% A few features of this representation are worth noting:
 
-\begin{itemize}
-\item Concrete operations on particular types are implemented as ``primitive
-  applications,'' \texttt{prim \$PRIM\_NAME (\dots)}. \texttt{prim}s are
-  eliminated at various different compilation phases, and come equipped with type
-  checkers to ensure that the IR is well-formed.
-\item Basic blocks carry explicit arguments. These arguments take the place of
-  $\phi$ nodes in compilers for imperative languages: within each block
-  \texttt{bbN} all names defined in blocks that strictly dominate \texttt{bbN}
-  are available, including block arguments. To conditionally bind a value to a
-  name, then, we add a conditional jump to a block that takes the desired name
-  as an argument, i.e.
+%% \begin{itemize}
+%% \item Concrete operations on particular types are implemented as ``primitive
+%%   applications,'' \texttt{prim \$PRIM\_NAME (\dots)}. \texttt{prim}s are
+%%   eliminated at various different compilation phases, and come equipped with type
+%%   checkers to ensure that the IR is well-formed.
+%% \item Basic blocks carry explicit arguments. These arguments take the place of
+%%   $\phi$ nodes in compilers for imperative languages: within each block
+%%   \texttt{bbN} all names defined in blocks that strictly dominate \texttt{bbN}
+%%   are available, including block arguments. To conditionally bind a value to a
+%%   name, then, we add a conditional jump to a block that takes the desired name
+%%   as an argument, i.e.
 
-  \begin{minted}{python}
-    block bb0():
-      cond: bool = ...
-      lhs: int = ...
-      rhs: int = ...
-      case cond of true => goto bb1 | false => goto bb2
+%%   \begin{minted}{python}
+%%     block bb0():
+%%       cond: bool = ...
+%%       lhs: int = ...
+%%       rhs: int = ...
+%%       case cond of true => goto bb1 | false => goto bb2
 
-    block bb1():
-      # `lhs` is available because `bb0` dominates `bb1`
-      goto bb3(lhs)
+%%     block bb1():
+%%       # `lhs` is available because `bb0` dominates `bb1`
+%%       goto bb3(lhs)
 
-    block bb2():
-      # `rhs` is available because `bb0` dominates `bb2`
-      goto bb3(rhs)
+%%     block bb2():
+%%       # `rhs` is available because `bb0` dominates `bb2`
+%%       goto bb3(rhs)
 
-    block bb3(boundValue: int):
-      # All blocks dominated by bb3 now have `boundValue` available
-      ...
-  \end{minted}
+%%     block bb3(boundValue: int):
+%%       # All blocks dominated by bb3 now have `boundValue` available
+%%       ...
+%%   \end{minted}
 
-\end{itemize}
+%% \end{itemize}
 
 \subsection{\texttt{SSA} $\Rightarrow$ C}
 Zooming out to the most abstract level, we might end up with something like the
