@@ -162,7 +162,11 @@ SSA: bound variables are available for use in any program position that they
 strictly dominate, and conditionally binding variables to names is implemented
 with a conditional \texttt{goto}.
 
-The \texttt{call} statement 
+The \texttt{call} statement differs somewhat from the \texttt{call} statement
+used in other SSA IRs: the syntax is \texttt{call return\_label func\_name
+  (...arguments...)}, where \texttt{return\_label} is a block label within the
+current function. Names for function return values in the caller are thus
+bound using the same block-argument mechanism described above.
 
 Concrete operations on particular types are implemented in MLton as ``primitive
 applications,'' denoted in the IR by the keyword \texttt{prim}. MLton defines on
@@ -172,6 +176,15 @@ eliminated in different compiler passes by either a decomposition into simpler
 \texttt{prim}s or a direct C call. MLton helpfully provides a type-checker for
 \texttt{prim}s in each IR, ensuring that the program remains well-formed after
 each compiler pass.
+
+The semantics of \texttt{SSA} are otherwise broadly the same as their usual SML
+equivalents: \texttt{datatype} introduces new sum type endowed with some set of
+constructors, \texttt{con} represents the application of one such constructor to
+concrete arguments, \texttt{case} implements conditional jumps with pattern
+matching, and \texttt{tuple} has some special syntactic support in the form of
+the \texttt{select} operator. The types \texttt{a' array} and \texttt{a' vector}
+likewise match their usual SML counterparts, representing a mutable or an
+immutable container of objects of type \texttt{a'}, respectively.
 
 \begin{figure}[htbp]
   \centering
