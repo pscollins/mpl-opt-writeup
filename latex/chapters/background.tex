@@ -148,44 +148,51 @@ def main(): unit =
 \hl{TODO(pscollins): fix naming for SSA}
 
 %% \hl{TODO: grammar is misisng constants, also missing tuple/container types. What
-  do we call the SSA?}
+%%   do we call the SSA?}
 
-A grammar for this language is provided in \cref{fig:ssa_grammar}. Mirroring
-MLton's representation of \texttt{SSA}, this language 
+A grammar for this intermediate representation is provided in \cref{fig:ssa_grammar}. Mirroring
+MLton's representation of \texttt{SSA}, a program consists of datatype declarations,
+global statement bindings, and a collection of first-order functions. Each function body
+is represented as a control flow graph of basic blocks carrying explicit block arguments in place
+of $\phi$-nodes.
 
-\hl{TODO(agy): review all uses of ``pseduo-ssa'' in this document (across all
-  chapters) and update the grammar below to cover the full set of cases
-  required. Formulate the grammar for the purposes of reasoning about the AST
-  rather than as a parser -- we don't care about whitespace, for example}
-  
-\begin{figure}
+\begin{figure}[htbp]
+  \centering
+  \small
   \begin{align*}
-\langle\textit{program}\rangle &\Coloneqq \langle\textit{function\_def}\rangle^+ \\[0.4em]
-\langle\textit{function\_def}\rangle &\Coloneqq \texttt{def} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \;\texttt{:} \;\langle\textit{type}\rangle \;\texttt{=} \;\textsc{newline} \\
-&\qquad \textsc{indent} \;\langle\textit{block}\rangle^+ \;\textsc{dedent} \\[0.4em]
-\langle\textit{param\_list}\rangle &\Coloneqq \langle\textit{param}\rangle \;(\texttt{,} \;\langle\textit{param}\rangle)^* \\[0.4em]
-\langle\textit{param}\rangle &\Coloneqq \langle\textit{id}\rangle \;\texttt{:} \;\langle\textit{type}\rangle \\[0.4em]
-\langle\textit{type}\rangle &\Coloneqq  \langle\textit{id}\rangle \\[0.4em]
-\langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \;\texttt{:} \;\textsc{newline} \\
-&\qquad \textsc{indent} \;\langle\textit{stmt}\rangle^* \;\langle\textit{terminator}\rangle \;\textsc{newline} \;\textsc{dedent} \\[0.4em]
-\langle\textit{stmt}\rangle &\Coloneqq \langle\textit{id}\rangle \;\texttt{:} \;\langle\textit{type}\rangle \mathrel{\texttt{=}} \langle\textit{rhs\_expr}\rangle \;\textsc{newline} \\[0.4em]
-\langle\textit{rhs\_expr}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
-&\quad \mid \texttt{prim} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\[0.4em]
-\langle\textit{terminator}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
-&\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
-&\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\texttt{(} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \;\texttt{)} \\
-&\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arms}\rangle \\[0.4em]
-\langle\textit{case\_arms}\rangle &\Coloneqq \langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.4em]
-\langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \langle\textit{terminator}\rangle \\[0.4em]
-\langle\textit{pattern}\rangle &\Coloneqq \langle\textit{integer}\rangle \mid \langle\textit{id}\rangle \\[0.4em]
-\langle\textit{arg\_list}\rangle &\Coloneqq \langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^* \\[0.4em]
-\langle\textit{operand}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{integer}\rangle \mid \texttt{true} \mid \texttt{false} \\[0.4em]
-\langle\textit{id}\rangle &\Coloneqq \texttt{[a-zA-Z\_][a-zA-Z0-9\_]*} \\[0.4em]
-\langle\textit{integer}\rangle &\Coloneqq \texttt{[0-9]+}
-\end{align*}
+    \langle\textit{program}\rangle &\Coloneqq \langle\textit{decl}\rangle^+ \\[0.3em]
+    \langle\textit{decl}\rangle &\Coloneqq \langle\textit{datatype\_def}\rangle \mid \langle\textit{stmt}\rangle \mid \langle\textit{function\_def}\rangle \\[0.3em]
+    \langle\textit{datatype\_def}\rangle &\Coloneqq \texttt{datatype} \;\langle\textit{id}\rangle \mathrel{\texttt{=}} \langle\textit{con\_def}\rangle \;(\texttt{|} \;\langle\textit{con\_def}\rangle)^* \\[0.3em]
+    \langle\textit{con\_def}\rangle &\Coloneqq \langle\textit{id}\rangle \;[\texttt{of} \;\langle\textit{type}\rangle] \\[0.3em]
+    \langle\textit{function\_def}\rangle &\Coloneqq \texttt{def} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{type}\rangle \mathrel{\texttt{=}} \langle\textit{block}\rangle^+ \\[0.3em]
+    \langle\textit{param\_list}\rangle &\Coloneqq \langle\textit{param}\rangle \;(\texttt{,} \;\langle\textit{param}\rangle)^* \\[0.3em]
+    \langle\textit{param}\rangle &\Coloneqq \langle\textit{id}\rangle \mathbin{\texttt{:}} \langle\textit{type}\rangle \\[0.3em]
+    \langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{stmt}\rangle^* \;\langle\textit{transfer}\rangle \\[0.3em]
+    \langle\textit{stmt}\rangle &\Coloneqq (\langle\textit{id}\rangle \;[\mathbin{\texttt{:}} \langle\textit{type}\rangle] \mid \texttt{\_}) \mathrel{\texttt{=}} \langle\textit{exp}\rangle \\[0.3em]
+    \langle\textit{exp}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
+    &\quad \mid [\texttt{prim}] \;\langle\textit{id}\rangle \,[\texttt{[}\langle\textit{type\_list}\rangle\texttt{]}] \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
+    &\quad \mid \texttt{tuple} \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{(} \;\langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^+ \;\texttt{)} \\
+    &\quad \mid \texttt{select} \;\texttt{(} \;\langle\textit{operand}\rangle \;\texttt{,} \;\langle\textit{integer}\rangle \;\texttt{)} \\
+    &\quad \mid [\texttt{con}] \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
+    \langle\textit{transfer}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
+    &\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
+    &\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{call} \;\langle\textit{id}\rangle \;\texttt{(} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \;\texttt{)} \\
+    &\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arms}\rangle \\[0.3em]
+    \langle\textit{case\_arms}\rangle &\Coloneqq \langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.3em]
+    \langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
+    \langle\textit{pattern}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \mid \texttt{\_} \\[0.3em]
+    \langle\textit{type}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{tuple\_type}\rangle \mid \langle\textit{type}\rangle \;\texttt{array} \mid \langle\textit{type}\rangle \;\texttt{vector} \\[0.3em]
+    \langle\textit{tuple\_type}\rangle &\Coloneqq \langle\textit{type}\rangle \;(\mathbin{\texttt{*}} \;\langle\textit{type}\rangle)^+ \mid \texttt{(} \;\langle\textit{type}\rangle \;(\mathbin{\texttt{*}} \;\langle\textit{type}\rangle)^+ \;\texttt{)} \\[0.3em]
+    \langle\textit{type\_list}\rangle &\Coloneqq \langle\textit{type}\rangle \;(\texttt{,} \;\langle\textit{type}\rangle)^* \\[0.3em]
+    \langle\textit{arg\_list}\rangle &\Coloneqq \langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^* \\[0.3em]
+    \langle\textit{operand}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \\[0.3em]
+    \langle\textit{const}\rangle &\Coloneqq \langle\textit{integer}\rangle \mid \langle\textit{float}\rangle \mid \texttt{true} \mid \texttt{false} \mid \texttt{()} \\[0.3em]
+    \langle\textit{id}\rangle &\Coloneqq \texttt{[a-zA-Z\_'][a-zA-Z0-9\_']*} \\[0.3em]
+    \langle\textit{integer}\rangle &\Coloneqq \texttt{[0-9]+} \\[0.3em]
+    \langle\textit{float}\rangle &\Coloneqq \texttt{[0-9]+\textbackslash.[0-9]+}
+  \end{align*}
+  \caption{An abstract syntax grammar for \texttt{SSA}.}
   \label{fig:ssa_grammar}
-
-  \caption{A grammar for \texttt{SSA}}
 \end{figure}
 
 \hl{TODO: collapse this section into the previous section about the grammar}
