@@ -170,10 +170,10 @@ of $\phi$-nodes.
     \langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{stmt}\rangle^* \;\langle\textit{transfer}\rangle \\[0.3em]
     \langle\textit{stmt}\rangle &\Coloneqq (\langle\textit{id}\rangle \;[\mathbin{\texttt{:}} \langle\textit{type}\rangle] \mid \texttt{\_}) \mathrel{\texttt{=}} \langle\textit{exp}\rangle \\[0.3em]
     \langle\textit{exp}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
-    &\quad \mid [\texttt{prim}] \;\langle\textit{id}\rangle \,[\texttt{[}\langle\textit{type\_list}\rangle\texttt{]}] \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
+    &\quad \mid \texttt{prim} \;\langle\textit{id}\rangle \,[\texttt{[}\langle\textit{type\_list}\rangle\texttt{]}] \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
     &\quad \mid \texttt{tuple} \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{(} \;\langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^+ \;\texttt{)} \\
     &\quad \mid \texttt{select} \;\texttt{(} \;\langle\textit{operand}\rangle \;\texttt{,} \;\langle\textit{integer}\rangle \;\texttt{)} \\
-    &\quad \mid [\texttt{con}] \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
+    &\quad \mid \texttt{con} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
     \langle\textit{transfer}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
     &\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
     &\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{call} \;\langle\textit{id}\rangle \;\texttt{(} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \;\texttt{)} \\
