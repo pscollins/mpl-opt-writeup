@@ -266,7 +266,9 @@ immutable container of objects of type \texttt{a'}, respectively.
 The core problems that we need to solve in order to translate from \texttt{SSA}
 to C are:
 \begin{itemize}
-\item \hl{TODO: SUMMARIZE}
+\item \texttt{SSA} control flow constructs (\texttt{goto}-with-arguments,
+  \texttt{call}-with-return) map poorly on to C
+\item \hl{TODO: COPIES}
 \end{itemize}
 
 \hl{TODO: LET'S START OFF WITH A DIAGRAM THAT SHOWS fib CONTROL FLOW}
