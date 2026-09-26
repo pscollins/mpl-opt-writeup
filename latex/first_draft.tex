@@ -1160,7 +1160,7 @@ and a callsite like:
   def call3() -> int:
     block bb0():
       biasArg: int = 5
-      env: lambda_1 = xEnv_addWithBias (biasArg)
+      env: lambda_1 = con xEnv_addWithBias (biasArg)
       call bbN doOp (2, 2, env)
     ...
 \end{minted}
@@ -1189,7 +1189,7 @@ the callers (in \texttt{SSA}) will look like:
   l: int = ...
   r: int = ...
   t: int * int = tuple (l, r)
-  e: Env = xEnvLarge t
+  e: Env = con xEnvLarge (t)
 \end{minted}
 The relevance of the closure conversion transformation to flattening, then, is
 that it introduces further nested tuples at callsites of higher order functions.
@@ -1359,7 +1359,7 @@ from a pattern like:
     ...
     block bbN():
       t: 'a * 'b = ...
-      env: Env = Env1 (t)
+      env: Env = con Env1 (t)
       call bbM g(env)
     ...
 
@@ -1378,7 +1378,7 @@ we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive a
 
   def g_flat_env1(t: 'a * 'b) -> ...:
     block bb0():
-      e: Env = Env1 (t)
+      e: Env = con Env1 (t)
       case e of Env1 => goto bb1 | ...
 \end{minted}
 and, again, rely on existing optimization patterns to eliminate the
@@ -1887,12 +1887,12 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 \item \texttt{Array\_length} picks an arbitrary tuple member to pass the call on to)
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  n: int = Array_length[a * b * ...](arr)
+  n: int = prim Array_length[a * b * ...](arr)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a = select (arr, 0)
-  n: int = Array_length[a](arr_a)
+  n: int = prim Array_length[a](arr_a)
 \end{minted}
 
 \item \texttt{Array\_sub} unpacks the tuple-of-arrays, reads out the necessary
@@ -1901,14 +1901,14 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
   # Read element i
-  x: (a * b * ...) = Array_sub[a * b * ...](arr, i)
+  x: (a * b * ...) = prim Array_sub[a * b * ...](arr, i)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a: a array = select (arr, 0)
-  x_a: a = Array_sub[a](arr_a, i)
+  x_a: a = prim Array_sub[a](arr_a, i)
   arr_b: b array = select (arr, 1)
-  x_b: b = Array_sub[b](arr_b, i)
+  x_b: b = prim Array_sub[b](arr_b, i)
   ...
   x: (a * b * ...) = tuple(x_a, x_b, ...)
 \end{minted}
@@ -1919,16 +1919,16 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
   x: (a * b * ...) = ...
-  _ = Array_update[a * b * ...](arr, i, x)
+  _ = prim Array_update[a * b * ...](arr, i, x)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a: a array = select (arr, 0)
   x_a: a = select (x, 0)
-  _ = Array_update[a](arr_a, i, x_a)
+  _ = prim Array_update[a](arr_a, i, x_a)
   arr_b: b array = select (arr, 1)
   x_b: b = select (x, 1)
-  _ = Array_update[b](arr_b, i, x_b)
+  _ = prim Array_update[b](arr_b, i, x_b)
   ...
 \end{minted}
 
@@ -1938,7 +1938,7 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  isNop: bool = Array_uninitIsNop[(a * b * ...) array](arr)
+  isNop: bool = prim Array_uninitIsNop[(a * b * ...) array](arr)
   -->
   isNop: bool = false
 \end{minted}
@@ -1948,14 +1948,14 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  _ = Array_uninit[a * b * ...](arr, n)
+  _ = prim Array_uninit[a * b * ...](arr, n)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a: a array = select (arr, 0)
-  _ = Array_uninit[a](arr_a, n)
+  _ = prim Array_uninit[a](arr_a, n)
   arr_b: b array = select (arr, 1)
-  _ = Array_uninit[b](arr_b, n)
+  _ = prim Array_uninit[b](arr_b, n)
   ...
 \end{minted}
 
@@ -1964,14 +1964,14 @@ Most other \texttt{Array\_} transformations follow in the obvious way: \hl{TODO:
 
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  arr': (a * b * ...) array = Array_toArray[a * b * ...](arr)
+  arr': (a * b * ...) array = prim Array_toArray[a * b * ...](arr)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a: a array = select (arr, 0)
-  arr'_a: a array = Array_toArray[a](arr_a)
+  arr'_a: a array = prim Array_toArray[a](arr_a)
   arr_b: b array = select (arr, 1)
-  arr'_b: b array = Array_toArray[b](arr_b)
+  arr'_b: b array = prim Array_toArray[b](arr_b)
   ...
   arr': a array * b array * ... = tuple(arr'_a, arr'_b, ...)
 \end{minted}
@@ -1983,14 +1983,14 @@ transformation primitive (a copy into an immutable container); i.e.:
 
 \begin{minted}{python}
   arr: (a * b * ...) array = ...
-  vec: (a * b * ...) vector = Array_toVector[a * b * ...](arr)
+  vec: (a * b * ...) vector = prim Array_toVector[a * b * ...](arr)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: (a array * b array * ...) = ...
   arr_a: a array = select (arr, 0)
-  vec_a: a vector = Array_toVector[a](arr_a)
+  vec_a: a vector = prim Array_toVector[a](arr_a)
   arr_b: b array = select (arr, 1)
-  vec_b: b vector = Array_toVector[b](arr_b)
+  vec_b: b vector = prim Array_toVector[b](arr_b)
   ...
   vec: a vector * b vector * ... = tuple(vec_a, vec_b, ...)
 \end{minted}
@@ -2003,12 +2003,12 @@ Consequently, it is necessary to handle the full set of operations on
 
 \begin{minted}{python}
   vec: (a * b * ...) vector = ...
-  n: int = Vector_length[a * b * ...](vec)
+  n: int = prim Vector_length[a * b * ...](vec)
   -->
   # Earlier action of the pass means that now we have:
   #   vec: (a vector * b vector * ...) = ...
   vec_a = select (vec, 0)
-  n: int = Vector_length[a](vec_a)
+  n: int = prim Vector_length[a](vec_a)
 \end{minted}
 
 \item \texttt{Vector\_sub}: analogous to \texttt{Array\_sub}
@@ -2016,14 +2016,14 @@ Consequently, it is necessary to handle the full set of operations on
 \begin{minted}{python}
   vec: (a * b * ...) vector = ...
   # Read element i
-  x: (a * b * ...) = Vector_sub[a * b * ...](vec, i)
+  x: (a * b * ...) = prim Vector_sub[a * b * ...](vec, i)
   -->
   # Earlier action of the pass means that now we have:
   #   vec: (a vector * b vector * ...) = ...
   vec_a: a vector = select (vec, 0)
-  x_a: a = Vector_sub[a](vec_a, i)
+  x_a: a = prim Vector_sub[a](vec_a, i)
   vec_b: b vector = select (vec, 1)
-  x_b: b = Vector_sub[b](vec_b, i)
+  x_b: b = prim Vector_sub[b](vec_b, i)
   ...
   x: (a * b * ...) = tuple(x_a, x_b, ...)
 \end{minted}
@@ -2040,7 +2040,7 @@ representative example, this means:
   tupleSize: int = tupleWidth(a * a * ...)
   n': int = n * tupleWidth
   # Bind `x` to a flat array of the scaled-up size
-  x: a array = Array_alloc[a](n')
+  x: a array = prim Array_alloc[a](n')
 \end{minted}
 
 The other operations follow in the obvious way:
@@ -2049,12 +2049,12 @@ The other operations follow in the obvious way:
 
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
-  n: int = Array_length[a * a * ...](arr)
+  n: int = prim Array_length[a * a * ...](arr)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: a array = ...
   tupleSize: int = tupleWidth(a * a * ...)
-  n': int = Array_length[a](arr)
+  n': int = prim Array_length[a](arr)
   n: int = n' / tupleSize
 \end{minted}
 
@@ -2064,15 +2064,15 @@ The other operations follow in the obvious way:
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
   # Read element i
-  x: (a * a * ...) = Array_sub[a * a * ...](arr, i)
+  x: (a * a * ...) = prim Array_sub[a * a * ...](arr, i)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: a array = ...
   tupleSize: int = tupleWidth(a * a * ...)
-  x_0: a = Array_sub[a](arr, i * tupleSize)
-  x_1: a = Array_sub[a](arr, i * tupleSize + 1)
+  x_0: a = prim Array_sub[a](arr, i * tupleSize)
+  x_1: a = prim Array_sub[a](arr, i * tupleSize + 1)
   ...
-  x_n: a = Array_sub[a](arr, i * tupleSize + tupleSize - 1)
+  x_n: a = prim Array_sub[a](arr, i * tupleSize + tupleSize - 1)
   x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
 \end{minted}
 
@@ -2081,7 +2081,7 @@ The other operations follow in the obvious way:
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
   x: (a * a * ...) = ...
-  _ = Array_update[a * a * ...](arr, i, x)
+  _ = prim Array_update[a * a * ...](arr, i, x)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: a array = ...
@@ -2089,8 +2089,8 @@ The other operations follow in the obvious way:
   x_0: a = select(x, 0)
   x_1: a = select(x, 1)
   ...
-  _ = Array_update[a](arr, i * tupleSize + 0, x_0)
-  _ = Array_update[a](arr, i * tupleSize + 1, x_1)
+  _ = prim Array_update[a](arr, i * tupleSize + 0, x_0)
+  _ = prim Array_update[a](arr, i * tupleSize + 1, x_1)
   ...
 \end{minted}
 
@@ -2098,7 +2098,7 @@ The other operations follow in the obvious way:
 
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
-  isNop: bool = Array_uninitIsNop[(a * a * ...) array](arr)
+  isNop: bool = prim Array_uninitIsNop[(a * a * ...) array](arr)
   -->
   isNop: bool = false
 \end{minted}
@@ -2108,26 +2108,26 @@ The other operations follow in the obvious way:
 
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
-  _ = Array_uninit[a * a * ...](arr, n)
+  _ = prim Array_uninit[a * a * ...](arr, n)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: a array = ...
   tupleSize: int = tupleWidth(a * a * ...)
-  _ = Array_uninit[a](arr, n * tupleSize)
-  _ = Array_uninit[a](arr, n * tupleSize + 1)
+  _ = prim Array_uninit[a](arr, n * tupleSize)
+  _ = prim Array_uninit[a](arr, n * tupleSize + 1)
   ...
-  _ = Array_uninit[a](arr, n * tupleSize + tupleSize - 1)
+  _ = prim Array_uninit[a](arr, n * tupleSize + tupleSize - 1)
 \end{minted}
 
 \item \texttt{Array\_toVector} is passed on to the flattned array:
 
 \begin{minted}{python}
   arr: (a * a * ...) array = ...
-  vec: (a * a * ...) vector = Array_toVector[a * a * ...](arr)
+  vec: (a * a * ...) vector = prim Array_toVector[a * a * ...](arr)
   -->
   # Earlier action of the pass means that now we have:
   #   arr: a array = ...
-  vec: a vector = Array_toVector[a](arr)
+  vec: a vector = prim Array_toVector[a](arr)
 \end{minted}
 
 \item \texttt{Vector\_sub} works analogously to \texttt{Array\_sub}
@@ -2135,15 +2135,15 @@ The other operations follow in the obvious way:
 \begin{minted}{python}
   vec: (a * a * ...) vector = ...
   # Read element i
-  x: (a * a * ...) = Vector_sub[a * a * ...](vec, i)
+  x: (a * a * ...) = prim Vector_sub[a * a * ...](vec, i)
   -->
   # Earlier action of the pass means that now we have:
   #   vec: a vector = ...
   tupleSize: int = tupleWidth(a * a * ...)
-  x_0: a = Vector_sub[a](vec, i * tupleSize)
-  x_1: a = Vector_sub[a](vec, i * tupleSize + 1)
+  x_0: a = prim Vector_sub[a](vec, i * tupleSize)
+  x_1: a = prim Vector_sub[a](vec, i * tupleSize + 1)
   ...
-  x_n: a = Vector_sub[a](vec, i * tupleSize + tupleSize - 1)
+  x_n: a = prim Vector_sub[a](vec, i * tupleSize + tupleSize - 1)
   x: (a * a * ...) = tuple(x_0, x_1, ..., x_n)
 \end{minted}
 

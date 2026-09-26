@@ -970,7 +970,7 @@ and a callsite like:
   def call3() -> int:
     block bb0():
       biasArg: int = 5
-      env: lambda_1 = xEnv_addWithBias (biasArg)
+      env: lambda_1 = con xEnv_addWithBias (biasArg)
       call bbN doOp (2, 2, env)
     ...
 \end{minted}
@@ -999,7 +999,7 @@ the callers (in \texttt{SSA}) will look like:
   l: int = ...
   r: int = ...
   t: int * int = tuple (l, r)
-  e: Env = xEnvLarge t
+  e: Env = con xEnvLarge (t)
 \end{minted}
 The relevance of the closure conversion transformation to flattening, then, is
 that it introduces further nested tuples at callsites of higher order functions.

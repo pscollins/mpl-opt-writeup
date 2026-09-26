@@ -109,7 +109,7 @@ from a pattern like:
     ...
     block bbN():
       t: 'a * 'b = ...
-      env: Env = Env1 (t)
+      env: Env = con Env1 (t)
       call bbM g(env)
     ...
 
@@ -128,7 +128,7 @@ we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive a
 
   def g_flat_env1(t: 'a * 'b) -> ...:
     block bb0():
-      e: Env = Env1 (t)
+      e: Env = con Env1 (t)
       case e of Env1 => goto bb1 | ...
 \end{minted}
 and, again, rely on existing optimization patterns to eliminate the
