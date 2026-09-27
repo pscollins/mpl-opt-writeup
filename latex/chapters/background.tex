@@ -189,7 +189,7 @@ the \texttt{select} operator. The types \texttt{a' array} and \texttt{a' vector}
 likewise match their usual SML counterparts, representing a mutable or an
 immutable container of objects of type \texttt{a'}, respectively.
 
-\hl{TODO: LET'S MENTION TAIL CALLS HERE}
+\hl{TODO: LET'S MENTION TAIL CALLS IN THE GRAMMAR?}
 
 \begin{figure}[htbp]
   \centering
@@ -211,7 +211,7 @@ immutable container of objects of type \texttt{a'}, respectively.
     &\quad \mid \texttt{con} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
     \langle\textit{transfer}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
     &\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
-    &\quad \mid \texttt{call} \;\langle\textit{id}\rangle \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
+    &\quad \mid \texttt{call} \;(\langle\textit{id}\rangle \mid \texttt{tail}) \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
     &\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.3em]
     \langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
     \langle\textit{pattern}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \mid \texttt{\_} \\[0.3em]
@@ -266,7 +266,7 @@ immutable container of objects of type \texttt{a'}, respectively.
 %%   \end{minted}
 
 %% \end{itemize}
-
+\FloatBarrier
 \subsection{\texttt{SSA} $\Rightarrow$ C}
 The core problems that we need to fix in order to translate from \texttt{SSA} to
 C are:
@@ -326,10 +326,11 @@ def fib(n: int): int =
 enum Label {
   bb0,
   bb1,
-  ... // All block labels in the program
+  ..., // All block labels in the program
+  bb_done, // Distinguished end-of-program label
 };
 
-Label Chunk(char** stackTopPtr,
+Label Chunk1(char** stackTopPtr,
             Label nextBlock) {
   // Local variable definitions
   int funcResult, callResult, callArg, n;
@@ -509,7 +510,37 @@ L_bb3:
   \label{fig:pseudo_small_bb3}
 \end{figure}
 
-\hl{TODO: next, discuss chunks}
+In an ideal world -- in order to ensure the simplest-possible implementation
+with the best-possible performance -- MLton would collapse the entire
+\texttt{SSA} control flow graph down to a single C function. In practice,
+however, such a strategy would be prohibitively expensive, since C compile times
+scale superlinearly with function length. Even a modestly-sized benchmark might
+take 20 minutes to compile.
+
+MLton's solution to the problem of C compile times is to split the SSA control
+flow graph across multiple C functions, which it refers to as ``chunks,''
+implemented by the \texttt{Chunkify} pass on the \texttt{Machine} IR. Control
+across chunks is orchestrated by a global trampoline function, illustrated in
+\cref{fig:mlton_trampoline}.
+
+\hl{TODO(agy): wrap in a figure}
+\label{fig:mlton_trampoline}
+\begin{minted}{cpp}
+typedef ChunkFn = ...; // Pointer to chunk function
+void MLton_Trampoline(char* stackTop, Label nextBlock) {
+  // Global mapping, Label -> enclosing chunk
+  static ChunkFn chunkMap[] = {
+    &Chunk1, // Jump target for bb0
+    &Chunk1, // Jump target for bb1
+    ...      // All other jump targets
+  }
+  do {
+    // Jump into the right chunk for nextBlock
+    nextBlock = (*(nextChunks[nextBlock]))(&stackTop, nextBlock);
+    // ...until we reach the distinguished end-of-program label.
+  } while (nextBlock != bb_done);
+}
+\end{minted}
 
 %% \begin{minted}{cpp}
 %% // Labels for all blocks in the program
