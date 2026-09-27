@@ -1409,15 +1409,11 @@ A naive solution to the problem would be to interpret all SML-level functions as
 $n$-ary functions over their arguments. However, this strategy can introduce
 unnecessary pack/unpack operations in cases where the natural representation for
 data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
-that must pass through a long sequence of intermediate function calls before
-\cref{fig:bad_flatten_example}. For the ``non-flat'' representation, each
-intermediate call pays only the cost to copy a pointer, but in the flattened
-representation, each call must pay for the full 1 KB copy -- even if the leaf
-function only reads a single field.
-
-TODO(agy): get rid of the trailing arguments after the tuple, add ... after bb0
-to reprsent the region where b11 is; also make the names match (the code says
-next but the function name is i)
+that must pass through an intermediate function call before reaching a leaf
+function, as depicted in \cref{fig:bad_flatten_example}. For the ``non-flat''
+representation, each intermediate call pays only the cost to copy a pointer,
+but in the flattened representation, each call must pay for the full 1 KB
+copy -- even if the leaf function only reads a single field.
 
 \begin{figure}[htbp]
   \centering
@@ -1426,17 +1422,25 @@ next but the function name is i)
     \label{fig:bad_flatten_unflattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-# Passes pointer to n-wide tuple across k layers
-def f_i(t: T1 * ... * Tn, ...):
+def f_parent(t: (T1 * ... * Tn)): T1 =
   block bb0():
-    # Pointer passed in register
-    call bb1 f_next(t, ...)
+    # Only need to pass a pointer
+    call bb1 f_leaf(t)
+    ...
 
-def leaf(t: T1 * ... * Tn, ...):
+def f_leaf(t: (T1 * ... * Tn)): T1 =
   block bb0():
     # Only field 0 is read
     x1: T1 = select (t, 0)
     return x1
+
+def main(): T1 =
+  block bb0():
+    # Heap allocation of tuple
+    t: (T1 * ... * Tn) =
+      tuple(v1, ..., vn)
+    call bb1 f_parent(t)
+    ...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -1444,20 +1448,30 @@ def leaf(t: T1 * ... * Tn, ...):
     \label{fig:bad_flatten_flattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-# Forwards n fields across k layers
-def f_i(x1: T1, ..., xn: Tn, ...):
+def f_parent(x1: T1, ..., xn: Tn): T1 =
   block bb0():
-    # n fields spilled across call
-    call bb1 f_next(x1, ..., xn, ...)
+    # Need to copy all n fields
+    call bb1 f_leaf(x1, ..., xn)
+    ...
 
-def leaf(x1: T1, ..., xn: Tn, ...):
+def f_leaf(x1: T1, ..., xn: Tn): T1 =
   block bb0():
-    # x2..xn carried through k
-    # frames but never used
+    # x2..xn carried across call
+    # but never used
     return x1
+
+def main(): T1 =
+  block bb0():
+    # Direct call passing n fields
+    call bb1 f_parent(v1, ..., vn)
+    ...
 \end{minted}
   \end{subfigure}
-  \caption{A pathological case for flattening: forwarding a large tuple across $k$ function call layers. The unflattened code passes a single pointer in a register, whereas naive flattening forces all $n$ fields to be passed and spilled at every layer even when only a subset is used at the leaf.}
+  \caption{A pathological case for (naive) flattening: forwarding a large tuple
+    across an intermediate call layer (\texttt{f\_parent} to \texttt{f\_leaf}).
+    The unflattened code passes a single pointer in a register, whereas naive
+    flattening forces all $n$ fields to be passed and spilled at each call even
+    when only a subset is used at the leaf.}
   \label{fig:bad_flatten_example}
 \end{figure}
 
@@ -1535,23 +1549,35 @@ def add_vec_flat(
   \caption{Flattening a nested tuple type: \texttt{Flatten} eliminates intermediate tuple selections by unnesting \texttt{((int * int) * (int * int))} into four scalar arguments.}
   \label{fig:nested_tuple_flatten}
 \end{figure}
-It is worth noting, however, that due to the structure of the generated C
-discussed above, the savings may be less large in practice \hl{than they appear}
-based on the transformation in the SSA format: a naive reading suggests that by
-translating from \texttt{add\_vec} to \texttt{add\_vec\_flat}, we have saved a
-total of 6 writes into temporary tuples (2 per inner tuple and 2 for the outer
-tuple), eliding them naturally into register writes.
 
-This is not true in the general case, however: if a call to
-\texttt{add\_vec\_flat} crosses a C chunk boundary, then we still need to pay the
-cost to write all 4 values to the \texttt{Stack}, and pay the same cost again to
-pass the data on to any further flattened callers. Therefore, for nested tuple
-types, it is perhaps more correct to think of flattening as a tradeoff of
-bandwidth for locality (passing data through hot \texttt{Stack} memory rather
-than cold heap) instead of a pure savings.
+It is worth recalling, however, that reasoning about costs in the generated code
+from the \texttt{SSA} representation alone can be misleading: while a direct
+translation of the \cref{fig:nested_tuple_flattened} to C would suggest that all
+4 values pass to \texttt{add\_vec\_flat} in registers, \texttt{Chunkify} may
+choose to put \texttt{add\_vec\_flat} in a different chunk from its callers. In
+this case, the callers must pass data through the MLton stack -- requiring
+memory operations that are linear in the number of function arguments. This
 
-\hl{TODO: BAD DISCUSSION ABOVE; WE DON'T NECESSARILY CONSTRUCT A TEMPORARY
-  TUPLE}
+%% choose to insert a chunk boundary between \texttt{add\_vec\_flat} and callers,
+%% forcing
+
+%% It is worth noting, however, that due to the structure of the generated C
+%% discussed above, the savings may be less large in practice \hl{than they appear}
+%% based on the transformation in the SSA format: a naive reading suggests that by
+%% translating from \texttt{add\_vec} to \texttt{add\_vec\_flat}, we have saved a
+%% total of 6 writes into temporary tuples (2 per inner tuple and 2 for the outer
+%% tuple), eliding them naturally into register writes.
+
+%% This is not true in the general case, however: if a call to
+%% \texttt{add\_vec\_flat} crosses a C chunk boundary, then we still need to pay the
+%% cost to write all 4 values to the \texttt{Stack}, and pay the same cost again to
+%% pass the data on to any further flattened callers. Therefore, for nested tuple
+%% types, it is perhaps more correct to think of flattening as a tradeoff of
+%% bandwidth for locality (passing data through hot \texttt{Stack} memory rather
+%% than cold heap) instead of a pure savings.
+
+%% \hl{TODO: BAD DISCUSSION ABOVE; WE DON'T NECESSARILY CONSTRUCT A TEMPORARY
+%%   TUPLE}
 
 %% TODO:
 %%   flatten: 'peels apart' tuples (in arguments)
@@ -1569,7 +1595,8 @@ than cold heap) instead of a pure savings.
 \subsection{\texttt{DeepFlatten}}
 The \texttt{Flatten} transformation fixes the problem that the source language
 does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
-solves the problem that the source language does not support unboxed tuple types.
+solves the problem that the source language does not support containers of
+unboxed tuple types.
 
 As discussed above, the normal MLton lowering for tuple types in containers is
 \texttt{void*}, i.e. for an SML type like \texttt{(int * int) array}, we get the
