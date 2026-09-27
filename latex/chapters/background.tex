@@ -1361,23 +1361,37 @@ introduced by \citet{flat-paper} implements the transformation from
 unary-with-tuple-arguments to true-$n$-ary, as depicted in
 \cref{fig:flatten_one_add}.
 
-TODO(agy): introduce a figure here called fig:flatten_one_add
-\begin{minted}{python}
-  # Unary tuple-based representation
-  def add_tuple(ab: (int * int)): int =
-    block bb0():
-      a: int = select (ab, 0)  # tuple member read
-      b: int = select (ab, 1)  # tuple member read
-      ret: int = prim Word32_add (a, b)
-      return ret
+TODO(agy): add in the caller ``main'' to both sides in the example below
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Unary tuple-based representation}
+    \label{fig:flatten_one_add_unary}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def add_tuple(ab: (int * int)): int =
+  block bb0():
+    a: int = select (ab, 0)  # tuple read
+    b: int = select (ab, 1)  # tuple read
+    ret: int = prim Word32_add (a, b)
+    return ret
 \end{minted}
-\begin{minted}{python}
-  # 2-ary "flat" representation
-  def add(a: int, b: int): int =
-    block bb0():
-      ret: int = prim Word32_add (a, b)
-      return ret
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Flat 2-ary representation}
+    \label{fig:flatten_one_add_flat}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def add(a: int, b: int): int =
+  block bb0():
+    ret: int = prim Word32_add (a, b)
+    return ret
 \end{minted}
+  \end{subfigure}
+  \caption{The \texttt{Flatten} transformation converts unary functions accepting tuple arguments into true $n$-ary functions.}
+  \label{fig:flatten_one_add}
+\end{figure}
+
 
 A naive solution to the problem would be to interpret all SML-level functions as
 $n$-ary functions over their arguments. However, this strategy can introduce
