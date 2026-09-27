@@ -1186,8 +1186,6 @@ struct ArrTypeT2 {
 // arr points to elements[0]
 void** arr = ...;
 
-// TODO(agy): IS IT LEGAL TO DO POINTER ARITHMETIC ON void*?
-
 // Read element pointer at index 0
 char* child0 = (char*)arr[0];
 
@@ -1196,9 +1194,11 @@ int child0_f1 = *(int*)(child0 + 0);
 float child0_f2 = *(float*)(child0 + 4);
 
 // Read element pointer at index 1
-char* child0 = (char*)arr[0]; // TODO(agy): FIX
+char* child1 = (char*)arr[1];
 
-// TODO(agy): ADD EXAMPLE READS INTO CHILD
+// Read element tuple's fields
+int child1_f1 = *(int*)(child1 + 0);
+float child1_f2 = *(float*)(child1 + 4);
 
 // Negative offset reads metadata
 ArrMetadata* meta =
