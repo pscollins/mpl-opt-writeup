@@ -1298,6 +1298,25 @@ See \cref{fig:add_two_compare} for a representation of this convention in
 \texttt{SSA}.
 
 
+Naively lowering the all-functions-are-unary program representation to C
+(following the memory layout conventions described in the previous section) has
+disastrous performance characteristics. Every single function call must:
+\begin{enumerate}[noitemsep, topsep=2pt, midpenalty=10000]
+\item Allocate a new tuple on the heap to store the function arguments
+\item Copy the function arguments into the heap-allocated memory
+\item Pass the address of the new tuple to the callee (on either the stack or a temporary)
+\item Jump to the callee
+\item Read the call arguments out of the tuple, into local variables
+\item (Eventually) garbage collect the allocated tuple
+\end{enumerate}
+
+{\clubpenalty=10000
+These penalties apply even in the fast intra-chunk call case. Compared to the
+usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
+registers \cite{amd64-abi}), we pay the price of a heap allocation per function
+call and two memory accesses per argument, hurting locality and wasting memory
+bandwidth.\par}
+
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.33\textwidth}
@@ -1336,25 +1355,13 @@ def main(): int =
   \label{fig:add_two_compare}
 \end{figure}
 
-Naively lowering the all-functions-are-unary program representation to C
-(following the memory layout conventions described in the previous desction) has
-disasterous performance chacteristics. Every single function call must:
-\begin{enumerate}
-\item Allocate a new tuple on the heap to store the function arguments
-\item Copy the function arguments into the heap-allocated memory
-\item Pass the address of the new tuple to the callee (on either the stack or a temporary)
-\item Jump to the callee
-\item Read the call arguments out of the tuple, into local variables
-\item (Eventually) garbage collect the allocated tuple
-\end{enumerate}
-These penalties apply even in the fast intra-chunk call case. Compared to the
-usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
-registers \cite{amd64-abi}), we pay the price of a heap allocation per function
-call and two memory accesses per argument, hurting locality and wasting memory
-bandwidth.
+Fortunately, we can represent the solution to this problem in \texttt{SSA},
+which supports true $n$-ary functions. The \texttt{Flatten} transformation
+introduced by \citet{flat-paper} implements the transformation from
+unary-with-tuple-arguments to true-$n$-ary, as depicted in
+\cref{fig:flatten_one_add}.
 
-The \texttt{Flatten} transformation of \citet{flat-paper} operates on the SSA
-representation, which supports true $n$-ary functions and blocks, contrasting:
+TODO(agy): introduce a figure here called fig:flatten_one_add
 \begin{minted}{python}
   # Unary tuple-based representation
   def add_tuple(ab: (int * int)): int =
@@ -1364,9 +1371,8 @@ representation, which supports true $n$-ary functions and blocks, contrasting:
       ret: int = prim Word32_add (a, b)
       return ret
 \end{minted}
-with:
 \begin{minted}{python}
-  # Binary "flat" representation
+  # 2-ary "flat" representation
   def add(a: int, b: int): int =
     block bb0():
       ret: int = prim Word32_add (a, b)
