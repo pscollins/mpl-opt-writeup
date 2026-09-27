@@ -874,7 +874,7 @@ In C codegen, these are translated as follows:
 Primitive values are mapped to corresponding primitive C types, and reads/writes
 are plain C load/store operations. As discussed above, primitive values can be
 allocated on the MLton stack or in local temporaries
-(\cref{fig:layout_primitive}):
+(\cref{fig:layout_primitive}).
 
 \begin{figure}[H]
   \centering
@@ -915,9 +915,12 @@ float y = tmp2 + 2.0f;
 \end{figure}
 
 
-The tuple type is mapped to a C struct type (\cref{fig:layout_tuple}). Unlike
-primitive types, tuple types are always allocated on the heap. Any references in
-the generated code read/write through a pointer, e.g.:
+Type types are mapped to C \texttt{struct} types (\cref{fig:layout_tuple}).
+Unlike primitive types, tuple data is always allocated on the heap. Any
+references in the generated code read/write through a pointer, which itself may
+be passed around either via temporaries or a MLton stack operation. Each tuple
+object is tagged with a \texttt{GC\_header}, which tracks various medatadata
+required during garbage collection, not discussed here.
 
 \begin{figure}[H]
   \centering
@@ -929,6 +932,7 @@ the generated code read/write through a pointer, e.g.:
   }
   \begin{minipage}[c]{0.48\textwidth}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
+// C struct corresponding to SSA `(int * float)`
 struct TupleT1 {
   GC_header gc_header; // GC metadata tag
   struct {
@@ -937,12 +941,12 @@ struct TupleT1 {
   } members;
 };
 
-// t1 points directly to payload (members)
+// t1 points directly to payload `members`
 char* t1 = ...;
 
 // Positive offsets access fields
-float tmp = *(float*)(t1 + 4);
-*(int*)(t1 + 0) = 13;
+float tmp = *(float*)(t1 + 4);  // Read  `field1`
+*(int*)(t1 + 0) = 13;           // Write `field2`
 
 // Negative offset accesses GC header
 GC_header* hdr =
@@ -985,7 +989,12 @@ GC_header* hdr =
 
 Similarly to tuples, array types and vector types are translated to C struct
 types (\cref{fig:layout_array}), and operations are always through pointers to
-data allocated on the heap:
+data allocated on the heap. Like tuples, container types are arranged so that
+metadata appears at a negative offset from the ``base'' of the object, and data
+members appear at positive offsets. Container type header metadata tracks the
+container length in addition to the GC metadata.
+
+\hl{TODO(agy): we say that GC header is 4 bytes above, but 8 bytes here -- pick one}
 
 \begin{figure}[H]
   \centering
@@ -1004,15 +1013,14 @@ typedef struct {
 
 struct ArrTypeT1 {
   ArrMetadata metadata;
-  int elements[];      // Flex array payload
+  int elements[];      // "Flex array" payload
 };
 
 // arr points directly to elements[0]
 int* arr = ...;
 
 // Positive offset accesses element 15
-int tmp = arr[15];
-// or: *(int*)((char*)arr + 15 * sizeof(int))
+int tmp = *(int*)((char*)arr + 15 * sizeof(int));
 
 // Negative offset accesses metadata
 ArrMetadata* meta =
@@ -1061,8 +1069,12 @@ size_t len = meta->length;
   \label{fig:layout_array}
 \end{figure}
 
-For both the tuple and container case, nested heap-allocated data structures are
-represented by \texttt{void*} members, i.e.:
+\hl{TODO(agy): make this a figure with a idagram on the RHS too, and add an array flavor}
+
+Both tuple and container types represent nested heap-allocated data structures
+as \texttt{void*} data members that point to the ``base'' of the member object
+(\cref{fig:layout_nested_tuple}, \cref{fig:layout_nested_array}).
+
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
 struct TupleT2 {
   struct {
@@ -1074,9 +1086,11 @@ struct TupleT2 {
   } members;
 };
 \end{minted}
-Because MLton is a whole-program compiler, all types are known statically: there
-is no runtime polymorphism in the generated code. Headers carrying type
-information exist only for the benefit of the GC. \hl{CUT?}
+
+
+%% Because MLton is a whole-program compiler, all types are known statically: there
+%% is no runtime polymorphism in the generated code. Headers carrying type
+%% information exist only for the benefit of the GC. \hl{CUT?}
 
 
 \subsection{\texttt{Flatten}}
