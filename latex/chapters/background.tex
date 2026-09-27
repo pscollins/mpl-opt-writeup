@@ -189,7 +189,7 @@ the \texttt{select} operator. The types \texttt{a' array} and \texttt{a' vector}
 likewise match their usual SML counterparts, representing a mutable or an
 immutable container of objects of type \texttt{a'}, respectively.
 
-\hl{TODO: LET'S MENTION TAIL CALLS IN THE GRAMMAR?}
+%% \hl{TODO: LET'S MENTION TAIL CALLS IN THE GRAMMAR?}
 
 \begin{figure}[htbp]
   \centering
@@ -523,9 +523,9 @@ implemented by the \texttt{Chunkify} pass on the \texttt{Machine} IR. Control
 across chunks is orchestrated by a global trampoline function, illustrated in
 \cref{fig:mlton_trampoline}.
 
-\hl{TODO(agy): wrap in a figure}
-\label{fig:mlton_trampoline}
-\begin{minted}{cpp}
+\begin{figure}[htbp]
+  \centering
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
 typedef ChunkFn = ...; // Pointer to chunk function
 void MLton_Trampoline(char* stackTop, Label nextBlock) {
   // Global mapping, Label -> enclosing chunk
@@ -533,14 +533,41 @@ void MLton_Trampoline(char* stackTop, Label nextBlock) {
     &Chunk1, // Jump target for bb0
     &Chunk1, // Jump target for bb1
     ...      // All other jump targets
-  }
+  };
   do {
     // Jump into the right chunk for nextBlock
-    nextBlock = (*(nextChunks[nextBlock]))(&stackTop, nextBlock);
+    nextBlock = (*(chunkMap[nextBlock]))(&stackTop, nextBlock);
     // ...until we reach the distinguished end-of-program label.
   } while (nextBlock != bb_done);
 }
 \end{minted}
+  \caption{The global trampoline function orchestrating control flow across chunks in MLton's generated C code.}
+  \label{fig:mlton_trampoline}
+\end{figure}
+
+
+``Chunkification'' is a tradeoff between C compile times and performance. Every
+chunk boundary adds overhead: first, there is direct overhead from the extra
+instructions required to bounce across the trampoline, and second, there is a
+penalty to pass data across chunk boundaries.
+
+There are two possible mechanisms to pass data along control flow edges in
+MLton, only one of which is available for inter-chunk calls: via C
+function-local variables (which are intended to map on to target CPU registers)
+or via explicit stack operations. Passing data via C function-local variables
+will generally be strictly less expensive than via stack operations: either the
+C compiler register allocator succeeds at keeping the temporaries in registers,
+or the C compiler emits a spill-fetch sequence that is of roughly equivalent
+cost to the explicit MLton stack operations.
+
+This completes the discussion of the correspondance between \texttt{SSA} and C
+representations of control flow, as well as the in-memory layout for program
+data that lives on the stack. The remaining correspondance to describe is the
+in-memory layout for heap data, which we will cover in the following section
+(alongside the optimizations that impact it).
+
+%% and fully describes the in-memory
+%% representation of \texttt{SSA} data that lives on the stack. 
 
 %% \begin{minted}{cpp}
 %% // Labels for all blocks in the program
@@ -581,15 +608,15 @@ void MLton_Trampoline(char* stackTop, Label nextBlock) {
 %% \item \hl{TODO: COPIES}
 %% \end{itemize}
 
-\hl{TODO: LET'S START OFF WITH A DIAGRAM THAT SHOWS fib CONTROL FLOW}
+%% \hl{TODO: LET'S START OFF WITH A DIAGRAM THAT SHOWS fib CONTROL FLOW}
 
-\hl{TODO: CLEAN UP STARTING BELOW}
+%% \hl{TODO: CLEAN UP STARTING BELOW}
 
-Zooming out to the most abstract level, we might end up with something like the
-following for the snippet above (where we'll continue to use pseudocode in order
-to elide some of the syntactic complexity, now with a C++ flavor):
+%% Zooming out to the most abstract level, we might end up with something like the
+%% following for the snippet above (where we'll continue to use pseudocode in order
+%% to elide some of the syntactic complexity, now with a C++ flavor):
 
-\hl{TODO: This seems too long -- commented out}
+%% \hl{TODO: This seems too long -- commented out}
 
 %% \begin{minted}{cpp}
 %%   GCState gc_state;  // Global garbage collector state
@@ -677,144 +704,144 @@ to elide some of the syntactic complexity, now with a C++ flavor):
 %%   ... runtime-provided `Main` ...
 
 %% \end{minted}
-We'll again highlight a few notable features of the generated code:
+%% We'll again highlight a few notable features of the generated code:
 
 %% TODO:
 %%   1. prims are C calls
 %%   2. data passes in C-temps when possible, otherwise via explicit stack
 %%   3. SML funcs are collapsed into chunks
 
-\begin{itemize}
-%% \item SML control flow becomes 
-\item SML functions are collapsed into ``chunks'' in the generated C code
-\item Within a ``chunk,'' data passes between blocks either by explicit stack
-  operations, or by ``registers'' as C-function locals.
-\end{itemize}
+%% \begin{itemize}
+%% %% \item SML control flow becomes 
+%% \item SML functions are collapsed into ``chunks'' in the generated C code
+%% \item Within a ``chunk,'' data passes between blocks either by explicit stack
+%%   operations, or by ``registers'' as C-function locals.
+%% \end{itemize}
 
-\hl{TODO: Better transition}
+%% \hl{TODO: Better transition}
 
-We'll discuss these in more detail below
+%% We'll discuss these in more detail below
 
 %% \paragraph{Jump }
 
-\paragraph{Chunkification}
+%% \paragraph{Chunkification}
 
-Rather than maintaining a mapping between SML functions and C functions, the
-compiler instead attempts to implement procedure calls as either a direct
-\texttt{goto} (for statically-known branch targets) or a computation to find the
-appropriate entry in a jump table: this strategy makes it possible to e.g.
-naturally guarantee that tail-recursive SML functions do not consume a C stack
-frame per call.
+%% Rather than maintaining a mapping between SML functions and C functions, the
+%% compiler instead attempts to implement procedure calls as either a direct
+%% \texttt{goto} (for statically-known branch targets) or a computation to find the
+%% appropriate entry in a jump table: this strategy makes it possible to e.g.
+%% naturally guarantee that tail-recursive SML functions do not consume a C stack
+%% frame per call.
 
-For maximum performance, MLton would ideally compile the entire SML program into
-a single C function: C function boundaries serve no purpose in the generated
-code, and so any such boundaries are pure overhead. However, C compilation time
-scales superlinearly with function size, and so this strategy can be
-prohibitively expensive in practice (20+ minutes to compile a single benchmark).
+%% For maximum performance, MLton would ideally compile the entire SML program into
+%% a single C function: C function boundaries serve no purpose in the generated
+%% code, and so any such boundaries are pure overhead. However, C compilation time
+%% scales superlinearly with function size, and so this strategy can be
+%% prohibitively expensive in practice (20+ minutes to compile a single benchmark).
 
-As a workaround, MLton trades off improved runtime performance for decreased C
-compile time by dividing the generated user program into ``chunks,'' each with
-their own local jump table, local ``registers,'' and so on. Control flow between
-chunks is orchestrated by returning the target block ID to the runtime, which
-looks up the containing chunk in a global map, i.e.:
-\begin{minted}{cpp}
-  typedef enum Label {
-    chunk_1_bb0,
-    ...,
-    chunk_2_bb0,
-    ...
-    doneLabel,  // Indicates program termination
-  };
+%% As a workaround, MLton trades off improved runtime performance for decreased C
+%% compile time by dividing the generated user program into ``chunks,'' each with
+%% their own local jump table, local ``registers,'' and so on. Control flow between
+%% chunks is orchestrated by returning the target block ID to the runtime, which
+%% looks up the containing chunk in a global map, i.e.:
+%% \begin{minted}{cpp}
+%%   typedef enum Label {
+%%     chunk_1_bb0,
+%%     ...,
+%%     chunk_2_bb0,
+%%     ...
+%%     doneLabel,  // Indicates program termination
+%%   };
 
-  Label Chunk_1(...) {
-    ...local variables, jump table...
+%%   Label Chunk_1(...) {
+%%     ...local variables, jump table...
 
-L_chunk_1_bb0:
-  ...some computation...
-  return chunk2_bb0;  // return to ``trampoline''
-}
+%% L_chunk_1_bb0:
+%%   ...some computation...
+%%   return chunk2_bb0;  // return to ``trampoline''
+%% }
 
-  Label Chunk_2(...) {
-    ...local variables, jump table...
+%%   Label Chunk_2(...) {
+%%     ...local variables, jump table...
 
-L_chunk_2_bb0:
-  ...some computation...
-  return chunk2_bb0;  // return to ``trampoline''
-}
+%% L_chunk_2_bb0:
+%%   ...some computation...
+%%   return chunk2_bb0;  // return to ``trampoline''
+%% }
 
-  typedef ChunkFn = ...; // Type of &Chunk_1, &Chunk_2, etc
-  void MLton_trampoline(...) {  // Outer loop over executing chunks
-    ChunkFn chunkMap[] = {
-      &Chunk_1, // index == chunk_0_bb0,
-      ...
-      &Chunk_2, // index == chunk_1_bb0
-      ...
-    };
-    Label nextBlock = chunk_0_bb0; // Distinguished 'start' block
-    do {
-      // Call into the chunk corresponding to the requested block
-      nextBlock = *chunkMap[nextBlock](...);
-    } while (nextBLock != doneLabel);
-  }
-\end{minted}
+%%   typedef ChunkFn = ...; // Type of &Chunk_1, &Chunk_2, etc
+%%   void MLton_trampoline(...) {  // Outer loop over executing chunks
+%%     ChunkFn chunkMap[] = {
+%%       &Chunk_1, // index == chunk_0_bb0,
+%%       ...
+%%       &Chunk_2, // index == chunk_1_bb0
+%%       ...
+%%     };
+%%     Label nextBlock = chunk_0_bb0; // Distinguished 'start' block
+%%     do {
+%%       // Call into the chunk corresponding to the requested block
+%%       nextBlock = *chunkMap[nextBlock](...);
+%%     } while (nextBLock != doneLabel);
+%%   }
+%% \end{minted}
 
 
-\paragraph{Stack vs ``registers''}
-As we can see in the samples above, there are two possible mechanisms to pass
-data between blocks in the generated C, either in ``registers,'' which are
-compiled down to function-local C variables:
-\begin{minted}{cpp}
-  Label Chunk(...) {
-    int x;
-    int y;
-    ...
-   L_bb0:
-    x = 1; // write to a "register"
-    goto L_bb1;
+%% \paragraph{Stack vs ``registers''}
+%% As we can see in the samples above, there are two possible mechanisms to pass
+%% data between blocks in the generated C, either in ``registers,'' which are
+%% compiled down to function-local C variables:
+%% \begin{minted}{cpp}
+%%   Label Chunk(...) {
+%%     int x;
+%%     int y;
+%%     ...
+%%    L_bb0:
+%%     x = 1; // write to a "register"
+%%     goto L_bb1;
 
-   L_bb1:
-    y = f(x); // read from a "register"
-    ...
-\end{minted}
-or through manipulation of an explicit C-level \texttt{Stack} data structure:
-\begin{minted}{cpp}
-  Label Chunk(...) {
-    ....
-   L_bb0:
-    *Stack.Push<int>() = 1; // Bump `top` pointer and initialize memory
-    goto L_bb1;
+%%    L_bb1:
+%%     y = f(x); // read from a "register"
+%%     ...
+%% \end{minted}
+%% or through manipulation of an explicit C-level \texttt{Stack} data structure:
+%% \begin{minted}{cpp}
+%%   Label Chunk(...) {
+%%     ....
+%%    L_bb0:
+%%     *Stack.Push<int>() = 1; // Bump `top` pointer and initialize memory
+%%     goto L_bb1;
 
-   L_bb1:
-    y = Stack.Peek<int>();  // Sized read from `top` pointer
-    ...
-\end{minted}
+%%    L_bb1:
+%%     y = Stack.Peek<int>();  // Sized read from `top` pointer
+%%     ...
+%% \end{minted}
 
-It is mandatory to pass data via the \texttt{Stack} in the following situations:
+%% It is mandatory to pass data via the \texttt{Stack} in the following situations:
 
-\begin{itemize}
-\item All calls to non-tail-recursive functions: a non-tail-recursive function
-  necessarily passes e.g. the return address to the callee via the stack, and so
-  for the sake of simplicity, MLton chooses to pass all arguments across the
-  stack in this case. \hl{TODO: CHECK}
+%% \begin{itemize}
+%% \item All calls to non-tail-recursive functions: a non-tail-recursive function
+%%   necessarily passes e.g. the return address to the callee via the stack, and so
+%%   for the sake of simplicity, MLton chooses to pass all arguments across the
+%%   stack in this case. \hl{TODO: CHECK}
  
-\item All function calls across chunk boundaries: all generated chunks take the
-  same arguments (GC state, stack state, and the target block), so there is no
-  way to pass data across chunks in ``registers.''
+%% \item All function calls across chunk boundaries: all generated chunks take the
+%%   same arguments (GC state, stack state, and the target block), so there is no
+%%   way to pass data across chunks in ``registers.''
 
-\item All values that remain live across a GC point: for simplicity, the garbage
-  collector does not examine ``registers'' when tracing live objects, hence all
-  data must be spilled to the stack before the GC runs.
+%% \item All values that remain live across a GC point: for simplicity, the garbage
+%%   collector does not examine ``registers'' when tracing live objects, hence all
+%%   data must be spilled to the stack before the GC runs.
 
-\end{itemize}
+%% \end{itemize}
 
-It is worth noting, furthermore, that passing data via C temporaries does not
-\textit{guarantee} that the data remains in host machine registers: it merely
-offers the C compiler's register allocator the opportunity to do so. MLton makes
-no attempt to pack temporaries into available registers, and so blocks with a
-large number of live-in/live-out variables will pay a performance penalty to
-spill/fetch onto the (implicit, OS-level) C stack.
+%% It is worth noting, furthermore, that passing data via C temporaries does not
+%% \textit{guarantee} that the data remains in host machine registers: it merely
+%% offers the C compiler's register allocator the opportunity to do so. MLton makes
+%% no attempt to pack temporaries into available registers, and so blocks with a
+%% large number of live-in/live-out variables will pay a performance penalty to
+%% spill/fetch onto the (implicit, OS-level) C stack.
 
-%% \hl{TODO}
+%% %% \hl{TODO}
 
 
 \section{Flattening optimizations}
