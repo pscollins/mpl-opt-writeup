@@ -1412,16 +1412,21 @@ data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
 that must pass through a long sequence of intermediate function calls before
 \cref{fig:bad_flatten_example}. For the ``non-flat'' representation, each
 intermediate call pays only the cost to copy a pointer, but in the flattened
-representation, each call must pay for the full 1 KB copy.
+representation, each call must pay for the full 1 KB copy -- even if the leaf
+function only reads a single field.
+
+TODO(agy): get rid of the trailing arguments after the tuple, add ... after bb0
+to reprsent the region where b11 is; also make the names match (the code says
+next but the function name is i)
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Unflattened (pointer-based)}
+    \caption{Unflattened (unary)}
     \label{fig:bad_flatten_unflattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-# Passes pointer across k layers
+# Passes pointer to n-wide tuple across k layers
 def f_i(t: T1 * ... * Tn, ...):
   block bb0():
     # Pointer passed in register
@@ -1492,25 +1497,44 @@ types than a simple tuple-as-unary argument -- for example, it can naturally
 select the optimum representation for nested tuple types (depicted in
 \cref{fig:nested_tuple_flatten}).
 
-TODO(agy): make this fig nested tuple flatten
-
-\begin{minted}{python}
-  fun add_vec(input: ((int * int) * (int * int))): int =
-    block bb0():
-      lhs: int * int = select (input, 0)
-      rhs: int * int = select (input, 1)
-      lhs_x: int = select (lhs, 0)
-      lhs_y: int = select (lhs, 1)
-      rhs_x: int = select (rhs, 0)
-      rhs_y: int = select (rhs, 1)
-      ... add elements ...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Nested tuple representation}
+    \label{fig:nested_tuple_unflattened}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def add_vec(
+  input: ((int * int) * (int * int))
+): int =
+  block bb0():
+    lhs: int * int = select (input, 0)
+    rhs: int * int = select (input, 1)
+    lhs_x: int = select (lhs, 0)
+    lhs_y: int = select (lhs, 1)
+    rhs_x: int = select (rhs, 0)
+    rhs_y: int = select (rhs, 1)
+    # ... add elements ...
 \end{minted}
-mapping to:
-\begin{minted}{python}
-  fun add_vec_flat(lhs_x: int, lhs_y: int, rhs_x: int, rhs_y: int): int =
-    block bb0():
-      ... add elements ...
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Flattened 4-ary representation}
+    \label{fig:nested_tuple_flattened}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def add_vec_flat(
+  lhs_x: int, lhs_y: int,
+  rhs_x: int, rhs_y: int
+): int =
+  block bb0():
+    # Direct access: tuple selects
+    # are completely eliminated
+    # ... add elements ...
 \end{minted}
+  \end{subfigure}
+  \caption{Flattening a nested tuple type: \texttt{Flatten} eliminates intermediate tuple selections by unnesting \texttt{((int * int) * (int * int))} into four scalar arguments.}
+  \label{fig:nested_tuple_flatten}
+\end{figure}
 It is worth noting, however, that due to the structure of the generated C
 discussed above, the savings may be less large in practice \hl{than they appear}
 based on the transformation in the SSA format: a naive reading suggests that by
