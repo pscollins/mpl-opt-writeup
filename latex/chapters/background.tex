@@ -873,7 +873,7 @@ In C codegen, these are translated as follows:
 
 Primitive values are mapped to corresponding primitive C types, and reads/writes
 are plain C load/store operations. As discussed above, primitive values can be
-allocated on the MLTon stack or in local temporaries
+allocated on the MLton stack or in local temporaries
 (\cref{fig:layout_primitive}):
 
 \begin{figure}[H]
@@ -886,13 +886,13 @@ allocated on the MLTon stack or in local temporaries
   }
   \begin{minipage}[c]{0.48\textwidth}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
-// Scalar values in registers/stack slots
+// Scalar values in chunk-local temporaries
 int   tmp1 = 42;
 float tmp2 = 3.14f;
 
 // Plain C operations (no heap indirection)
-int   x = tmp1;
-float y = tmp2;
+int   x = tmp1 + 1;
+float y = tmp2 + 2.0f;
 \end{minted}
   \end{minipage}%
   \hfill
@@ -907,12 +907,13 @@ float y = tmp2;
       \node[idx] at ($(p2.north) + (0, 0.22)$) {\texttt{float tmp2}};
       \node[idx] at ($(p2.south) + (0, -0.22)$) {4 bytes};
 
-      \node[font=\scriptsize\color{textMuted}] at ($(p1.south)!0.5!(p2.south) + (0.3, -0.55)$) {Unboxed scalars in registers / stack slots};
+      \node[font=\scriptsize\color{textMuted}] at ($(p1.south)!0.5!(p2.south) + (0.3, -0.55)$) {Unboxed scalars passed by value};
     \end{tikzpicture}
   \end{minipage}
   \caption{Primitive values: Unboxed scalar values stored directly in registers or stack slots without object headers.}
   \label{fig:layout_primitive}
 \end{figure}
+
 
 The tuple type is mapped to a C struct type (\cref{fig:layout_tuple}). Unlike
 primitive types, tuple types are always allocated on the heap. Any references in
