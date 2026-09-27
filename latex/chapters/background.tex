@@ -165,8 +165,11 @@ with a conditional \texttt{goto}.
 The \texttt{call} statement differs somewhat from the \texttt{call} statement
 used in other SSA IRs: the syntax is \texttt{call return\_label func\_name
   (...arguments...)}, where \texttt{return\_label} is a block label within the
-current function. Names for function return values in the caller are thus
-bound using the same block-argument mechanism described above.
+current function. Names for function return values in the caller are thus bound
+using the same block-argument mechanism described above. Tail-recursive
+functions are distinguished in \texttt{SSA} by the lack of a
+\texttt{return\_label}; in the textual representation they use the placeholder
+label \texttt{tail}.
 
 Concrete operations on particular types are implemented in MLton as ``primitive
 applications,'' denoted in the IR by the keyword \texttt{prim}. MLton defines on
@@ -185,6 +188,8 @@ matching, and \texttt{tuple} has some special syntactic support in the form of
 the \texttt{select} operator. The types \texttt{a' array} and \texttt{a' vector}
 likewise match their usual SML counterparts, representing a mutable or an
 immutable container of objects of type \texttt{a'}, respectively.
+
+\hl{TODO: LET'S MENTION TAIL CALLS HERE}
 
 \begin{figure}[htbp]
   \centering
@@ -268,17 +273,22 @@ C are:
 \begin{itemize}
 \item \texttt{SSA} control flow constructs (\texttt{goto}-with-arguments,
   \texttt{call}-with-return) map poorly to C
-\item \texttt{SSA} data types leave memory representations abstract
+\item \texttt{SSA} data types leave in-memory representations abstract
 \end{itemize}
+
+\hl{TODO: where to note that the match isn't exact?}
 
 To solve the first problem, the essence of MLton's strategy is to compile all
 control flow (both \texttt{goto}-with-arguments and \texttt{call}-with-return)
-down to a jump table. Data is passed between blocks either via C function-local variables 
+down to a jump table: the high-level structure of the C function generated for
+the snippet \cref{fig:chunk_ssa} is given in \cref{fig:chunk_func}. \texttt{SSA}
+block labels become entries in a C enum, and control passes between blocks
+either by direct \texttt{goto} calls (for statically-known branch targets) or
+via the jump table (for indirect branches). Here and elsewhere, the provided C
+code is simplified syntactically vs the actual MLton output, but it faithfully
+represents \hl{its semantics}.
 
-
-with an explicit stack: data is passed between blocks via C
-function-local variables
-
+\hl{TODO(agy): put this in a figure, side by side}
 \label{fig:ssa_pseudo_small}
 \begin{minted}{python}
 def fib(n: int): int =
@@ -298,6 +308,131 @@ def fib(n: int): int =
     funcResult: int = prim Word32_mul (callResult, n)
     return funcResult
 \end{minted}
+\label{fig:chunk_func}
+\begin{minted}{cpp}
+// Type definitions
+enum Label {
+  bb0,
+  bb1,
+  ... // All block labels in the program
+};
+
+Label Chunk(char** stackTopPtr, Label nextBLock) {
+  // Local variable definitions
+  int funcResult, callResult, callArg, n;
+  bool isEq;
+
+ doSwitchNextBlock:
+  switch (nextBlock) {
+    case bb0: goto L_bb0;
+    case bb1: goto L_bb1;
+    ...
+  }
+  ...
+  // Block definitions follow
+}
+\end{minted}
+
+Within each block, the generated code can access temporaries (represented as C
+function-local variables), call lower-level C primitives, and manipulate the
+current thread's stack. Explicit stack operations allow MLton to implement
+non-tail-recursive function calls through the jump table mechanism, without
+emitting a distinct C function for each such callee. Figures
+\cref{fig:pseudo_small_bb0}, \cref{fig:pseudo_small_bb1},
+\cref{fig:pseudo_small_bb2} and \cref{fig:pseudo_small_bb3} demonstrate the flow
+of data between \texttt{SSA} functions and blocks.
+
+\hl{TODO(agy): make  figure that wraps these, with the overall label fig:pseudo_small_bb0}
+\label{fig:ssa_pseudo_small_bb0}
+\begin{minted}{python}
+block bb0():
+  isEq: bool = prim Word32_equal (n, 0)
+  case isEq of true => goto bb1 | false => goto bb2
+\end{minted}
+\label{fig:c_pseudo_small_bb0}
+\begin{minted}{cpp}
+L_bb0:
+  // Read function argument from the stack
+  n = *((uint32*)(*stackTopPtr) + 0);
+  isEq = n == 0;
+  // Direct branch
+  if (isEq) {
+    goto l_bb1;
+  } else {
+    goto l_bb2;
+  }
+\end{minted}
+
+\hl{TODO(agy): make  figure that wraps these, follow the naming convention}
+\label{fig:ssa_pseudo_small_bb1}
+\begin{minted}{python}
+block bb1():
+  return 1;
+\end{minted}
+\label{fig:c_pseudo_small_bb1}
+\begin{minted}{cpp}
+L_bb1:
+  // Write the function return value to the top of the stack
+  *((uint32*)(*stackTopPtr + 0)) = 1
+  // Read the label for the continuation block from the end of the caller's
+  // stack frame.
+  nextBlock = *(Label*)(*stackTopPtr - sizeof(Label))
+  // Indirect branch; return to the caller
+  goto doSwitchNextBlock;
+\end{minted}
+
+\hl{TODO(agy): make  figure that wraps these, follow the naming convention}
+\label{fig:ssa_pseudo_small_bb2}
+\begin{minted}{python}
+block bb2():
+  callArg: int = prim Word32_sub (n, 1)
+  # call fib(n-1) and return to bb3
+  call bb3 fib (callArg)
+\end{minted}
+\label{fig:c_pseudo_small_bb2}
+\begin{minted}{cpp}
+L_bb2:
+  // Read from a local variable. Dominator-scoping in the SSA IR guarantees that
+  // n is initialized.
+  //
+  // Word32_sub is a C function exposed by the runtime.
+  callArg = Word32_sub(n, 1)
+  // Store the return address for the callee at the end of our stack frame.
+  *(Label*)(*stackTopPtr + sizeof(Label)) = bb2;
+  // Store the function call argument in the first slot in the next stack frame.
+  // The size of each stack frame is calculated by MLton at compile time.
+  *(int*)(*stackTopPtr + kFibStackSize) = callArg;
+  // Bump the stack pointer to allocate a new frame.
+  *stackTopPtr += kFibStackSize;
+  // Recursive, non-tail call
+  goto bb0;
+\end{minted}
+
+\hl{TODO(agy): make  figure that wraps these, follow the naming convention}
+\label{fig:ssa_pseudo_small_bb3}
+\begin{minted}{python}
+block bb3(callResult: int):
+  funcResult: int = prim Word32_mul (callResult, n)
+  return funcResult
+\end{minted}
+\label{fig:c_pseudo_small_bb3}
+\begin{minted}{cpp}
+L_bb3:
+  // Read the return value, written at the current top of the stack
+  callResult = *(int*)(*stackTopPtr + 0);
+  // De-allocate the callee's stack frame
+  *stackTopPtr -= kFibStackSize;
+  // Read out the current call's n, which was clobbered by the callee
+  n = *(int*)(*stackTopPtr + 0);
+  // C call into the runtime
+  funcResult = Word32_mul(callResult, n)
+  // Store this call's return value at the start of its stack frame
+  (*stackTopPtr + 0) = funcResult;
+  // Return to the caller
+  nextBlock = *(Label*)(*stackTop - sizeof(Label));
+  goto doSwitchNextBlock;
+\end{minted}
+
 \begin{minted}{cpp}
 // Labels for all blocks in the program
 enum Label {
