@@ -1361,7 +1361,6 @@ introduced by \citet{flat-paper} implements the transformation from
 unary-with-tuple-arguments to true-$n$-ary, as depicted in
 \cref{fig:flatten_one_add}.
 
-TODO(agy): add in the caller ``main'' to both sides in the example below
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
@@ -1375,6 +1374,13 @@ def add_tuple(ab: (int * int)): int =
     b: int = select (ab, 1)  # tuple read
     ret: int = prim Word32_add (a, b)
     return ret
+
+def main(): int =
+  block bb0():
+    # Heap allocation
+    ab: (int * int) = tuple(1, 2)
+    call bb1 add_tuple(ab)
+    ...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -1386,6 +1392,12 @@ def add(a: int, b: int): int =
   block bb0():
     ret: int = prim Word32_add (a, b)
     return ret
+
+def main(): int =
+  block bb0():
+    # Direct call
+    call bb1 add(1, 2)
+    ...
 \end{minted}
   \end{subfigure}
   \caption{The \texttt{Flatten} transformation converts unary functions accepting tuple arguments into true $n$-ary functions.}
