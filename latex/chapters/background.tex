@@ -1408,7 +1408,14 @@ def main(): int =
 A naive solution to the problem would be to interpret all SML-level functions as
 $n$-ary functions over their arguments. However, this strategy can introduce
 unnecessary pack/unpack operations in cases where the natural representation for
-data really is a tuple, e.g.:
+data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
+that must pass through a long sequence of intermediate function calls before
+some of its members are consumed by a leaf function, as depicted in
+\cref{fig:bad_flatten_example}
+
+TOOD(agy): insert bad-flatten-example here
+
+e.g.:
 \begin{minted}{sml}
   val toArray: 'a array = .... (* global array value *)
 
