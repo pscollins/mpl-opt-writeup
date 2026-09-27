@@ -869,15 +869,12 @@ In the source language, we have three basic species of data types (ignoring
 \end{itemize}
 
 \newpage
-In C codegen, these data types are translated as follows:
+In C codegen, these are translated as follows:
 
-Primitive values (such as \texttt{int}, \texttt{bool}, and \texttt{real}) map
-directly to corresponding native machine types in C (\cref{fig:layout_primitive}).
-Unlike heap-allocated objects, primitive values carry no object headers, length
-tags, or garbage collection metadata. They are allocated unboxed in local
-variables---which the C compiler typically maps to CPU registers---or in slots
-within the thread's execution stack, and reads and writes lower to standard
-register moves or direct memory loads and stores.
+Primitive values are mapped to corresponding primitive C types, and reads/writes
+are plain C load/store operations. As discussed above, primitive values can be
+allocated on the MLTon stack or in local temporaries
+(\cref{fig:layout_primitive}):
 
 \begin{figure}[H]
   \centering
@@ -917,19 +914,9 @@ float y = tmp2;
   \label{fig:layout_primitive}
 \end{figure}
 
-Unlike primitive values, tuple types are always allocated on the heap. A tuple
-is represented by a C struct consisting of a metadata header containing a
-garbage collection tag (\texttt{GC\_header}) followed by a nested struct
-holding the member fields (\cref{fig:layout_tuple}). Crucially, in MLton's
-runtime representation, object references do not point to the base of the
-allocated struct. Instead, a tuple pointer \texttt{t1} points directly to the
-beginning of the payload (\texttt{members}), immediately following the header.
-Member fields are accessed via non-negative byte offsets from \texttt{t1} using
-C-style casts, while the garbage collector accesses the metadata header at a
-fixed negative offset (\texttt{-sizeof(GC\_header)}). This interior pointer
-convention allows compiled user code to access fields directly with positive
-displacements, while runtime GC routines inspect object tags by stepping
-backward.
+The tuple type is mapped to a C struct type (\cref{fig:layout_tuple}). Unlike
+primitive types, tuple types are always allocated on the heap. Any references in
+the generated code read/write through a pointer, e.g.:
 
 \begin{figure}[H]
   \centering
@@ -995,16 +982,9 @@ GC_header* hdr =
   \label{fig:layout_tuple}
 \end{figure}
 
-Container types---immutable vectors and mutable arrays---are likewise allocated
-on the heap and lowered to C struct types with flexible array members
-(\cref{fig:layout_array}). The container layout consists of a metadata prefix
-carrying both the GC header tag and the array length, immediately followed by
-a contiguous array of elements. As with tuples, an array pointer \texttt{arr}
-points directly to the first element of the payload (\texttt{elements[0]})
-rather than to the beginning of the metadata. Individual elements are accessed
-by computing non-negative byte offsets from \texttt{arr} using C-style casts,
-while container properties such as \texttt{length} are retrieved by applying
-a negative byte offset to step back into the metadata header.
+Similarly to tuples, array types and vector types are translated to C struct
+types (\cref{fig:layout_array}), and operations are always through pointers to
+data allocated on the heap:
 
 \begin{figure}[H]
   \centering
@@ -1080,27 +1060,22 @@ size_t len = meta->length;
   \label{fig:layout_array}
 \end{figure}
 
-For both tuples and containers, nested heap-allocated data structures are
-represented by storing pointers (\texttt{void*}) to child objects rather than
-inlining them:
+For both the tuple and container case, nested heap-allocated data structures are
+represented by \texttt{void*} members, i.e.:
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
 struct TupleT2 {
   struct {
     GC_header gc_header;
   } metadata;
   struct {
-    void* field1; // Pointer to child heap object
+    void* field1;
     ...
   } members;
 };
 \end{minted}
 Because MLton is a whole-program compiler, all types are known statically: there
-is no runtime polymorphism in the generated code, and headers exist solely for
-the garbage collector. However, because the source language treats all tuples
-and containers uniformly, this default layout forces composite structures to be
-heap-allocated and traversed through pointer indirection. The flattening
-optimizations discussed next are designed to eliminate these costly heap
-allocations and pointer chains.
+is no runtime polymorphism in the generated code. Headers carrying type
+information exist only for the benefit of the GC. \hl{CUT?}
 
 
 \subsection{\texttt{Flatten}}
