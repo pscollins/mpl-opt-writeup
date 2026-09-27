@@ -263,13 +263,79 @@ immutable container of objects of type \texttt{a'}, respectively.
 %% \end{itemize}
 
 \subsection{\texttt{SSA} $\Rightarrow$ C}
-The core problems that we need to solve in order to translate from \texttt{SSA}
-to C are:
+The core problems that we need to fix in order to translate from \texttt{SSA} to
+C are:
 \begin{itemize}
 \item \texttt{SSA} control flow constructs (\texttt{goto}-with-arguments,
-  \texttt{call}-with-return) map poorly on to C
-\item \hl{TODO: COPIES}
+  \texttt{call}-with-return) map poorly to C
+\item \texttt{SSA} data types leave memory representations abstract
 \end{itemize}
+
+To solve the first problem, the essence of MLton's strategy is to compile all
+control flow (both \texttt{goto}-with-arguments and \texttt{call}-with-return)
+down to a jump table. Data is passed between blocks either via C function-local variables 
+
+
+with an explicit stack: data is passed between blocks via C
+function-local variables
+
+\label{fig:ssa_pseudo_small}
+\begin{minted}{python}
+def fib(n: int): int =
+  block bb0():
+    isEq: bool = prim Word32_equal (n, 0)
+    case isEq of true => goto bb1 | false => goto bb2
+
+  block bb1():
+    return 1
+
+  block bb2():
+    callArg: int = prim Word32_sub (n, 1)
+    # call fib(n-1) and return to bb3
+    call bb3 fib (callArg)
+
+  block bb3(callResult: int):
+    funcResult: int = prim Word32_mul (callResult, n)
+    return funcResult
+\end{minted}
+\begin{minted}{cpp}
+// Labels for all blocks in the program
+enum Label {
+  fib_bb0,
+  fib_bb1,
+  fib_bb2,
+  fib_bb3
+}
+def fib(n: int): int =
+  block bb0():
+    isEq: bool = prim Word32_equal (n, 0)
+    case isEq of true => goto bb1 | false => goto bb2
+
+  block bb1():
+    return 1
+
+  block bb2():
+    callArg: int = prim Word32_sub (n, 1)
+    # call fib(n-1) and return to bb3
+    call bb3 fib (callArg)
+
+  block bb3(callResult: int):
+    funcResult: int = prim Word32_mul (callResult, n)
+    return funcResult
+\end{minted}
+
+
+
+%% The core problem that we need to solve in order to translate from \texttt{SSA}
+%% to C is that the \texttt{SSA} 
+
+%% The core problems that we need to solve in order to translate from \texttt{SSA}
+%% to C are:
+%% \begin{itemize}
+%% \item \texttt{SSA} control flow constructs (\texttt{goto}-with-arguments,
+%%   \texttt{call}-with-return) map poorly on to C
+%% \item \hl{TODO: COPIES}
+%% \end{itemize}
 
 \hl{TODO: LET'S START OFF WITH A DIAGRAM THAT SHOWS fib CONTROL FLOW}
 
