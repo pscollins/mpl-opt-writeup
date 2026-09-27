@@ -1291,42 +1291,54 @@ size_t len = meta->length;
 
 \subsection{\texttt{Flatten}}
 In the source language, all functions are unary, with support for multiple
-arguments implemented via tuple types: therefore, even a trivial function call
-expands requires a heap allocation and a sequence of memory operations that is
-linear in the number of function arguments (depicted in
-\cref{fig:add_two_compare}).
+arguments implemented via tuple types. This convention is desirable from the
+perspective of simplifying language design, since (for example) rules for
+type-checking function calls can be subsumed by rules for typechecking tuples.
+See \cref{fig:add_two_compare} for a representation of this convention in
+\texttt{SSA}.
 
-\hl{TODO(agy): move this into a figure with the code side-by-side}
 
-\label{fig:add_two_compare}
-\begin{minted}{sml}
-  fun add(a, b) = a + b
-  fun main() = add (1, 2)
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.33\textwidth}
+    \caption{Standard ML source}
+    \label{fig:add_two_sml}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+fun add(a, b) = a + b
+
+fun main() = add (1, 2)
 \end{minted}
-\begin{minted}{python}
-  # Naive, unary tuple representation
-  def add(ab: (int * int)): int =
-    block bb0():
-      a: int = select (ab, 0)  # tuple member read: pointer dereference
-      b: int = select (ab, 1)  # tuple member read: pointer dereference
-      ret: int = prim Word32_add (a, b)
-      return ret
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.64\textwidth}
+    \caption{Lowered \texttt{SSA} pseudocode}
+    \label{fig:add_two_ssa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+def add(ab: (int * int)): int =
+  block bb0():
+    # Tuple reads: pointer dereferences
+    a: int = select (ab, 0)
+    b: int = select (ab, 1)
+    ret: int = prim Word32_add (a, b)
+    return ret
 
-  def main(): int =
-    block bb0():
-      # Tuple constructor call: heap allocation
-      ab: (int * int) = tuple(1, 2)
-      call bb1 add(ab)
-   ...
+def main(): int =
+  block bb0():
+    # Tuple constructor call: heap allocation
+    ab: (int * int) = tuple(1, 2)
+    call bb1 add(ab)
+    ...
 \end{minted}
+  \end{subfigure}
+  \caption{A simple \texttt{add} program in Standard ML alongside its naive
+    unary representation lowered to \texttt{SSA}.}
+  \label{fig:add_two_compare}
+\end{figure}
 
-This convention is desirable from the perspective of simplifying language
-design, since (for example) rules for type-checking function calls can be
-subsumed by rules for typechecking tuples.
-
-However, naively lowering \hl{this construct} to C according to the rules that
-we have described above has disasterous performance characteristics: every
-single function call must
+Naively lowering the all-functions-are-unary program representation to C
+(following the memory layout conventions described in the previous desction) has
+disasterous performance chacteristics. Every single function call must:
 \begin{enumerate}
 \item Allocate a new tuple on the heap to store the function arguments
 \item Copy the function arguments into the heap-allocated memory
@@ -1337,7 +1349,7 @@ single function call must
 \end{enumerate}
 These penalties apply even in the fast intra-chunk call case. Compared to the
 usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
-registers \citet{amd64-abi}), we pay the price of a heap allocation per function
+registers \cite{amd64-abi}), we pay the price of a heap allocation per function
 call and two memory accesses per argument, hurting locality and wasting memory
 bandwidth.
 
