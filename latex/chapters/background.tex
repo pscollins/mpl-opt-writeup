@@ -867,100 +867,240 @@ In the source language, we have three basic species of data types (ignoring
   container for elements of a uniform, statically-known type, e.g. \texttt{int
     array}, \texttt{(int * bool) array}, etc.
 \end{itemize}
-In C codegen, these are translated as follows:
 
-\hl{DIAGRAMS WOULD BE NICE}
+\newpage
+In C codegen, these data types are translated as follows:
 
-\hl{TODO(agy): rework each of these bullets to be a paragraph that has a
-  reference to a figure. The figure should be a code snippet alongside a diagram
-  that shows the memory laytout for the listed object. Also the code snippets
-  should use C-style casts rather than C++}
+Primitive values (such as \texttt{int}, \texttt{bool}, and \texttt{real}) map
+directly to corresponding native machine types in C (\cref{fig:layout_primitive}).
+Unlike heap-allocated objects, primitive values carry no object headers, length
+tags, or garbage collection metadata. They are allocated unboxed in local
+variables---which the C compiler typically maps to CPU registers---or in slots
+within the thread's execution stack, and reads and writes lower to standard
+register moves or direct memory loads and stores.
 
-\begin{itemize}
-\item Primitive values are mapped to corresponding primitive C types, and
-  reads/writes are plain C load/store operations. Primitive values can be
-  allocated on the \texttt{Stack} or in local temporaries:
-\begin{minted}{cpp}
-  int tmp1;
-  float tmp2;
-  ...
-  tmp1 = 42;
-  tmp2 = 3.14f;
-  ...
+\begin{figure}[H]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.6pt, minimum height=0.62cm, font=\small, align=center},
+    idx/.style={font=\scriptsize\color{textMuted}},
+    labelnode/.style={font=\small\bfseries, anchor=east},
+    brace/.style={decorate, decoration={brace, amplitude=3.5pt, mirror}, line width=0.6pt, black!70}
+  }
+  \begin{minipage}[c]{0.48\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
+// Scalar values in registers/stack slots
+int   tmp1 = 42;
+float tmp2 = 3.14f;
+
+// Plain C operations (no heap indirection)
+int   x = tmp1;
+float y = tmp2;
 \end{minted}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.50\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.8cm, minimum height=0.62cm] (p1) at (0, 0) {\texttt{42}};
+      \node[idx] at ($(p1.north) + (0, 0.22)$) {\texttt{int tmp1}};
+      \node[idx] at ($(p1.south) + (0, -0.22)$) {4 bytes};
 
-\item The tuple type is mapped to a C struct type:
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=1.8cm, minimum height=0.62cm, right=0.6cm of p1] (p2) {\texttt{3.14f}};
+      \node[idx] at ($(p2.north) + (0, 0.22)$) {\texttt{float tmp2}};
+      \node[idx] at ($(p2.south) + (0, -0.22)$) {4 bytes};
 
-\begin{minted}{cpp}
-  struct TupleT1 {
-    struct Metadata {
-      GC_header gc_header;  // Metadata tag for GC
-    } metadata;
-    struct Members {
-      int field1;
-      float field2;
-      ...
-    } members;
-  };
+      \node[font=\scriptsize\color{textMuted}] at ($(p1.south)!0.5!(p2.south) + (0.3, -0.55)$) {Unboxed scalars in registers / stack slots};
+    \end{tikzpicture}
+  \end{minipage}
+  \caption{Primitive values: Unboxed scalar values stored directly in registers or stack slots without object headers.}
+  \label{fig:layout_primitive}
+\end{figure}
+
+Unlike primitive values, tuple types are always allocated on the heap. A tuple
+is represented by a C struct consisting of a metadata header containing a
+garbage collection tag (\texttt{GC\_header}) followed by a nested struct
+holding the member fields (\cref{fig:layout_tuple}). Crucially, in MLton's
+runtime representation, object references do not point to the base of the
+allocated struct. Instead, a tuple pointer \texttt{t1} points directly to the
+beginning of the payload (\texttt{members}), immediately following the header.
+Member fields are accessed via non-negative byte offsets from \texttt{t1} using
+C-style casts, while the garbage collector accesses the metadata header at a
+fixed negative offset (\texttt{-sizeof(GC\_header)}). This interior pointer
+convention allows compiled user code to access fields directly with positive
+displacements, while runtime GC routines inspect object tags by stepping
+backward.
+
+\begin{figure}[H]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.6pt, minimum height=0.62cm, font=\small, align=center},
+    idx/.style={font=\scriptsize\color{textMuted}},
+    labelnode/.style={font=\small\bfseries, anchor=east},
+    brace/.style={decorate, decoration={brace, amplitude=3.5pt, mirror}, line width=0.6pt, black!70}
+  }
+  \begin{minipage}[c]{0.48\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
+struct TupleT1 {
+  GC_header gc_header; // GC metadata tag
+  struct {
+    int   field1;      // offset +0
+    float field2;      // offset +4
+  } members;
+};
+
+// t1 points directly to payload (members)
+char* t1 = ...;
+
+// Positive offsets access fields
+float tmp = *(float*)(t1 + 4);
+*(int*)(t1 + 0) = 13;
+
+// Negative offset accesses GC header
+GC_header* hdr =
+  (GC_header*)(t1 - sizeof(GC_header));
 \end{minted}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.50\textwidth}
+    \centering
+    \begin{tikzpicture}
+      % Heap layout cells
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.7cm, minimum height=0.62cm] (hdr) at (0, 0) {\texttt{gc\_header}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.6cm, minimum height=0.62cm, right=0cm of hdr] (f1) {\texttt{field1}};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=1.6cm, minimum height=0.62cm, right=0cm of f1] (f2) {\texttt{field2}};
 
-\hl{Add a diagram of the struct layout |header| |field1, field2,...| with arrow
-  pointing to `t1`}
+      % Types above
+      \node[idx] at ($(hdr.north) + (0, 0.22)$) {\texttt{GC\_header}};
+      \node[idx] at ($(f1.north) + (0, 0.22)$) {\texttt{int}};
+      \node[idx] at ($(f2.north) + (0, 0.22)$) {\texttt{float}};
 
-Unlike primitive types, tuple types are always allocated on the heap. Any
-references in the generated code read/write through a pointer, e.g.
-\begin{minted}{cpp}
-  TupleT1::Members* t1 = nullptr; // Tuple of type T1
-  float tmp;
-  ...
-  tmp = *bit_cast<float*>(bit_cast<uint8_t*>(t1) +
-                          offsetof(TupleT1::Members, field2));
-  *bit_cast<int*>(bit_cast<uint8_t*>(t1) +
-                  offsetof(TupleT1::Members, field1)) = 13;
+      % Pointer arrow pointing to members payload
+      \node[font=\small\ttfamily\bfseries, color=colorPtrBorder] (t1_lbl) at ($(f1.north west) + (-0.35, 0.65)$) {t1};
+      \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(f1.north west) + (0, 0.65)$) -- (f1.north west);
+
+      % Offsets below
+      \node[idx] at ($(hdr.south) + (0, -0.22)$) {\texttt{-4}};
+      \node[idx] at ($(f1.south) + (0, -0.22)$) {\texttt{+0}};
+      \node[idx] at ($(f2.south) + (0, -0.22)$) {\texttt{+4}};
+
+      % Braces below
+      \draw[brace] ($(hdr.south west) + (0.02, -0.42)$) -- ($(hdr.south east) + (-0.02, -0.42)$)
+        node[midway, below=2pt, font=\scriptsize] {\texttt{metadata}};
+      \draw[brace] ($(f1.south west) + (0.02, -0.42)$) -- ($(f2.south east) + (-0.02, -0.42)$)
+        node[midway, below=2pt, font=\scriptsize] {\texttt{members}};
+    \end{tikzpicture}
+  \end{minipage}
+  \caption{Heap-allocated tuple layout. Pointer \texttt{t1} points directly to the \texttt{members} payload; fields are accessed at non-negative offsets, while GC metadata precedes the payload at a fixed negative offset.}
+  \label{fig:layout_tuple}
+\end{figure}
+
+Container types---immutable vectors and mutable arrays---are likewise allocated
+on the heap and lowered to C struct types with flexible array members
+(\cref{fig:layout_array}). The container layout consists of a metadata prefix
+carrying both the GC header tag and the array length, immediately followed by
+a contiguous array of elements. As with tuples, an array pointer \texttt{arr}
+points directly to the first element of the payload (\texttt{elements[0]})
+rather than to the beginning of the metadata. Individual elements are accessed
+by computing non-negative byte offsets from \texttt{arr} using C-style casts,
+while container properties such as \texttt{length} are retrieved by applying
+a negative byte offset to step back into the metadata header.
+
+\begin{figure}[H]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.6pt, minimum height=0.62cm, font=\small, align=center},
+    idx/.style={font=\scriptsize\color{textMuted}},
+    labelnode/.style={font=\small\bfseries, anchor=east},
+    brace/.style={decorate, decoration={brace, amplitude=3.5pt, mirror}, line width=0.6pt, black!70}
+  }
+  \begin{minipage}[c]{0.48\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
+typedef struct {
+  GC_header gc_header; // GC metadata tag
+  size_t    length;    // Array length
+} ArrMetadata;
+
+struct ArrTypeT1 {
+  ArrMetadata metadata;
+  int elements[];      // Flex array payload
+};
+
+// arr points directly to elements[0]
+int* arr = ...;
+
+// Positive offset accesses element 15
+int tmp = arr[15];
+// or: *(int*)((char*)arr + 15 * sizeof(int))
+
+// Negative offset accesses metadata
+ArrMetadata* meta =
+  (ArrMetadata*)((char*)arr - sizeof(ArrMetadata));
+size_t len = meta->length;
 \end{minted}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.50\textwidth}
+    \centering
+    \begin{tikzpicture}
+      % Heap layout cells
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.4cm, minimum height=0.62cm] (hdr) at (0, 0) {\small\texttt{header}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.2cm, minimum height=0.62cm, right=0cm of hdr] (len) {\small\texttt{length}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, minimum height=0.62cm, right=0cm of len] (el0) {\small\texttt{el[0]}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, minimum height=0.62cm, right=0cm of el0] (el1) {\small\texttt{el[1]}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.7cm, minimum height=0.62cm, right=0cm of el1] (dots) {$\cdots$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.2cm, minimum height=0.62cm, right=0cm of dots] (eln) {\small\texttt{el[n-1]}};
 
-\item Similarly to tuples, array types and vector types are translated to C
-  struct types:
+      % Types above
+      \node[idx] at ($(hdr.north) + (0, 0.22)$) {\texttt{GC\_hdr}};
+      \node[idx] at ($(len.north) + (0, 0.22)$) {\texttt{size\_t}};
+      \node[idx] at ($(el0.north) + (0, 0.22)$) {\texttt{int}};
+      \node[idx] at ($(el1.north) + (0, 0.22)$) {\texttt{int}};
+      \node[idx] at ($(eln.north) + (0, 0.22)$) {\texttt{int}};
 
-\begin{minted}{cpp}
-  struct ArrTypeT1 {
-    struct Metadata {
-      ... GC info, length ...
-    } metadata;
-    struct Element {
-      int el;
-    } elements[];  // "Flex array" extends according to array length
-  };
-\end{minted}
-and operations are always through pointers to data allocated on the heap:
-\begin{minted}{cpp}
-  ArrTypeT1::Element* arr = nullptr;  // Array of type T1
-  int length;
-  int tmp;
-  ...
-  // Element read
-  tmp = bit_cast<ArrTypeT1::Element*>(bit_cast<uint8_t*>(arr) +
-                                      sizeof(ArrTypeT1::Element) * 15)->el;
-  // Metadata read
-  length = bit_cast<ArrTypeT1::Metadata*>(bit_cast<uint8_t*>(arr) -
-                                          offsetof(ArrTypeT1, Element))->length;
+      % Pointer arrow pointing to elements
+      \node[font=\small\ttfamily\bfseries, color=colorPtrBorder] (arr_lbl) at ($(el0.north west) + (-0.4, 0.65)$) {arr};
+      \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(el0.north west) + (0, 0.65)$) -- (el0.north west);
 
-\end{minted}
+      % Offsets below
+      \node[idx] at ($(hdr.south) + (0, -0.22)$) {\texttt{-16}};
+      \node[idx] at ($(len.south) + (0, -0.22)$) {\texttt{-8}};
+      \node[idx] at ($(el0.south) + (0, -0.22)$) {\texttt{+0}};
+      \node[idx] at ($(el1.south) + (0, -0.22)$) {\texttt{+4}};
+      \node[idx] at ($(eln.south) + (0, -0.22)$) {\texttt{+4(n-1)}};
 
-\end{itemize}
+      % Braces below
+      \draw[brace] ($(hdr.south west) + (0.02, -0.42)$) -- ($(len.south east) + (-0.02, -0.42)$)
+        node[midway, below=2pt, font=\scriptsize] {\texttt{metadata}};
+      \draw[brace] ($(el0.south west) + (0.02, -0.42)$) -- ($(eln.south east) + (-0.02, -0.42)$)
+        node[midway, below=2pt, font=\scriptsize] {\texttt{elements[]}};
+    \end{tikzpicture}
+  \end{minipage}
+  \caption{Heap-allocated array and vector layout. Pointer \texttt{arr} points to the first payload element \texttt{el[0]}; positive offsets index elements forward, while negative offsets access container metadata.}
+  \label{fig:layout_array}
+\end{figure}
 
-For both the tuple and container case, nested heap-allocated data structures are
-represented by \texttt{void*} members, i.e.:
-\begin{minted}{cpp}
-  struct TupleT2 {
+For both tuples and containers, nested heap-allocated data structures are
+represented by storing pointers (\texttt{void*}) to child objects rather than
+inlining them:
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
+struct TupleT2 {
+  struct {
+    GC_header gc_header;
+  } metadata;
+  struct {
+    void* field1; // Pointer to child heap object
     ...
-    struct Members {
-      void* field1;
-      ...
+  } members;
+};
 \end{minted}
 Because MLton is a whole-program compiler, all types are known statically: there
-is no runtime polymorphism in the generated code. Headers carrying type
-information exist only for the benefit of the GC. \hl{CUT?}
+is no runtime polymorphism in the generated code, and headers exist solely for
+the garbage collector. However, because the source language treats all tuples
+and containers uniformly, this default layout forces composite structures to be
+heap-allocated and traversed through pointer indirection. The flattening
+optimizations discussed next are designed to eliminate these costly heap
+allocations and pointer chains.
 
 
 \subsection{\texttt{Flatten}}
