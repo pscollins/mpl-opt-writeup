@@ -849,11 +849,12 @@ The following section will outline two of the existing ``flattening
 optimizations'' performed by MLton. In the context of MLton, this class of
 optimization was originally explored by \citet{flat-paper}. Additional
 optimizations of this type were implemented by later contributors without
-corresponding publications, as discussed in e.g. \citet{deep-flat-email}.
+corresponding publications, as discussed in e.g. \citet{deep-flat-email}. These
+passes (alongside some additional flattening passes that we will not discuss
+here) are responsible for selecting in-memory representations for heap-allocated
+data in MLton.
 
 \subsection{Motivation}
-
-\hl{CONTAINERS?}
 
 In the source language, we have three basic species of data types (ignoring
 \texttt{ref}, which is not relevant for the optimizations that we'll discuss)
