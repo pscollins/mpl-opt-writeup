@@ -1410,10 +1410,49 @@ $n$-ary functions over their arguments. However, this strategy can introduce
 unnecessary pack/unpack operations in cases where the natural representation for
 data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
 that must pass through a long sequence of intermediate function calls before
-some of its members are consumed by a leaf function, as depicted in
-\cref{fig:bad_flatten_example}
+\cref{fig:bad_flatten_example}.
 
-TOOD(agy): insert bad-flatten-example here
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Unflattened (pointer-based)}
+    \label{fig:bad_flatten_unflattened}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+# Passes pointer across k layers
+def f_i(t: T1 * ... * Tn, ...):
+  block bb0():
+    # Pointer passed in register
+    call bb1 f_next(t, ...)
+
+def leaf(t: T1 * ... * Tn, ...):
+  block bb0():
+    # Only field 0 is read
+    x1: T1 = select (t, 0)
+    return x1
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Flattened ($n$-ary)}
+    \label{fig:bad_flatten_flattened}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+# Forwards n fields across k layers
+def f_i(x1: T1, ..., xn: Tn, ...):
+  block bb0():
+    # n fields spilled across call
+    call bb1 f_next(x1, ..., xn, ...)
+
+def leaf(x1: T1, ..., xn: Tn, ...):
+  block bb0():
+    # x2..xn carried through k
+    # frames but never used
+    return x1
+\end{minted}
+  \end{subfigure}
+  \caption{A pathological case for flattening: forwarding a large tuple across $k$ function call layers. The unflattened code passes a single pointer in a register, whereas naive flattening forces all $n$ fields to be passed and spilled at every layer even when only a subset is used at the leaf.}
+  \label{fig:bad_flatten_example}
+\end{figure}
 
 e.g.:
 \begin{minted}{sml}
