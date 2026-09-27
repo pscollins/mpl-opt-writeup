@@ -1283,22 +1283,46 @@ size_t len = meta->length;
   \label{fig:layout_nested_array}
 \end{figure}
 
-
 %% Because MLton is a whole-program compiler, all types are known statically: there
 %% is no runtime polymorphism in the generated code. Headers carrying type
 %% information exist only for the benefit of the GC. \hl{CUT?}
 
+\hl{TODO: do we need to discuss hte allocation side too?}
 
 \subsection{\texttt{Flatten}}
 In the source language, all functions are unary, with support for multiple
-arguments implemented via tuple types, i.e. for:
+arguments implemented via tuple types: therefore, even a trivial function call
+expands requires a heap allocation and a sequence of memory operations that is
+linear in the number of function arguments (depicted in
+\cref{fig:add_two_compare}).
+
+\hl{TODO(agy): move this into a figure with the code side-by-side}
+
+\label{fig:add_two_compare}
 \begin{minted}{sml}
   fun add(a, b) = a + b
+  fun main() = add (1, 2)
 \end{minted}
-The function \texttt{add} has the type \texttt{(int * int) -> int}. This
-convention is desirable in terms of simplifying language design, by removing the
-need for a \hl{special construct to represent function arguments} outside of the
-regular type system.
+\begin{minted}{python}
+  # Naive, unary tuple representation
+  def add(ab: (int * int)): int =
+    block bb0():
+      a: int = select (ab, 0)  # tuple member read: pointer dereference
+      b: int = select (ab, 1)  # tuple member read: pointer dereference
+      ret: int = prim Word32_add (a, b)
+      return ret
+
+  def main(): int =
+    block bb0():
+      # Tuple constructor call: heap allocation
+      ab: (int * int) = tuple(1, 2)
+      call bb1 add(ab)
+   ...
+\end{minted}
+
+This convention is desirable from the perspective of simplifying language
+design, since (for example) rules for type-checking function calls can be
+subsumed by rules for typechecking tuples.
 
 However, naively lowering \hl{this construct} to C according to the rules that
 we have described above has disasterous performance characteristics: every
