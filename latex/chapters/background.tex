@@ -1952,8 +1952,12 @@ float GetDistanceFlat(
 \end{figure}
 
 MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
--- for an \texttt{(int * int) array} corresponding to the \texttt{Point} type
-above, we get:
+for MLton, replacing the naive container-of-pointers representation with a dense
+representation that embeds tuple data members into their parent container
+(see \cref{fig:flatten_generated_c}).
+
+TODO(agy): give use two snippets side-by-side matching the formatting from the previous flattening example -- one has PairArrayType with void* el and the other has FlatPairArrayTuple with int field 1, int field2.
+
 \begin{minted}{cpp}
   struct ArrTypeT1 {
     struct Metadata {
