@@ -1791,7 +1791,7 @@ float GetDistance(
         \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
         \node[ptr] (dot\i) at (ptr\i.center) {};
       }
-      \node[font=\tiny\color{black!40}] at (4.8, 1.8) {32B (slots 4--7)};
+      \node[font=\tiny\color{black!40}] at (4.8, 1.8);
       % Brace above pointer buffer
       \draw[topbrace] ($(0.0, 2.32)$) -- ($(6.4, 2.32)$)
         node[midway, above=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte pointer slots)};
@@ -1815,8 +1815,8 @@ float GetDistance(
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p0x) at (4.2, -0.5) {\tiny $x_0$};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p0y) at (4.6, -0.5) {\tiny $y_0$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p0x)(p0y), inner sep=0pt] (box0) {};
-      \node[font=\tiny\color{black!40}] at (1.6, -0.5) {32B};
-      \node[font=\tiny\color{black!40}] at (5.6, -0.5) {16B};
+      \node[font=\tiny\color{black!40}] at (1.6, -0.5) {32B unused};
+      \node[font=\tiny\color{black!40}] at (5.6, -0.5) {16B unused};
 
       % Line 2: Point 3 in slot 2 (x in [1.6, 2.4])
       \foreach \s in {0,...,7} {
