@@ -1743,7 +1743,7 @@ is:
 \begin{figure}[htbp]
   \centering
   \tikzset{
-    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center},
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
     idx/.style={font=\tiny\color{textMuted}},
     labelnode/.style={font=\scriptsize\bfseries},
     ptr/.style={circle, fill=colorPtrBorder, inner sep=1.3pt},
@@ -1787,7 +1787,7 @@ float GetDistance(
       }
       \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 1.58) rectangle (6.4, 2.02);
       \foreach \i in {0,...,3} {
-        \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=0.76cm, minimum height=0.42cm] (ptr\i) at (\i*0.8+0.4, 1.8) {};
+        \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=0.8cm, minimum height=0.44cm, inner sep=0pt] (ptr\i) at (\i*0.8+0.4, 1.8) {};
         \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
         \node[ptr] (dot\i) at (ptr\i.center) {};
       }
@@ -1802,8 +1802,8 @@ float GetDistance(
         \draw[fill=black!4, draw=black!18] (\s*0.8, 0.13) rectangle (\s*0.8+0.8, 0.57);
       }
       \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.13) rectangle (6.4, 0.57);
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p2x) at (1.0, 0.35) {\tiny $x_2$};
-      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p2x] (p2y) {\tiny $y_2$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p2x) at (1.0, 0.35) {\tiny $x_2$};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p2y) at (1.4, 0.35) {\tiny $y_2$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p2x)(p2y), inner sep=0pt] (box2) {};
       \node[font=\tiny\color{black!40}] at (5.6, 0.35) {56B unused};
 
@@ -1812,8 +1812,8 @@ float GetDistance(
         \draw[fill=black!4, draw=black!18] (\s*0.8, -0.72) rectangle (\s*0.8+0.8, -0.28);
       }
       \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -0.72) rectangle (6.4, -0.28);
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p0x) at (4.2, -0.5) {\tiny $x_0$};
-      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p0x] (p0y) {\tiny $y_0$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p0x) at (4.2, -0.5) {\tiny $x_0$};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p0y) at (4.6, -0.5) {\tiny $y_0$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p0x)(p0y), inner sep=0pt] (box0) {};
       \node[font=\tiny\color{black!40}] at (1.6, -0.5) {32B};
       \node[font=\tiny\color{black!40}] at (5.6, -0.5) {16B};
@@ -1823,8 +1823,8 @@ float GetDistance(
         \draw[fill=black!4, draw=black!18] (\s*0.8, -1.57) rectangle (\s*0.8+0.8, -1.13);
       }
       \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -1.57) rectangle (6.4, -1.13);
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p3x) at (1.8, -1.35) {\tiny $x_3$};
-      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p3x] (p3y) {\tiny $y_3$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p3x) at (1.8, -1.35) {\tiny $x_3$};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p3y) at (2.2, -1.35) {\tiny $y_3$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p3x)(p3y), inner sep=0pt] (box3) {};
       \node[font=\tiny\color{black!40}] at (5.6, -1.35) {48B unused};
 
@@ -1833,8 +1833,8 @@ float GetDistance(
         \draw[fill=black!4, draw=black!18] (\s*0.8, -2.42) rectangle (\s*0.8+0.8, -1.98);
       }
       \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -2.42) rectangle (6.4, -1.98);
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p1x) at (5.0, -2.2) {\tiny $x_1$};
-      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p1x] (p1y) {\tiny $y_1$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p1x) at (5.0, -2.2) {\tiny $x_1$};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (p1y) at (5.4, -2.2) {\tiny $y_1$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p1x)(p1y), inner sep=0pt] (box1) {};
       \node[font=\tiny\color{black!40}] at (2.0, -2.2) {48B unused};
 
@@ -1846,7 +1846,7 @@ float GetDistance(
 
       % Brace below Line 3
       \draw[brace] ($(0.0, -2.52)$) -- ($(6.4, -2.52)$)
-        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte slots)};
+        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
     \end{tikzpicture}
   \end{subfigure}
   \caption{Non-flat container layout and access. (a) C++ corresponding to the naive layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
@@ -1889,7 +1889,7 @@ loads from the the program.
 \begin{figure}[htbp]
   \centering
   \tikzset{
-    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center},
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
     idx/.style={font=\tiny\color{textMuted}},
     labelnode/.style={font=\scriptsize\bfseries},
     brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
@@ -1899,11 +1899,6 @@ loads from the the program.
     \label{fig:flat_distance_code}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
-struct Point {
-  float x;
-  float y;
-};
-
 float GetDistanceFlat(
     const vector<Point>& lhs,
     const vector<Point>& rhs) {
@@ -1918,38 +1913,38 @@ float GetDistanceFlat(
 \end{minted}
   \end{subfigure}%\hfill
   \begin{subfigure}[t]{0.53\textwidth}
-    \caption{Memory layout: dense contiguous allocations}
+    \caption{Memory layout: contiguous heap allocations}
     \label{fig:flat_distance_mem}
-    \vspace{1.1cm}
+    \vspace{1mm}
     \centering
     \begin{tikzpicture}
       % Line 0: lhs cache line
-      \node[labelnode, anchor=east] at (-0.05, 0.6) {\texttt{lhs}:};
+      \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{lhs}:};
       \foreach \s in {0,...,7} {
-        \draw[fill=black!4, draw=black!18] (\s*0.8, 0.38) rectangle (\s*0.8+0.8, 0.82);
+        \draw[fill=black!4, draw=black!18] (\s*0.8, 0.28) rectangle (\s*0.8+0.8, 0.72);
       }
-      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.38) rectangle (6.4, 0.82);
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.28) rectangle (6.4, 0.72);
       \foreach \s in {0,...,7} {
-        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (lx\s) at (\s*0.8+0.2, 0.6) {\tiny $x_\s$};
-        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (ly\s) at (\s*0.8+0.6, 0.6) {\tiny $y_\s$};
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (lx\s) at (\s*0.8+0.2, 0.5) {\tiny $x_\s$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (ly\s) at (\s*0.8+0.6, 0.5) {\tiny $y_\s$};
         \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(lx\s)(ly\s), inner sep=0pt] (lbox\s) {};
-        \node[idx] at ($(lbox\s.north) + (0, 0.13)$) {[\s]};
+        \node[idx] at ($(lbox\s.north) + (0, 0.12)$) {[\s]};
       }
 
       % Line 1: rhs cache line
-      \node[labelnode, anchor=east] at (-0.05, -0.6) {\texttt{rhs}:};
+      \node[labelnode, anchor=east] at (-0.05, -0.55) {\texttt{rhs}:};
       \foreach \s in {0,...,7} {
-        \draw[fill=black!4, draw=black!18] (\s*0.8, -0.82) rectangle (\s*0.8+0.8, -0.38);
+        \draw[fill=black!4, draw=black!18] (\s*0.8, -0.77) rectangle (\s*0.8+0.8, -0.33);
       }
-      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -0.82) rectangle (6.4, -0.38);
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -0.77) rectangle (6.4, -0.33);
       \foreach \s in {0,...,7} {
-        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (rx\s) at (\s*0.8+0.2, -0.6) {\tiny $x_\s$};
-        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (ry\s) at (\s*0.8+0.6, -0.6) {\tiny $y_\s$};
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (rx\s) at (\s*0.8+0.2, -0.55) {\tiny $x_\s$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (ry\s) at (\s*0.8+0.6, -0.55) {\tiny $y_\s$};
         \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(rx\s)(ry\s), inner sep=0pt] (rbox\s) {};
-        \node[idx] at ($(rbox\s.north) + (0, 0.13)$) {[\s]};
+        \node[idx] at ($(rbox\s.north) + (0, 0.12)$) {[\s]};
       }
-      \draw[brace] ($(0.0, -0.95)$) -- ($(6.4, -0.95)$)
-        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte slots)};
+      \draw[brace] ($(0.0, -0.87)$) -- ($(6.4, -0.87)$)
+        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
     \end{tikzpicture}
   \end{subfigure}
   \caption{Flat container layout and access. (a) C++ corresponding to the flattened layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
