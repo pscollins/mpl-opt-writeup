@@ -1736,7 +1736,9 @@ _ = prim Array_update(arr, 1, t')
 In terms of global program efficiency on modern CPU architectures, however, this
 layout is disasterous. As an illustration, consider the C++ snippet in
 \cref{fig:nonflat_distance}, which corresponds to the ``non-flat'' naive MLton
-layout (i.e. a container of pointers).
+layout (i.e. a container of pointers). Suppose that \texttt{lhs.size() =
+  rhs.size() = n}. Then the memory bandwidth requirement for this implementation
+is:
 
 \begin{figure}[htbp]
   \centering
@@ -1773,28 +1775,24 @@ float GetDistance(
 \end{minted}
   \end{subfigure}%\hfill
   \begin{subfigure}[t]{0.53\textwidth}
-    \caption{Memory layout: scattered heap tuples}
+    \caption{Memory layout: scattered heap allocations}
     \label{fig:nonflat_distance_mem}
     \vspace{1mm}
     \centering
     \begin{tikzpicture}
-      % Pointer array lhs
-      \node[labelnode, anchor=east] at (1.2, 1.8) {\texttt{lhs}:};
-      \foreach \i/\x in {0/1.5, 1/2.6, 2/3.7, 3/4.8} {
+      % Pointer array lhs/rhs
+      \node[labelnode, anchor=east] at (1.2, 1.8) {\texttt{lhs/rhs}:};
+      \foreach \i/\x in {0/1.5, 1/2.5, 2/3.5, 3/4.5} {
         \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=1.0cm, minimum height=0.44cm] (ptr\i) at (\x+0.5, 1.8) {};
         \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
         \node[ptr] (dot\i) at (ptr\i.center) {};
       }
       % Brace above pointer buffer
       \draw[topbrace] ($(ptr0.north west) + (0.02, 0.26)$) -- ($(ptr3.north east) + (-0.02, 0.26)$)
-        node[midway, above=2pt, font=\tiny\color{textMuted}] {Contiguous 8B pointers (dense)};
-
-      % Section label above addresses
-      \node[font=\scriptsize\bfseries\color{black!70}, anchor=south east] at (-0.05, 0.58) {Heap:};
+        node[midway, above=2pt, font=\tiny\color{textMuted}] {Contiguous 8B pointers};
 
       % 4 Cache lines (width = 6.4cm, 8 slots of 0.8cm)
-      % Line 0: @0x1080 with Point 2 in slot 1 (x in [0.8, 1.6])
-      \node[font=\tiny\ttfamily\color{textMuted}, anchor=east] at (-0.05, 0.35) {@0x1080};
+      % Line 0: Point 2 in slot 1 (x in [0.8, 1.6])
       \foreach \s in {0,...,7} {
         \draw[fill=black!4, draw=black!18] (\s*0.8, 0.13) rectangle (\s*0.8+0.8, 0.57);
       }
@@ -1802,10 +1800,9 @@ float GetDistance(
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p2x) at (1.0, 0.35) {\tiny $x_2$};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p2x] (p2y) {\tiny $y_2$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p2x)(p2y), inner sep=0pt] (box2) {};
-      \node[font=\tiny\color{black!40}] at (5.6, 0.35) {56B unread};
+      \node[font=\tiny\color{black!40}] at (5.6, 0.35) {56B unused};
 
-      % Line 1: @0x2840 with Point 0 in slot 5 (x in [4.0, 4.8])
-      \node[font=\tiny\ttfamily\color{textMuted}, anchor=east] at (-0.05, -0.5) {@0x2840};
+      % Line 1: Point 0 in slot 5 (x in [4.0, 4.8])
       \foreach \s in {0,...,7} {
         \draw[fill=black!4, draw=black!18] (\s*0.8, -0.72) rectangle (\s*0.8+0.8, -0.28);
       }
@@ -1816,8 +1813,7 @@ float GetDistance(
       \node[font=\tiny\color{black!40}] at (1.6, -0.5) {32B};
       \node[font=\tiny\color{black!40}] at (5.6, -0.5) {16B};
 
-      % Line 2: @0x41C0 with Point 3 in slot 2 (x in [1.6, 2.4])
-      \node[font=\tiny\ttfamily\color{textMuted}, anchor=east] at (-0.05, -1.35) {@0x41C0};
+      % Line 2: Point 3 in slot 2 (x in [1.6, 2.4])
       \foreach \s in {0,...,7} {
         \draw[fill=black!4, draw=black!18] (\s*0.8, -1.57) rectangle (\s*0.8+0.8, -1.13);
       }
@@ -1825,10 +1821,9 @@ float GetDistance(
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p3x) at (1.8, -1.35) {\tiny $x_3$};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p3x] (p3y) {\tiny $y_3$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p3x)(p3y), inner sep=0pt] (box3) {};
-      \node[font=\tiny\color{black!40}] at (5.6, -1.35) {48B unread};
+      \node[font=\tiny\color{black!40}] at (5.6, -1.35) {48B unused};
 
-      % Line 3: @0x6F00 with Point 1 in slot 6 (x in [4.8, 5.6])
-      \node[font=\tiny\ttfamily\color{textMuted}, anchor=east] at (-0.05, -2.2) {@0x6F00};
+      % Line 3: Point 1 in slot 6 (x in [4.8, 5.6])
       \foreach \s in {0,...,7} {
         \draw[fill=black!4, draw=black!18] (\s*0.8, -2.42) rectangle (\s*0.8+0.8, -1.98);
       }
@@ -1836,7 +1831,7 @@ float GetDistance(
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm] (p1x) at (5.0, -2.2) {\tiny $x_1$};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, right=0cm of p1x] (p1y) {\tiny $y_1$};
       \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(p1x)(p1y), inner sep=0pt] (box1) {};
-      \node[font=\tiny\color{black!40}] at (2.0, -2.2) {48B unread};
+      \node[font=\tiny\color{black!40}] at (2.0, -2.2) {48B unused};
 
       % Pointer arrows
       \draw[arrptr] (dot0) to[out=-90, in=115] (box0.north);
@@ -1847,17 +1842,12 @@ float GetDistance(
       % Brace below Line 3
       \draw[brace] ($(0.0, -2.52)$) -- ($(6.4, -2.52)$)
         node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte slots)};
-
-      % Bandwidth note
-      \node[font=\tiny\bfseries\color{ThesisRed!90!black}, align=center] at (3.2, -3.1) {8B useful payload + 64B cache line $\implies \approx 89\%$ bandwidth wasted};
     \end{tikzpicture}
   \end{subfigure}
   \caption{Non-flat container layout and access. (a) C++ corresponding to the naive layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
   \label{fig:nonflat_distance}
 \end{figure}
 
-Suppose that \texttt{lhs.size() = rhs.size() = n}. Then the memory bandwidth
-requirement for this implementation is:
 \begin{enumerate}
 \item Cost to load $2n$ pointers: \texttt{$2n$ * sizeof(uintptr\_t)}. These
   values are laid out contiguously in memory, so we can assume perfect
