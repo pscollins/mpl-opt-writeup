@@ -1603,59 +1603,124 @@ container-of-tuple is an array of pointers to out-of-line heap objects. When the
 generated code reads an element from such a container, it receives a pointer to
 a pre-constructed tuple object, and when it writes to a container, it must
 provide a pointer to a pre-consistructed tuple object (see \cref{fig:array_read_write}).
-
-TODO(agy): for fig array read write, let's have all of hte following:
-SML type is pairArray = (int * int) array
-let's have this definition of the C type
-\begin{minted}{cpp}
-  struct PariArrayType {
-    struct Metadata {
-      ...
-    } metadata;
-    struct Element {
-      // Pointer to-out-of-line elements
-      void* el;
-    } elements[]
-  };
+\begin{figure}[H]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.6pt, minimum height=0.55cm, font=\scriptsize, align=center},
+    idx/.style={font=\tiny\color{textMuted}},
+    labelnode/.style={font=\small\bfseries, anchor=east},
+    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.6pt, black!70}
+  }
+  \begin{minipage}[c]{0.46\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{c}
+// SML: type pairArray = (int * int) array
+struct PairArrayType {
+  struct Metadata {
+    GC_header gc_header;
+    size_t    length;
+  } metadata;
+  struct Element {
+    // Out-of-line heap elements
+    void* el;
+  } elements[];
+};
 \end{minted}
-and let's have an SSA snippet like:
-\begin{minted}{python}
-  arr: (int * int) array = ...
-  # Example load operation
-  t: (int * int) = Array_sub(arr, 0)
-  # Example store operation
-  t': (int * int) = ...
-  _ = Array_sub(arr, 0, t')
+\vspace{-1.5mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+arr: (int * int) array = ...
+
+# Read operation (yields tuple pointer)
+t: (int * int) = Array_sub(arr, 0)
+x0: int = #1(t)  # dereference payload
+
+# Write operation (stores tuple pointer)
+t': (int * int) = (42, 99)  # heap alloc
+_ = Array_update(arr, 1, t')
 \end{minted}
-and then let's have a diagram that matches the style above, from fig:layout
-nested array, that illustrates the action of a read/write peration
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.52\textwidth}
+    \centering
+    \begin{tikzpicture}
+      % Array container
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.1cm, anchor=north west] (ahdr) at (0, 1.4) {\scriptsize\texttt{header}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.0cm, right=0cm of ahdr] (alen) {\scriptsize\texttt{length}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, right=0cm of alen] (ael0) {\scriptsize\texttt{el[0]}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, right=0cm of ael0] (ael1) {\scriptsize\texttt{el[1]}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.6cm, right=0cm of ael1] (adots) {$\cdots$};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, right=0cm of adots] (aeln) {\scriptsize\texttt{el[n-1]}};
 
+      % Types above array
+      \node[idx] at ($(ahdr.north) + (0, 0.18)$) {\texttt{GC\_hdr}};
+      \node[idx] at ($(alen.north) + (0, 0.18)$) {\texttt{size\_t}};
+      \node[idx] at ($(ael0.north) + (0, 0.18)$) {\texttt{void*}};
+      \node[idx] at ($(ael1.north) + (0, 0.18)$) {\texttt{void*}};
+      \node[idx] at ($(aeln.north) + (0, 0.18)$) {\texttt{void*}};
 
-%% \texttt{(int * int) array} corresponds to
+      % Pointer arrow arr
+      \node[font=\scriptsize\ttfamily\bfseries, color=colorPtrBorder] (arr_lbl) at ($(ael0.north west) + (-0.35, 0.45)$) {arr};
+      \draw[-{Stealth[length=4pt, width=3pt]}, line width=0.8pt, color=colorPtrBorder] ($(ael0.north west) + (0, 0.45)$) -- (ael0.north west);
 
-\texttt{void*}, i.e. for an SML type like \texttt{(int * int) array}, we get the
-C type:
-\begin{minted}{cpp}
-  struct ArrTypeT1 {
-    struct Metadata {
-      ... GC info, length ...
-    } metadata;
-    struct Element {
-      // C-level type erasure
-      void* el;
-    } elements[]
-  };
-\end{minted}
-Maniupulating elements in this kind of container corresponds to manipulating
+      % Offsets below array
+      \node[idx] at ($(ahdr.south) + (0, -0.16)$) {\texttt{-16}};
+      \node[idx] at ($(alen.south) + (0, -0.16)$) {\texttt{-8}};
+      \node[idx] at ($(ael0.south) + (0, -0.16)$) {\texttt{+0}};
+      \node[idx] at ($(ael1.south) + (0, -0.16)$) {\texttt{+8}};
+      \node[idx] at ($(aeln.south) + (0, -0.16)$) {\texttt{+8(n-1)}};
+
+      % Child tuple 0 (Read from el[0])
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c0_hdr) at (-0.5, -0.65) {\tiny\texttt{header}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c0_hdr] (c0_f1) {\tiny\texttt{10}};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c0_f1] (c0_f2) {\tiny\texttt{20}};
+
+      % Types above child 0
+      \node[idx] at ($(c0_hdr.north) + (0, 0.15)$) {\texttt{GC\_hdr}};
+      \node[idx] at ($(c0_f1.north) + (0, 0.15)$) {\texttt{int}};
+      \node[idx] at ($(c0_f2.north) + (0, 0.15)$) {\texttt{int}};
+
+      % Brace / Label below child 0
+      \draw[brace] ($(c0_hdr.south west) + (0.02, -0.16)$) -- ($(c0_f2.south east) + (-0.02, -0.16)$)
+        node[midway, below=2pt, font=\scriptsize] (b0_lbl) {\texttt{Tuple (el[0])}};
+
+      % Arrow from el[0] to child 0 payload, carrying pointer t
+      \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisDarkBlue] ($(ael0.south) + (-0.15, 0)$) to[out=-90, in=90]
+        node[pos=0.4, left=1pt, font=\scriptsize\ttfamily\bfseries, color=ThesisDarkBlue] {t} (c0_f1.north west);
+
+      % Operation text below child 0
+      \node[below=3pt of b0_lbl, font=\tiny\color{textMuted}, align=center] {Read: \texttt{t = el[0]}\\Load: \texttt{x0 = \#1(t)}};
+
+      % Child tuple 1 (Write to el[1])
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c1_hdr) at (3.3, -0.65) {\tiny\texttt{header}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c1_hdr] (c1_f1) {\tiny\texttt{42}};
+      \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c1_f1] (c1_f2) {\tiny\texttt{99}};
+
+      % Types above child 1
+      \node[idx] at ($(c1_hdr.north) + (0, 0.15)$) {\texttt{GC\_hdr}};
+      \node[idx] at ($(c1_f1.north) + (0, 0.15)$) {\texttt{int}};
+      \node[idx] at ($(c1_f2.north) + (0, 0.15)$) {\texttt{int}};
+
+      % Brace / Label below child 1
+      \draw[brace] ($(c1_hdr.south west) + (0.02, -0.16)$) -- ($(c1_f2.south east) + (-0.02, -0.16)$)
+        node[midway, below=2pt, font=\scriptsize] (b1_lbl) {\texttt{Tuple t' (new)}};
+
+      % Arrow from el[1] to child 1 payload, storing pointer t'
+      \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisPurple] ($(ael1.south) + (0.15, 0)$) to[out=-90, in=90]
+        node[pos=0.4, right=1pt, font=\scriptsize\ttfamily\bfseries, color=ThesisPurple] {t'} (c1_f1.north west);
+
+      % Operation text below child 1
+      \node[below=3pt of b1_lbl, font=\tiny\color{textMuted}, align=center] {Alloc: \texttt{t' = (42, 99)}\\Store: \texttt{el[1] = t'}};
+    \end{tikzpicture}
+  \end{minipage}
+  \caption{Container-of-tuple read and write operations under naive representation. For \texttt{type pairArray = (int * int) array}, elements are stored as pointers to out-of-line heap tuples. Reading an element loads a pointer into \texttt{t}, requiring a second load to dereference payload fields. Writing an element with \texttt{Array\_update} requires first allocating a separate heap tuple object \texttt{t'} and storing its pointer into the array slot.}
+  \label{fig:array_read_write}
+\end{figure}
+
+Manipulating elements in this kind of container corresponds to manipulating
 pointers to pre-constructed tuples, stored out-of-line from the container
-itself.
-
-In terms of the local efficiency of the container operations themselves, this is
-optimal: we pay a flat O(1) cost regardless of the contained element type, and
-we never need to store more than a single copy of a particular tuple's data
-regardness of how many containers we insert it into.
-
-\hl{Add a diagram -- array with arrows pointing to scatterd boxes}
+itself. In terms of the local efficiency of the container operations
+themselves, this is optimal: we pay a flat $O(1)$ cost regardless of the
+contained element type, and we never need to store more than a single copy of a
+particular tuple's data regardless of how many containers we insert it into.
 
 In terms of global program efficiency on modern CPU architectures, however, this
 layout is disasterous. As an illustration, compare the following C++ snippets:
