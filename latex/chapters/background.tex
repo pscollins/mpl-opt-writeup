@@ -1791,7 +1791,7 @@ float GetDistance(
         \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
         \node[ptr] (dot\i) at (ptr\i.center) {};
       }
-      \node[font=\tiny\color{black!40}] at (4.8, 1.8);
+      \node[font=\tiny\color{black!40}] at (4.8, 1.8) {32B unused};
       % Brace above pointer buffer
       \draw[topbrace] ($(0.0, 2.32)$) -- ($(6.4, 2.32)$)
         node[midway, above=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte pointer slots)};
@@ -1956,38 +1956,86 @@ for MLton, replacing the naive container-of-pointers representation with a dense
 representation that embeds tuple data members into their parent container
 (see \cref{fig:flatten_generated_c}).
 
-TODO(agy): give use two snippets side-by-side matching the formatting from the previous flattening example -- one has PairArrayType with void* el and the other has FlatPairArrayTuple with int field 1, int field2.
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Unflattened array (\texttt{PairArrayType})}
+    \label{fig:flatten_c_pair_array}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{c}
+// SML: type pair = (int * int)
+struct PairType {
+  GC_header header;
+  struct {
+    // Inlined tuple fields
+    int field1;
+    int field2;
+  } members;
+};
 
-\begin{minted}{cpp}
-  struct ArrTypeT1 {
-    struct Metadata {
-      ... GC info, length ...
-    } metadata;
-    struct Element {
-      // Flattened, inlined tuple members
-      int x;
-      int y;
-    } elements[]
-  };
+// SML: type pairArray = (int * int) array
+struct PairArrayType {
+  struct Metadata {
+    GC_header header;
+    size_t    length;
+  } metadata;
+  // Points to out-of-line `PairType` elements
+  void* el[];
+};
 \end{minted}
-Unlike \texttt{Flatten}, which operates on the SSA representation (where
-containers are either \texttt{'a array} or \texttt{'b array} -- both unary type
-constructors), \texttt{DeepFlatten} operates on the SSA2 representation, where
-we distinguish between a \texttt{((int * int) tuple) sequence} (for the non-flat
-representation) vs \texttt{(int * int) sequence} (for the flat representation).
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Flattened array (\texttt{FlatPairArrayTuple})}
+    \label{fig:flatten_c_flat_pair_array}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{c}
+// SML: type pairArray = (int * int) array
+struct FlatPairArrayTuple {
+  struct Metadata {
+    GC_header header;
+    size_t    length;
+  } metadata;
+  // PairType fields directly inlined
+  struct {
+    int field1;
+    int field2;
+  } el[];
+};
+\end{minted}
+  \end{subfigure}
+  \caption{Comparison of generated C array layouts for \texttt{(int * int) array} before and after \texttt{DeepFlatten}. (a) Naive container holding pointers to out-of-line heap tuples. (b) Dense container embedding tuple components directly into array elements.}
+  \label{fig:flatten_generated_c}
+\end{figure}
 
 Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
 flattening the types associated with particular variables only when all of their
-uses are compatible with the transformation. In particular, 
+uses are compatible with the transformation: that is, \texttt{DeepFlatten} will
+never insert extra tuple pack/unpack operations. This is the most-conservative
+strategy, and as we will see below, it seems to miss on substantial performance
+opportunities in practice.
 
-\hl{Consider adding a small benchmark to confirm the napkin math}
+%% This is the most-conservative
+%% strategy, and as we will see below, it seems to miss on substantial performance
+%% opportunities in practice.
 
-\hl{If we want to discuss SSA vs SSA2, we need to flesh out SSA2 more. Consider
-  just using SSA2 as our target IR for the whole thing. (downside: we actually
-  target SSA with the optimizations later, it will raise awkward questions why
-  we didn't use a different representation). Biggest conceptual difference: SSA2
-  allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x =
-  A[i, 1]}
+%% Unlike \texttt{Flatten}, which operates on the SSA representation (where
+%% containers are either \texttt{'a array} or \texttt{'b array} -- both unary type
+%% constructors), \texttt{DeepFlatten} operates on the SSA2 representation, where
+%% we distinguish between a \texttt{((int * int) tuple) sequence} (for the non-flat
+%% representation) vs \texttt{(int * int) sequence} (for the flat representation).
+
+%% Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
+%% flattening the types associated with particular variables only when all of their
+%% uses are compatible with the transformation. In particular, 
+
+%% \hl{Consider adding a small benchmark to confirm the napkin math}
+
+%% \hl{If we want to discuss SSA vs SSA2, we need to flesh out SSA2 more. Consider
+%%   just using SSA2 as our target IR for the whole thing. (downside: we actually
+%%   target SSA with the optimizations later, it will raise awkward questions why
+%%   we didn't use a different representation). Biggest conceptual difference: SSA2
+%%   allows ``nested'' addressing into fields, i.e. t = A[i]; x = load(t, 1) -> x =
+%%   A[i, 1]}
 
 %% TODO:
 %%   deepFlatten: 'squashes' tuples in arrays
