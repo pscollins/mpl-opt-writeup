@@ -1734,10 +1734,9 @@ _ = prim Array_update(arr, 1, t')
 %% particular tuple's data regardless of how many containers we insert it into.
 
 In terms of global program efficiency on modern CPU architectures, however, this
-layout is disasterous. As an illustration, consider the non-flat C++ implementation
-and memory layout shown in \cref{fig:nonflat_distance}: suppose we have a type
-\texttt{Point}; the non-flat SML-like layout corresponds to a container of pointers
-traversed by \texttt{GetDistance}.
+layout is disasterous. As an illustration, consider the C++ snippet in
+\cref{fig:nonflat_distance}, which corresponds to the ``non-flat'' naive MLton
+layout (i.e. a container of pointers).
 
 \begin{figure}[htbp]
   \centering
@@ -1853,7 +1852,7 @@ float GetDistance(
       \node[font=\tiny\bfseries\color{ThesisRed!90!black}, align=center] at (3.2, -3.1) {8B useful payload + 64B cache line $\implies \approx 89\%$ bandwidth wasted};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Non-flat container layout and access. (a) In C++, representing an \texttt{(int * int) array} or container of tuples as a \texttt{vector} of pointers requires pointer indirections in the inner loop. (b) Because each \texttt{Point} is allocated independently, heap tuples are scattered across different cache lines in DRAM. Accessing an 8-byte \texttt{Point} loads an entire 64-byte cache line, wasting $\approx 89\%$ of memory bandwidth.}
+  \caption{Non-flat container layout and access. (a) C++ corresponding to the naive layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
   \label{fig:nonflat_distance}
 \end{figure}
 
