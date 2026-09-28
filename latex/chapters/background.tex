@@ -1604,7 +1604,7 @@ generated code reads an element from such a container, it receives a pointer to
 a pre-constructed tuple object, and when it writes to a container, it must
 provide a pointer to a pre-constructed tuple object (see
 \cref{fig:array_read_write}). In terms of the local efficiency of the container
-operations (i.e. \texttt{Array_sub}, \texttt{Array_update}) themselves, this is
+operations (i.e. \texttt{Array\_sub}, \texttt{Array\_update}) themselves, this is
 optimal: we pay a flat $O(1)$ cost regardless of the contained element type, and
 we never need to store more than a single copy of a particular tuple's data
 regardless of how many containers we insert it into.
@@ -1733,7 +1733,9 @@ _ = prim Array_update(arr, 1, t')
 %% contained element type, and we never need to store more than a single copy of a
 %% particular tuple's data regardless of how many containers we insert it into.
 
-TODO(agy) change the following C++ examples to be C (const pointers plus a size `n`)
+TODO(agy): refactor this next part (just talking about the non-flat case) so
+that we always have code in a figure; give a diagram on the non-flat containers
+that shows the tuple memory scattered randomly
 
 In terms of global program efficiency on modern CPU architectures, however, this
 layout is disasterous. As an illustration, compare the following C++ snippets:
