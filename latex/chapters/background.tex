@@ -1721,8 +1721,10 @@ _ = prim Array_update(arr, 1, t')
       \draw[brace] ($(c0_hdr.south west) + (0.02, -0.16)$) -- ($(c0_f2.south east) + (-0.02, -0.16)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{PairType}};
 
-      % Arrow: Dereference t into payload field 0
-      \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisDarkBlue] (reg_t.south) to[out=-90, in=90] (c0_f1.north west);
+      % Zoom box lines for t
+      \fill[ThesisDarkBlue!5] (reg_t.south west) -- (c0_hdr.north west) -- (c0_f2.north east) -- (reg_t.south east) -- cycle;
+      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!70] (reg_t.south west) -- (c0_hdr.north west);
+      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!70] (reg_t.south east) -- (c0_f2.north east);
 
       % Child tuple 1 (Newly allocated tuple)
       \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c1_hdr) at (3.4, -0.7) {\tiny\texttt{header}};
@@ -1738,11 +1740,13 @@ _ = prim Array_update(arr, 1, t')
       \draw[brace] ($(c1_hdr.south west) + (0.02, -0.16)$) -- ($(c1_f2.south east) + (-0.02, -0.16)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{PairType}};
 
-      % Arrow: Allocate tuple, pointer held in t'
-      \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisPurple] (reg_tp.south) to[out=-90, in=90] (c1_f1.north west);
+      % Zoom box lines for t'
+      \fill[ThesisPurple!5] (reg_tp.south west) -- (c1_hdr.north west) -- (c1_f2.north east) -- (reg_tp.south east) -- cycle;
+      \draw[dashed, line width=0.65pt, color=ThesisPurple!70] (reg_tp.south west) -- (c1_hdr.north west);
+      \draw[dashed, line width=0.65pt, color=ThesisPurple!70] (reg_tp.south east) -- (c1_f2.north east);
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Container-of-tuple read and write operations under naive representation. For \texttt{type pairArray = (int * int) array}, elements are stored as pointers to out-of-line heap tuples. Reading an element loads a pointer into \texttt{t}, requiring a second load to dereference payload fields via \texttt{select}. Writing an element requires first allocating a separate heap tuple object \texttt{t'} and storing its pointer into the array slot via \texttt{Array\_update}.}
+  \caption{Container-of-tuple read and write operations in the naive representation. For \texttt{type pairArray = (int * int) array}, elements are stored as pointers to out-of-line heap tuples. Reading an element loads a pointer into \texttt{t}, requiring a second load to dereference payload fields via \texttt{select}. Writing an element requires first allocating a separate heap tuple object \texttt{t'} and storing its pointer into the array slot via \texttt{Array\_update}.}
   \label{fig:array_read_write}
 \end{figure}
 
