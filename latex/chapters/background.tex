@@ -1780,16 +1780,21 @@ float GetDistance(
     \vspace{1mm}
     \centering
     \begin{tikzpicture}
-      % Pointer array lhs/rhs
-      \node[labelnode, anchor=east] at (1.2, 1.8) {\texttt{lhs/rhs}:};
-      \foreach \i/\x in {0/1.5, 1/2.5, 2/3.5, 3/4.5} {
-        \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=1.0cm, minimum height=0.44cm] (ptr\i) at (\x+0.5, 1.8) {};
+      % Pointer array lhs/rhs on a 64-byte DRAM cache line
+      \node[labelnode, anchor=east] at (-0.05, 1.8) {\texttt{lhs/rhs}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, 1.58) rectangle (\s*0.8+0.8, 2.02);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 1.58) rectangle (6.4, 2.02);
+      \foreach \i in {0,...,3} {
+        \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=0.76cm, minimum height=0.42cm] (ptr\i) at (\i*0.8+0.4, 1.8) {};
         \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
         \node[ptr] (dot\i) at (ptr\i.center) {};
       }
+      \node[font=\tiny\color{black!40}] at (4.8, 1.8) {32B (slots 4--7)};
       % Brace above pointer buffer
-      \draw[topbrace] ($(ptr0.north west) + (0.02, 0.26)$) -- ($(ptr3.north east) + (-0.02, 0.26)$)
-        node[midway, above=2pt, font=\tiny\color{textMuted}] {Contiguous 8B pointers};
+      \draw[topbrace] ($(0.0, 2.32)$) -- ($(6.4, 2.32)$)
+        node[midway, above=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte pointer slots)};
 
       % 4 Cache lines (width = 6.4cm, 8 slots of 0.8cm)
       % Line 0: Point 2 in slot 1 (x in [0.8, 1.6])
@@ -1834,9 +1839,9 @@ float GetDistance(
       \node[font=\tiny\color{black!40}] at (2.0, -2.2) {48B unused};
 
       % Pointer arrows
-      \draw[arrptr] (dot0) to[out=-90, in=115] (box0.north);
-      \draw[arrptr] (dot1) to[out=-90, in=120] (box1.north);
-      \draw[arrptr] (dot2) to[out=-90, in=65] (box2.north);
+      \draw[arrptr] (dot0) to[out=-90, in=120] (box0.north);
+      \draw[arrptr] (dot1) to[out=-90, in=125] (box1.north);
+      \draw[arrptr] (dot2) to[out=-90, in=50] (box2.north);
       \draw[arrptr] (dot3) to[out=-90, in=60] (box3.north);
 
       % Brace below Line 3
@@ -1869,7 +1874,9 @@ pointer data (e.g. \texttt{lhs[i]->x}) cannot be pipelined with the load of the
 pointer itself -- no matter how cleverly we design our out-of-order CPU, we
 simply cannot issue a load to an address that we do not yet know. We thus must
 wait at least a few cycles to complete a load in L1, risking a hit to our
-instructions-per-cycle without heroics from the C compiler. \hl{TODO: REFERENCE}
+instructions-per-cycle without heroics from the C compiler.
+
+%% \hl{TODO: REFERENCE}
 
 In C++, we can fix this problem by eliminating the indirection in the source
 language, as depicted in \cref{fig:flat_distance}. From the perspective of the
@@ -1879,23 +1886,75 @@ single byte in each cacheline that we read, yielding 100\% efficient utilization
 of memory bandwidth. We also eliminate the pipeline-hostile chain of dependent
 loads from the the program.
 
-TODO(agy): make this diagram follow the example of above -- we should duplicate
-the point definition, and then show the memory access paterns. in order to drive
-the metaphor home, i think it would be helpful if `lhs/rhs` was also depicted as
-lying on a cacheline
-
-
-\begin{minted}{cpp}
-  float GetDistanceFlat(const vector<Point>& lhs, const vector<Point>& rhs) {
-    float sum = 0.0;
-    for (int i = 0; i < lhs.size(); ++i) {
-      const float x = lhs[i].x - rhs[i].x;
-      const float y = lhs[i].y - rhs[i].y;
-      sum += x * x + y * y;
-    }
-    return sum;
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center},
+    idx/.style={font=\tiny\color{textMuted}},
+    labelnode/.style={font=\scriptsize\bfseries},
+    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
   }
+  \begin{subfigure}[t]{0.45\textwidth}
+    \caption{Flat C++ traversal}
+    \label{fig:flat_distance_code}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
+struct Point {
+  float x;
+  float y;
+};
+
+float GetDistanceFlat(
+    const vector<Point>& lhs,
+    const vector<Point>& rhs) {
+  float sum = 0.0;
+  for (int i = 0; i < lhs.size(); ++i) {
+    const float x = lhs[i].x - rhs[i].x;
+    const float y = lhs[i].y - rhs[i].y;
+    sum += x * x + y * y;
+  }
+  return sum;
+}
 \end{minted}
+  \end{subfigure}%\hfill
+  \begin{subfigure}[t]{0.53\textwidth}
+    \caption{Memory layout: dense contiguous allocations}
+    \label{fig:flat_distance_mem}
+    \vspace{1.1cm}
+    \centering
+    \begin{tikzpicture}
+      % Line 0: lhs cache line
+      \node[labelnode, anchor=east] at (-0.05, 0.6) {\texttt{lhs}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, 0.38) rectangle (\s*0.8+0.8, 0.82);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.38) rectangle (6.4, 0.82);
+      \foreach \s in {0,...,7} {
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (lx\s) at (\s*0.8+0.2, 0.6) {\tiny $x_\s$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (ly\s) at (\s*0.8+0.6, 0.6) {\tiny $y_\s$};
+        \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(lx\s)(ly\s), inner sep=0pt] (lbox\s) {};
+        \node[idx] at ($(lbox\s.north) + (0, 0.13)$) {[\s]};
+      }
+
+      % Line 1: rhs cache line
+      \node[labelnode, anchor=east] at (-0.05, -0.6) {\texttt{rhs}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, -0.82) rectangle (\s*0.8+0.8, -0.38);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -0.82) rectangle (6.4, -0.38);
+      \foreach \s in {0,...,7} {
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (rx\s) at (\s*0.8+0.2, -0.6) {\tiny $x_\s$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.38cm, minimum height=0.42cm, inner sep=0.5pt] (ry\s) at (\s*0.8+0.6, -0.6) {\tiny $y_\s$};
+        \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(rx\s)(ry\s), inner sep=0pt] (rbox\s) {};
+        \node[idx] at ($(rbox\s.north) + (0, 0.13)$) {[\s]};
+      }
+      \draw[brace] ($(0.0, -0.95)$) -- ($(6.4, -0.95)$)
+        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte slots)};
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Flat container layout and access. (a) C++ corresponding to the flattened layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
+  \label{fig:flat_distance}
+\end{figure}
 
 MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
 -- for an \texttt{(int * int) array} corresponding to the \texttt{Point} type
