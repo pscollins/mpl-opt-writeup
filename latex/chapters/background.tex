@@ -1698,8 +1698,8 @@ _ = prim Array_update(arr, 1, t')
       \node[idx] at ($(aeln.south) + (0, -0.16)$) {\texttt{+8(n-1)}};
 
       % Temporaries in middle
-      \node[reg, draw=ThesisDarkBlue, fill=ThesisDarkBlue!10, text=ThesisDarkBlue, minimum width=0.8cm] (reg_t) at (1.8, 0.4) {\texttt{t}};
-      \node[reg, draw=ThesisPurple, fill=ThesisPurple!10, text=ThesisPurple, minimum width=0.8cm] (reg_tp) at (4.8, 0.4) {\texttt{t'}};
+      \node[reg, draw=ThesisDarkBlue, fill=ThesisDarkBlue!10, text=ThesisDarkBlue, minimum width=0.8cm] (reg_t) at (1.2, 0.4) {\texttt{t}};
+      \node[reg, draw=ThesisPurple, fill=ThesisPurple!10, text=ThesisPurple, minimum width=0.8cm] (reg_tp) at (4.6, 0.4) {\texttt{t'}};
 
       % Arrow: Read pointer from el[0] into temporary t
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisDarkBlue] ($(ael0.south west) + (0.2, 0)$) to[out=-90, in=90] (reg_t.north);
@@ -1707,43 +1707,33 @@ _ = prim Array_update(arr, 1, t')
       % Arrow: Write pointer from temporary t' UP INTO el[1]
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=ThesisPurple] (reg_tp.north) to[out=90, in=-90] ($(ael1.south east) + (-0.2, 0)$);
 
-      % Child tuple 0 (Read target)
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c0_hdr) at (-0.4, -0.7) {\tiny\texttt{header}};
+      % Child tuple 0 (Read target - centered under t at x=1.2)
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c0_hdr) at (-0.125, -0.7) {\tiny\texttt{header}};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c0_hdr] (c0_f1) {\tiny\texttt{10}};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c0_f1] (c0_f2) {\tiny\texttt{20}};
-
-      % Types above child 0
-      \node[idx] at ($(c0_hdr.north) + (0, 0.15)$) {\texttt{GC\_hdr}};
-      \node[idx] at ($(c0_f1.north) + (0, 0.15)$) {\texttt{int}};
-      \node[idx] at ($(c0_f2.north) + (0, 0.15)$) {\texttt{int}};
 
       % Brace below child 0
       \draw[brace] ($(c0_hdr.south west) + (0.02, -0.16)$) -- ($(c0_f2.south east) + (-0.02, -0.16)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{PairType}};
 
-      % Zoom box lines for t
-      \fill[ThesisDarkBlue!5] (reg_t.south west) -- (c0_hdr.north west) -- (c0_f2.north east) -- (reg_t.south east) -- cycle;
-      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!70] (reg_t.south west) -- (c0_hdr.north west);
-      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!70] (reg_t.south east) -- (c0_f2.north east);
+      % Zoom box for t
+      \fill[ThesisDarkBlue!6] (reg_t.south west) -- (c0_hdr.north west) -- (c0_f2.north east) -- (reg_t.south east) -- cycle;
+      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!75] (reg_t.south west) -- (c0_hdr.north west);
+      \draw[dashed, line width=0.65pt, color=ThesisDarkBlue!75] (reg_t.south east) -- (c0_f2.north east);
 
-      % Child tuple 1 (Newly allocated tuple)
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c1_hdr) at (3.4, -0.7) {\tiny\texttt{header}};
+      % Child tuple 1 (Newly allocated tuple - centered under t' at x=4.6)
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.95cm, minimum height=0.48cm, anchor=north west] (c1_hdr) at (3.275, -0.7) {\tiny\texttt{header}};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c1_hdr] (c1_f1) {\tiny\texttt{42}};
       \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.85cm, minimum height=0.48cm, right=0cm of c1_f1] (c1_f2) {\tiny\texttt{99}};
-
-      % Types above child 1
-      \node[idx] at ($(c1_hdr.north) + (0, 0.15)$) {\texttt{GC\_hdr}};
-      \node[idx] at ($(c1_f1.north) + (0, 0.15)$) {\texttt{int}};
-      \node[idx] at ($(c1_f2.north) + (0, 0.15)$) {\texttt{int}};
 
       % Brace below child 1
       \draw[brace] ($(c1_hdr.south west) + (0.02, -0.16)$) -- ($(c1_f2.south east) + (-0.02, -0.16)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{PairType}};
 
-      % Zoom box lines for t'
-      \fill[ThesisPurple!5] (reg_tp.south west) -- (c1_hdr.north west) -- (c1_f2.north east) -- (reg_tp.south east) -- cycle;
-      \draw[dashed, line width=0.65pt, color=ThesisPurple!70] (reg_tp.south west) -- (c1_hdr.north west);
-      \draw[dashed, line width=0.65pt, color=ThesisPurple!70] (reg_tp.south east) -- (c1_f2.north east);
+      % Zoom box for t'
+      \fill[ThesisPurple!6] (reg_tp.south west) -- (c1_hdr.north west) -- (c1_f2.north east) -- (reg_tp.south east) -- cycle;
+      \draw[dashed, line width=0.65pt, color=ThesisPurple!75] (reg_tp.south west) -- (c1_hdr.north west);
+      \draw[dashed, line width=0.65pt, color=ThesisPurple!75] (reg_tp.south east) -- (c1_f2.north east);
     \end{tikzpicture}
   \end{subfigure}
   \caption{Container-of-tuple read and write operations in the naive representation. For \texttt{type pairArray = (int * int) array}, elements are stored as pointers to out-of-line heap tuples. Reading an element loads a pointer into \texttt{t}, requiring a second load to dereference payload fields via \texttt{select}. Writing an element requires first allocating a separate heap tuple object \texttt{t'} and storing its pointer into the array slot via \texttt{Array\_update}.}
