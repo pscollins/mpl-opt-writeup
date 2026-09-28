@@ -1620,13 +1620,11 @@ provide a pointer to a pre-constructed tuple object (see \cref{fig:array_read_wr
 // SML: type pairArray = (int * int) array
 struct PairArrayType {
   struct Metadata {
-    GC_header gc_header;
+    GC_header header;
     size_t    length;
   } metadata;
-  struct Element {
-    // Out-of-line heap elements
-    void* el;
-  } elements[];
+  // Out-of-line heap elements
+  void* el[];
 };
 \end{minted}
   \end{subfigure}\hfill
@@ -1637,7 +1635,7 @@ struct PairArrayType {
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{c}
 // SML: type pair = (int * int)
 struct PairType {
-  GC_header gc_header;
+  GC_header header;
   struct {
     // Inlined tuple fields
     int field1;
@@ -1678,24 +1676,6 @@ _ = prim Array_update(arr, 1, t')
       \node[cell, fill=colorPtr, draw=ThesisPurple, line width=0.8pt, minimum width=1.15cm, right=0cm of ael0] (ael1) {\scriptsize\texttt{el[1]}};
       \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.55cm, right=0cm of ael1] (adots) {$\cdots$};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, right=0cm of adots] (aeln) {\scriptsize\texttt{el[n-1]}};
-
-      % Types above array
-      \node[idx] at ($(ahdr.north) + (0, 0.18)$) {\texttt{GC\_hdr}};
-      \node[idx] at ($(alen.north) + (0, 0.18)$) {\texttt{size\_t}};
-      \node[idx] at ($(ael0.north) + (0, 0.18)$) {\texttt{void*}};
-      \node[idx] at ($(ael1.north) + (0, 0.18)$) {\texttt{void*}};
-      \node[idx] at ($(aeln.north) + (0, 0.18)$) {\texttt{void*}};
-
-      % Pointer arrow arr
-      \node[font=\scriptsize\ttfamily\bfseries, color=colorPtrBorder] (arr_lbl) at ($(ael0.north west) + (-0.35, 0.45)$) {arr};
-      \draw[-{Stealth[length=4pt, width=3pt]}, line width=0.8pt, color=colorPtrBorder] ($(ael0.north west) + (0, 0.45)$) -- (ael0.north west);
-
-      % Offsets below array
-      \node[idx] at ($(ahdr.south) + (0, -0.16)$) {\texttt{-16}};
-      \node[idx] at ($(alen.south) + (0, -0.16)$) {\texttt{-8}};
-      \node[idx] at ($(ael0.south) + (0, -0.16)$) {\texttt{+0}};
-      \node[idx] at ($(ael1.south) + (0, -0.16)$) {\texttt{+8}};
-      \node[idx] at ($(aeln.south) + (0, -0.16)$) {\texttt{+8(n-1)}};
 
       % Temporaries in middle
       \node[reg, draw=ThesisDarkBlue, fill=ThesisDarkBlue!10, text=ThesisDarkBlue, minimum width=0.8cm] (reg_t) at (1.2, 0.4) {\texttt{t}};
