@@ -1602,7 +1602,13 @@ As depicted in \cref{fig:layout_nested_array}, the naive MLton lowering for
 container-of-tuple is an array of pointers to out-of-line heap objects. When the
 generated code reads an element from such a container, it receives a pointer to
 a pre-constructed tuple object, and when it writes to a container, it must
-provide a pointer to a pre-constructed tuple object (see \cref{fig:array_read_write}).
+provide a pointer to a pre-constructed tuple object (see
+\cref{fig:array_read_write}). In terms of the local efficiency of the container
+operations (i.e. \texttt{Array_sub}, \texttt{Array_update}) themselves, this is
+optimal: we pay a flat $O(1)$ cost regardless of the contained element type, and
+we never need to store more than a single copy of a particular tuple's data
+regardless of how many containers we insert it into.
+
 \begin{figure}[H]
   \centering
   \tikzset{
@@ -1720,12 +1726,14 @@ _ = prim Array_update(arr, 1, t')
   \label{fig:array_read_write}
 \end{figure}
 
-Manipulating elements in this kind of container corresponds to manipulating
-pointers to pre-constructed tuples, stored out-of-line from the container
-itself. In terms of the local efficiency of the container operations
-themselves, this is optimal: we pay a flat $O(1)$ cost regardless of the
-contained element type, and we never need to store more than a single copy of a
-particular tuple's data regardless of how many containers we insert it into.
+%% Manipulating elements in this kind of container corresponds to manipulating
+%% pointers to pre-constructed tuples, stored out-of-line from the container
+%% itself. In terms of the local efficiency of the container operations
+%% themselves, this is optimal: we pay a flat $O(1)$ cost regardless of the
+%% contained element type, and we never need to store more than a single copy of a
+%% particular tuple's data regardless of how many containers we insert it into.
+
+TODO(agy) change the following C++ examples to be C (const pointers plus a size `n`)
 
 In terms of global program efficiency on modern CPU architectures, however, this
 layout is disasterous. As an illustration, compare the following C++ snippets:
