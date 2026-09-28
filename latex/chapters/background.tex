@@ -1871,8 +1871,20 @@ simply cannot issue a load to an address that we do not yet know. We thus must
 wait at least a few cycles to complete a load in L1, risking a hit to our
 instructions-per-cycle without heroics from the C compiler. \hl{TODO: REFERENCE}
 
-In C++, the solution to this problem is to eliminate the indirection in the
-source language, i.e.:
+In C++, we can fix this problem by eliminating the indirection in the source
+language, as depicted in \cref{fig:flat_distance}. From the perspective of the
+memory access pattern of the consuming code, this strategy is optimal: since the
+\texttt{Point} data is in a dense, contiguous layout, we can make use of every
+single byte in each cacheline that we read, yielding 100\% efficient utilization
+of memory bandwidth. We also eliminate the pipeline-hostile chain of dependent
+loads from the the program.
+
+TODO(agy): make this diagram follow the example of above -- we should duplicate
+the point definition, and then show the memory access paterns. in order to drive
+the metaphor home, i think it would be helpful if `lhs/rhs` was also depicted as
+lying on a cacheline
+
+
 \begin{minted}{cpp}
   float GetDistanceFlat(const vector<Point>& lhs, const vector<Point>& rhs) {
     float sum = 0.0;
@@ -1884,11 +1896,6 @@ source language, i.e.:
     return sum;
   }
 \end{minted}
-From the perspective of the memory access pattern of the consuming code, this
-strategy is optimal: since the \texttt{Point} data is in a dense, contiguous
-layout, we get 100\% efficient utilization of memory bandwidth, and we eliminate
-the pipeline-hostile chain of dependent loads from the inner loop of the
-program.
 
 MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
 -- for an \texttt{(int * int) array} corresponding to the \texttt{Point} type
