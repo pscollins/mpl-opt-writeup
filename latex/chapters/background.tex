@@ -1279,7 +1279,7 @@ size_t len = meta->length;
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=colorPtrBorder] ($(ael1.south) + (0.2, 0)$) to[out=-90, in=90] (c1_f1.north west);
     \end{tikzpicture}
   \end{minipage}
-  \caption{Nested container layout. The array contains \texttt{void*} pointers to separately allocated heap tuples, requiring an indirection on every element access.}
+  \caption{Container-of-tuple layout. The array contains \texttt{void*} pointers to separately allocated heap tuples, requiring an indirection on every element access.}
   \label{fig:layout_nested_array}
 \end{figure}
 
@@ -1598,7 +1598,41 @@ does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
 solves the problem that the source language does not support containers of
 unboxed tuple types.
 
-As discussed above, the normal MLton lowering for tuple types in containers is
+As depicted in \cref{fig:layout_nested_array}, the naive MLton lowering for
+container-of-tuple is an array of pointers to out-of-line heap objects. When the
+generated code reads an element from such a container, it receives a pointer to
+a pre-constructed tuple object, and when it writes to a container, it must
+provide a pointer to a pre-consistructed tuple object (see \cref{fig:array_read_write}).
+
+TODO(agy): for fig array read write, let's have all of hte following:
+SML type is pairArray = (int * int) array
+let's have this definition of the C type
+\begin{minted}{cpp}
+  struct PariArrayType {
+    struct Metadata {
+      ...
+    } metadata;
+    struct Element {
+      // Pointer to-out-of-line elements
+      void* el;
+    } elements[]
+  };
+\end{minted}
+and let's have an SSA snippet like:
+\begin{minted}{python}
+  arr: (int * int) array = ...
+  # Example load operation
+  t: (int * int) = Array_sub(arr, 0)
+  # Example store operation
+  t': (int * int) = ...
+  _ = Array_sub(arr, 0, t')
+\end{minted}
+and then let's have a diagram that matches the style above, from fig:layout
+nested array, that illustrates the action of a read/write peration
+
+
+%% \texttt{(int * int) array} corresponds to
+
 \texttt{void*}, i.e. for an SML type like \texttt{(int * int) array}, we get the
 C type:
 \begin{minted}{cpp}
