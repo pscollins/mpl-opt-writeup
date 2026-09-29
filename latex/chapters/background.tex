@@ -2057,8 +2057,8 @@ opportunities in practice.
 %% \hl{TODO: OUTLINE FLATTEN, DEEPFLATTEN}
 
 \subsection{\texttt{Polyvariance}}
-\hl{TODO: MAYBE JUST FORGET ABOUT SXML?}
-\hl{TODO: SHOULD PROBABLY MOVE THIS INTO AN SML -> SXML SECTION ABOVE}
+%% \hl{TODO: MAYBE JUST FORGET ABOUT SXML?}
+%% \hl{TODO: SHOULD PROBABLY MOVE THIS INTO AN SML -> SXML SECTION ABOVE}
 
 Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
 pass is also relevant to the optimizations we will explore here.
@@ -2072,7 +2072,13 @@ The \texttt{Polyvariance} pass duplicates higher order functions at their
 callsites, as depicted in \cref{fig:polyvar_sml_example}. Whether or not it
 chooses to duplicate the definition of a particular higher-order function is
 controlled by a heuristic cost model based on the product of how many times the
-function is called and how large the function body is.
+function is called and how large the function body is. The benefit of this
+transformation is its impact on closure conversion, which takes place as part of
+the $\texttt{SXML} \Rightarrow \texttt{SSA}$ \hl{translation}.
+
+%% The benefit of this pass that is relevant to our discussion here is the impact
+%% on closure conversion, which takes places as part of the $\texttt{SXML}
+%% \Rightarrow \texttt{SSA}$ conversion.
 
 
 \begin{figure}[htbp]
@@ -2129,6 +2135,60 @@ fun call2 (): int =
   \label{fig:polyvar_sml_example}
 \end{figure}
 
+\hl{TODO: terminology?}
+
+Closures are represented in SSA by tagged-union \texttt{datatype} objects, with
+the tag type indicating which function to call, and the corresponding data
+elements representing the contents of the environment. Thus, while the
+unary-function restriction introduces \texttt{tuple} pack/unpack pairs around
+all function calls, closure conversion introduces \texttt{datatype} constructor
+pack/unpack pairs around calls to higher-order functions specifically.
+Continuing with the example from \cref{fig:polyvar_sml_example}, see
+\cref{fig:hofo_no_polyvar} for an illustration of the generated \texttt{SSA} for
+a simple higher-order function, without \texttt{Polyvariance}
+
+TODO(agy): add a diagram with these side by side marked fig:hofo no polyvar
+\begin{minted}{sml}
+fun doOp (l: int, r: int,
+    f: int * int -> int): int =
+  f (l, r)
+
+fun add (l: int, r: int): int =
+  l + r
+
+fun sub (l: int, r: int): int =
+  l - r
+
+fun call1 (): int =
+  doOp (2, 2, add)
+
+fun call2 (): int =
+  doOp (2, 2, sub)
+\end{minted}
+\begin{minted}{python}
+  datatype lambda1 = xEnv_add | xEnv_sub
+  def doOp(l: int, r: int, env: lambda1) -> int:
+    block bb0():
+      case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
+
+    block bb1():
+      result: int = prim Word32_add (l, r)
+      return result
+
+    block bb2():
+      result: int = prim Word32_sub (l, r)
+      return result
+\end{minted}
+
+%% While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
+%% around all function calls in the SSA representation, closure conversion
+%% introduces \texttt{datatype} constructor pack/unpack pairs around calls to
+%% higher-order functions specifically: closures are represented in 
+
+
+%% So for the pre-\texttt{Polyvariance}
+%% snippet from above, we might end up with the following SSA IR:
+
 
 %% Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
 %% pass is also relevant to the optimizations we will explore here.
@@ -2136,67 +2196,68 @@ fun call2 (): int =
 %% higher order functions and implicit closure captures (all that has been removed
 %% are the \texttt{module} constructs, which are irrelevant from the perspective of
 %% performance). Beginning from an SML program like:
-\begin{minted}{sml}
-  fun doOp (l: int, r: int, f: int * int -> int): int =
-    f (l, r)
+%% \begin{minted}{sml}
+%%   fun doOp (l: int, r: int, f: int * int -> int): int =
+%%     f (l, r)
 
-  fun add (l: int, r: int): int =
-    l + r
+%%   fun add (l: int, r: int): int =
+%%     l + r
 
-  fun sub (l: int, r: int): int =
-    l - r
+%%   fun sub (l: int, r: int): int =
+%%     l - r
 
-  fun call1 (): int =
-    doOp (2, 2, add)
+%%   fun call1 (): int =
+%%     doOp (2, 2, add)
 
-  fun call2 (): int =
-    doOp (2, 2, sub)
-\end{minted}
-we might end up with \texttt{SXML} IR like the following (using the same
-Python-style pseudocode as before):
-\begin{minted}{python}
-  def do_op(l: int, r: int, f: int * int -> int) -> int:
-    return f(l, r)
+%%   fun call2 (): int =
+%%     doOp (2, 2, sub)
+%% \end{minted}
+%% we might end up with \texttt{SXML} IR like the following (using the same
+%% Python-style pseudocode as before):
+%% \begin{minted}{python}
+%%   def do_op(l: int, r: int, f: int * int -> int) -> int:
+%%     return f(l, r)
 
-  def add(l: int, r: int) -> int:
-    return l + r
+%%   def add(l: int, r: int) -> int:
+%%     return l + r
 
-  def sub(l: int, r: int) -> int:
-    return l - r
+%%   def sub(l: int, r: int) -> int:
+%%     return l - r
 
-  def call1() -> int:
-    return do_op(2, 2, add)
+%%   def call1() -> int:
+%%     return do_op(2, 2, add)
 
-  def call2() -> bool:
-    return do_op(2, 2, sub)
-\end{minted}
-The \texttt{Polyvariance} pass duplicates function definitions at callsites
-(limited by a cost heuristic that is calculated as the product of how many times
-the function is called and a measure of the size of the function related to the
-number of nodes in the program graph). Thus for the preceeding example, we might
-end up with:
-\begin{minted}{python}
-  def do_op_add(l: int, r: int, f: int * int -> int) -> int:
-    return f(l, r)
+%%   def call2() -> bool:
+%%     return do_op(2, 2, sub)
+%% \end{minted}
+%% The \texttt{Polyvariance} pass duplicates function definitions at callsites
+%% (limited by a cost heuristic that is calculated as the product of how many times
+%% the function is called and a measure of the size of the function related to the
+%% number of nodes in the program graph). Thus for the preceeding example, we might
+%% end up with:
+%% \begin{minted}{python}
+%%   def do_op_add(l: int, r: int, f: int * int -> int) -> int:
+%%     return f(l, r)
 
-  def do_op_sub(l: int, r: int, f: int * int -> int) -> int:
-    return f(l, r)
+%%   def do_op_sub(l: int, r: int, f: int * int -> int) -> int:
+%%     return f(l, r)
 
-  def add(l: int, r: int) -> int:
-    return l + r
+%%   def add(l: int, r: int) -> int:
+%%     return l + r
 
-  def sub(l: int, r: int) -> int:
-    return l - r
+%%   def sub(l: int, r: int) -> int:
+%%     return l - r
 
-  def call1() -> int:
-    return do_op_add(2, 2, add)
+%%   def call1() -> int:
+%%     return do_op_add(2, 2, add)
 
-  def call2() -> int:
-    return do_op_sub(2, 2, sub)
-\end{minted}
-The benefit of this pass that is relevant to our discussion here is the impact
-on closure conversion, which takes places as part of the $\texttt{SXML}
-\Rightarrow \texttt{SSA}$ conversion.
+%%   def call2() -> int:
+%%     return do_op_sub(2, 2, sub)
+%% \end{minted}
+
+%% The benefit of this pass that is relevant to our discussion here is the impact
+%% on closure conversion, which takes places as part of the $\texttt{SXML}
+%% \Rightarrow \texttt{SSA}$ conversion.
 
 While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
 around all function calls in the SSA representation, \hl{closure capture}
