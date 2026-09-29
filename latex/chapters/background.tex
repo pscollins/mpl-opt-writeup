@@ -2074,6 +2074,9 @@ chooses to duplicate the definition of a particular higher-order function is
 controlled by a heuristic cost model based on the product of how many times the
 function is called and how large the function body is.
 
+
+TODO(agy): add a diagram that has these two snippets side-by-side, labeled fig
+polyvar sml example
 \begin{minted}{sml}
   def doOp(l: int, r: int, f: int * int -> int): int =
     f(l, r)
