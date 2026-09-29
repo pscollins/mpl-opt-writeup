@@ -2145,10 +2145,15 @@ all function calls, closure conversion introduces \texttt{datatype} constructor
 pack/unpack pairs around calls to higher-order functions specifically.
 Continuing with the example from \cref{fig:polyvar_sml_example}, see
 \cref{fig:hofo_no_polyvar} for an illustration of the generated \texttt{SSA} for
-a simple higher-order function, without \texttt{Polyvariance}
+a simple higher-order function, without \texttt{Polyvariance}.
 
-TODO(agy): add a diagram with these side by side marked fig:hofo no polyvar
-\begin{minted}{sml}
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.40\textwidth}
+    \caption{Standard ML source}
+    \label{fig:hofo_no_polyvar_sml}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
 fun doOp (l: int, r: int,
     f: int * int -> int): int =
   f (l, r)
@@ -2165,20 +2170,48 @@ fun call1 (): int =
 fun call2 (): int =
   doOp (2, 2, sub)
 \end{minted}
-\begin{minted}{python}
-  datatype lambda1 = xEnv_add | xEnv_sub
-  def doOp(l: int, r: int, env: lambda1) -> int:
-    block bb0():
-      case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.58\textwidth}
+    \caption{Post-closure conversion \texttt{SSA}}
+    \label{fig:hofo_no_polyvar_ssa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+datatype lambda1 = xEnv_add | xEnv_sub
+def doOp(l: int, r: int, env: lambda1) -> int:
+  block bb0():
+    case env of
+      xEnv_add => goto bb1
+    | xEnv_sub => goto bb2
 
-    block bb1():
-      result: int = prim Word32_add (l, r)
-      return result
+  block bb1():
+    result: int = prim Word32_add (l, r)
+    return result
 
-    block bb2():
-      result: int = prim Word32_sub (l, r)
-      return result
+  block bb2():
+    result: int = prim Word32_sub (l, r)
+    return result
+
+def call1() -> int:
+  block bb0():
+    env: lambda1 = xEnv_add
+    call bb1 doOp(1, 2, env)
+  ...
+
+def call2() -> int:
+  block bb0():
+    env: lambda1 = xEnv_sub
+    call bb1 doOp(1, 2, env)
+  ...
 \end{minted}
+  \end{subfigure}
+  \caption{Illustration of the generated \texttt{SSA} for a simple higher-order
+    function, without \texttt{Polyvariance}. Closures are represented by
+    tagged-union \texttt{datatype} objects, requiring a \texttt{case} dispatch
+    at the callsite inside \texttt{doOp}.}
+  \label{fig:hofo_no_polyvar}
+\end{figure}
+
+\hl{TODO: finish}
 
 %% While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
 %% around all function calls in the SSA representation, closure conversion
