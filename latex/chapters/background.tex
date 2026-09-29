@@ -2075,43 +2075,60 @@ controlled by a heuristic cost model based on the product of how many times the
 function is called and how large the function body is.
 
 
-TODO(agy): add a diagram that has these two snippets side-by-side, labeled fig
-polyvar sml example
-\begin{minted}{sml}
-  def doOp(l: int, r: int, f: int * int -> int): int =
-    f(l, r)
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{Polyvariance}}
+    \label{fig:polyvar_sml_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+def doOp(l: int, r: int,
+    f: int * int -> int): int =
+  f(l, r)
 
-  def add(l: int, r: int): int =
-    l + r
+def add(l: int, r: int): int =
+  l + r
 
-  def sub(l: int, r: int): int =
-    l - r
+def sub(l: int, r: int): int =
+  l - r
 
-  def call1(): int =
-    doOp (2, 2, add)
+def call1(): int =
+  doOp (2, 2, add)
 
-  def call2(): int =
-    doOp (2, 2, sub)
+def call2(): int =
+  doOp (2, 2, sub)
 \end{minted}
-\begin{minted}{sml}
-  def doOpAdd(l: int, r: int, f: int * int -> int): int =
-    f(l, r)
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{Polyvariance}}
+    \label{fig:polyvar_sml_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+def doOpAdd(l: int, r: int,
+    f: int * int -> int): int =
+  f(l, r)
 
-  def doOpSub(l: int, r: int, f: int * int -> int): int =
-    f(l, r)
+def doOpSub(l: int, r: int,
+    f: int * int -> int): int =
+  f(l, r)
 
-  def add(l: int, r: int): int =
-    l + r
+def add(l: int, r: int): int =
+  l + r
 
-  def sub(l: int, r: int): int =
-    l - r
+def sub(l: int, r: int): int =
+  l - r
 
-  def call1(): int =
-    doOpAdd (2, 2, add)
+def call1(): int =
+  doOpAdd (2, 2, add)
 
-  def call2(): int =
-    doOpSub (2, 2, sub)
+def call2(): int =
+  doOpSub (2, 2, sub)
 \end{minted}
+  \end{subfigure}
+  \caption{The \texttt{Polyvariance} pass duplicates higher-order functions at callsites, creating specialized copies for each caller.}
+  \label{fig:polyvar_sml_example}
+\end{figure}
+
 
 
 %% Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
