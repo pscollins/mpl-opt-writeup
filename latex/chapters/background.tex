@@ -2065,7 +2065,58 @@ pass is also relevant to the optimizations we will explore here.
 \texttt{Polyvariance} runs on the \texttt{SXML} IR, where the IR still has
 higher order functions and implicit closure captures (all that has been removed
 are the \texttt{module} constructs, which are irrelevant from the perspective of
-performance). Beginning from an SML program like:
+performance). Here, we will represent \texttt{SXML} IR as plain SML, since the
+two are identical for our purposes.
+
+The \texttt{Polyvariance} pass duplicates higher order functions at their
+callsites, as depicted in \cref{fig:polyvar_sml_example}. Whether or not it
+chooses to duplicate the definition of a particular higher-order function is
+controlled by a heuristic cost model based on the product of how many times the
+function is called and how large the function body is.
+
+\begin{minted}{sml}
+  def doOp(l: int, r: int, f: int * int -> int): int =
+    f(l, r)
+
+  def add(l: int, r: int): int =
+    l + r
+
+  def sub(l: int, r: int): int =
+    l - r
+
+  def call1(): int =
+    doOp (2, 2, add)
+
+  def call2(): int =
+    doOp (2, 2, sub)
+\end{minted}
+\begin{minted}{sml}
+  def doOpAdd(l: int, r: int, f: int * int -> int): int =
+    f(l, r)
+
+  def doOpSub(l: int, r: int, f: int * int -> int): int =
+    f(l, r)
+
+  def add(l: int, r: int): int =
+    l + r
+
+  def sub(l: int, r: int): int =
+    l - r
+
+  def call1(): int =
+    doOpAdd (2, 2, add)
+
+  def call2(): int =
+    doOpSub (2, 2, sub)
+\end{minted}
+
+
+%% Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
+%% pass is also relevant to the optimizations we will explore here.
+%% \texttt{Polyvariance} runs on the \texttt{SXML} IR, where the IR still has
+%% higher order functions and implicit closure captures (all that has been removed
+%% are the \texttt{module} constructs, which are irrelevant from the perspective of
+%% performance). Beginning from an SML program like:
 \begin{minted}{sml}
   def doOp(l: int, r: int, f: int * int -> int): int =
     f(l, r)
