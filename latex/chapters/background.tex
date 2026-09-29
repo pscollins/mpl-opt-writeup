@@ -2082,20 +2082,20 @@ function is called and how large the function body is.
     \label{fig:polyvar_sml_before}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
-def doOp(l: int, r: int,
+fun doOp (l: int, r: int,
     f: int * int -> int): int =
-  f(l, r)
+  f (l, r)
 
-def add(l: int, r: int): int =
+fun add (l: int, r: int): int =
   l + r
 
-def sub(l: int, r: int): int =
+fun sub (l: int, r: int): int =
   l - r
 
-def call1(): int =
+fun call1 (): int =
   doOp (2, 2, add)
 
-def call2(): int =
+fun call2 (): int =
   doOp (2, 2, sub)
 \end{minted}
   \end{subfigure}\hfill
@@ -2104,31 +2104,30 @@ def call2(): int =
     \label{fig:polyvar_sml_after}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
-def doOpAdd(l: int, r: int,
+fun doOpAdd (l: int, r: int,
     f: int * int -> int): int =
-  f(l, r)
+  f (l, r)
 
-def doOpSub(l: int, r: int,
+fun doOpSub (l: int, r: int,
     f: int * int -> int): int =
-  f(l, r)
+  f (l, r)
 
-def add(l: int, r: int): int =
+fun add (l: int, r: int): int =
   l + r
 
-def sub(l: int, r: int): int =
+fun sub (l: int, r: int): int =
   l - r
 
-def call1(): int =
+fun call1 (): int =
   doOpAdd (2, 2, add)
 
-def call2(): int =
+fun call2 (): int =
   doOpSub (2, 2, sub)
 \end{minted}
   \end{subfigure}
   \caption{The \texttt{Polyvariance} pass duplicates higher-order functions at callsites, creating specialized copies for each caller.}
   \label{fig:polyvar_sml_example}
 \end{figure}
-
 
 
 %% Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
@@ -2138,19 +2137,19 @@ def call2(): int =
 %% are the \texttt{module} constructs, which are irrelevant from the perspective of
 %% performance). Beginning from an SML program like:
 \begin{minted}{sml}
-  def doOp(l: int, r: int, f: int * int -> int): int =
-    f(l, r)
+  fun doOp (l: int, r: int, f: int * int -> int): int =
+    f (l, r)
 
-  def add(l: int, r: int): int =
+  fun add (l: int, r: int): int =
     l + r
 
-  def sub(l: int, r: int): int =
+  fun sub (l: int, r: int): int =
     l - r
 
-  def call1(): int =
+  fun call1 (): int =
     doOp (2, 2, add)
 
-  def call2(): int =
+  fun call2 (): int =
     doOp (2, 2, sub)
 \end{minted}
 we might end up with \texttt{SXML} IR like the following (using the same
