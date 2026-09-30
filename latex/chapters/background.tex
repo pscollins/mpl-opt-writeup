@@ -2135,9 +2135,9 @@ fun call2 (): int =
   \label{fig:polyvar_sml_example}
 \end{figure}
 
-\hl{TODO: terminology?}
+\hl{TODO: terminology? ``datatype objects''?}
 
-Closures are represented in SSA by tagged-union \texttt{datatype} objects, with
+Closures are represented in SSA by tagged-value \texttt{datatype} objects, with
 the tag type indicating which function to call, and the corresponding data
 elements representing the contents of the environment. Thus, while the
 unary-function restriction introduces \texttt{tuple} pack/unpack pairs around
@@ -2208,44 +2208,127 @@ def call2() -> int:
   \end{subfigure}
   \caption{Illustration of the generated \texttt{SSA} for a simple higher-order
     function, without \texttt{Polyvariance}. Closures are represented by
-    tagged-union \texttt{datatype} objects, requiring a \texttt{case} dispatch
+    \texttt{datatype} values, requiring a \texttt{case} dispatch
     at the callsite inside \texttt{doOp}.}
   \label{fig:hofo_no_polyvar}
 \end{figure}
 
 
-TODO(agy): make this into a figure called fig:hofo env example
-\begin{minted}{sml}
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.42\textwidth}
+    \caption{Standard ML source}
+    \label{fig:hofo_env_example_sml}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
 ...
-fun buildAddWithBias(bias: int): int -> int = let
-  fun addWithBias (l: int, r: int): int =
-    return l + r + bias
-  ...
-
-fun call3() -> int:
+fun buildAddWithBias
+    (bias: int):
+    int * int -> int =
+  let
+    fun addWithBias
+        (l: int, r: int): int =
+      l + r + bias
+  in
+    addWithBias
+  end
+...
+fun call3 (): int =
   doOp (2, 2, buildAddWithBias 4)
 \end{minted}
-\begin{minted}{python}
-datatype lambda1 = xEnv_add | xEnv_sub | xEnv_AddBias of int
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.56\textwidth}
+    \caption{Post-closure conversion \texttt{SSA}}
+    \label{fig:hofo_env_example_ssa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+datatype lambda1 =
+   xEnv_add
+ | xEnv_sub
+ | xEnv_AddBias of int
+
 def doOp(l: int, r: int, env: lambda1) -> int:
   block bb0():
     case env of
       xEnv_add => goto bb1
     | xEnv_sub => goto bb2
     | xEnv_AddBias(bias) => goto bb3(bias)
- ...
+  ...
   block bb3(bias: int):
-    ...
+    t: int = prim Word32_add (l, r)
+    result: int = prim Word32_add (t, bias)
+    return result
 
 def call3() -> int:
   block bb0():
-    env: lambda1 = con xEnv_AddBias (5)
+    env: lambda1 = con xEnv_AddBias (4)
     call bb1 doOp(1, 2, env)
   ...
 \end{minted}
+  \end{subfigure}
+  \caption{Illustration of closure conversion with a non-empty capture
+    environment. The \texttt{datatype} variant \texttt{xEnv\_AddBias} carries
+    the captured variable as payload, which is passed to the target basic block
+    upon dispatch.}
+  \label{fig:hofo_env_example}
+\end{figure}
+
+The relevance of closure conversion to flattening is that the C representation
+for \texttt{datatype} values is, in the most general case, a tagged union whose
+payload is a pointer to a tuple (\cref{fig:datatype_tuple_payload}). A variety
+of special-case layouts are supported so that e.g. small payloads can be inlined
+directly into the C struct for the \texttt{datatype} object, but building the
+\texttt{datatype} object itself will generally cost us at least one heap
+allocation when the payload is non-empty.
 
 
-\hl{TODO: finish}
+TODO(agy): make this into fig:datatype tuple payload. I think the best layout is
+probably to put the ``python'' SSA snippet and the two tuple type definitions in
+the left hand column with the datatype on the right hand
+
+\begin{minted}{python}
+# Example datatype definition
+datatype Foo = Bar of int * int
+             | Baz of float * float
+\end{minted}
+
+\begin{minted}{cpp}
+// C type for int * int
+struct IntPair {
+  GC_header gc_header;  // GC metadata tag
+  struct {
+    int field1;
+    int field2;
+  } members;
+}
+// C type for float * float
+struct FloatPair {
+  GC_header gc_header;  // GC metadata tag
+  struct {
+    float field1;
+    float field2;
+  } members;
+}
+\end{minted}
+
+\begin{minted}{cpp}
+// C type for `Foo`
+struct FooDatatype {
+  // GC metadata tag contains the variant type
+  GC_header gc_header;
+  // Out-of-line tuple member
+
+  // Users cast to `IntPair` or `FloatPair` based on the tag
+  void* payload;
+};
+\end{minted}
+
+
+\hl{TODO: delete remainder?}
+
+%% \texttt{Polyvariance} eliminates the 
+
+%% \hl{TODO: finish}
 
 %% While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
 %% around all function calls in the SSA representation, closure conversion
