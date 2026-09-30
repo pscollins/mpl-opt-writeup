@@ -2145,7 +2145,9 @@ all function calls, closure conversion introduces \texttt{datatype} constructor
 pack/unpack pairs around calls to higher-order functions specifically.
 Continuing with the example from \cref{fig:polyvar_sml_example}, see
 \cref{fig:hofo_no_polyvar} for an illustration of the generated \texttt{SSA} for
-a simple higher-order function, without \texttt{Polyvariance}.
+a simple higher-order function, without \texttt{Polyvariance}, and see
+\cref{fig:hofo_env_example} for an extension to the case of a non-empty
+environment.
 
 \begin{figure}[htbp]
   \centering
@@ -2210,6 +2212,38 @@ def call2() -> int:
     at the callsite inside \texttt{doOp}.}
   \label{fig:hofo_no_polyvar}
 \end{figure}
+
+
+TODO(agy): make this into a figure called fig:hofo env example
+\begin{minted}{sml}
+...
+fun buildAddWithBias(bias: int): int -> int = let
+  fun addWithBias (l: int, r: int): int =
+    return l + r + bias
+  ...
+
+fun call3() -> int:
+  doOp (2, 2, buildAddWithBias 4)
+\end{minted}
+\begin{minted}{python}
+datatype lambda1 = xEnv_add | xEnv_sub | xEnv_AddBias of int
+def doOp(l: int, r: int, env: lambda1) -> int:
+  block bb0():
+    case env of
+      xEnv_add => goto bb1
+    | xEnv_sub => goto bb2
+    | xEnv_AddBias(bias) => goto bb3(bias)
+ ...
+  block bb3(bias: int):
+    ...
+
+def call3() -> int:
+  block bb0():
+    env: lambda1 = con xEnv_AddBias (5)
+    call bb1 doOp(1, 2, env)
+  ...
+\end{minted}
+
 
 \hl{TODO: finish}
 
