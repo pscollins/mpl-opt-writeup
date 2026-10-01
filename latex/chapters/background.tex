@@ -2279,52 +2279,94 @@ payload is a pointer to a tuple (\cref{fig:datatype_tuple_payload}). A variety
 of special-case layouts are supported so that e.g. small payloads can be inlined
 directly into the C struct for the \texttt{datatype} object, but building the
 \texttt{datatype} object itself will generally cost us at least one heap
-allocation when the payload is non-empty.
+allocation when the payload is non-empty. Hence the environment itself can
+introduce an unflattened tuple to the program.
 
-
-TODO(agy): make this into fig:datatype tuple payload. I think the best layout is
-probably to put the ``python'' SSA snippet and the two tuple type definitions in
-the left hand column with the datatype on the right hand
-
-\begin{minted}{python}
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Datatype definition and tuple types}
+    \label{fig:datatype_tuple_payload_types}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 # Example datatype definition
 datatype Foo = Bar of int * int
              | Baz of float * float
 \end{minted}
-
-\begin{minted}{cpp}
+\vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
 // C type for int * int
 struct IntPair {
-  GC_header gc_header;  // GC metadata tag
+  GC_header gc_header; // GC metadata tag
   struct {
     int field1;
     int field2;
   } members;
-}
+};
+
 // C type for float * float
 struct FloatPair {
-  GC_header gc_header;  // GC metadata tag
+  GC_header gc_header; // GC metadata tag
   struct {
     float field1;
     float field2;
   } members;
-}
+};
 \end{minted}
-
-\begin{minted}{cpp}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{C \texttt{datatype} representation}
+    \label{fig:datatype_tuple_payload_c}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
 // C type for `Foo`
 struct FooDatatype {
-  // GC metadata tag contains the variant type
+  // GC metadata tag contains the
+  // variant type
   GC_header gc_header;
-  // Out-of-line tuple member
 
-  // Users cast to `IntPair` or `FloatPair` based on the tag
+  // Out-of-line tuple member
+  // Users cast to `IntPair` or `FloatPair`
+  // based on the tag
   void* payload;
 };
 \end{minted}
+  \end{subfigure}
+  \caption{Representation of \texttt{datatype} values with tuple payloads in lowered C code. The datatype object \texttt{FooDatatype} contains a GC tag identifying the active variant and an untyped pointer to a separately allocated tuple object representing the variant's payload.}
+  \label{fig:datatype_tuple_payload}
+\end{figure}
+
+\hl{TODO: could probably use some figures here}
+
+The environment objects introduced by closure conversion can also inhibit
+flattening by interfering with the lattice-based analyses performed by the other
+flattening passes. For example, if a tuple is read from an array and then
+captured as part of a closure environment, it will inhibit the
+\texttt{DeepFlatten} pass from acting on that array: \texttt{DeepFlatten}ing
+such an array would require constructing a temporary tuple at the spot where the
+tuple passes between the array and the closure environment, which
+\texttt{DeepFlatten} does not support.
+
+\texttt{Polyvariance} can solve some of these situations by duplicating the
+consuming higher-order function, since in this case the single-member
+\texttt{datatype} is optimized to a tuple, and the regular \texttt{Flatten} pass
+has an opportunity to eliminate the temporary tuple as usual. However, since
+\texttt{Polyvariance} emits a fresh function definition at every single callsite
+(even if two calls to the same higher-order function have the same arguments),
+its cost heuristic is necessarily conservative in order to prevent excessive
+binary bloat.
+
+%% \texttt{Polyvariance} blindly emits fresh function definitions at every 
+
+%% \texttt{Polyvariance} 
+
+%% in which case closure conversion stores the
+%% environment in a tuple rather than a \texttt{datatype} object, allowing
+%% \texttt{Flatten} to 
 
 
-\hl{TODO: delete remainder?}
+
+\hl{TODO: review structure}
 
 %% \texttt{Polyvariance} eliminates the 
 
@@ -2409,106 +2451,106 @@ struct FooDatatype {
 %% on closure conversion, which takes places as part of the $\texttt{SXML}
 %% \Rightarrow \texttt{SSA}$ conversion.
 
-While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
-around all function calls in the SSA representation, \hl{closure capture}
-introduces \texttt{datatype} pack/unpack pairs around calls to higher-order
-functions specifically. So for the pre-\texttt{Polyvariance} snippet from above,
-we might end up with the following SSA IR:
-\begin{minted}{python}
-  datatype lambda1 = xEnv_add | xEnv_sub
-  def doOp(l: int, r: int, env: lambda1) -> int:
-    block bb0():
-      case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
+%% While the unary-function restriction introduces \texttt{tuple} pack/unpack pairs
+%% around all function calls in the SSA representation, \hl{closure capture}
+%% introduces \texttt{datatype} pack/unpack pairs around calls to higher-order
+%% functions specifically. So for the pre-\texttt{Polyvariance} snippet from above,
+%% we might end up with the following SSA IR:
+%% \begin{minted}{python}
+%%   datatype lambda1 = xEnv_add | xEnv_sub
+%%   def doOp(l: int, r: int, env: lambda1) -> int:
+%%     block bb0():
+%%       case env of xEnv_add => goto bb1 | xEnv_sub => goto bb2
 
-    block bb1():
-      result: int = prim Word32_add (l, r)
-      return result
+%%     block bb1():
+%%       result: int = prim Word32_add (l, r)
+%%       return result
 
-    block bb2():
-      result: int = prim Word32_sub (l, r)
-      return result
-\end{minted}
-The contents of each \texttt{datatype} case corresponds to the capture
-environment of the function argument that it maps to, e.g. for a call like:
-\begin{minted}{sml}
-  fun buildAddWithBias(bias: int): int -> int = let
-    fun addWithBias (l: int, r: int): int =
-      return l + r + bias
-  ...
+%%     block bb2():
+%%       result: int = prim Word32_sub (l, r)
+%%       return result
+%% \end{minted}
+%% The contents of each \texttt{datatype} case corresponds to the capture
+%% environment of the function argument that it maps to, e.g. for a call like:
+%% \begin{minted}{sml}
+%%   fun buildAddWithBias(bias: int): int -> int = let
+%%     fun addWithBias (l: int, r: int): int =
+%%       return l + r + bias
+%%   ...
 
-  fun call3() -> int:
-    doOp (2, 2, buildAddWithBias 4)
-\end{minted}
-we would end up with a case in the declaration like:
-\begin{minted}{python}
-  datatype lambda1 = xEnv_addWithBias of int | xEnv_add | xEnv_sub
-\end{minted}
-and a callsite like:
-\begin{minted}{python}
-  def call3() -> int:
-    block bb0():
-      biasArg: int = 5
-      env: lambda_1 = con xEnv_addWithBias (biasArg)
-      call bbN doOp (2, 2, env)
-    ...
-\end{minted}
-In the generated C, \texttt{datatype} objects correspond to tagged unions,
-roughly:
-\begin{minted}{cpp}
-  struct Lambda1 {
-    enum Case {
-      xEnv_addWithBias,
-      xEnv_add,
-      xEnv_sub,
-    } case;
-    // Interpretation of the payload depends on the tag
-    void *paylod;
-  };
-\end{minted}
-The representation of \texttt{payload} depends on the particular
-\texttt{datatype}: small types and other special cases may be allocated inline,
-but the general case with a \hl{large payload} corresponds to allocating a
-nested tuple, i.e. for:
-\begin{minted}{sml}
-  datatype env = xEnvLarge of int * int | ...
-\end{minted}
-the callers (in \texttt{SSA}) will look like:
-\begin{minted}{python}
-  l: int = ...
-  r: int = ...
-  t: int * int = tuple (l, r)
-  e: Env = con xEnvLarge (t)
-\end{minted}
-The relevance of the closure conversion transformation to flattening, then, is
-that it introduces further nested tuples at callsites of higher order functions.
-In the case when these nested tuples make it through to the \texttt{SSA}
-representation, this indirection cannot be optimized away by \texttt{Flatten},
-\texttt{DeepFlatten}, or any of the other flattening passes in MLton (since
-``peeling apart'' the tuple elements is only possible when we know the value of
-the tag).
+%%   fun call3() -> int:
+%%     doOp (2, 2, buildAddWithBias 4)
+%% \end{minted}
+%% we would end up with a case in the declaration like:
+%% \begin{minted}{python}
+%%   datatype lambda1 = xEnv_addWithBias of int | xEnv_add | xEnv_sub
+%% \end{minted}
+%% and a callsite like:
+%% \begin{minted}{python}
+%%   def call3() -> int:
+%%     block bb0():
+%%       biasArg: int = 5
+%%       env: lambda_1 = con xEnv_addWithBias (biasArg)
+%%       call bbN doOp (2, 2, env)
+%%     ...
+%% \end{minted}
+%% In the generated C, \texttt{datatype} objects correspond to tagged unions,
+%% roughly:
+%% \begin{minted}{cpp}
+%%   struct Lambda1 {
+%%     enum Case {
+%%       xEnv_addWithBias,
+%%       xEnv_add,
+%%       xEnv_sub,
+%%     } case;
+%%     // Interpretation of the payload depends on the tag
+%%     void *paylod;
+%%   };
+%% \end{minted}
+%% The representation of \texttt{payload} depends on the particular
+%% \texttt{datatype}: small types and other special cases may be allocated inline,
+%% but the general case with a \hl{large payload} corresponds to allocating a
+%% nested tuple, i.e. for:
+%% \begin{minted}{sml}
+%%   datatype env = xEnvLarge of int * int | ...
+%% \end{minted}
+%% the callers (in \texttt{SSA}) will look like:
+%% \begin{minted}{python}
+%%   l: int = ...
+%%   r: int = ...
+%%   t: int * int = tuple (l, r)
+%%   e: Env = con xEnvLarge (t)
+%% \end{minted}
+%% The relevance of the closure conversion transformation to flattening, then, is
+%% that it introduces further nested tuples at callsites of higher order functions.
+%% In the case when these nested tuples make it through to the \texttt{SSA}
+%% representation, this indirection cannot be optimized away by \texttt{Flatten},
+%% \texttt{DeepFlatten}, or any of the other flattening passes in MLton (since
+%% ``peeling apart'' the tuple elements is only possible when we know the value of
+%% the tag).
 
-The existing solution to this problem is \texttt{Polyvariance}: by duplicating
-higher-order functions at their callsite, for each caller like:
-\begin{minted}{python}
-  def call1() -> int:
-    return do_op_add(2, 2, add)
+%% The existing solution to this problem is \texttt{Polyvariance}: by duplicating
+%% higher-order functions at their callsite, for each caller like:
+%% \begin{minted}{python}
+%%   def call1() -> int:
+%%     return do_op_add(2, 2, add)
 
-  def call2() -> int:
-    return do_op_sub(2, 2, sub)
-\end{minted}
-the duplicated functions \texttt{do\_op\_add}, \texttt{do\_op\_sub} each end up
-with a single-variant \texttt{datatype} that can easily be optimized away by
-later passes (since the tag is statically known), allowing \texttt{Flatten} /
-\texttt{DeepFlatten} to act on the embedded tuple as normal.
+%%   def call2() -> int:
+%%     return do_op_sub(2, 2, sub)
+%% \end{minted}
+%% the duplicated functions \texttt{do\_op\_add}, \texttt{do\_op\_sub} each end up
+%% with a single-variant \texttt{datatype} that can easily be optimized away by
+%% later passes (since the tag is statically known), allowing \texttt{Flatten} /
+%% \texttt{DeepFlatten} to act on the embedded tuple as normal.
 
-\texttt{Polyvariance} is limited, however: since it acts by duplicating
-functions across all callsites, it imposes a risk of severe code bloat beyond
-what is necessary just for the sake of eliminating the \texttt{datatype}. The
-cost heuristic also implies the potential for a sharp performance cliff around
-minor changes to the source-language program: a program that calls \texttt{map}
-$N$ times might have significantly worse performance than a program that calls
-\texttt{map} $N-1$ times if it pushes the \texttt{map} beyond the
-\texttt{Polyvariance} threshold.
+%% \texttt{Polyvariance} is limited, however: since it acts by duplicating
+%% functions across all callsites, it imposes a risk of severe code bloat beyond
+%% what is necessary just for the sake of eliminating the \texttt{datatype}. The
+%% cost heuristic also implies the potential for a sharp performance cliff around
+%% minor changes to the source-language program: a program that calls \texttt{map}
+%% $N$ times might have significantly worse performance than a program that calls
+%% \texttt{map} $N-1$ times if it pushes the \texttt{map} beyond the
+%% \texttt{Polyvariance} threshold.
 
 
 %% \hl{TODO: FINISH}
