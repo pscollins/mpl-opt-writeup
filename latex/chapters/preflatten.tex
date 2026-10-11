@@ -13,8 +13,6 @@ together'' tuple pack/unpack operations separated by function call boundaries
 (as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
 optimizations to elide the temporary tuple.
 
-TODO(agy): add a # before the `...` lines in code snippets
-
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
@@ -23,22 +21,22 @@ TODO(agy): add a # before the `...` lines in code snippets
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def f(...) -> ...:
-  ...other blocks...
+  # ...other blocks...
 
   block bbN():
     t: 'a * 'b = tuple(x0, x1)
     # call g(t) and return to bbM
     call bbM g(t)
 
-  ...other blocks...
+  # ...other blocks...
 
 def g(t: 'a * 'b) -> ...:
   block bb0():
     x0: 'a = select(t, 0)
     x1: 'b = select(t, 1)
-    ...etc...
+    # ...etc...
 
-  ...other blocks...
+  # ...other blocks...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -47,22 +45,22 @@ def g(t: 'a * 'b) -> ...:
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def f(...) -> ...:
-  ...other blocks...
+  # ...other blocks...
 
   block bbN():
     # call g(x0, x1) and return to bbM
     call bbM g_flat(x0, x1)
 
-  ...other blocks...
+  # ...other blocks...
 
 def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
   block bb0():
     t: 'a * 'b = tuple(x0_flat, x1_flat)
     x0: 'a = select(t, 0)
     x1: 'b = select(t, 1)
-    ...etc...
+    # ...etc...
 
-  ...other blocks...
+  # ...other blocks...
 \end{minted}
   \end{subfigure}
   \caption{The \texttt{PreFlatten} transformation duplicates and specializes the callee to accept unpacked arguments, pushing tuple construction across the function call boundary.}
@@ -90,7 +88,7 @@ each \hl{flattening pattern}, as depicted in \cref{fig:pre_flatten_example_dup}.
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def f(t1: 'a * 'b) -> ...:
-  ...other blocks...
+  # ...other blocks...
 
   block bbN1():
     # call g(t1) and return to bbM
@@ -101,10 +99,10 @@ def f(t1: 'a * 'b) -> ...:
     # call g(t2) and return to bbM
     call bbM g(t2)
 
-  ...other blocks...
+  # ...other blocks...
 
 def g(t: 'a * 'b) -> ...:
-  ...as above...
+  # ...as above...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -113,7 +111,7 @@ def g(t: 'a * 'b) -> ...:
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def f(t1: 'a * 'b) -> ...:
-  ...other blocks...
+  # ...other blocks...
 
   block bbN1():
     # Unflattenable caller:
@@ -125,13 +123,13 @@ def f(t1: 'a * 'b) -> ...:
     # can ``push down'' the allocation
     call bbM g_flat(x1, x2)
 
-  ...other blocks...
+  # ...other blocks...
 
 def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
-  ...as above...
+  # ...as above...
 
 def g(t: 'a * 'b) -> ...:
-  ...as above...
+  # ...as above...
 \end{minted}
   \end{subfigure}
   \caption{When a function has a mixture of flattenable and unflattenable calls, \texttt{PreFlatten} duplicates the callee definition to support each flattening pattern, specializing flattenable callers while leaving unflattenable callers untouched.}
@@ -155,7 +153,7 @@ fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
 for callers that require it, i.e. for something like:
 \begin{minted}{python}
   def f(t1: 'a * 'b) -> ...:
-    ...other blocks...
+    # ...other blocks...
 
     block bbN1():
       # call g(t1) and return to some other block bbM
@@ -166,15 +164,15 @@ for callers that require it, i.e. for something like:
       # call g(t2) and return to some other block bbM
       call bbM g(t2)
 
-    ...other blocks...
+    # ...other blocks...
 
  def g(t: 'a * 'b) -> ...:
-    ...as above...
+    # ...as above...
 \end{minted}
 We can emit:
 \begin{minted}{python}
   def f(t1: 'a * 'b) -> ...:
-    ...other blocks...
+    # ...other blocks...
 
     block bbN1():
       # Unflattenable caller: no tuple allocation to ``push down''
@@ -184,13 +182,13 @@ We can emit:
       # Flattenable caller: can ``push down'' the allocation
       call bbM g_flat(x1, x2)
 
-    ...other blocks...
+    # ...other blocks...
 
  def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
-    ...as above...
+    # ...as above...
 
  def g(t: 'a * 'b) -> ...:
-    ...as above...
+    # ...as above...
 \end{minted}
 By iteratively applying this strategy, we can ``push together'' distant pairs of
 flatten/unflatten operations, and so try to ensure that the maximum possible
@@ -202,12 +200,12 @@ from a pattern like:
 \begin{minted}{python}
   datatype Env = Env1 of 'a * 'b | ...
   def f(...) -> ...:
-    ...
+    # ...
     block bbN():
       t: 'a * 'b = ...
       env: Env = con Env1 (t)
       call bbM g(env)
-    ...
+    # ...
 
   def g(e: Env) -> ...:
     block bb0():
@@ -216,11 +214,11 @@ from a pattern like:
 we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive at:
 \begin{minted}{python}
   def f(...) -> ...:
-    ...
+    # ...
     block bbN():
       t: 'a * 'b = ...
       call bbM g(t)
-    ...
+    # ...
 
   def g_flat_env1(t: 'a * 'b) -> ...:
     block bb0():
@@ -246,18 +244,18 @@ in the types of operations that they match on:
 \begin{minted}{python}
   t: a * b * ... = tuple(x1, x2, ...)
   call bbN f_tuple(t, y, z, ...) # call1
-  ....
+  # ...
   def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
 \end{minted}
 and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
 \begin{minted}{python}
   datatype ConType = Con1 of a * b * ... | Con2 of ...
-  ...
+  # ...
   t: a * b * ... = ...
-  ...
+  # ...
   c: ConType = con Con1(t)
   call bbN f_con(c, y, z, ...) # call2
-  ...
+  # ...
   def f_con(c: ConType, y: c, z: d, ...) -> ...:
 \end{minted}
 \item Tag each such \texttt{call} statement with a per-argument flattening
@@ -269,11 +267,11 @@ and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
 \begin{minted}{python}
     f_tuple_caller_info = {
       'call1': [FlattenVar(x1, x1, ...), PreserveVar, PreserveVar, ...]
-      ...other callers...
+      # ...other callers...
     }
     f_con_caller_info = {
       'call2': [FlattenVar(t), PreserveVar, PreserveVar, ...]
-      ...other callers...
+      # ...other callers...
     }
 \end{minted}
 \item Traverse all function-callee-decision collections and apply heuristics to
@@ -339,13 +337,13 @@ becomes:
   a source program like:
 \begin{minted}{python}
   f(...) -> ...:
-    ...
+    # ...
     # flat call to `g`
     t0: a * b = (x, y)
     call bbN g(t0)
 
   g(t: a * b) -> ...:
-    ...
+    # ...
     block bbM():
       # arguments for recursive call
       t2: a * b = (w, z)
@@ -356,13 +354,13 @@ The action of the pass is as follows: for both the call in \texttt{f} and
 specialization of the function, \texttt{g\_flat}
 \begin{minted}{python}
   f(...) -> ...:
-    ...
+    # ...
     # flat call to `g`
     t0: a * b = (x, y)
     call bbN g_flat(x, y)  # pointed to flat specialization
 
   g(t: a * b) -> ...:
-    ...
+    # ...
     block bbM():
       call bbK g_flat(w, z) # pointed to flat specialization
 
@@ -373,7 +371,7 @@ specialization of the function, \texttt{g\_flat}
       # jump to original first block
       goto bb0()
 
-    ...
+    # ...
     block bbM():
       # arguments for recursive call
       t2: a * b = (w, z)
@@ -390,7 +388,7 @@ specializations to remove the unflattened call in the specialized function, i.e.
       # jump to original first block
       goto bb0()
 
-    ...
+    # ...
     block bbM():
       call bbK g_flat(w, z) # pointed to flat specialization
 \end{minted}
