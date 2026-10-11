@@ -1,24 +1,20 @@
 The core \texttt{PreFlatten} transformation is to duplicate function bodies so
 that callers can avoid unnecessary pack/unpack sequences, eliding
-either \texttt{tuple} constructors or \texttt{ConApp} calls. Below, we 
+either \texttt{tuple} constructors or \texttt{ConApp} calls. It is intended to
+be a generalization of the existing \texttt{Flatten} pass in order to handle the
+case where the lattice-based analysis chooses not to flatten based on a mixture
+of flattenable and un-flattenable callers.
 
-Like \texttt{Flatten}, the \texttt{PreFlatten} pass runs on the \texttt{SSA} IR. 
-
-The \texttt{PreFlatten} optimization runs on 
-
-We have freedom to run \texttt{PreFlatten} either before or after the
-regular \texttt{Flatten} pass over the SSA IR. Currently (as we will describe
-below), we use both configurations: for \texttt{ConApp}s, the tran
-
-\hl{TODO: LET'S RENAME IT TO FlattenCall}
-
-Like \texttt{Flatten}, \texttt{PreFlatten} runs on the \texttt{SSA} IR:
-currently, it runs before \texttt{Flatten}, so that the lattice-based
-\texttt{Flatten} analysis has a better chance to pick up on opportunities to
-completely flatten particular uses.
+\hl{TODO: LET'S RENAME IT TO FlattenCall?}
 
 \section{Motivation}
-The basic intuition is that if we see a sequence like:
+The basic intiution is that we can use a simple peephole optimization to ``push
+together'' tuple pack/unpack operations separated by function call boundaries
+(as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
+optimizations to elide the temporary tuple.
+
+TODO(agy): make this into a fifugre with side-by-side code snippets in the name
+fig:pre flatten example.
 \begin{minted}{python}
   def f(...) -> ...:
     ...other blocks...
@@ -38,9 +34,6 @@ The basic intuition is that if we see a sequence like:
 
     ...other blocks...
 \end{minted}
-then we can eliminate the intermediate tuple \texttt{t} with a simple peephole
-optimization that ``pushes down'' the tuple allocation from the caller into the
-callee, i.e.:
 \begin{minted}{python}
   def f(...) -> ...:
     ...other blocks...
@@ -60,8 +53,8 @@ callee, i.e.:
 
     ...other blocks...
 \end{minted}
-and then rely on existing optimization machinery to \hl{remove the allocation
-  completely}.
+
+\hl{TODO: continue}
 
 In case all callers of \texttt{g} satisfy the pattern above, then the result of
 this transformation is equivalent to the existing \texttt{Flatten} pass.
