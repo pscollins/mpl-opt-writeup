@@ -13,48 +13,68 @@ together'' tuple pack/unpack operations separated by function call boundaries
 (as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
 optimizations to elide the temporary tuple.
 
-TODO(agy): make this into a fifugre with side-by-side code snippets in the name
-fig:pre flatten example.
-\begin{minted}{python}
-  def f(...) -> ...:
-    ...other blocks...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  ...other blocks...
 
-    block bbN():
-      t: 'a * 'b = tuple(x0, x1)
-      # call g(t) and return to some other block bbM
-      call bbM g(t)
+  block bbN():
+    t: 'a * 'b = tuple(x0, x1)
+    # call g(t) and return to bbM
+    call bbM g(t)
 
-    ...other blocks...
+  ...other blocks...
 
-  def g(t: 'a * 'b) -> ...:
-    block bb0():
-      x0: 'a = select(t, 0)
-      x1: 'b = select(t, 1)
-      ...etc...
+def g(t: 'a * 'b) -> ...:
+  block bb0():
+    x0: 'a = select(t, 0)
+    x1: 'b = select(t, 1)
+    ...etc...
 
-    ...other blocks...
+  ...other blocks...
 \end{minted}
-\begin{minted}{python}
-  def f(...) -> ...:
-    ...other blocks...
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:pre_flatten_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  ...other blocks...
 
-    block bbN():
-      # call g(x0, x1) and return to some other block bbM
-      call bbM g_flat(x0, x1)
+  block bbN():
+    # call g(x0, x1) and return to bbM
+    call bbM g_flat(x0, x1)
 
-    ...other blocks...
+  ...other blocks...
 
-  def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
-    block bb0():
-      t: 'a * 'b = tuple(x0_flat, x1_flat)
-      x0: 'a = select(t, 0)
-      x1: 'b = select(t, 1)
-      ...etc...
+def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+  block bb0():
+    t: 'a * 'b = tuple(x0_flat, x1_flat)
+    x0: 'a = select(t, 0)
+    x1: 'b = select(t, 1)
+    ...etc...
 
-    ...other blocks...
+  ...other blocks...
 \end{minted}
+  \end{subfigure}
+  \caption{The \texttt{PreFlatten} transformation duplicates and specializes the callee to accept unpacked arguments, pushing tuple construction across the function call boundary.}
+  \label{fig:pre_flatten_example}
+\end{figure}
 
 \hl{TODO: continue}
+
+In the case that all calls to a given function are immediately preceeded by a
+``pack'' operation, then the result of this transformation is equivalent to the
+regular \texttt{Flatten} transformation described in \cref{sec:basic_flatten}.
+
+TODO(agy): add a label for sec:basic_flatten to the subsection that we talked
+about Flatten in
 
 In case all callers of \texttt{g} satisfy the pattern above, then the result of
 this transformation is equivalent to the existing \texttt{Flatten} pass.
