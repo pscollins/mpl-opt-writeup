@@ -13,6 +13,8 @@ together'' tuple pack/unpack operations separated by function call boundaries
 (as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
 optimizations to elide the temporary tuple.
 
+TODO(agy): add a # before the `...` lines in code snippets
+
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
@@ -80,45 +82,61 @@ mixture of flattenable and unflattenable calls to a given function definition,
 we must emit duplicate definitions of the function to support
 each \hl{flattening pattern}, as depicted in \cref{fig:pre_flatten_example_dup}.
 
-TODO(agy): put this into a new figure fig:pre flatten example dup.
-\begin{minted}{python}
-  def f(t1: 'a * 'b) -> ...:
-    ...other blocks...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_dup_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(t1: 'a * 'b) -> ...:
+  ...other blocks...
 
-    block bbN1():
-      # call g(t1) and return to some other block bbM
-      call bbM g(t1)
+  block bbN1():
+    # call g(t1) and return to bbM
+    call bbM g(t1)
 
-    block bbN2():
-      t2: 'a * 'b = tuple (x1, x2)
-      # call g(t2) and return to some other block bbM
-      call bbM g(t2)
+  block bbN2():
+    t2: 'a * 'b = tuple(x1, x2)
+    # call g(t2) and return to bbM
+    call bbM g(t2)
 
-    ...other blocks...
+  ...other blocks...
 
- def g(t: 'a * 'b) -> ...:
-    ...as above...
+def g(t: 'a * 'b) -> ...:
+  ...as above...
 \end{minted}
-\begin{minted}{python}
-  def f(t1: 'a * 'b) -> ...:
-    ...other blocks...
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:pre_flatten_dup_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(t1: 'a * 'b) -> ...:
+  ...other blocks...
 
-    block bbN1():
-      # Unflattenable caller: no tuple allocation to ``push down''
-      call bbM g(t1)
+  block bbN1():
+    # Unflattenable caller:
+    # no allocation to ``push down''
+    call bbM g(t1)
 
-    block bbN2():
-      # Flattenable caller: can ``push down'' the allocation
-      call bbM g_flat(x1, x2)
+  block bbN2():
+    # Flattenable caller:
+    # can ``push down'' the allocation
+    call bbM g_flat(x1, x2)
 
-    ...other blocks...
+  ...other blocks...
 
- def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
-    ...as above...
+def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+  ...as above...
 
- def g(t: 'a * 'b) -> ...:
-    ...as above...
+def g(t: 'a * 'b) -> ...:
+  ...as above...
 \end{minted}
+  \end{subfigure}
+  \caption{When a function has a mixture of flattenable and unflattenable calls, \texttt{PreFlatten} duplicates the callee definition to support each flattening pattern, specializing flattenable callers while leaving unflattenable callers untouched.}
+  \label{fig:pre_flatten_example_dup}
+\end{figure}
 
 
 \hl{TODO: continue}
