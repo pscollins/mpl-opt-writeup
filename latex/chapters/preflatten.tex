@@ -1,3 +1,16 @@
+The core \texttt{PreFlatten} transformation is to duplicate function bodies so
+that callers can avoid unnecessary pack/unpack sequences, eliding
+either \texttt{tuple} constructors or \texttt{ConApp} calls. Below, we 
+
+Like \texttt{Flatten}, the \texttt{PreFlatten} pass runs on the \texttt{SSA} IR. 
+
+The \texttt{PreFlatten} optimization runs on 
+
+We have freedom to run \texttt{PreFlatten} either before or after the
+regular \texttt{Flatten} pass over the SSA IR. Currently (as we will describe
+below), we use both configurations: for \texttt{ConApp}s, the tran
+
+\hl{TODO: LET'S RENAME IT TO FlattenCall}
 
 Like \texttt{Flatten}, \texttt{PreFlatten} runs on the \texttt{SSA} IR:
 currently, it runs before \texttt{Flatten}, so that the lattice-based
