@@ -271,54 +271,92 @@ def g_flat_env1(t: a * b) -> ...:
 \hl{TODO: continue}
 
 The two type flattening implementations share a common framework, differing only
-in the types of operations that they match on:
-
-TODO(agy): rewrite all of the AST transformations to match this suggestion:
-
-  > A useful way to write the AST transformation is ``[|foo bar = baz|] =
-    [|foo bar|] = [|baz|], where ....'' followed by a detailed explanation. The
-    transformation brackets can be subscripted by some symbol that indicates the
-    result of the analysis 
-
-make minimal changes to the english
+in the types of operations that they match on. We express the AST
+transformations using transformation brackets $\trans[\sigma]{\cdot}$,
+subscripted by a symbol $\sigma$ that indicates the result of the callsite
+analysis:
 
 \begin{enumerate}
 \item Find all \texttt{call} statements with a ``pack'' operation that feeds
-  directly into a \texttt{call}: for the \texttt{tuple} case, this corresponds
-  to \texttt{tuple} constructor applications:
-\begin{minted}{python}
-  t: a * b * ... = tuple(x1, x2, ...)
-  call bbN f_tuple(t, y, z, ...) # call1
-  # ...
-  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+  directly into a \texttt{call}, as depicted in
+  \cref{fig:preflatten_pack_candidates}: for the \texttt{tuple} case
+  (\cref{fig:preflatten_pack_tuple}), this corresponds to \texttt{tuple}
+  constructor applications, and for the \texttt{datatype} case
+  (\cref{fig:preflatten_pack_con}), this corresponds to \texttt{ConApp}s.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{tuple} pack feeding into call}
+    \label{fig:preflatten_pack_tuple}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+t: a * b * ... = tuple(x1, x2, ...)
+call bbN f_tuple(t, y, z, ...) # call1
+# ...
+def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
 \end{minted}
-and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
-\begin{minted}{python}
-  datatype ConType = Con1 of a * b * ... | Con2 of ...
-  # ...
-  t: a * b * ... = ...
-  # ...
-  c: ConType = con Con1(t)
-  call bbN f_con(c, y, z, ...) # call2
-  # ...
-  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{ConApp} pack feeding into call}
+    \label{fig:preflatten_pack_con}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+datatype ConType = Con1 of a * b * ... | Con2 of ...
+# ...
+t: a * b * ... = ...
+# ...
+c: ConType = con Con1(t)
+call bbN f_con(c, y, z, ...) # call2
+# ...
+def f_con(c: ConType, y: c, z: d, ...) -> ...:
 \end{minted}
+  \end{subfigure}
+  \caption{Identifying candidate callsites where a ``pack'' operation directly feeds into a function call.}
+  \label{fig:preflatten_pack_candidates}
+\end{figure}
+
 \item Tag each such \texttt{call} statement with a per-argument flattening
   decision, to indicate which arguments are valid targets to flatten, and
-  associate the tagged \texttt{call}s with their callee. For the flattenable
-  arguments, we include the information necessary to construct the flattened
-  call (i.e. the arguments to the \texttt{tuple} / \texttt{ConApp} call).
-  Continuing the examples from above, we would have:
-\begin{minted}{python}
-    f_tuple_caller_info = {
-      'call1': [FlattenVar(x1, x1, ...), PreserveVar, PreserveVar, ...]
-      # ...other callers...
-    }
-    f_con_caller_info = {
-      'call2': [FlattenVar(t), PreserveVar, PreserveVar, ...]
-      # ...other callers...
-    }
+  associate the tagged \texttt{call}s with their callee. We denote the analysis
+  result for a callsite by a decision vector $\sigma = (d_1, \dots, d_k)$, where
+  each $d_i$ indicates whether to preserve the argument (\texttt{PreserveVar}) or
+  flatten it (\texttt{FlattenVar}). For the flattenable arguments, we include the
+  information necessary to construct the flattened call (i.e. the arguments to
+  the \texttt{tuple} / \texttt{ConApp} call). Continuing the examples from above,
+  we obtain the decision collections shown in \cref{fig:preflatten_caller_info}.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{f\_tuple} callsite decisions}
+    \label{fig:preflatten_decisions_tuple}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+f_tuple_caller_info = {
+  'call1': [FlattenVar(x1, x2, ...),
+            PreserveVar,
+            PreserveVar, ...]
+  # ...other callers...
+}
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{f\_con} callsite decisions}
+    \label{fig:preflatten_decisions_con}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+f_con_caller_info = {
+  'call2': [FlattenVar(t),
+            PreserveVar,
+            PreserveVar, ...]
+  # ...other callers...
+}
+\end{minted}
+  \end{subfigure}
+  \caption{Per-argument flattening decisions associated with callers of \texttt{f\_tuple} and \texttt{f\_con}.}
+  \label{fig:preflatten_caller_info}
+\end{figure}
 \item Traverse all function-callee-decision collections and apply heuristics to
   ``downgrade'' \texttt{FlattenVar} decisions to \texttt{PreserveVar} decisions
   when specialization would be unprofitable.
@@ -329,49 +367,129 @@ and for the \texttt{datatype} case, this corresponds to \texttt{ConApp}s:
   result in a new specialization whose formal parameters include the flat
   arguments in the appropriate location, and whose first block re-binds the
   flattened names to the old, un-flattened name before jumping to the original
-  first block. That is, for the \texttt{tuple} example above, we emit:
-\begin{minted}{python}
-  # Specialization for [FlattenVar(...), PreserveVar, ...]
-  def f_tuple_flat0(x1: a, x2: b, ..., y: c, z: d, ...) -> ...:
-    block bbBind():
-      # Re-introduce the original, unflattened name
-      t: a * b * ... = tuple(x1, x2, ...)
-      # Jump to the original first block
-      goto bb0()
+  first block. We express this AST transformation on a function definition
+  $\texttt{def } f(\vec{p}) \mathbin{:} \tau_{\text{ret}} \mathrel{=} \vec{B}$
+  under specialization decision $\sigma = (d_1, \dots, d_k)$ as:
+  \[
+    \trans[\sigma]{\texttt{def } f(p_1 \mathbin{:} \tau_1, \dots, p_k \mathbin{:} \tau_k) \mathbin{:} \tau_{\text{ret}} \mathrel{=} \vec{B}}
+    = \texttt{def } f_\sigma(\vec{p}') \mathbin{:} \tau_{\text{ret}} \mathrel{=} B_{\text{bind}} \; \vec{B}
+  \]
+  where $\vec{p}' = (\trans[d_1]{p_1 \mathbin{:} \tau_1}, \dots, \trans[d_k]{p_k \mathbin{:} \tau_k})$,
+  and $B_{\text{bind}} = \texttt{block } bbBind()$ is a fresh entry block preceding
+  the original blocks $\vec{B} = (bb0, \dots)$. For each parameter $p_i \mathbin{:} \tau_i$
+  and decision $d_i$:
+  \begin{itemize}
+  \item If $d_i = \texttt{PreserveVar}$, the formal parameter is unchanged: $\trans[d_i]{p_i \mathbin{:} \tau_i} = p_i \mathbin{:} \tau_i$, and no re-binding statement is needed in $B_{\text{bind}}$.
+  \item If $d_i = \texttt{FlattenVar}(x_1, \dots, x_m)$ for a tuple type $\tau_i = \tau_{i,1} * \dots * \tau_{i,m}$, then $\trans[d_i]{p_i \mathbin{:} \tau_i} = x_1 \mathbin{:} \tau_{i,1}, \dots, x_m \mathbin{:} \tau_{i,m}$, and $B_{\text{bind}}$ includes the re-binding statement $p_i \mathbin{:} \tau_i \mathrel{=} \texttt{tuple}(x_1, \dots, x_m)$.
+  \item If $d_i = \texttt{FlattenVar}(t)$ for a constructor type $\tau_i = \text{ConType}$ with constructor $\texttt{Con1}$ carrying payload of type $\tau_t$, then $\trans[d_i]{p_i \mathbin{:} \tau_i} = t \mathbin{:} \tau_t$, and $B_{\text{bind}}$ includes the re-binding statement $p_i \mathbin{:} \tau_i \mathrel{=} \texttt{con } \texttt{Con1}(t)$.
+  \end{itemize}
+  The transfer in $B_{\text{bind}}$ is an unconditional jump $\texttt{goto } bb0()$ to the original entry block.
+  When $\sigma$ consists entirely of \texttt{PreserveVar} decisions, $\trans[\sigma]{\texttt{def } f \dots} = \texttt{def } f \dots$ (the function is left untouched).
+  That is, for the running examples above, the pass emits the specialized definitions shown in \cref{fig:preflatten_specializations}: \cref{fig:preflatten_spec_tuple} for the \texttt{tuple} case and \cref{fig:preflatten_spec_con} for the \texttt{ConApp} case.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{tuple} specialization}
+    \label{fig:preflatten_spec_tuple}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Specialization for [FlattenVar(...), PreserveVar, ...]
+def f_tuple_flat0(x1: a, x2: b, ..., y: c, z: d, ...) -> ...:
+  block bbBind():
+    # Re-introduce original name
+    t: a * b * ... = tuple(x1, x2, ...)
+    # Jump to original first block
+    goto bb0()
 \end{minted}
-and for the \texttt{ConApp} example, we emit:
-\begin{minted}{python}
-  # Specialization for [FlattenVar(...), PreserveVar, ...]
-  def f_con_flat0(t: a * b * ..., ..., y: c, z: d, ...) -> ...:
-    block bbBind():
-      # Re-introduce the original, unflattened name
-      c: ConType = con Con1(t)
-      # Jump to the original first block
-      goto bb0()
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{ConApp} specialization}
+    \label{fig:preflatten_spec_con}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Specialization for [FlattenVar(...), PreserveVar, ...]
+def f_con_flat0(t: a * b * ..., ..., y: c, z: d, ...) -> ...:
+  block bbBind():
+    # Re-introduce original name
+    c: ConType = con Con1(t)
+    # Jump to original first block
+    goto bb0()
 \end{minted}
+  \end{subfigure}
+  \caption{Emitted function specializations for \texttt{tuple} and \texttt{ConApp} flattening, prepending \texttt{bbBind} to re-introduce original names before jumping to \texttt{bb0}.}
+  \label{fig:preflatten_specializations}
+\end{figure}
+
 
 \item Traverse the program to visit all \texttt{call} statements again, and
   redirect the call target to the appropriate specialization that we identified
-  in the previous step (perhaps the original function). For non-identity
-  flattening decisions, use the contents of the \texttt{FlattenVar(...)}
-  argument to construct the appropriate flat call, i.e. for \texttt{tuple}:
-\begin{minted}{python}
-  t: a * b * ... = tuple(x1, x2, ...)
-  call bbN f_tuple(t, y, z, ...) # call1
+  in the previous step (perhaps the original function). We express the AST
+  transformation on \texttt{call} transfers under analysis decision
+  $\sigma = (d_1, \dots, d_k)$ as:
+  \[
+    \trans[\sigma]{\texttt{call } bbN \; f(a_1, \dots, a_k)} =
+    \texttt{call } bbN \; f_\sigma(\trans[d_1]{a_1}, \dots, \trans[d_k]{a_k})
+  \]
+  where $f_\sigma$ is the target specialization (with $f_\sigma = f$ if all decisions
+  are \texttt{PreserveVar}), and each argument $a_i$ is rewritten according to $d_i$:
+  \[
+    \trans[d_i]{a_i} =
+    \begin{cases}
+      a_i & \text{if } d_i = \texttt{PreserveVar} \\
+      x_1, \dots, x_m & \text{if } d_i = \texttt{FlattenVar}(x_1, \dots, x_m) \\
+      t & \text{if } d_i = \texttt{FlattenVar}(t)
+    \end{cases}
+  \]
+  For non-identity flattening decisions, the contents of the \texttt{FlattenVar(...)}
+  decision construct the appropriate flat call. Specifically, for \texttt{tuple}:
+  \[
+    \trans[\sigma]{\texttt{call } bbN \; f_{\text{tuple}}(t, y, z, \dots)} =
+    \texttt{call } bbN \; f_{\text{tuple\_flat0}}(x_1, x_2, \dots, y, z, \dots)
+  \]
+  where $\sigma = (\texttt{FlattenVar}(x_1, x_2, \dots), \texttt{PreserveVar}, \texttt{PreserveVar}, \dots)$
+  and $t \mathrel{=} \texttt{tuple}(x_1, x_2, \dots)$; and for \texttt{ConApp}:
+  \[
+    \trans[\sigma]{\texttt{call } bbN \; f_{\text{con}}(c, y, z, \dots)} =
+    \texttt{call } bbN \; f_{\text{con\_flat0}}(t, y, z, \dots)
+  \]
+  where $\sigma = (\texttt{FlattenVar}(t), \texttt{PreserveVar}, \texttt{PreserveVar}, \dots)$
+  and $c \mathrel{=} \texttt{con } Con1(t)$.
+  The resulting callsite rewrites are depicted in \cref{fig:preflatten_call_rewrites}.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{tuple} callsite redirection}
+    \label{fig:preflatten_call_rewrite_tuple}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Before rewrite:
+t: a * b * ... = tuple(x1, x2, ...)
+call bbN f_tuple(t, y, z, ...)
+
+# After rewrite:
+call bbN f_tuple_flat0(x1, x2, ..., y, z, ...)
 \end{minted}
-becomes:
-\begin{minted}{python}
-  call bbN f_tuple_flat0(x1, x2, ..., y, z, ...)
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{ConApp} callsite redirection}
+    \label{fig:preflatten_call_rewrite_con}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Before rewrite:
+c: ConType = con Con1(t)
+call bbN f_con(c, y, z, ...)
+
+# After rewrite:
+call bbN f_con_flat0(t, y, z, ...)
 \end{minted}
-and for \texttt{ConApp}, 
-\begin{minted}{python}
-  c: ConType = con Con1(t)
-  call bbN f_con(c, y, z, ...) # call2
-\end{minted}
-becomes:
-\begin{minted}{python}
-  call bbN f_con_flat0(t, y, z, ...)
-\end{minted}
+  \end{subfigure}
+  \caption{Callsite AST transformations redirecting calls to specialized targets with unpacked arguments.}
+  \label{fig:preflatten_call_rewrites}
+\end{figure}
+
+
 
 \item With the callsite-flattening mapping still intact and with the duplicated
   functions retaining the original variable names, iteratively re-apply the
@@ -379,66 +497,98 @@ becomes:
   user-specified iteration limit is reached. This fixes an issue with (mutually)
   recursive functions, where a collection of $n$ mutually recursive calls
   require $n$ iterations to remove unnecessary pack/unpack operations, e.g. for
-  a source program like:
-\begin{minted}{python}
-  f(...) -> ...:
-    # ...
-    # flat call to `g`
-    t0: a * b = (x, y)
-    call bbN g(t0)
+  a source program like the one in \cref{fig:preflatten_rec_initial}.
 
-  g(t: a * b) -> ...:
-    # ...
-    block bbM():
-      # arguments for recursive call
-      t2: a * b = (w, z)
-      call bbK g(t2)
+\begin{figure}[htbp]
+  \centering
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  # ...
+  # flat call to `g`
+  t0: a * b = (x, y)
+  call bbN g(t0)
+
+def g(t: a * b) -> ...:
+  # ...
+  block bbM():
+    # arguments for recursive call
+    t2: a * b = (w, z)
+    call bbK g(t2)
 \end{minted}
+  \caption{An example program with mutually recursive calls requiring multiple flattening iterations.}
+  \label{fig:preflatten_rec_initial}
+\end{figure}
+
 The action of the pass is as follows: for both the call in \texttt{f} and
 \texttt{g}, we can flatten the function argument, and so we emit a new
-specialization of the function, \texttt{g\_flat}
-\begin{minted}{python}
-  f(...) -> ...:
-    # ...
-    # flat call to `g`
-    t0: a * b = (x, y)
-    call bbN g_flat(x, y)  # pointed to flat specialization
+specialization of the function, \texttt{g\_flat}, as shown in
+\cref{fig:preflatten_rec_iter1}. Notice that the recursive call inside
+\texttt{g\_flat} is not yet flattened after the first iteration.
 
-  g(t: a * b) -> ...:
-    # ...
-    block bbM():
-      call bbK g_flat(w, z) # pointed to flat specialization
-
-  g_flat(x: a, y: b) -> ...:
-    block bbBind():
-      # reintroduce original, unflattened name
-      t: a * b = tuple(x, y)
-      # jump to original first block
-      goto bb0()
-
-    # ...
-    block bbM():
-      # arguments for recursive call
-      t2: a * b = (w, z)
-      # This call is not flattened, but it could be!
-      call bbK g(t2)
-\end{minted}
 In this step, we re-run the flattening logic using the already-emitted set of
-specializations to remove the unflattened call in the specialized function, i.e.:
-\begin{minted}{python}
-  g_flat(x: a, y: b) -> ...:
-    block bbBind():
-      # reintroduce original, unflattened name
-      t: a * b = tuple(x, y)
-      # jump to original first block
-      goto bb0()
-
-    # ...
-    block bbM():
-      call bbK g_flat(w, z) # pointed to flat specialization
-\end{minted}
+specializations to remove the unflattened call in the specialized function by
+applying the call transformation:
+\[
+  \trans[\sigma]{\texttt{call } bbK \; g(t_2)} = \texttt{call } bbK \; g_{\text{flat}}(w, z)
+\]
+where $\sigma = (\texttt{FlattenVar}(w, z))$ and $t_2 \mathrel{=} \texttt{tuple}(w, z)$,
+yielding the converged specialized definition shown in \cref{fig:preflatten_rec_iter2}.
 Multiple iterations are required to handle the case of mutually recursive
 functions, in a similar way. \hl{TODO: EXAMPLE?}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After Iteration 1}
+    \label{fig:preflatten_rec_iter1}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  # ...
+  t0: a * b = (x, y)
+  call bbN g_flat(x, y)
+
+def g(t: a * b) -> ...:
+  # ...
+  block bbM():
+    call bbK g_flat(w, z)
+
+def g_flat(x: a, y: b) -> ...:
+  block bbBind():
+    t: a * b = tuple(x, y)
+    goto bb0()
+
+  # ...
+  block bbM():
+    t2: a * b = (w, z)
+    # Unflattened recursive call:
+    call bbK g(t2)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After Iteration 2 (Convergence)}
+    \label{fig:preflatten_rec_iter2}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Re-running flattening on g_flat:
+
+def g_flat(x: a, y: b) -> ...:
+  block bbBind():
+    # reintroduce unflattened name
+    t: a * b = tuple(x, y)
+    # jump to original first block
+    goto bb0()
+
+  # ...
+  block bbM():
+    # Recursive call now redirected:
+    call bbK g_flat(w, z)
+\end{minted}
+  \end{subfigure}
+  \caption{Iterative flattening on recursive functions: iteration 1 emits \texttt{g\_flat} with an unflattened internal call (\cref{fig:preflatten_rec_iter1}), which is subsequently redirected to \texttt{g\_flat} in iteration 2 (\cref{fig:preflatten_rec_iter2}).}
+  \label{fig:preflatten_rec_iterations}
+\end{figure}
+
 
 \item Introduce fresh names for the symbols (specifically block labels and
   variable names) in all duplicated functions. This is a requirement from MLton,

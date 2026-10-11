@@ -123,6 +123,10 @@
 \newcommand{\inZ}[2]{\ensuremath{[#2]_{#1}}}
 \newcommand{\inZU}[2]{\ensuremath{[#1]}}
 
+%% AST transformation brackets
+\usepackage{stmaryrd}
+\newcommand{\trans}[2][]{\ensuremath{\llbracket #2 \rrbracket\ifstrempty{#1}{}{_{#1}}}}
+
 %% Vector derivative
 \newcommand{\vecd}[1]{\ensuremath{\dot{\vec{#1}}}}
 
