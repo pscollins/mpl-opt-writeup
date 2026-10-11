@@ -5,7 +5,7 @@ be a generalization of the existing \texttt{Flatten} pass in order to handle the
 case where the lattice-based analysis chooses not to flatten based on a mixture
 of flattenable and un-flattenable callers.
 
-\hl{TODO: LET'S RENAME IT TO FlattenCall?}
+\hl{TODO: LET'S RENAME IT TO CallFlatten?}
 
 \section{Motivation}
 The basic intiution is that we can use a simple peephole optimization to ``push
@@ -67,15 +67,66 @@ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
   \label{fig:pre_flatten_example}
 \end{figure}
 
+For a given \texttt{(argument, function call)} pair, we say that the pair is
+``flattenable'' if it is in the form depicted in \cref{fig:pre_flatten_example},
+i.e. if the argument is the direct result of a \texttt{tuple} constructor call.
+In a flattenable pair, the argument is a candidate to be ``pushed down'' across
+the function boundary so as to elide the allocation.
+
+In the case that all concrete arguments to a given formal function parameter are
+flattenable, then it is sufficient to replace the existing non-flat function
+defintion with a new, flattened function definition, but in order to support a
+mixture of flattenable and unflattenable calls to a given function definition,
+we must emit duplicate definitions of the function to support
+each \hl{flattening pattern}, as depicted in \cref{fig:pre_flatten_example_dup}.
+
+TODO(agy): put this into a new figure fig:pre flatten example dup.
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # call g(t1) and return to some other block bbM
+      call bbM g(t1)
+
+    block bbN2():
+      t2: 'a * 'b = tuple (x1, x2)
+      # call g(t2) and return to some other block bbM
+      call bbM g(t2)
+
+    ...other blocks...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+\begin{minted}{python}
+  def f(t1: 'a * 'b) -> ...:
+    ...other blocks...
+
+    block bbN1():
+      # Unflattenable caller: no tuple allocation to ``push down''
+      call bbM g(t1)
+
+    block bbN2():
+      # Flattenable caller: can ``push down'' the allocation
+      call bbM g_flat(x1, x2)
+
+    ...other blocks...
+
+ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+    ...as above...
+
+ def g(t: 'a * 'b) -> ...:
+    ...as above...
+\end{minted}
+
+
 \hl{TODO: continue}
 
-We will say that if at least one argument to a function call is a \texttt{tuple}
-constructor application, then this call is ``flattenable'' (i.e. it is a
-candidate for ``pushing down'' the allocation through the function boundary)
-
-In the case that all calls to a given function are immediately preceeded by a
-``pack'' operation, then the result of this transformation is equivalent to the
-regular \texttt{Flatten} transformation described in \cref{sec:basic_flatten}.
+In the case that all calls to a given function are
+immediately preceeded by a ``pack'' operation, then the result of this
+transformation is equivalent to the regular \texttt{Flatten} transformation
+described in \cref{sec:basic_flatten}.
 
 In case all callers of \texttt{g} satisfy the pattern above, then the result of
 this transformation is equivalent to the existing \texttt{Flatten} pass.
