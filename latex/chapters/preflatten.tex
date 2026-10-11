@@ -69,12 +69,13 @@ def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
 
 \hl{TODO: continue}
 
+We will say that if at least one argument to a function call is a \texttt{tuple}
+constructor application, then this call is ``flattenable'' (i.e. it is a
+candidate for ``pushing down'' the allocation through the function boundary)
+
 In the case that all calls to a given function are immediately preceeded by a
 ``pack'' operation, then the result of this transformation is equivalent to the
 regular \texttt{Flatten} transformation described in \cref{sec:basic_flatten}.
-
-TODO(agy): add a label for sec:basic_flatten to the subsection that we talked
-about Flatten in
 
 In case all callers of \texttt{g} satisfy the pattern above, then the result of
 this transformation is equivalent to the existing \texttt{Flatten} pass.
