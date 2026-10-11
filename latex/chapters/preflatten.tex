@@ -137,66 +137,76 @@ def g(t: a * b) -> ...:
 \end{figure}
 
 
-\hl{TODO: continue}
+%% \hl{TODO: continue}
 
-In the case that all calls to a given function are
-immediately preceeded by a ``pack'' operation, then the result of this
-transformation is equivalent to the regular \texttt{Flatten} transformation
-described in \cref{sec:basic_flatten}.
+%% In the case that all calls to a given function are
+%% immediately preceeded by a ``pack'' operation, then the result of this
+%% transformation is equivalent to the regular \texttt{Flatten} transformation
+%% described in \cref{sec:basic_flatten}.
 
-In case all callers of \texttt{g} satisfy the pattern above, then the result of
-this transformation is equivalent to the existing \texttt{Flatten} pass.
-However, since we want to phrase this optimization as a simple, purely-local
-transformation, we need a solution for the case when not all callers of
-\texttt{g} are \texttt{PreFlatten}-able: we resolve this problem by emitting a
-fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
-for callers that require it, i.e. for something like:
-\begin{minted}{python}
-  def f(t1: a * b) -> ...:
-    # ...other blocks...
+%% In case all callers of \texttt{g} satisfy the pattern above, then the result of
+%% this transformation is equivalent to the existing \texttt{Flatten} pass.
+%% However, since we want to phrase this optimization as a simple, purely-local
+%% transformation, we need a solution for the case when not all callers of
+%% \texttt{g} are \texttt{PreFlatten}-able: we resolve this problem by emitting a
+%% fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
+%% for callers that require it, i.e. for something like:
+%% \begin{minted}{python}
+%%   def f(t1: a * b) -> ...:
+%%     # ...other blocks...
 
-    block bbN1():
-      # call g(t1) and return to some other block bbM
-      call bbM g(t1)
+%%     block bbN1():
+%%       # call g(t1) and return to some other block bbM
+%%       call bbM g(t1)
 
-    block bbN2():
-      t2: a * b = tuple (x1, x2)
-      # call g(t2) and return to some other block bbM
-      call bbM g(t2)
+%%     block bbN2():
+%%       t2: a * b = tuple (x1, x2)
+%%       # call g(t2) and return to some other block bbM
+%%       call bbM g(t2)
 
-    # ...other blocks...
+%%     # ...other blocks...
 
- def g(t: a * b) -> ...:
-    # ...as above...
-\end{minted}
-We can emit:
-\begin{minted}{python}
-  def f(t1: a * b) -> ...:
-    # ...other blocks...
+%%  def g(t: a * b) -> ...:
+%%     # ...as above...
+%% \end{minted}
+%% We can emit:
+%% \begin{minted}{python}
+%%   def f(t1: a * b) -> ...:
+%%     # ...other blocks...
 
-    block bbN1():
-      # Unflattenable caller: no tuple allocation to ``push down''
-      call bbM g(t1)
+%%     block bbN1():
+%%       # Unflattenable caller: no tuple allocation to ``push down''
+%%       call bbM g(t1)
 
-    block bbN2():
-      # Flattenable caller: can ``push down'' the allocation
-      call bbM g_flat(x1, x2)
+%%     block bbN2():
+%%       # Flattenable caller: can ``push down'' the allocation
+%%       call bbM g_flat(x1, x2)
 
-    # ...other blocks...
+%%     # ...other blocks...
 
- def g_flat(x0_flat: a, x1_flat: b) -> ...:
-    # ...as above...
+%%  def g_flat(x0_flat: a, x1_flat: b) -> ...:
+%%     # ...as above...
 
- def g(t: a * b) -> ...:
-    # ...as above...
-\end{minted}
+%%  def g(t: a * b) -> ...:
+%%     # ...as above...
+%% \end{minted}
 By iteratively applying this strategy, we can ``push together'' distant pairs of
 flatten/unflatten operations, and so try to ensure that the maximum possible
 number of callsites in the program are flattened -- even in cases where the
 global \texttt{Flatten} transformation would fail.
 
-This strategy also naturally extends to eliminating \texttt{ConApp}s: starting
-from a pattern like:
+This strategy also naturally extends to eliminating \texttt{ConApp}s, as
+depicted in \cref{fig:pre_flatten_example_con}: given a callsite with a
+constructor call, we emit a new definition of the callee that is specialized to
+the statically-known case in the caller and ``push down'' the \texttt{ConApp}
+from caller to callee. After the ``push down'' step, we can rely on existing
+optimziation patterns to eliminate now-dead blocks corresponding to cases that
+are no longer reachable in the specialized function. For \texttt{ConApp} calls
+corresponding to closure environments, this transformation subsums the action of
+the \texttt{Polyvariance} pass described in \cref{sec:background_polyvar}.
+
+TODO(agy): make this snippet into fig:pre flatten example con; also add the
+appropriate albel for sec:background polyvar.
 \begin{minted}{python}
   datatype Env = Env1 of a * b | ...
   def f(...) -> ...:
@@ -211,7 +221,6 @@ from a pattern like:
     block bb0():
       case e of Env1 => goto bb1 | ...
 \end{minted}
-we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive at:
 \begin{minted}{python}
   def f(...) -> ...:
     # ...
@@ -225,13 +234,14 @@ we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive a
       e: Env = con Env1 (t)
       case e of Env1 => goto bb1 | ...
 \end{minted}
-and, again, rely on existing optimization patterns to eliminate the
-\texttt{ConApp} completely, in addition to elimating now-dead blocks
-corresponding to \texttt{Env} cases that are no longer reachable, etc. For
-higher order functions, this subsumes the action of the existing
-\texttt{Polyvariance} pass.
 
-\hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
+%% and, again, rely on existing optimization patterns to eliminate the
+%% \texttt{ConApp} completely, in addition to elimating now-dead blocks
+%% corresponding to \texttt{Env} cases that are no longer reachable, etc. For
+%% higher order functions, this subsumes the action of the existing
+%% \texttt{Polyvariance} pass.
+
+%% \hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
 
 \section{Implementation}
 The two type flattening implementations share a common framework, differing only
