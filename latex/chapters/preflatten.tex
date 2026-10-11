@@ -24,16 +24,16 @@ def f(...) -> ...:
   # ...other blocks...
 
   block bbN():
-    t: 'a * 'b = tuple(x0, x1)
+    t: a * b = tuple(x0, x1)
     # call g(t) and return to bbM
     call bbM g(t)
 
   # ...other blocks...
 
-def g(t: 'a * 'b) -> ...:
+def g(t: a * b) -> ...:
   block bb0():
-    x0: 'a = select(t, 0)
-    x1: 'b = select(t, 1)
+    x0: a = select(t, 0)
+    x1: b = select(t, 1)
     # ...etc...
 
   # ...other blocks...
@@ -53,11 +53,11 @@ def f(...) -> ...:
 
   # ...other blocks...
 
-def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+def g_flat(x0_flat: a, x1_flat: b) -> ...:
   block bb0():
-    t: 'a * 'b = tuple(x0_flat, x1_flat)
-    x0: 'a = select(t, 0)
-    x1: 'b = select(t, 1)
+    t: a * b = tuple(x0_flat, x1_flat)
+    x0: a = select(t, 0)
+    x1: b = select(t, 1)
     # ...etc...
 
   # ...other blocks...
@@ -87,7 +87,7 @@ each \hl{flattening pattern}, as depicted in \cref{fig:pre_flatten_example_dup}.
     \label{fig:pre_flatten_dup_before}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def f(t1: 'a * 'b) -> ...:
+def f(t1: a * b) -> ...:
   # ...other blocks...
 
   block bbN1():
@@ -95,13 +95,13 @@ def f(t1: 'a * 'b) -> ...:
     call bbM g(t1)
 
   block bbN2():
-    t2: 'a * 'b = tuple(x1, x2)
+    t2: a * b = tuple(x1, x2)
     # call g(t2) and return to bbM
     call bbM g(t2)
 
   # ...other blocks...
 
-def g(t: 'a * 'b) -> ...:
+def g(t: a * b) -> ...:
   # ...as above...
 \end{minted}
   \end{subfigure}\hfill
@@ -110,7 +110,7 @@ def g(t: 'a * 'b) -> ...:
     \label{fig:pre_flatten_dup_after}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def f(t1: 'a * 'b) -> ...:
+def f(t1: a * b) -> ...:
   # ...other blocks...
 
   block bbN1():
@@ -125,10 +125,10 @@ def f(t1: 'a * 'b) -> ...:
 
   # ...other blocks...
 
-def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+def g_flat(x0_flat: a, x1_flat: b) -> ...:
   # ...as above...
 
-def g(t: 'a * 'b) -> ...:
+def g(t: a * b) -> ...:
   # ...as above...
 \end{minted}
   \end{subfigure}
@@ -152,7 +152,7 @@ transformation, we need a solution for the case when not all callers of
 fresh definition \texttt{g\_flat} and leaving the existing \texttt{g} in place
 for callers that require it, i.e. for something like:
 \begin{minted}{python}
-  def f(t1: 'a * 'b) -> ...:
+  def f(t1: a * b) -> ...:
     # ...other blocks...
 
     block bbN1():
@@ -160,18 +160,18 @@ for callers that require it, i.e. for something like:
       call bbM g(t1)
 
     block bbN2():
-      t2: 'a * 'b = tuple (x1, x2)
+      t2: a * b = tuple (x1, x2)
       # call g(t2) and return to some other block bbM
       call bbM g(t2)
 
     # ...other blocks...
 
- def g(t: 'a * 'b) -> ...:
+ def g(t: a * b) -> ...:
     # ...as above...
 \end{minted}
 We can emit:
 \begin{minted}{python}
-  def f(t1: 'a * 'b) -> ...:
+  def f(t1: a * b) -> ...:
     # ...other blocks...
 
     block bbN1():
@@ -184,10 +184,10 @@ We can emit:
 
     # ...other blocks...
 
- def g_flat(x0_flat: 'a, x1_flat: 'b) -> ...:
+ def g_flat(x0_flat: a, x1_flat: b) -> ...:
     # ...as above...
 
- def g(t: 'a * 'b) -> ...:
+ def g(t: a * b) -> ...:
     # ...as above...
 \end{minted}
 By iteratively applying this strategy, we can ``push together'' distant pairs of
@@ -198,11 +198,11 @@ global \texttt{Flatten} transformation would fail.
 This strategy also naturally extends to eliminating \texttt{ConApp}s: starting
 from a pattern like:
 \begin{minted}{python}
-  datatype Env = Env1 of 'a * 'b | ...
+  datatype Env = Env1 of a * b | ...
   def f(...) -> ...:
     # ...
     block bbN():
-      t: 'a * 'b = ...
+      t: a * b = ...
       env: Env = con Env1 (t)
       call bbM g(env)
     # ...
@@ -216,11 +216,11 @@ we can specialize the callsite and ``push down'' the \texttt{ConApp} to arrive a
   def f(...) -> ...:
     # ...
     block bbN():
-      t: 'a * 'b = ...
+      t: a * b = ...
       call bbM g(t)
     # ...
 
-  def g_flat_env1(t: 'a * 'b) -> ...:
+  def g_flat_env1(t: a * b) -> ...:
     block bb0():
       e: Env = con Env1 (t)
       case e of Env1 => goto bb1 | ...
