@@ -273,6 +273,15 @@ def g_flat_env1(t: a * b) -> ...:
 The two type flattening implementations share a common framework, differing only
 in the types of operations that they match on:
 
+TODO(agy): rewrite all of the AST transformations to match this suggestion:
+
+  > A useful way to write the AST transformation is ``[|foo bar = baz|] =
+    [|foo bar|] = [|baz|], where ....'' followed by a detailed explanation. The
+    transformation brackets can be subscripted by some symbol that indicates the
+    result of the analysis 
+
+make minimal changes to the english
+
 \begin{enumerate}
 \item Find all \texttt{call} statements with a ``pack'' operation that feeds
   directly into a \texttt{call}: for the \texttt{tuple} case, this corresponds
