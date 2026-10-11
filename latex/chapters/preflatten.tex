@@ -200,40 +200,64 @@ depicted in \cref{fig:pre_flatten_example_con}: given a callsite with a
 constructor call, we emit a new definition of the callee that is specialized to
 the statically-known case in the caller and ``push down'' the \texttt{ConApp}
 from caller to callee. After the ``push down'' step, we can rely on existing
-optimziation patterns to eliminate now-dead blocks corresponding to cases that
+optimization patterns to eliminate now-dead blocks corresponding to cases that
 are no longer reachable in the specialized function. For \texttt{ConApp} calls
-corresponding to closure environments, this transformation subsums the action of
+corresponding to closure environments, this transformation subsumes the action of
 the \texttt{Polyvariance} pass described in \cref{sec:background_polyvar}.
 
-TODO(agy): make this snippet into fig:pre flatten example con; also add the
-appropriate albel for sec:background polyvar.
-\begin{minted}{python}
-  datatype Env = Env1 of a * b | ...
-  def f(...) -> ...:
-    # ...
-    block bbN():
-      t: a * b = ...
-      env: Env = con Env1 (t)
-      call bbM g(env)
-    # ...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_con_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+datatype Env = Env1 of a * b | ...
 
-  def g(e: Env) -> ...:
-    block bb0():
-      case e of Env1 => goto bb1 | ...
-\end{minted}
-\begin{minted}{python}
-  def f(...) -> ...:
-    # ...
-    block bbN():
-      t: a * b = ...
-      call bbM g(t)
-    # ...
+def f(...) -> ...:
+  # ...other blocks...
 
-  def g_flat_env1(t: a * b) -> ...:
-    block bb0():
-      e: Env = con Env1 (t)
-      case e of Env1 => goto bb1 | ...
+  block bbN():
+    t: a * b = ...
+    env: Env = con Env1(t)
+    # call g(env) and return to bbM
+    call bbM g(env)
+
+  # ...other blocks...
+
+def g(e: Env) -> ...:
+  block bb0():
+    case e of Env1 => goto bb1 | ...
+
+  # ...other blocks...
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:pre_flatten_con_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  # ...other blocks...
+
+  block bbN():
+    t: a * b = ...
+    # call g_flat_env1(t) and return to bbM
+    call bbM g_flat_env1(t)
+
+  # ...other blocks...
+
+def g_flat_env1(t: a * b) -> ...:
+  block bb0():
+    e: Env = con Env1(t)
+    case e of Env1 => goto bb1 | ...
+
+  # ...other blocks...
+\end{minted}
+  \end{subfigure}
+  \caption{The \texttt{PreFlatten} transformation applied to constructor applications (\texttt{ConApp}), specializing the callee on the statically known constructor and pushing constructor application across the function call boundary.}
+  \label{fig:pre_flatten_example_con}
+\end{figure}
 
 %% and, again, rely on existing optimization patterns to eliminate the
 %% \texttt{ConApp} completely, in addition to elimating now-dead blocks
@@ -244,6 +268,8 @@ appropriate albel for sec:background polyvar.
 %% \hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
 
 \section{Implementation}
+\hl{TODO: continue}
+
 The two type flattening implementations share a common framework, differing only
 in the types of operations that they match on:
 
