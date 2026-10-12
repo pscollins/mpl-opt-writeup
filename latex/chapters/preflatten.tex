@@ -269,9 +269,64 @@ def g_flat_env1(t: a * b) -> ...:
 
 \section{Implementation}
 We separate the action of the pass into two phases: first, analysis; second,
-transformation.
+transformation. The analysis phase differs between \texttt{tuple} flattening
+and \texttt{ConApp} flattening, while the transformation phase is shared.
 
-In the analysis,
+In the analysis phase, our goal is to construct a mapping $\sigma$ from function
+calls to their per-argument flattening decisions: as a first pass, we simply
+examine each callsite to record whether each argument is ``flattenable''. For
+the \texttt{tuple} analysis, an argument is flattenable if it is the direct
+result of a \texttt{tuple} constructor call; for the \texttt{ConApp} analysis,
+an argument is flattenable if it is the direct result of a \texttt{con}
+constructor call. Call the result of this analysis $\sigma_i$, the initial
+flattening decision.
+
+For notational simplicity, we'll imagine that each \texttt{call} statement in
+the program is tagged with a label \texttt{callN}, corresponding to its index in
+the original program: the $\sigma_i$ resulting from some example programs is
+depicted in \cref{fig:example_sigma_init}.
+
+TODO(agy): make this into a figure, fig:example sigma init.
+\begin{minted}{python}
+  t: a * b * ... = tuple(x1, x2, ...)
+  call bbN f_tuple(t, y, z, ...) # callN
+  # ...
+  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+\end{minted}
+\[
+\sigma_i(\texttt{f\_tuple}, \texttt{callN}) =
+\begin{bmatrix}
+\texttt{Flatten}, \texttt{Preserve}, \dots
+\end{bmatrix}
+\]
+\begin{minted}{python}
+  datatype ConType = Con1 of a * b * ... | Con2 of ...
+  # ...
+  t: a * b * ... = ...
+  # ...
+  c: ConType = con Con1(t)
+  call bbN f_con(c, y, z, ...) # callM
+  # ...
+  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+\end{minted}
+\[
+\sigma_i(\texttt{f\_con}, \texttt{callM}) =
+\begin{bmatrix}
+\texttt{Flatten}, \texttt{Preserve}, \dots
+\end{bmatrix}
+\]
+
+Next, we examine all \texttt{Flatten} decisions and choose to ``downgrade'' a
+subset of them to \texttt{Preserve} based on cost heuristics. The cost
+heuristics implemented in this project were: 
+\begin{itemize}
+\item For \texttt{tuple} flattening: \hl{TODO}
+\item For \texttt{ConApp} flattening: \hl{TODO}
+\end{itemize}
+
+%% we construct a mapping $\sigma$ from function calls to
+%% their per-argument flattening decisions: as a first pass, we simply examine each
+%% callsite to record whether each argument is ``flattenable'' (i.e. if it is the direct result of a constr
 
 \hl{TODO: continue}
 
