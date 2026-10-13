@@ -349,9 +349,22 @@ def f_con(c: ConType, y: c, z: d, ...) -> ...:
 Next, we examine all \texttt{Flatten} decisions and choose to ``downgrade'' a
 subset of them to \texttt{Preserve} based on cost heuristics. The cost
 heuristics implemented in this project were: 
+
+\hl{TODO: the MLton-MLton experiments are in the wrong configuration (all unpack + global),
+try to revisit}
 \begin{itemize}
-\item For \texttt{tuple} flattening: \hl{TODO}
-\item For \texttt{ConApp} flattening: \hl{TODO}
+\item For \texttt{tuple} flattening: only flatten tail-recursive function calls.
+
+\item For \texttt{ConApp} flattening: unconditionally flatten, no ``downgrade'' heuristics.
+\end{itemize}
+
+
+
+After applying these heuristics, we end up with a final analysis result,
+$\sigma_f$. The action of $\sigma_f$ on the program is described
+in \cref{fig:tuple_flattening_impl}, specifically:
+\begin{itemize}
+\item \hl{TODO: describe transform}
 \end{itemize}
 
 %% we construct a mapping $\sigma$ from function calls to
