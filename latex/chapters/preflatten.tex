@@ -286,35 +286,65 @@ the program is tagged with a label \texttt{callN}, corresponding to its index in
 the original program: the $\sigma_i$ resulting from some example programs is
 depicted in \cref{fig:example_sigma_init}.
 
-TODO(agy): make this into a figure, fig:example sigma init.
-\begin{minted}{python}
-  t: a * b * ... = tuple(x1, x2, ...)
-  call bbN f_tuple(t, y, z, ...) # callN
-  # ...
-  def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{\textwidth}
+    \caption{\texttt{tuple} flattening}
+    \label{fig:example_sigma_init_tuple}
+    \vspace{1mm}
+    \begin{minipage}[c]{0.52\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+t: a * b * ... = tuple(x1, x2, ...)
+call bbN f_tuple(t, y, z, ...) # callN
+# ...
+def f_tuple(t: a * b * ..., y: c, z: d, ...) -> ...:
 \end{minted}
-\[
-\sigma_i(\texttt{f\_tuple}, \texttt{callN}) =
-\begin{bmatrix}
-\texttt{Flatten}, \texttt{Preserve}, \dots
-\end{bmatrix}
-\]
-\begin{minted}{python}
-  datatype ConType = Con1 of a * b * ... | Con2 of ...
-  # ...
-  t: a * b * ... = ...
-  # ...
-  c: ConType = con Con1(t)
-  call bbN f_con(c, y, z, ...) # callM
-  # ...
-  def f_con(c: ConType, y: c, z: d, ...) -> ...:
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.45\textwidth}
+      \[
+      \begin{aligned}
+        & \sigma_i(\texttt{f\_tuple}, \texttt{callN}) = \\
+        & \quad \begin{bmatrix}
+          \texttt{Flatten}, \texttt{Preserve}, \dots
+        \end{bmatrix}
+      \end{aligned}
+      \]
+    \end{minipage}
+  \end{subfigure}
+
+  \vspace{3mm}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\texttt{ConApp} flattening}
+    \label{fig:example_sigma_init_con}
+    \vspace{1mm}
+    \begin{minipage}[c]{0.52\textwidth}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+datatype ConType =
+    Con1 of a * b * ...
+  | Con2 of ...
+# ...
+t: a * b * ... = ...
+c: ConType = con Con1(t)
+call bbN f_con(c, y, z, ...) # callM
+# ...
+def f_con(c: ConType, y: c, z: d, ...) -> ...:
 \end{minted}
-\[
-\sigma_i(\texttt{f\_con}, \texttt{callM}) =
-\begin{bmatrix}
-\texttt{Flatten}, \texttt{Preserve}, \dots
-\end{bmatrix}
-\]
+    \end{minipage}\hfill
+    \begin{minipage}[c]{0.45\textwidth}
+      \[
+      \begin{aligned}
+        & \sigma_i(\texttt{f\_con}, \texttt{callM}) = \\
+        & \quad \begin{bmatrix}
+          \texttt{Flatten}, \texttt{Preserve}, \dots
+        \end{bmatrix}
+      \end{aligned}
+      \]
+    \end{minipage}
+  \end{subfigure}
+  \caption{Initial flattening decisions ($\sigma_i$) computed during the analysis phase for \texttt{tuple} and \texttt{ConApp} flattening. Arguments directly produced by a tuple or constructor allocation are initially marked as \texttt{Flatten}, while all other arguments are marked as \texttt{Preserve}.}
+  \label{fig:example_sigma_init}
+\end{figure}
 
 Next, we examine all \texttt{Flatten} decisions and choose to ``downgrade'' a
 subset of them to \texttt{Preserve} based on cost heuristics. The cost
