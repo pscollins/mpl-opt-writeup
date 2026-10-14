@@ -350,8 +350,8 @@ Next, we examine all \texttt{Flatten} decisions and choose to ``downgrade'' a
 subset of them to \texttt{Preserve} based on cost heuristics. The cost
 heuristics implemented in this project were: 
 
-\hl{TODO: the MLton-MLton experiments are in the wrong configuration (all unpack + global),
-try to revisit}
+%% \hl{TODO: the MLton-MLton experiments are in the wrong configuration (all
+%% unpack + global), try to revisit --- fixed}
 \begin{itemize}
 \item For \texttt{tuple} flattening: only flatten tail-recursive function calls.
 
@@ -364,8 +364,35 @@ After applying these heuristics, we end up with a final analysis result,
 $\sigma_f$. The action of $\sigma_f$ on the program is described
 in \cref{fig:tuple_flattening_impl}, specifically:
 \begin{itemize}
-\item \hl{TODO: describe transform}
+
+\item For each caller \texttt{callN} of a function \texttt{f},
+we emit a specialized function
+$\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$ for that flattening decision
+(reusing the duplicated definitions where possible), \cref{fig:preflatten_emit_new}.
+
+\item For each emitted function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$,
+we append a new basic block \texttt{bbBind} that re-binds any new function
+arguments resulting from a \texttt{Flatten} decision to their old, unflattened
+names (by constructing a temporary \texttt{tuple} or \texttt{datatype} object)
+and then jumps unconditionally to the previous first block of the
+function, \cref{fig:preflatten_rebind_block}.
+
+
+\item For each caller \texttt{callN} of a function \texttt{f}, we elide the temporary
+\texttt{tuple} or \texttt{datatype} object and
+redirect the call to the flattened argument for each \texttt{Flatten}
+decision, \cref{fig:preflatten_fix_call}.
+
+\item \hl{TODO: describe the iterative step?}
+
+\item For the function arguments and for each basic block in an emitted function
+$\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$, we introduce fresh, unique
+names for every variable, \cref{fig:tuple_rename}.
+
+
 \end{itemize}
+
+%% \label{fig
 
 %% we construct a mapping $\sigma$ from function calls to
 %% their per-argument flattening decisions: as a first pass, we simply examine each
