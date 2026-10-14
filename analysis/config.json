@@ -3,7 +3,7 @@
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_tuple_flatten_test_o3:flattening-tests:cd5550ce5:20260909_191612.jsonl",
+    "tuple": "tuple_test_o3_fixed_downgrade:flattening-tests:964de7355:20261013_131143.jsonl",
 
     "con": "test_conapp_flatten_test_o3:flattening-tests:cd5550ce5:20260909_171650.jsonl",
     "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",

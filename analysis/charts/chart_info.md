@@ -1,11 +1,11 @@
-Data generated at 2026-09-17 09:10:38.969666 using the following config:
+Data generated at 2026-10-14 08:57:20.812929 using the following config:
 
 {
   "output_directory": "charts/",
   "mlton_benchmarks_mlton_vs_mlton": {
     "compiler": "mlton",
     "suite": "mlton",
-    "tuple": "test_tuple_flatten_test_o3:flattening-tests:cd5550ce5:20260909_191612.jsonl",
+    "tuple": "tuple_test_o3_fixed_downgrade:flattening-tests:964de7355:20261013_131143.jsonl",
     "con": "test_conapp_flatten_test_o3:flattening-tests:cd5550ce5:20260909_171650.jsonl",
     "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",
     "aos": "test_aos_flatten_test_o3:flattening-tests:cd5550ce5:20260909_131724.jsonl",
