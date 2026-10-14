@@ -391,7 +391,113 @@ names for every variable, \cref{fig:tuple_rename}.
 
 \end{itemize}
 
+\hl{TODO: REVIEW START}
 
+\Cref{fig:tuple_flattening_impl} makes this precise, writing
+$\flatsem{\cdot}$ for the action of the transformation on the AST under a final
+analysis result $\sigma_f$. A decision vector
+$\vec{d} = [d_1, \dots, d_n]$ assigns each formal parameter of a function
+either \texttt{Preserve} or \texttt{Flatten}; for the \texttt{ConApp} analysis,
+we write $\texttt{Flatten}_C$ to record the statically-known constructor $C$.
+The all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the
+original, unspecialized function.
+
+\begin{figure}[htbp]
+  \centering
+  \footnotesize
+  \begin{subfigure}{\textwidth}
+    \caption{Emitting one specialization per distinct flattening decision}
+    \label{fig:preflatten_emit_new}
+    \[
+    \begin{aligned}
+      \flatsem{F_1 \cdots F_m}
+        &= \textstyle\bigcup_{j=1}^{m}
+           \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \right\} \\
+      \mathcal{D}(f)
+        &= \{ \texttt{Preserve}^n \} \cup
+           \{ \sigma_f(f, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f \} \\[1ex]
+      \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) = B_0 \cdots B_k}^{\vec{d}}
+        &= \rho_{f,\vec{d}}\Big(
+           \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) = \\
+        &\qquad\qquad \mathtt{bbBind}_{\vec{d}}\ \flatsem{B_0} \cdots \flatsem{B_k}
+           \Big) \\[1ex]
+      \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
+      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
+      \pi(x{:}T, \texttt{Flatten}_C) &= x^1{:}\tau
+        \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Re-binding flattened parameters to their original names}
+    \label{fig:preflatten_rebind_block}
+    \[
+    \begin{aligned}
+      \mathtt{bbBind}_{\vec{d}}
+        &= \mathtt{block\ bbBind}():\ 
+           \beta(x_1, d_1);\ \dots;\ \beta(x_n, d_n);\ \mathtt{goto}\ B_0() \\[1ex]
+      \beta(x, \texttt{Preserve}) &= \epsilon \\
+      \beta(x, \texttt{Flatten}) &= x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k) \\
+      \beta(x, \texttt{Flatten}_C) &= x : T = \mathtt{con}\ C(x^1)
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Redirecting callers to the matching specialization}
+    \label{fig:preflatten_fix_call}
+    \[
+    \begin{aligned}
+      \flatsem{\mathtt{block}\ l(\vec{y}):\ s_1; \dots; s_m}
+        &= \mathtt{block}\ l(\vec{y}):\ \flatsem{s_1}; \dots; \flatsem{s_m} \\
+      \flatsem{\mathtt{call}\ L\ f(a_1, \dots, a_n)\ \texttt{\#\,callN}}
+        &= \mathtt{call}\ L\ f_{\vec{d}}\big(\alpha(a_1, d_1), \dots, \alpha(a_n, d_n)\big)
+           \quad \text{where } \vec{d} = \sigma_f(f, \texttt{callN}) \\
+      \flatsem{a : \tau = \mathtt{tuple}(z_1, \dots, z_k)}
+        &= \epsilon \quad \text{if every use of } a \text{ is a \texttt{Flatten} argument} \\
+      \flatsem{a : T = \mathtt{con}\ C(z)}
+        &= \epsilon \quad \text{if every use of } a \text{ is a $\texttt{Flatten}_C$ argument} \\
+      \flatsem{s} &= s \quad \text{otherwise} \\[1ex]
+      \alpha(a, \texttt{Preserve}) &= a \\
+      \alpha(a, \texttt{Flatten}) &= z_1, \dots, z_k
+        \quad \text{where } a = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
+      \alpha(a, \texttt{Flatten}_C) &= z
+        \quad \text{where } a = \mathtt{con}\ C(z) \text{ in the caller}
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Renaming the duplicated definitions}
+    \label{fig:tuple_rename}
+    \[
+    \begin{aligned}
+      \rho_{f,\texttt{Preserve}^n} &= \mathrm{id} \\
+      \rho_{f,\vec{d}} &= \text{globally fresh names for every variable and label bound in } f_{\vec{d}}
+        \quad \text{otherwise}
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \caption{The action $\flatsem{\cdot}$ of the \texttt{PreFlatten} transformation
+    on the AST, given the final analysis result $\sigma_f$. Each function is
+    emitted once per distinct decision vector among its callers (a); each
+    specialization begins with a \texttt{bbBind} block that reconstructs the
+    original, unflattened arguments (b); each call is redirected to its
+    specialization, passing the constituents of the eliminated \texttt{tuple}
+    or \texttt{ConApp} directly (c); and every duplicated definition is
+    $\alpha$-renamed so that names remain globally unique (d).}
+  \label{fig:tuple_flattening_impl}
+\end{figure}
+
+\hl{TODO: REVIEW END}
 
 %% \label{fig
 
