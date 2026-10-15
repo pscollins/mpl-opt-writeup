@@ -383,7 +383,7 @@ function, \cref{fig:preflatten_rebind_block}.
 redirect the call to the flattened argument for each \texttt{Flatten}
 decision, \cref{fig:preflatten_fix_call}.
 
-\item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters}
+\item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters. Turns out YES; dropping it causes regressions -- see ``zero\_post\_recs'' data.}
 
 \item For the function arguments and for each basic block in an emitted function
 $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$, we introduce fresh, unique
