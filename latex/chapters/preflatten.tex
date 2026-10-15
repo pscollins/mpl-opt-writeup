@@ -381,7 +381,9 @@ function, \cref{fig:preflatten_rebind_block}.
 \item For each caller \texttt{callN} of a function \texttt{f}, we elide the temporary
 \texttt{tuple} or \texttt{datatype} object and
 redirect the call to the flattened argument for each \texttt{Flatten}
-decision, \cref{fig:preflatten_fix_call}.
+decision, \cref{fig:preflatten_fix_call}. The result of eliding a \texttt{tuple}
+constructor is a flat sequence of variables; the result of eliding
+a \texttt{ConApp} call is a tuple.
 
 \item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters. Turns out YES; dropping it causes regressions -- see ``zero\_post\_recs'' data.}
 
