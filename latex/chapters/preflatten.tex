@@ -1,17 +1,46 @@
-The core \texttt{PreFlatten} transformation is to duplicate function bodies so
-that callers can avoid unnecessary pack/unpack sequences, eliding
-either \texttt{tuple} constructors or \texttt{ConApp} calls. It is intended to
-be a generalization of the existing \texttt{Flatten} pass in order to handle the
-case where the lattice-based analysis chooses not to flatten based on a mixture
-of flattenable and un-flattenable callers.
+The action of the \texttt{PreFlatten} transformation is to ``push
+down'' \texttt{tuple} and \texttt{datatype} constructor calls across function
+call boundaries, creating new opportunities for subsequent optimization passes
+to eliminate the allocation entirely. It is intended to be a more ``agressive''
+extension of the existing \texttt{Flatten} pass, supporting a mixture of
+flattenable and un-flattenable callsites by duplicating function definitions.
+
+%% In order to achieve this goal in the case
+%% where not all callers of the function are immediately preceeded by an
+%% allocation, the pass duplicates the called function as necessary 
+
+%% %% The \texttt{PreFlatten} transformation aims to extend the \texttt{Flatten} 
+
+%% %% The core \
+
+%% The core \texttt{PreFlatten} transformation is to duplicate function bodies so
+%% that callers can avoid unnecessary pack/unpack sequences, eliding
+%% either \texttt{tuple} constructors or \texttt{ConApp} calls. It is intended to
+%% be a generalization of the existing \texttt{Flatten} pass in order to handle the
+%% case where the lattice-based analysis chooses not to flatten based on a mixture
+%% of flattenable and un-flattenable callers.
 
 \hl{TODO: LET'S RENAME IT TO CallFlatten?}
 
 \section{Motivation}
-The basic intiution is that we can use a simple peephole optimization to ``push
-together'' tuple pack/unpack operations separated by function call boundaries
-(as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
-optimizations to elide the temporary tuple.
+The basic intuition is: whenever a \texttt{tuple} allocation feeds directly into
+a function call, we can eliminate the \texttt{tuple} from the function signature
+by moving the allocation from the caller to the callee (depicted
+in \cref{fig:pre_flatten_example}). So long as the arguments to the flattened
+function can pass in registers, this should be no-more-expensive than the
+original call; we have simply delayed copying the tuple members from registers
+into memory.
+
+%% we must load the contents of the tuple into registers when
+
+%% So long as the tuple is small enough that
+%% the arguments to the flattened function call arguments can still fit in
+%% registers (ignoring chunk boundaries), the fla
+
+%% The basic intiution is that we can use a simple peephole optimization to ``push
+%% together'' tuple pack/unpack operations separated by function call boundaries
+%% (as depicted in \cref{fig:pre_flatten_example}), and then rely on existing
+%% optimizations to elide the temporary tuple.
 
 \begin{figure}[htbp]
   \centering
@@ -136,6 +165,21 @@ def g(t: a * b) -> ...:
   \label{fig:pre_flatten_example_dup}
 \end{figure}
 
+\hl{CLEAN UP}
+
+This process creates two opportunities for flattening. First, we enable
+``projection elimination'' by the general-purpose \texttt{Shrink} optimization
+pass, i.e. any ``unpack'' operations in the flattened functon bypass the tuple
+object (perhaps removing it entirely), depicted
+in \cref{fig:shrink_tuple_example}. Second, since the duplicated function (by
+construction) is only called along easy-to-flatten paths, we increase the odds
+that the global \texttt{Flatten} analysis will successfully eliminate the tuple.
+
+\hl{TODO: add example for fig shrink tuple example}
+
+
+
+%% general-purpose \texttt{Simplify}, any ``unpack'' operations that occur in the 
 
 %% \hl{TODO: continue}
 
