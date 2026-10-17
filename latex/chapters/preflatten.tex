@@ -165,19 +165,6 @@ def g(t: a * b) -> ...:
   \label{fig:pre_flatten_example_dup}
 \end{figure}
 
-\hl{CLEAN UP}
-
-This process creates two opportunities for flattening. First, we enable
-``projection elimination'' by the general-purpose \texttt{Shrink} optimization
-pass, i.e. any ``unpack'' operations in the flattened functon bypass the tuple
-object (perhaps removing it entirely), depicted
-in \cref{fig:shrink_tuple_example}. Second, since the duplicated function (by
-construction) is only called along easy-to-flatten paths, we increase the odds
-that the global \texttt{Flatten} analysis will successfully eliminate the tuple.
-
-\hl{TODO: add example for fig shrink tuple example}
-
-
 
 %% general-purpose \texttt{Simplify}, any ``unpack'' operations that occur in the 
 
@@ -302,6 +289,23 @@ def g_flat_env1(t: a * b) -> ...:
   \caption{The \texttt{PreFlatten} transformation applied to constructor applications (\texttt{ConApp}), specializing the callee on the statically known constructor and pushing constructor application across the function call boundary.}
   \label{fig:pre_flatten_example_con}
 \end{figure}
+
+\hl{CLEAN UP}
+
+This process creates three opportunities for subsequent optimizations. First, we
+enable ``projection elimination'' by the general-purpose \texttt{Shrink}
+optimization pass, i.e. any ``unpack'' operations in the flattened functon
+bypass the tuple object (perhaps removing it entirely), depicted
+in \cref{fig:shrink_tuple_example}. Second, since the duplicated function (by
+construction) is only called along easy-to-flatten paths, we increase the odds
+that the global \texttt{Flatten} analysis will successfully eliminate the tuple.
+
+\hl{TODO: add example for fig shrink tuple example}
+
+TODO: first we do projection elim (example) / known case elim (example), also we
+create opportunities for more flatten (example) if we run before the flatten
+pass (only when we run before)
+
 
 %% and, again, rely on existing optimization patterns to eliminate the
 %% \texttt{ConApp} completely, in addition to elimating now-dead blocks
