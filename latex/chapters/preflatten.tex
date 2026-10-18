@@ -328,18 +328,20 @@ succeeded.
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Before \texttt{Simplify}}
+    \caption{Before \texttt{Simplify} (After \texttt{PreFlatten})}
     \label{fig:simplify_proj_elim_before}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def g_flat(x0_flat: a, x1_flat: b) -> ...:
-  block bb0():
-    t: a * b = tuple(x0_flat, x1_flat)
-    x0: a = select(t, 0)
-    x1: b = select(t, 1)
-    # ...uses of x0, x1...
+def g_flat(x0_flat: int, x1_flat: int) -> int:
+  block bbBind():
+    t: int * int = tuple(x0_flat, x1_flat)
+    goto bb0()
 
-  # ...other blocks...
+  block bb0():
+    x0: int = select(t, 0)
+    x1: int = select(t, 1)
+    res: int = prim Word32_add(x0, x1)
+    return res
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -347,14 +349,13 @@ def g_flat(x0_flat: a, x1_flat: b) -> ...:
     \label{fig:simplify_proj_elim_after}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def g_flat(x0_flat: a, x1_flat: b) -> ...:
-  block bb0():
-    # Intermediate tuple `t` and `select`s
-    # are eliminated; uses of x0 and x1
-    # are replaced by x0_flat and x1_flat
-    # ...uses of x0_flat, x1_flat...
+def g_flat(x0_flat: int, x1_flat: int) -> int:
+  block bbBind():
+    goto bb0()
 
-  # ...other blocks...
+  block bb0():
+    res: int = prim Word32_add(x0_flat, x1_flat)
+    return res
 \end{minted}
   \end{subfigure}
   \caption{Once \texttt{PreFlatten} pushes a \texttt{tuple} construction into the same function as its corresponding \texttt{select} projections, \texttt{Simplify} performs projection elimination to forward the unpacked arguments directly and remove the temporary tuple allocation.}
@@ -364,18 +365,21 @@ def g_flat(x0_flat: a, x1_flat: b) -> ...:
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Before \texttt{KnownCase}}
+    \caption{Before \texttt{KnownCase} (After \texttt{PreFlatten})}
     \label{fig:simplify_known_case_before}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def g_flat_env1(t: a * b) -> ...:
-  block bb0():
+  block bbBind():
     e: Env = con Env1(t)
-    case e of
-      Env1(t') => goto bb1(t')
-    | Env2(...) => goto bb2(...)
+    goto bb0()
 
-  block bb1(t': a * b):
+  block bb0():
+    case e of
+      Env1 => goto bb1
+    | Env2 => goto bb2
+
+  block bb1(t: a * b):
     # ...handle Env1...
 
   block bb2(...):
@@ -388,23 +392,28 @@ def g_flat_env1(t: a * b) -> ...:
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 def g_flat_env1(t: a * b) -> ...:
+  block bbBind():
+    goto bb0()
+
   block bb0():
-    # Static jump to known branch;
-    # `e` and unreachable `bb2` eliminated
     goto bb1(t)
 
-  block bb1(t': a * b):
+  block bb1(t: a * b):
     # ...handle Env1...
+
+  # bb2 later eliminated if unreachable
+  block bb2(...):
+    # ...handle Env2...
 \end{minted}
   \end{subfigure}
-  \caption{Once \texttt{PreFlatten} pushes a \texttt{ConApp} allocation into the callee, \texttt{KnownCase} folds the \texttt{case} dispatch on the statically known constructor into a direct \texttt{goto}, eliminating the constructor allocation and any unreachable case arms.}
+  \caption{Once \texttt{PreFlatten} pushes a \texttt{ConApp} allocation into the callee, \texttt{KnownCase} folds the \texttt{case} dispatch on the statically known constructor into a direct \texttt{goto} and eliminates the constructor allocation.}
   \label{fig:simplify_known_case}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Before \texttt{Flatten} (after \texttt{ConApp} \texttt{PreFlatten})}
+    \caption{Before \texttt{Flatten} (After \texttt{PreFlatten})}
     \label{fig:simplify_enable_flatten_before}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
@@ -415,12 +424,15 @@ def f(...) -> ...:
     call bbM g_flat_env1(t)
 
 def g_flat_env1(t: a * b) -> ...:
+  block bbBind():
+    goto bb0()
+
   block bb0():
     goto bb1(t)
 
-  block bb1(t': a * b):
-    x0: a = select(t', 0)
-    x1: b = select(t', 1)
+  block bb1(t: a * b):
+    x0: a = select(t, 0)
+    x1: b = select(t, 1)
     # ...uses of x0, x1...
 \end{minted}
   \end{subfigure}\hfill
@@ -435,12 +447,15 @@ def f(...) -> ...:
     call bbM g_flat_env1(x0, x1)
 
 def g_flat_env1(x0: a, x1: b) -> ...:
+  block bbBind():
+    goto bb0()
+
   block bb0():
     goto bb1(x0, x1)
 
-  block bb1(x0': a, x1': b):
+  block bb1(x0: a, x1: b):
     # Tuple selects eliminated by Flatten
-    # ...uses of x0', x1'...
+    # ...uses of x0, x1...
 \end{minted}
   \end{subfigure}
   \caption{Eliminating a \texttt{ConApp} wrapper via \texttt{PreFlatten} and \texttt{KnownCase} exposes the underlying payload tuple \texttt{t} directly as a function argument, enabling the global \texttt{Flatten} pass to unbox \texttt{t} across the call and basic block boundaries.}
