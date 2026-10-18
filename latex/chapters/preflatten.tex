@@ -467,7 +467,14 @@ In the worst case, the code bloat introduced by this pass could be extreme: a
 function with $n$ \texttt{tuple} arguments might require as many as $2^n$
 specializations to satisfy all flattenable callers; each \texttt{datatype}
 argument over a type with $k$ constructors increases the total possible
-specializations by a factor of $k$.
+specializations by a factor of $k$. It is therefore necessary to apply
+heuristics so that we only duplicate functions in the most-profitable cases.
+
+\hl{TODO: MORE CONCRETE EXAMPLE?}
+
+%% heuristics so that we only duplicate 
+
+%% heuristics to restrict function duplication to the most-profitable cases.
 
 %% object for a type 
 
