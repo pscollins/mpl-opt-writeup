@@ -292,19 +292,65 @@ def g_flat_env1(t: a * b) -> ...:
 
 \hl{CLEAN UP}
 
-This process creates three opportunities for subsequent optimizations. First, we
-enable ``projection elimination'' by the general-purpose \texttt{Shrink}
-optimization pass, i.e. any ``unpack'' operations in the flattened functon
-bypass the tuple object (perhaps removing it entirely), depicted
-in \cref{fig:shrink_tuple_example}. Second, since the duplicated function (by
-construction) is only called along easy-to-flatten paths, we increase the odds
-that the global \texttt{Flatten} analysis will successfully eliminate the tuple.
+This process enables the following optimizations in subsequent passes:
+\begin{itemize}
+\item \texttt{Simplify}: when a \texttt{tuple} ``pack'' operation is pushed
+all the way down into the same function as a corresponding ``unpack''
+operation, \texttt{Simplify} performs ``projection elimination'' to elide the
+access to the intermediate tuple (\cref{fig:simplify_proj_elim}).
 
-\hl{TODO: add example for fig shrink tuple example}
+\item \texttt{KnownCase}: when a \texttt{ConApp} constructor call is pushed all
+the way down to the \texttt{case} statement that consumes it, \texttt{KnownCase}
+replaces the \texttt{case} statement with a static \texttt{jump}
+(\cref{fig:simplify_known_case}).
 
-TODO: first we do projection elim (example) / known case elim (example), also we
-create opportunities for more flatten (example) if we run before the flatten
-pass (only when we run before)
+\item \texttt{Flatten}: if \texttt{PreFlatten} runs before \texttt{Flatten}, then
+it can create new opportunities for \texttt{Flatten} by creating larger
+subgraphs of the dataflow graph that are free from un-flattenable constructs
+(such as \texttt{ConApp} calls -- \cref{fig:simplify_enable_flatten})
+
+\end{itemize}
+
+In the experiments described in \cref{sec:results}, we run
+the \texttt{ConApp}-flattening configuration before \texttt{Flatten} and
+the \texttt{tuple}-flattening configuration afterwards, and hence the third
+point only applies for the \texttt{ConApp} transformation. The motivation for
+this choice is that \texttt{tuple}-flattening transformation can introduce
+unnecessary code bloat in the case where regular \texttt{Flatten} would have
+succeeded.
+
+%% the \texttt{ConApp}-flattening transformation can only
+%% create new opportunities for \texttt{Flatten}, but the \texttt{tuple}-flattening
+%% can
+
+%% the \texttt{tuple}-flattening configuration after \texttt{F
+
+TODO(agy): fill in the missing figures above with code snippets that show
+before/after; also add the missing section label
+
+%% This process creates the following opportunities for subsequent optimization
+%% passes: first, we enable the general-purpose \texttt{Shrink}
+
+%% This process creates a number of different opportunities for subsequent
+%% optimizations. First, when applying the optimization to \texttt{tuple} objects,
+%% it enables the general-purp
+
+%% When applying the transformation to \texttt{tuple} objects, it
+%% creates
+
+%% First, we enable ``projection elimination'' by the
+%% general-purpose \texttt{Shrink} optimization pass, i.e. any ``unpack''
+%% operations in the flattened functon bypass the tuple object (perhaps removing it
+%% entirely), depicted in \cref{fig:shrink_tuple_example}. Second, since the
+%% duplicated function (by construction) is only called along easy-to-flatten
+%% paths, we increase the odds that the global \texttt{Flatten} analysis will
+%% successfully eliminate the tuple.
+
+%% \hl{TODO: add example for fig shrink tuple example}
+
+%% TODO: first we do projection elim (example) / known case elim (example), also we
+%% create opportunities for more flatten (example) if we run before the flatten
+%% pass (only when we run before)
 
 
 %% and, again, rely on existing optimization patterns to eliminate the
