@@ -317,7 +317,7 @@ the \texttt{tuple}-flattening configuration afterwards, and hence the third
 point only applies for the \texttt{ConApp} transformation. The motivation for
 this choice is that \texttt{tuple}-flattening transformation can introduce
 unnecessary code bloat in the case where regular \texttt{Flatten} would have
-succeeded.
+already succeeded.
 
 %% the \texttt{ConApp}-flattening transformation can only
 %% create new opportunities for \texttt{Flatten}, but the \texttt{tuple}-flattening
@@ -462,6 +462,14 @@ def g_flat_env1(x0: a, x1: b) -> ...:
   \label{fig:simplify_enable_flatten}
 \end{figure}
 
+
+In the worst case, the code bloat introduced by this pass could be extreme: a
+function with $n$ \texttt{tuple} arguments might require as many as $2^n$
+specializations to satisfy all flattenable callers; each \texttt{datatype}
+argument over a type with $k$ constructors increases the total possible
+specializations by a factor of $k$.
+
+%% object for a type 
 
 \hl{TODO: show the bad case}
 
