@@ -462,7 +462,6 @@ def g_flat_env1(x0: a, x1: b) -> ...:
   \label{fig:simplify_enable_flatten}
 \end{figure}
 
-
 In the worst case, the code bloat introduced by this pass could be extreme: a
 function with $n$ \texttt{tuple} arguments might require as many as $2^n$
 specializations to satisfy all flattenable callers; each \texttt{datatype}
@@ -472,13 +471,19 @@ heuristics so that we only duplicate functions in the most-profitable cases.
 
 \hl{TODO: MORE CONCRETE EXAMPLE?}
 
+Finally, we note one compelxity that needs to be addressed in phrasing this
+transformation as a strictly-local peephole optimization: missed flattening
+opportunities in recursive calls. Suppose we have 
+
+\hl{TODO: MOTIVATE THE RECURSIVE CASE}
+
 %% heuristics so that we only duplicate 
 
 %% heuristics to restrict function duplication to the most-profitable cases.
 
 %% object for a type 
 
-\hl{TODO: show the bad case}
+%% \hl{TODO: show the bad case}
 
 %% This process creates the following opportunities for subsequent optimization
 %% passes: first, we enable the general-purpose \texttt{Shrink}
