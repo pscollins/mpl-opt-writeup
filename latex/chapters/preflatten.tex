@@ -325,8 +325,130 @@ succeeded.
 
 %% the \texttt{tuple}-flattening configuration after \texttt{F
 
-TODO(agy): fill in the missing figures above with code snippets that show
-before/after; also add the missing section label
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{Simplify}}
+    \label{fig:simplify_proj_elim_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def g_flat(x0_flat: a, x1_flat: b) -> ...:
+  block bb0():
+    t: a * b = tuple(x0_flat, x1_flat)
+    x0: a = select(t, 0)
+    x1: b = select(t, 1)
+    # ...uses of x0, x1...
+
+  # ...other blocks...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{Simplify}}
+    \label{fig:simplify_proj_elim_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def g_flat(x0_flat: a, x1_flat: b) -> ...:
+  block bb0():
+    # Intermediate tuple `t` and `select`s
+    # are eliminated; uses of x0 and x1
+    # are replaced by x0_flat and x1_flat
+    # ...uses of x0_flat, x1_flat...
+
+  # ...other blocks...
+\end{minted}
+  \end{subfigure}
+  \caption{Once \texttt{PreFlatten} pushes a \texttt{tuple} construction into the same function as its corresponding \texttt{select} projections, \texttt{Simplify} performs projection elimination to forward the unpacked arguments directly and remove the temporary tuple allocation.}
+  \label{fig:simplify_proj_elim}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{KnownCase}}
+    \label{fig:simplify_known_case_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def g_flat_env1(t: a * b) -> ...:
+  block bb0():
+    e: Env = con Env1(t)
+    case e of
+      Env1(t') => goto bb1(t')
+    | Env2(...) => goto bb2(...)
+
+  block bb1(t': a * b):
+    # ...handle Env1...
+
+  block bb2(...):
+    # ...handle Env2...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{KnownCase}}
+    \label{fig:simplify_known_case_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def g_flat_env1(t: a * b) -> ...:
+  block bb0():
+    # Static jump to known branch;
+    # `e` and unreachable `bb2` eliminated
+    goto bb1(t)
+
+  block bb1(t': a * b):
+    # ...handle Env1...
+\end{minted}
+  \end{subfigure}
+  \caption{Once \texttt{PreFlatten} pushes a \texttt{ConApp} allocation into the callee, \texttt{KnownCase} folds the \texttt{case} dispatch on the statically known constructor into a direct \texttt{goto}, eliminating the constructor allocation and any unreachable case arms.}
+  \label{fig:simplify_known_case}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{Flatten} (after \texttt{ConApp} \texttt{PreFlatten})}
+    \label{fig:simplify_enable_flatten_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  block bbN():
+    t: a * b = tuple(x0, x1)
+    # `t` is no longer wrapped in `con Env1`
+    call bbM g_flat_env1(t)
+
+def g_flat_env1(t: a * b) -> ...:
+  block bb0():
+    goto bb1(t)
+
+  block bb1(t': a * b):
+    x0: a = select(t', 0)
+    x1: b = select(t', 1)
+    # ...uses of x0, x1...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{Flatten}}
+    \label{fig:simplify_enable_flatten_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(...) -> ...:
+  block bbN():
+    # Tuple allocation eliminated by Flatten
+    call bbM g_flat_env1(x0, x1)
+
+def g_flat_env1(x0: a, x1: b) -> ...:
+  block bb0():
+    goto bb1(x0, x1)
+
+  block bb1(x0': a, x1': b):
+    # Tuple selects eliminated by Flatten
+    # ...uses of x0', x1'...
+\end{minted}
+  \end{subfigure}
+  \caption{Eliminating a \texttt{ConApp} wrapper via \texttt{PreFlatten} and \texttt{KnownCase} exposes the underlying payload tuple \texttt{t} directly as a function argument, enabling the global \texttt{Flatten} pass to unbox \texttt{t} across the call and basic block boundaries.}
+  \label{fig:simplify_enable_flatten}
+\end{figure}
+
+
+\hl{TODO: show the bad case}
 
 %% This process creates the following opportunities for subsequent optimization
 %% passes: first, we enable the general-purpose \texttt{Shrink}
