@@ -78,6 +78,7 @@ constructs that our optimizations target) as well as the mapping from
 \texttt{SSA} to \texttt{Machine} (in order to motivate the expected performance
 impact of our optimizations).
 
+\label{sec:background_sml_ssa}
 \subsection{SML $\Rightarrow$ \texttt{SSA}}
 %% Regenerating code in this section:
 %%
@@ -1557,7 +1558,7 @@ translation of the \cref{fig:nested_tuple_flattened} to C would suggest that all
 4 values pass to \texttt{add\_vec\_flat} in registers, \texttt{Chunkify} may
 choose to put \texttt{add\_vec\_flat} in a different chunk from its callers. In
 this case, the callers must pass data through the MLton stack -- requiring
-memory operations that are linear in the number of function arguments. This
+memory operations that are linear in the number of function arguments. 
 
 %% choose to insert a chunk boundary between \texttt{add\_vec\_flat} and callers,
 %% forcing

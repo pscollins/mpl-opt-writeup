@@ -1,9 +1,10 @@
 The action of the \texttt{PreFlatten} transformation is to ``push
 down'' \texttt{tuple} and \texttt{datatype} constructor calls across function
 call boundaries, creating new opportunities for subsequent optimization passes
-to eliminate the allocation entirely. It is intended to be a more ``agressive''
-extension of the existing \texttt{Flatten} pass, supporting a mixture of
-flattenable and un-flattenable callsites by duplicating function definitions.
+to eliminate the corresponding allocations entirely. It is intended to be a more
+``agressive'' extension of the existing \texttt{Flatten} pass, supporting a
+mixture of flattenable and un-flattenable callsites by duplicating function
+definitions.
 
 %% In order to achieve this goal in the case
 %% where not all callers of the function are immediately preceeded by an
@@ -104,10 +105,11 @@ the function boundary so as to elide the allocation.
 
 In the case that all concrete arguments to a given formal function parameter are
 flattenable, then it is sufficient to replace the existing non-flat function
-defintion with a new, flattened function definition, but in order to support a
+defintion with a new, flattened function definition. In order to support a
 mixture of flattenable and unflattenable calls to a given function definition,
-we must emit duplicate definitions of the function to support
-each \hl{flattening pattern}, as depicted in \cref{fig:pre_flatten_example_dup}.
+however, we must emit duplicate definitions of the function, each specialized to
+a particular flattening decision at some caller
+(\cref{fig:pre_flatten_example_dup}).
 
 \begin{figure}[htbp]
   \centering
@@ -221,19 +223,20 @@ def g(t: a * b) -> ...:
 %%  def g(t: a * b) -> ...:
 %%     # ...as above...
 %% \end{minted}
-By iteratively applying this strategy, we can ``push together'' distant pairs of
-flatten/unflatten operations, and so try to ensure that the maximum possible
-number of callsites in the program are flattened -- even in cases where the
-global \texttt{Flatten} transformation would fail.
+%% By iteratively applying this strategy, we can ``push together'' distant pairs of
+%% flatten/unflatten operations, and so try to ensure that the maximum possible
+%% number of callsites in the program are flattened -- even in cases where the
+%% global \texttt{Flatten} transformation would fail.
 
 This strategy also naturally extends to eliminating \texttt{ConApp}s, as
-depicted in \cref{fig:pre_flatten_example_con}: given a callsite with a
-constructor call, we emit a new definition of the callee that is specialized to
-the statically-known case in the caller and ``push down'' the \texttt{ConApp}
-from caller to callee. After the ``push down'' step, we can rely on existing
-optimization patterns to eliminate now-dead blocks corresponding to cases that
-are no longer reachable in the specialized function. For \texttt{ConApp} calls
-corresponding to closure environments, this transformation subsumes the action of
+depicted in \cref{fig:pre_flatten_example_con}: if the argument at some callsite
+is the direct result of a a \texttt{datatype} object allocation, we can emit a
+new definition of the callee that is specialized to the statically-known case in
+the caller and ``push down'' the \texttt{ConApp} from caller to callee. After
+the ``push down'' step, we can rely on existing optimization patterns to
+eliminate now-dead blocks corresponding to cases that are no longer reachable in
+the specialized function. For \texttt{ConApp} calls corresponding to closure
+environments, this transformation subsumes the action of
 the \texttt{Polyvariance} pass described in \cref{sec:background_polyvar}.
 
 \begin{figure}[htbp]
@@ -290,9 +293,10 @@ def g_flat_env1(t: a * b) -> ...:
   \label{fig:pre_flatten_example_con}
 \end{figure}
 
-\hl{CLEAN UP}
+%% \hl{CLEAN UP}
 
-This process enables the following optimizations in subsequent passes:
+In particular, the transformation described above enables the following
+optimizations in subsequent passes:
 \begin{itemize}
 \item \texttt{Simplify}: when a \texttt{tuple} ``pack'' operation is pushed
 all the way down into the same function as a corresponding ``unpack''
@@ -304,7 +308,7 @@ the way down to the \texttt{case} statement that consumes it, \texttt{KnownCase}
 replaces the \texttt{case} statement with a static \texttt{jump}
 (\cref{fig:simplify_known_case}).
 
-\item \texttt{Flatten}: if \texttt{PreFlatten} runs before \texttt{Flatten}, then
+\item \texttt{Flatten}: if \texttt{PreFlateen} runs before \texttt{Flatten}, then
 it can create new opportunities for \texttt{Flatten} by creating larger
 subgraphs of the dataflow graph that are free from un-flattenable constructs
 (such as \texttt{ConApp} calls -- \cref{fig:simplify_enable_flatten})
@@ -317,7 +321,8 @@ the \texttt{tuple}-flattening configuration afterwards, and hence the third
 point only applies for the \texttt{ConApp} transformation. The motivation for
 this choice is that \texttt{tuple}-flattening transformation can introduce
 unnecessary code bloat in the case where regular \texttt{Flatten} would have
-already succeeded.
+already succeeded, whereas the \texttt{ConApp}-flattening can only create new
+opportunities to successfully \texttt{Flatten}.
 
 %% the \texttt{ConApp}-flattening transformation can only
 %% create new opportunities for \texttt{Flatten}, but the \texttt{tuple}-flattening
@@ -464,12 +469,15 @@ def g_flat_env1(x0: a, x1: b) -> ...:
 
 In the worst case, the code bloat introduced by this pass could be extreme: a
 function with $n$ \texttt{tuple} arguments might require as many as $2^n$
-specializations to satisfy all flattenable callers; each \texttt{datatype}
+specializations to satisfy all flattenable callers, and each \texttt{datatype}
 argument over a type with $k$ constructors increases the total possible
 specializations by a factor of $k$. It is therefore necessary to apply
-heuristics so that we only duplicate functions in the most-profitable cases.
+heuristics so that we only duplicate functions in the most-profitable cases --
+which we will describe in the following section. After applying these
+heuristics, we observe that the code bloat is marginal -- $< 10\%$ in nearly all
+benchmarks.
 
-\hl{TODO: MORE CONCRETE EXAMPLE?}
+%% \hl{TODO: MORE CONCRETE EXAMPLE?}
 
 %% Finally, we note one compelxity that needs to be addressed in phrasing this
 %% transformation as a strictly-local peephole optimization: missed flattening
@@ -559,7 +567,7 @@ def fib_pair(xs: int * int, n: int) -> int * int:
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Specialized \texttt{fib\_pair\_flat}}
+    \caption{Naive \texttt{fib\_pair\_flat}}
     \label{fig:bad_flat_rec_func_flat}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
@@ -615,7 +623,7 @@ def fib_pair(xs: int * int, n: int) -> int * int:
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Iterative \texttt{fib\_pair\_flat}}
+    \caption{Recursively-flattened \texttt{fib\_pair\_flat}}
     \label{fig:good_flat_rec_func_flat}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
@@ -642,7 +650,7 @@ def fib_pair_flat(x1: int, x2: int,
   \label{fig:good_flat_rec_func_ssa}
 \end{figure}
 
-\hl{TODO: MOTIVATE THE RECURSIVE CASE}
+%% \hl{TODO: MOTIVATE THE RECURSIVE CASE}
 
 %% heuristics so that we only duplicate 
 
@@ -694,11 +702,12 @@ transformation phase is shared.
 In the analysis phase, our goal is to construct a mapping $\sigma$ from function
 calls to their per-argument flattening decisions: as a first pass, we simply
 examine each callsite to record whether each argument is ``flattenable''. For
-the \texttt{tuple} analysis, an argument is flattenable if it is the direct
-result of a \texttt{tuple} constructor call; for the \texttt{ConApp} analysis,
-an argument is flattenable if it is the direct result of a \texttt{con}
-constructor call. Call the result of this analysis $\sigma_i$, the initial
-flattening decision.
+the \texttt{tuple} analysis, an argument is flattenable
+(written \texttt{Flatten}) if it is the direct result of a \texttt{tuple}
+constructor call; for the \texttt{ConApp} analysis, an argument is flattenable
+(written $\texttt{Flatten}_C$) if it is the direct result of a \texttt{con} $C$
+constructor call. Unflattenable arguments are is marked \texttt{Preserve}. Call
+the result of this analysis $\sigma_i$, the initial flattening decision.
 
 For notational simplicity, we'll imagine that each \texttt{call} statement in
 the program is tagged with a label \texttt{callN}, corresponding to its index in
@@ -755,19 +764,19 @@ def f_con(c: ConType, y: c, z: d, ...) -> ...:
       \begin{aligned}
         & \sigma_i(\texttt{f\_con}, \texttt{callM}) = \\
         & \quad \begin{bmatrix}
-          \texttt{Flatten}, \texttt{Preserve}, \dots
+          \texttt{Flatten}_{\texttt{Con1}}, \texttt{Preserve}, \dots
         \end{bmatrix}
       \end{aligned}
       \]
     \end{minipage}
   \end{subfigure}
-  \caption{Initial flattening decisions ($\sigma_i$) computed during the analysis phase for \texttt{tuple} and \texttt{ConApp} flattening. Arguments directly produced by a tuple or constructor allocation are initially marked as \texttt{Flatten}, while all other arguments are marked as \texttt{Preserve}.}
+  \caption{Initial flattening decisions ($\sigma_i$) computed during the analysis phase for \texttt{tuple} and \texttt{ConApp} flattening. Arguments directly produced by a tuple or constructor allocation are initially marked as \texttt{Flatten} or $\texttt{Flatten}_C$, while all other arguments are marked as \texttt{Preserve}.}
   \label{fig:example_sigma_init}
 \end{figure}
 
-Next, we examine all \texttt{Flatten} decisions and choose to ``downgrade'' a
-subset of them to \texttt{Preserve} based on cost heuristics. The cost
-heuristics implemented in this project were: 
+Next, we examine all \texttt{Flatten} and $\texttt{Flatten}_C$ decisions and
+choose to ``downgrade'' a subset of them to \texttt{Preserve} based on cost
+heuristics. The cost heuristics evaluated in this project are:
 
 %% \hl{TODO: the MLton-MLton experiments are in the wrong configuration (all
 %% unpack + global), try to revisit --- fixed}
@@ -777,6 +786,14 @@ heuristics implemented in this project were:
 \item For \texttt{ConApp} flattening: unconditionally flatten, no ``downgrade'' heuristics.
 \end{itemize}
 
+These heuristics are motivated by the MLton calling convention described
+in \cref{sec:background_sml_ssa}: non-tail calls pass data through explicit
+stack operations, so flattening \texttt{tuple} arguments to a non-tail
+corresponds to a \texttt{memcpy} rather than simply leaving data resident in
+registers across a call boundary. Tail calls, by contrast, are more likely to
+pass data in registers. For the \texttt{ConApp} case, no such tradeoff exists:
+flattening a \texttt{ConApp} results in a \texttt{tuple} argument that is
+no-more-expensive to pass.
 
 
 After applying these heuristics, we end up with a final analysis result,
@@ -788,31 +805,32 @@ in \cref{fig:tuple_flattening_impl}, specifically:
 First, we apply our analysis $\Sigma$ to the program in order
 to arrive at a flattening decision $\sigma_f$ (described above).
 
-\item For each caller \texttt{callN} of a function \texttt{f},
-we emit a specialized function
-$\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$ for that flattening decision
+\item For each caller \texttt{callN} of a function \texttt{f} whose
+flattening decision $\vec{d} = \sigma_f(\texttt{f}, \texttt{callN})$ is
+non-trivial (i.e.\ $\vec{d} \neq \texttt{Preserve}^n$), we emit a specialized
+function $\texttt{f}_{\vec{d}}$ for that flattening decision
 (reusing the duplicated definitions where
 possible), \cref{fig:preflatten_emit_new}.
 
-\item For each emitted function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$,
-we append a new basic block \texttt{bbBind} that re-binds any new function
-arguments resulting from a \texttt{Flatten} decision to their old, unflattened
-names (by constructing a temporary \texttt{tuple} or \texttt{datatype} object)
-and then jumps unconditionally to the previous first block of the
-function, \cref{fig:preflatten_rebind_block}.
+\item For each newly-emitted specialization $\texttt{f}_{\vec{d}}$,
+we prepend a new entry basic block \texttt{bbBind} that re-binds any new function
+arguments resulting from a \texttt{Flatten} or $\texttt{Flatten}_C$ decision to
+their old, unflattened names (by constructing a temporary \texttt{tuple}
+or \texttt{datatype} object) and then jumps unconditionally to the original
+entry block of the function, \cref{fig:preflatten_rebind_block}.
 
 
 \item For each caller \texttt{callN} of a function \texttt{f}, we elide the temporary
-\texttt{tuple} or \texttt{datatype} object and
-redirect the call to the flattened argument for each \texttt{Flatten}
+\texttt{tuple} or \texttt{datatype} object (when all of its uses are flattened) and
+redirect the call to the flattened arguments for each \texttt{Flatten} or $\texttt{Flatten}_C$
 decision, \cref{fig:preflatten_fix_call}. The result of eliding a \texttt{tuple}
 constructor is a flat sequence of variables; the result of eliding
-a \texttt{ConApp} call is a tuple.
+a \texttt{ConApp} call is the constructor's payload argument (typically a tuple).
 
 
-\item For the function arguments and for each basic block in an emitted function
-$\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$, we introduce fresh, unique
-names for every variable, \cref{fig:tuple_rename}.
+\item For the function arguments and for each basic block in an emitted specialization
+$\texttt{f}_{\vec{d}}$, we introduce fresh, globally unique
+names for every bound variable, block label, and call site, \cref{fig:tuple_rename}.
 
 %% \item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters. Turns out YES; dropping it causes regressions --
 %% see ``zero\_post\_recs'' data. What's the best way to handle this? Maybe we can
@@ -820,7 +838,7 @@ names for every variable, \cref{fig:tuple_rename}.
 
 \item
 Finally, we extend $\sigma_f$ with the result of applying the analysis to each
-newly-emitted flat function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$
+newly-emitted flat function $\texttt{f}_{\vec{d}}$
 to obtain a (perhaps-larger) flattening decision $\sigma_f'$. If $\sigma_f'
 = \sigma_f$, or if we have reached a user-configurable iteration limit, the
 transformation terminates. Otherwise, it is recursively applied to the
@@ -832,12 +850,13 @@ sub-program composed only of new function definitions, \cref{fig:preflatten_recu
 
 \Cref{fig:tuple_flattening_impl} makes this precise, writing
 $\flatsem{\cdot}$ for the action of the transformation on the AST under a
-flattening decision $\sigma_f$ produced by the analysis $\Sigma$. A decision
-vector $\vec{d} = [d_1, \dots, d_n]$ assigns each formal parameter of a function
-either \texttt{Preserve} or \texttt{Flatten}; for the \texttt{ConApp} analysis,
-we write $\texttt{Flatten}_C$ to record the statically-known constructor $C$.
-The all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the
-original, unspecialized function.
+flattening decision $\sigma_f$ produced by the analysis $\Sigma$. For a function
+definition $F$ of arity $n$, a decision vector $\vec{d} = [d_1, \dots, d_n]$
+assigns each formal parameter either \texttt{Preserve} or \texttt{Flatten} (written
+$\texttt{Flatten}_C$ in the \texttt{ConApp} analysis to record the
+statically-known constructor $C$). The all-\texttt{Preserve} vector
+$\texttt{Preserve}^n$ corresponds to the original, unspecialized function
+($f_{\texttt{Preserve}^n} = f$).
 
 \begin{figure}[htbp]
   \centering
@@ -851,14 +870,16 @@ original, unspecialized function.
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
-      \mathcal{D}(f)
+      \mathcal{D}(F)
         &= \{ \texttt{Preserve}^n \} \cup
            \{ \sigma_f(f, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f \} \\
-      \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) = B_0 \cdots B_k}^{\vec{d}}
+      \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k}^{\texttt{Preserve}^n}
+        &= \mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = \flatsem{B_0} \cdots \flatsem{B_k} \\
+      \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k}^{\vec{d}}
         &= \rho_{f,\vec{d}}\Big(
-           \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) = \\
-        &\qquad\qquad \mathtt{bbBind}_{\vec{d}}\ \flatsem{B_0} \cdots \flatsem{B_k}
-           \Big) \\
+           \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau = \\
+        &\qquad\qquad \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
+           \Big) \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau, \qquad
       \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) = x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
       \pi(x{:}T, \texttt{Flatten}_C) &= x^1{:}\tau
@@ -868,22 +889,23 @@ original, unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Re-binding flattened parameters to their original names}
+    \caption{Re-binding flattened parameters to their original names (where $l_0$ is the label of $B_0$)}
     \label{fig:preflatten_rebind_block}
     \[
     \begin{aligned}
       \mathtt{bbBind}_{\vec{d}}
         &= \mathtt{block\ bbBind}():\ 
-           \beta(x_1, d_1);\ \dots;\ \beta(x_n, d_n);\ \mathtt{goto}\ B_0() \\
-      \beta(x, \texttt{Preserve}) &= \epsilon, \qquad
-      \beta(x, \texttt{Flatten}_C) = x : T = \mathtt{con}\ C(x^1) \\
-      \beta(x, \texttt{Flatten}) &= x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k)
+           \beta(x_1{:}\tau_1, d_1);\ \dots;\ \beta(x_n{:}\tau_n, d_n);\ \mathtt{goto}\ l_0() \\
+      \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon, \qquad
+      \beta(x{:}T, \texttt{Flatten}_C) = \big(x : T = \mathtt{con}\ C(x^1)\big) \\
+      \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
+        &= \big(x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k)\big)
     \end{aligned}
     \]
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Redirecting callers to the matching specialization}
+    \caption{Redirecting callers to the matching specialization (with $f_{\texttt{Preserve}^n} = f$)}
     \label{fig:preflatten_fix_call}
     \[
     \begin{aligned}
@@ -893,15 +915,15 @@ original, unspecialized function.
         &= \mathtt{call}\ L\ f_{\vec{d}}\big(\alpha(a_1, d_1), \dots, \alpha(a_n, d_n)\big)
            \quad \text{where } \vec{d} = \sigma_f(f, \texttt{callN}) \\
       \flatsem{a : \tau = \mathtt{tuple}(z_1, \dots, z_k)}
-        &= \epsilon \quad \text{if every use of } a \text{ is a \texttt{Flatten} argument} \\
+        &= \epsilon \quad \text{if every use of } a \text{ is a \texttt{Flatten} argument under } \sigma_f \\
       \flatsem{a : T = \mathtt{con}\ C(z)}
-        &= \epsilon \quad \text{if every use of } a \text{ is a $\texttt{Flatten}_C$ argument} \\
+        &= \epsilon \quad \text{if every use of } a \text{ is a $\texttt{Flatten}_C$ argument under } \sigma_f \\
       \flatsem{s} &= s \quad \text{otherwise} \\
       \alpha(a, \texttt{Preserve}) &= a \\
       \alpha(a, \texttt{Flatten}) &= z_1, \dots, z_k
-        \quad \text{where } a = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
+        \quad \text{where } a : \tau = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
       \alpha(a, \texttt{Flatten}_C) &= z
-        \quad \text{where } a = \mathtt{con}\ C(z) \text{ in the caller}
+        \quad \text{where } a : T = \mathtt{con}\ C(z) \text{ in the caller}
     \end{aligned}
     \]
   \end{subfigure}
@@ -912,8 +934,8 @@ original, unspecialized function.
     \[
     \begin{aligned}
       \rho_{f,\texttt{Preserve}^n} &= \mathrm{id} \\
-      \rho_{f,\vec{d}} &= \text{globally fresh names for every variable and label bound in } f_{\vec{d}}
-        \quad \text{otherwise}
+      \rho_{f,\vec{d}} &= \text{globally fresh names for every variable, block label, and call label in } f_{\vec{d}}
+        \quad (\vec{d} \neq \texttt{Preserve}^n)
     \end{aligned}
     \]
   \end{subfigure}
@@ -924,45 +946,38 @@ original, unspecialized function.
     \[
     \begin{aligned}
       \flatsem{F_1 \cdots F_m}
-        &= \textstyle\bigcup_{j=1}^{m} \left\{ \flatsem{F_j}^{\texttt{Preserve}^n} \right\} \\
-        &\quad \cup
+        &= \textstyle\bigcup_{j=1}^{m} \left\{ \flatsem{F_j}^{\texttt{Preserve}^{n_j}} \right\}
+           \cup
            \begin{cases}
-             \textstyle\bigcup_{j=1}^{m}
-               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}
-               & \text{if } \sigma_f' = \sigma_f \text{ or limit reached} \\[1ex]
-             \sembrack{\textstyle\bigcup_{j=1}^{m}
-               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}}_{\sigma_f'}
+             \mathcal{N}
+               & \text{if } \sigma_f' = \sigma_f \text{ or limit reached} \\
+             \sembrack{\mathcal{N}}_{\sigma_f'}
                & \text{otherwise}
            \end{cases} \\
+      \mathcal{N}
+        &= \textstyle\bigcup_{j=1}^{m}
+             \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^{n_j}\} \right\},
+      \qquad
       \sigma_f'
-        &= \sigma_f \cup \Sigma\left(
-             \textstyle\bigcup_{j=1}^{m}
-               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}
-           \right)
+        = \sigma_f \cup \Sigma(\mathcal{N})
     \end{aligned}
     \]
   \end{subfigure}
 
   \caption{The action $\flatsem{\cdot}$ of the \texttt{PreFlatten} transformation
-    on the AST, given the analysis result $\sigma_f$. Each function is
-    emitted once per distinct decision vector among its callers (a); each
+    on the AST, given the analysis result $\sigma_f$. Each function $F_j$ of arity $n_j$ is
+    emitted once per distinct decision vector among its callers (a); each new
     specialization begins with a \texttt{bbBind} block that reconstructs the
-    original, unflattened arguments (b); each call is redirected to its
+    original, unflattened arguments before jumping to the entry block $l_0$ (b); each call is redirected to its
     specialization, passing the constituents of the eliminated \texttt{tuple}
     or \texttt{ConApp} directly (c); every duplicated definition is
     $\alpha$-renamed so that names remain globally unique (d); and newly-emitted
-    specializations are iteratively analyzed and transformed until a fixed point
+    specializations $\mathcal{N}$ are iteratively analyzed and transformed until a fixed point
     or iteration limit is reached (e).}
   \label{fig:tuple_flattening_impl}
 \end{figure}
 
 \hl{TODO: REVIEW END}
-
-%% \label{fig
-
-we construct a mapping $\sigma$ from function calls to
-their per-argument flattening decisions: as a first pass, we simply examine each
-callsite to record whether each argument is ``flattenable'' (i.e. if it is the direct result of a constr
 
 \hl{TODO: DEPRECATED PORTION BEGIN}
 
