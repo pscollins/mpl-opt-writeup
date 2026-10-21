@@ -475,6 +475,21 @@ Finally, we note one compelxity that needs to be addressed in phrasing this
 transformation as a strictly-local peephole optimization: missed flattening
 opportunities in recursive calls. Suppose we have 
 
+Finally, we note one source of complexity in flattening recursive function
+calls: consider, for example, a function that recursively acts on
+a \texttt{tuple} argument, as depicted in \cref{fig:rec_func_sml_ssa}. In this
+case,
+
+TODO(agy): add a figure named rec func sml ssa that has this plus an SSA translation
+\begin{minted}{sml}
+fun fibPair (xs: int * int, int: n): (int * int) = let
+  val (x1, x2) = xs
+in
+  if n = 0 then xs
+  else fibPair (x2, x1+x2, n-1)
+end
+\end{minted}
+
 \hl{TODO: MOTIVATE THE RECURSIVE CASE}
 
 %% heuristics so that we only duplicate 
