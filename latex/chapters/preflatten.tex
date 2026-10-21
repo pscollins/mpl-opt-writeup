@@ -686,9 +686,10 @@ def fib_pair_flat(x1: int, x2: int,
 %% \hl{TODO: CONAPP IS NOT INTRODUCED PROPERLY BEFORE THIS}
 
 \section{Implementation}
-We separate the action of the pass into two phases: first, analysis; second,
-transformation. The analysis phase differs between \texttt{tuple} flattening
-and \texttt{ConApp} flattening, while the transformation phase is shared.
+We separate the action of the pass into two (interleaved) phases: first,
+analysis; second, transformation. The analysis phase differs
+between \texttt{tuple} flattening and \texttt{ConApp} flattening, while the
+transformation phase is shared.
 
 In the analysis phase, our goal is to construct a mapping $\sigma$ from function
 calls to their per-argument flattening decisions: as a first pass, we simply
@@ -783,10 +784,15 @@ $\sigma_f$. The action of $\sigma_f$ on the program is described
 in \cref{fig:tuple_flattening_impl}, specifically:
 \begin{itemize}
 
+\item
+First, we apply our analysis $\Sigma$ to the program in order
+to arrive at a flattening decision $\sigma_f$ (described above).
+
 \item For each caller \texttt{callN} of a function \texttt{f},
 we emit a specialized function
 $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$ for that flattening decision
-(reusing the duplicated definitions where possible), \cref{fig:preflatten_emit_new}.
+(reusing the duplicated definitions where
+possible), \cref{fig:preflatten_emit_new}.
 
 \item For each emitted function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$,
 we append a new basic block \texttt{bbBind} that re-binds any new function
@@ -803,13 +809,22 @@ decision, \cref{fig:preflatten_fix_call}. The result of eliding a \texttt{tuple}
 constructor is a flat sequence of variables; the result of eliding
 a \texttt{ConApp} call is a tuple.
 
-\item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters. Turns out YES; dropping it causes regressions --
-see ``zero\_post\_recs'' data. What's the best way to handle this? Maybe we can
-skip talking completely about the renaming?}
 
 \item For the function arguments and for each basic block in an emitted function
 $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$, we introduce fresh, unique
 names for every variable, \cref{fig:tuple_rename}.
+
+%% \item \hl{TODO: describe the iterative step? -- let's try dropping it and see if it matters. Turns out YES; dropping it causes regressions --
+%% see ``zero\_post\_recs'' data. What's the best way to handle this? Maybe we can
+%% skip talking completely about the renaming?}
+
+\item
+Finally, we extend $\sigma_f$ with the result of applying the analysis to each
+newly-emitted flat function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$
+to obtain a (perhaps-larger) flattening decision $\sigma_f'$. If $\sigma_f'
+= \sigma_f$, or if we have reached a user-configurable iteration limit, the
+transformation terminates. Otherwise, it is recursively applied to the
+sub-program composed only of new function definitions.
 
 \end{itemize}
 
