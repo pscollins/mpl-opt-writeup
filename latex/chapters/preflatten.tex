@@ -824,16 +824,16 @@ newly-emitted flat function $\texttt{f}_{\sigma_f(\texttt{f}, \texttt{callN})}$
 to obtain a (perhaps-larger) flattening decision $\sigma_f'$. If $\sigma_f'
 = \sigma_f$, or if we have reached a user-configurable iteration limit, the
 transformation terminates. Otherwise, it is recursively applied to the
-sub-program composed only of new function definitions.
+sub-program composed only of new function definitions, \cref{fig:preflatten_recurse}.
 
 \end{itemize}
 
 \hl{TODO: REVIEW START}
 
 \Cref{fig:tuple_flattening_impl} makes this precise, writing
-$\flatsem{\cdot}$ for the action of the transformation on the AST under a final
-analysis result $\sigma_f$. A decision vector
-$\vec{d} = [d_1, \dots, d_n]$ assigns each formal parameter of a function
+$\flatsem{\cdot}$ for the action of the transformation on the AST under a
+flattening decision $\sigma_f$ produced by the analysis $\Sigma$. A decision
+vector $\vec{d} = [d_1, \dots, d_n]$ assigns each formal parameter of a function
 either \texttt{Preserve} or \texttt{Flatten}; for the \texttt{ConApp} analysis,
 we write $\texttt{Flatten}_C$ to record the statically-known constructor $C$.
 The all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the
@@ -842,31 +842,30 @@ original, unspecialized function.
 \begin{figure}[htbp]
   \centering
   \footnotesize
+  \captionsetup[subfigure]{aboveskip=2pt,belowskip=0pt}
+  \setlength{\abovedisplayskip}{1pt}
+  \setlength{\belowdisplayskip}{1pt}
+  \setlength{\jot}{1pt}
   \begin{subfigure}{\textwidth}
     \caption{Emitting one specialization per distinct flattening decision}
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
-      \flatsem{F_1 \cdots F_m}
-        &= \textstyle\bigcup_{j=1}^{m}
-           \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \right\} \\
       \mathcal{D}(f)
         &= \{ \texttt{Preserve}^n \} \cup
-           \{ \sigma_f(f, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f \} \\[1ex]
+           \{ \sigma_f(f, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f \} \\
       \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) = B_0 \cdots B_k}^{\vec{d}}
         &= \rho_{f,\vec{d}}\Big(
            \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) = \\
         &\qquad\qquad \mathtt{bbBind}_{\vec{d}}\ \flatsem{B_0} \cdots \flatsem{B_k}
-           \Big) \\[1ex]
-      \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
-      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
+           \Big) \\
+      \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau, \qquad
+      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) = x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
       \pi(x{:}T, \texttt{Flatten}_C) &= x^1{:}\tau
         \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
     \end{aligned}
     \]
   \end{subfigure}
-
-  \vspace{1mm}
 
   \begin{subfigure}{\textwidth}
     \caption{Re-binding flattened parameters to their original names}
@@ -875,15 +874,13 @@ original, unspecialized function.
     \begin{aligned}
       \mathtt{bbBind}_{\vec{d}}
         &= \mathtt{block\ bbBind}():\ 
-           \beta(x_1, d_1);\ \dots;\ \beta(x_n, d_n);\ \mathtt{goto}\ B_0() \\[1ex]
-      \beta(x, \texttt{Preserve}) &= \epsilon \\
-      \beta(x, \texttt{Flatten}) &= x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k) \\
-      \beta(x, \texttt{Flatten}_C) &= x : T = \mathtt{con}\ C(x^1)
+           \beta(x_1, d_1);\ \dots;\ \beta(x_n, d_n);\ \mathtt{goto}\ B_0() \\
+      \beta(x, \texttt{Preserve}) &= \epsilon, \qquad
+      \beta(x, \texttt{Flatten}_C) = x : T = \mathtt{con}\ C(x^1) \\
+      \beta(x, \texttt{Flatten}) &= x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k)
     \end{aligned}
     \]
   \end{subfigure}
-
-  \vspace{1mm}
 
   \begin{subfigure}{\textwidth}
     \caption{Redirecting callers to the matching specialization}
@@ -899,7 +896,7 @@ original, unspecialized function.
         &= \epsilon \quad \text{if every use of } a \text{ is a \texttt{Flatten} argument} \\
       \flatsem{a : T = \mathtt{con}\ C(z)}
         &= \epsilon \quad \text{if every use of } a \text{ is a $\texttt{Flatten}_C$ argument} \\
-      \flatsem{s} &= s \quad \text{otherwise} \\[1ex]
+      \flatsem{s} &= s \quad \text{otherwise} \\
       \alpha(a, \texttt{Preserve}) &= a \\
       \alpha(a, \texttt{Flatten}) &= z_1, \dots, z_k
         \quad \text{where } a = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
@@ -908,8 +905,6 @@ original, unspecialized function.
     \end{aligned}
     \]
   \end{subfigure}
-
-  \vspace{1mm}
 
   \begin{subfigure}{\textwidth}
     \caption{Renaming the duplicated definitions}
@@ -923,14 +918,41 @@ original, unspecialized function.
     \]
   \end{subfigure}
 
+  \begin{subfigure}{\textwidth}
+    \caption{Recursively analyzing and transforming newly-emitted specializations}
+    \label{fig:preflatten_recurse}
+    \[
+    \begin{aligned}
+      \flatsem{F_1 \cdots F_m}
+        &= \textstyle\bigcup_{j=1}^{m} \left\{ \flatsem{F_j}^{\texttt{Preserve}^n} \right\} \\
+        &\quad \cup
+           \begin{cases}
+             \textstyle\bigcup_{j=1}^{m}
+               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}
+               & \text{if } \sigma_f' = \sigma_f \text{ or limit reached} \\[1ex]
+             \sembrack{\textstyle\bigcup_{j=1}^{m}
+               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}}_{\sigma_f'}
+               & \text{otherwise}
+           \end{cases} \\
+      \sigma_f'
+        &= \sigma_f \cup \Sigma\left(
+             \textstyle\bigcup_{j=1}^{m}
+               \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^n\} \right\}
+           \right)
+    \end{aligned}
+    \]
+  \end{subfigure}
+
   \caption{The action $\flatsem{\cdot}$ of the \texttt{PreFlatten} transformation
-    on the AST, given the final analysis result $\sigma_f$. Each function is
+    on the AST, given the analysis result $\sigma_f$. Each function is
     emitted once per distinct decision vector among its callers (a); each
     specialization begins with a \texttt{bbBind} block that reconstructs the
     original, unflattened arguments (b); each call is redirected to its
     specialization, passing the constituents of the eliminated \texttt{tuple}
-    or \texttt{ConApp} directly (c); and every duplicated definition is
-    $\alpha$-renamed so that names remain globally unique (d).}
+    or \texttt{ConApp} directly (c); every duplicated definition is
+    $\alpha$-renamed so that names remain globally unique (d); and newly-emitted
+    specializations are iteratively analyzed and transformed until a fixed point
+    or iteration limit is reached (e).}
   \label{fig:tuple_flattening_impl}
 \end{figure}
 
