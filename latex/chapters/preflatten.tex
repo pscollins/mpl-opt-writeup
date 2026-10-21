@@ -524,18 +524,123 @@ def fib_pair(xs: int * int, n: int) -> int * int:
     next_xs: int * int = tuple(x2, s)
     next_n: int = prim Word32_sub(n, 1)
     # Recursive tail call
-    call tail fibPair(next_xs, next_n)
+    call tail fib_pair(next_xs, next_n)
 \end{minted}
   \end{subfigure}
   \caption{A tail-recursive Fibonacci function over a pair of integers in Standard ML alongside its lowered \texttt{SSA} representation. Each recursive call allocates a fresh intermediate tuple \texttt{next\_xs} to pass the updated pair of values.}
   \label{fig:rec_func_sml_ssa}
 \end{figure}
 
-TODO(agy): add bad flat rec func ssa (SSA example from above on LHS, then on the
-RHS we have a version where fib pair flat calls fib pair)
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Original \texttt{fib\_pair}}
+    \label{fig:bad_flat_rec_func_orig}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def fib_pair(xs: int * int, n: int) -> int * int:
+  block bb0():
+    x1: int = select(xs, 0)
+    x2: int = select(xs, 1)
+    cond: bool = prim Word32_equal(n, 0)
+    case cond of
+      true => goto bb1()
+    | false => goto bb2()
 
-TODO(agy) add good flat rec func ssa (SSA example from above on LHS, then on the
-RHS we have a version where fib pair flat calls fib pair flat)
+  block bb1():
+    return xs
+
+  block bb2():
+    s: int = prim Word32_add(x1, x2)
+    next_xs: int * int = tuple(x2, s)
+    next_n: int = prim Word32_sub(n, 1)
+    # Recursive tail call
+    call tail fib_pair(next_xs, next_n)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Specialized \texttt{fib\_pair\_flat}}
+    \label{fig:bad_flat_rec_func_flat}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def fib_pair_flat(x1: int, x2: int,
+                  n: int) -> int * int:
+  block bb0():
+    cond: bool = prim Word32_equal(n, 0)
+    case cond of
+      true => goto bb1()
+    | false => goto bb2()
+
+  block bb1():
+    res: int * int = tuple(x1, x2)
+    return res
+
+  block bb2():
+    s: int = prim Word32_add(x1, x2)
+    next_xs: int * int = tuple(x2, s)
+    next_n: int = prim Word32_sub(n, 1)
+    # Missed flattening: calls plain fib_pair
+    call tail fib_pair(next_xs, next_n)
+\end{minted}
+  \end{subfigure}
+  \caption{A naive, non-iterative application of \texttt{PreFlatten}. Although \texttt{fib\_pair\_flat} receives its arguments unpacked, the recursive call in block \texttt{bb2} still targets the unspecialized function \texttt{fib\_pair}, allocating an intermediate tuple \texttt{next\_xs} on every recursive iteration.}
+  \label{fig:bad_flat_rec_func_ssa}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Original \texttt{fib\_pair}}
+    \label{fig:good_flat_rec_func_orig}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def fib_pair(xs: int * int, n: int) -> int * int:
+  block bb0():
+    x1: int = select(xs, 0)
+    x2: int = select(xs, 1)
+    cond: bool = prim Word32_equal(n, 0)
+    case cond of
+      true => goto bb1()
+    | false => goto bb2()
+
+  block bb1():
+    return xs
+
+  block bb2():
+    s: int = prim Word32_add(x1, x2)
+    next_xs: int * int = tuple(x2, s)
+    next_n: int = prim Word32_sub(n, 1)
+    # Recursive tail call
+    call tail fib_pair(next_xs, next_n)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Iterative \texttt{fib\_pair\_flat}}
+    \label{fig:good_flat_rec_func_flat}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def fib_pair_flat(x1: int, x2: int,
+                  n: int) -> int * int:
+  block bb0():
+    cond: bool = prim Word32_equal(n, 0)
+    case cond of
+      true => goto bb1()
+    | false => goto bb2()
+
+  block bb1():
+    res: int * int = tuple(x1, x2)
+    return res
+
+  block bb2():
+    s: int = prim Word32_add(x1, x2)
+    next_n: int = prim Word32_sub(n, 1)
+    # Successful flattening, no temporary tuple
+    call tail fib_pair_flat(x2, s, next_n)
+\end{minted}
+  \end{subfigure}
+  \caption{Iteratively applying \texttt{PreFlatten} to recursive specializations. By analyzing newly emitted specializations, the recursive call within \texttt{fib\_pair\_flat} is rewritten to target itself directly, eliminating the intermediate tuple allocation \texttt{next\_xs} across all recursive iterations.}
+  \label{fig:good_flat_rec_func_ssa}
+\end{figure}
 
 \hl{TODO: MOTIVATE THE RECURSIVE CASE}
 
