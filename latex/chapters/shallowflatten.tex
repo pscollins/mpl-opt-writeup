@@ -10,11 +10,24 @@ are required.
 
 \section{Motivation}
 As outlined in \cref{sec:background_deep_flatten}, the MLton default
-array-of-pointers is disasterous from the perspective of cache-efficiency. With
-this in mind, the priorities of the \texttt{DeepFlatten} pass seem to be
-inverted: \texttt{DeepFlatten} is a ``best-effort'' optimization that only
-applies in the case when it is completely free -- i.e. the case when no new
-\texttt{tuple} constructor calls must be inserted. 
+array-of-pointers is disasterous from the perspective of cache-efficiency,
+introducing a load to an unpredictable, likely-cold heap location on every
+element access. The existing remedy to this problem is the \texttt{DeepFlatten}
+pass, but \texttt{DeepFlatten} only supports the case where the transformation
+is completely ``free,'' introducing zero new \texttt{tuple} allocations. This
+seems to be an inversion of priorities: \texttt{ShallowFlatten} takes the
+opposite approach, inserting temporary \texttt{tuple} objects for all operations
+into or out of containers and relying on later optimization passes to eliminate
+them.
+
+
+%% With this in mind, the priorities of the \texttt{DeepFlatten}
+%% pass seem to be inverted: \texttt{DeepFlatten} is a ``best-effort'' optimization
+%% that only applies in the case when it is completely free -- i.e. the case when
+%% no new \texttt{tuple} constructor calls must be inserted.
+
+
+%% As described below, \texttt{ShallowFlatten} follows the opposite
 
 %% From
 %% this perspective, the priority of the \texttt{DeepFlatten} pass seem to be
@@ -33,10 +46,11 @@ applies in the case when it is completely free -- i.e. the case when no new
 %% the MLton benchmark suite, but they have good coverage in parallel-ml-bench, as
 %% we'll see below.
 
-Given a container-of-\texttt{tuple} type in the source language, what
-transformations could we apply in order to guarantee that the generated C
-contains no container-of-pointer types? How can we generalize the
-\texttt{Flatten} transformation to apply to containers?
+What alternatives to the mechanism used by \texttt{DeepFlatten} exist? Given a
+container-of-\texttt{tuple} type in the source language, what transformations
+could we apply in order to guarantee that the generated C contains no
+container-of-pointer types? How can we generalize the \texttt{Flatten}
+transformation to apply to containers?
 
 For one possible strategy, consider the action of \texttt{Flatten} on function
 arguments in the \texttt{SSA} representation: it dissolves the association
@@ -53,7 +67,7 @@ example.
     \label{fig:ssa_flatten_soa_args}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# Dissolve conjoined tuple into scalar names:
+# Dissolve tuple into parallel scalars:
 #   t: a * b  -->  x: a, y: b
 
 # Before: conjoined tuple argument
@@ -75,7 +89,7 @@ def f_flat(x: a, y: b) -> ...:
     \label{fig:ssa_flatten_soa_arr}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# Dissolve conjoined array into parallel arrays:
+# Dissolve tuple array members as parallel arrays:
 #   arr: (a * b) array  -->  arr_x: a array, ...
 
 # Before: conjoined array of tuples
@@ -91,7 +105,8 @@ x: a = prim Array_sub(arr_x, i)
 y: b = prim Array_sub(arr_y, i)
 \end{minted}
   \end{subfigure}
-  \caption{\hl{TODO:EDIT} Generalizing \texttt{SSA} argument flattening to arrays via Structure-of-Arrays (SoA). In (a), \texttt{Flatten} dissolves conjoined tuple elements into separate variable names for each member, eliminating tuple allocation and selection operations. In (b), mapping this concept onto containers dissolves an array of tuples into separate parallel array bindings for each tuple member.}
+  \caption{First possible generalization of \texttt{Flatten} to containers:
+    array-of-\texttt{tuple} becomes \texttt{tuple}-of-array.}
   \label{fig:ssa_flatten_vs_soa}
 \end{figure}
 
@@ -100,9 +115,8 @@ function calls in the generated C: rather than copying a pointer into the stack,
 we copy the elements of the pointed-to object into the stack themselves. Mapping
 this on to arrays, we can, likewise, eliminate pointers by copying the elements
 of the pointed-to object directly into the array's backing storage. See
-\cref{fig:ssa_flatten_vs_aos} for an example.
-
-\hl{TODO: compare to deepFlatten}
+\cref{fig:ssa_flatten_vs_aos} for an example. This most-closely matches the
+existing \texttt{DeepFlatten} transformation.
 
 \begin{figure}[htbp]
   \centering
@@ -110,28 +124,28 @@ of the pointed-to object directly into the array's backing storage. See
     \caption{\texttt{Flatten} on inter-chunk function calls}
     \label{fig:ssa_flatten_aos_stack}
     \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
 // Copy pointed-to elements into stack:
-//   *stack.Push<void*>() = t  -->
-//     *stack.Push<typeA>() = t[0], ...
+//   *(void**)(*stackTopPtr) = t  -->
+//     *(int*)(*stackTopPtr + 0) = t[0], ...
 
-// Before: push pointer to heap tuple
-*stack.Push<void*>() = t;
+// Before: write pointer to heap tuple
+*(void**)(*stackTopPtr + 0) = t;
 
 // After: copy pointed-to elements directly
-*stack.Push<typeA>() = t[0];
-*stack.Push<typeB>() = t[1];
+*(int*)(*stackTopPtr + 0) = t[0];
+*(int*)(*stackTopPtr + sizeof(int)) = t[1];
 
-// Callee pops inlined values directly:
-typeA x = *stack.Pop<typeA>();
-typeB y = *stack.Pop<typeB>();
+// Callee reads inlined values directly:
+int x = *(int*)(*stackTopPtr + 0);
+int y = *(int*)(*stackTopPtr + sizeof(int));
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
     \caption{Generalization to arrays (AoS)}
     \label{fig:ssa_flatten_aos_arr}
     \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
 // Copy pointed-to elements into buffer:
 //   arr[i] = t  -->
 //     arr[i * L + 0] = t[0], ...
@@ -144,11 +158,12 @@ arr[i * tuple_len + 0] = t[0];
 arr[i * tuple_len + 1] = t[1];
 
 // Read accesses flat contiguous buffer:
-typeA x = arr[i * tuple_len + 0];
-typeB y = arr[i * tuple_len + 1];
+int x = arr[i * tuple_len + 0];
+int y = arr[i * tuple_len + 1];
 \end{minted}
   \end{subfigure}
-  \caption{\hl{TODO: EDIT} Generalizing low-level stack flattening to arrays via Array-of-Structs (AoS). In (a), rather than pushing a pointer to a heap-allocated tuple across an inter-chunk call boundary, \texttt{Flatten} copies the tuple elements directly into contiguous stack slots. In (b), mapping this concept onto containers eliminates pointers by copying pointed-to elements directly into the array's contiguous backing storage at offset $i \times \text{tuple\_len} + j$, transforming an Array-of-Pointers into an Array-of-Structs.}
+  \caption{Second possible generalization of \texttt{Flatten} to containers:
+    array-of-\texttt{tuple} becomes a single, larger array.}
   \label{fig:ssa_flatten_vs_aos}
 \end{figure}
 
