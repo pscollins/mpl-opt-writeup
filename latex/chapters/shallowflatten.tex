@@ -10,7 +10,7 @@ are required.
 
 \section{Motivation}
 As outlined in \cref{sec:background_deep_flatten}, the MLton default
-array-of-pointers is disasterous from the perspective of cache-efficiency,
+array-of-pointers is \hl{disasterous} from the perspective of cache-efficiency,
 introducing a load to an unpredictable, likely-cold heap location on every
 element access. The existing remedy to this problem is the \texttt{DeepFlatten}
 pass, but \texttt{DeepFlatten} only supports the case where the transformation
@@ -19,6 +19,8 @@ seems to be an inversion of priorities: \texttt{ShallowFlatten} takes the
 opposite approach, inserting temporary \texttt{tuple} objects for all operations
 into or out of containers and relying on later optimization passes to eliminate
 them.
+
+\hl{ALREADY SAID ``DISASTEROUS''}
 
 
 %% With this in mind, the priorities of the \texttt{DeepFlatten}
