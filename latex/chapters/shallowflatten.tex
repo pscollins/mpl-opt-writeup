@@ -91,7 +91,7 @@ x: a = prim Array_sub(arr_x, i)
 y: b = prim Array_sub(arr_y, i)
 \end{minted}
   \end{subfigure}
-  \caption{Generalizing \texttt{SSA} argument flattening to arrays via Structure-of-Arrays (SoA). In (a), \texttt{Flatten} dissolves conjoined tuple elements into separate variable names for each member, eliminating tuple allocation and selection operations. In (b), mapping this concept onto containers dissolves an array of tuples into separate parallel array bindings for each tuple member.}
+  \caption{\hl{TODO:EDIT} Generalizing \texttt{SSA} argument flattening to arrays via Structure-of-Arrays (SoA). In (a), \texttt{Flatten} dissolves conjoined tuple elements into separate variable names for each member, eliminating tuple allocation and selection operations. In (b), mapping this concept onto containers dissolves an array of tuples into separate parallel array bindings for each tuple member.}
   \label{fig:ssa_flatten_vs_soa}
 \end{figure}
 
@@ -148,7 +148,7 @@ typeA x = arr[i * tuple_len + 0];
 typeB y = arr[i * tuple_len + 1];
 \end{minted}
   \end{subfigure}
-  \caption{Generalizing low-level stack flattening to arrays via Array-of-Structs (AoS). In (a), rather than pushing a pointer to a heap-allocated tuple across an inter-chunk call boundary, \texttt{Flatten} copies the tuple elements directly into contiguous stack slots. In (b), mapping this concept onto containers eliminates pointers by copying pointed-to elements directly into the array's contiguous backing storage at offset $i \times \text{tuple\_len} + j$, transforming an Array-of-Pointers into an Array-of-Structs.}
+  \caption{\hl{TODO: EDIT} Generalizing low-level stack flattening to arrays via Array-of-Structs (AoS). In (a), rather than pushing a pointer to a heap-allocated tuple across an inter-chunk call boundary, \texttt{Flatten} copies the tuple elements directly into contiguous stack slots. In (b), mapping this concept onto containers eliminates pointers by copying pointed-to elements directly into the array's contiguous backing storage at offset $i \times \text{tuple\_len} + j$, transforming an Array-of-Pointers into an Array-of-Structs.}
   \label{fig:ssa_flatten_vs_aos}
 \end{figure}
 
