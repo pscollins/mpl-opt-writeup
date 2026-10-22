@@ -46,15 +46,54 @@ between \texttt{tuple} members by providing a distinct (array-valued) name for
 each element of the \texttt{tuple}. See \cref{fig:ssa_flatten_vs_soa} for an
 example.
 
-TODO(agy): make this into ssa flatten vs soa figure
-\begin{minted}{python}
-  t: a * b * c * ... -->
-  x: a, y: b, z: c, ...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{Flatten} on SSA function arguments}
+    \label{fig:ssa_flatten_soa_args}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Dissolve conjoined tuple into scalar names:
+#   t: a * b  -->  x: a, y: b
+
+# Before: conjoined tuple argument
+def f(t: a * b) -> ...:
+  x: a = select(t, 0)
+  y: b = select(t, 1)
+
+# After: distinct scalar arguments
+def f_flat(x: a, y: b) -> ...:
+  # direct access: tuple elided
+  ...
+
+# Caller transforms call site:
+#   call bbM f(t)  -->  call bbM f_flat(x, y)
 \end{minted}
-\begin{minted}{python}
-  arr: (a * b * c * ...) array -->
-  arr_x: a array, arr_y: b array, arr_z: c array * ...
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Generalization to arrays (SoA)}
+    \label{fig:ssa_flatten_soa_arr}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Dissolve conjoined array into parallel arrays:
+#   arr: (a * b) array  -->  arr_x: a array, ...
+
+# Before: conjoined array of tuples
+arr: (a * b) array = ...
+t: a * b = prim Array_sub(arr, i)
+x: a = select(t, 0)
+y: b = select(t, 1)
+
+# After: parallel arrays segregated by field
+arr_x: a array = ...
+arr_y: b array = ...
+x: a = prim Array_sub(arr_x, i)
+y: b = prim Array_sub(arr_y, i)
 \end{minted}
+  \end{subfigure}
+  \caption{Generalizing \texttt{SSA} argument flattening to arrays via Structure-of-Arrays (SoA). In (a), \texttt{Flatten} dissolves conjoined tuple elements into separate variable names for each member, eliminating tuple allocation and selection operations. In (b), mapping this concept onto containers dissolves an array of tuples into separate parallel array bindings for each tuple member.}
+  \label{fig:ssa_flatten_vs_soa}
+\end{figure}
 
 For another strategy, consider the action of \texttt{Flatten} on inter-chunk
 function calls in the generated C: rather than copying a pointer into the stack,
@@ -65,19 +104,53 @@ of the pointed-to object directly into the array's backing storage. See
 
 \hl{TODO: compare to deepFlatten}
 
-TODO(agy): make this into ssa flatten vs aos figure
-\begin{minted}{cpp}
-  *stack.Push<void*>() = t ->
-  *stack.Push<typeA>() = t[0], 
-  *stack.Push<typeB>() = t[1],
-   ...
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{Flatten} on inter-chunk function calls}
+    \label{fig:ssa_flatten_aos_stack}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+// Copy pointed-to elements into stack:
+//   *stack.Push<void*>() = t  -->
+//     *stack.Push<typeA>() = t[0], ...
+
+// Before: push pointer to heap tuple
+*stack.Push<void*>() = t;
+
+// After: copy pointed-to elements directly
+*stack.Push<typeA>() = t[0];
+*stack.Push<typeB>() = t[1];
+
+// Callee pops inlined values directly:
+typeA x = *stack.Pop<typeA>();
+typeB y = *stack.Pop<typeB>();
 \end{minted}
-\begin{minted}{cpp}
-  arr[i] = t ->
-  arr[i * tuplelen(*t)] = t[0],
-  arr[i * tuplelen(*t) + 1] = t[1],
-  ...
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Generalization to arrays (AoS)}
+    \label{fig:ssa_flatten_aos_arr}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+// Copy pointed-to elements into buffer:
+//   arr[i] = t  -->
+//     arr[i * L + 0] = t[0], ...
+
+// Before (AoP): store pointer to heap tuple
+arr[i] = t;  // void* pointer to heap tuple
+
+// After (AoS): copy elements into buffer
+arr[i * tuple_len + 0] = t[0];
+arr[i * tuple_len + 1] = t[1];
+
+// Read accesses flat contiguous buffer:
+typeA x = arr[i * tuple_len + 0];
+typeB y = arr[i * tuple_len + 1];
 \end{minted}
+  \end{subfigure}
+  \caption{Generalizing low-level stack flattening to arrays via Array-of-Structs (AoS). In (a), rather than pushing a pointer to a heap-allocated tuple across an inter-chunk call boundary, \texttt{Flatten} copies the tuple elements directly into contiguous stack slots. In (b), mapping this concept onto containers eliminates pointers by copying pointed-to elements directly into the array's contiguous backing storage at offset $i \times \text{tuple\_len} + j$, transforming an Array-of-Pointers into an Array-of-Structs.}
+  \label{fig:ssa_flatten_vs_aos}
+\end{figure}
 
 
 %% \texttt{tuple} types by storing 
