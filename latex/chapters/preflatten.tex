@@ -955,7 +955,15 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \label{fig:preflatten_recurse}
     \[
     \begin{aligned}
-      \flatsem{F_1 \cdots F_m}
+      \mathcal{D}(F_j)
+        &= \big\{\, \sigma_f(f_j, \texttt{callN}) \;\big|\; \texttt{callN} \text{ is a call to } f_j \,\big\}
+           \setminus \{ \texttt{Preserve}^{n_j} \} \\
+      \mathcal{N}
+        &= \textstyle\bigcup_{j=1}^{m}
+             \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \right\} \\
+      \sigma_f'
+        &= \sigma_f \cup \Sigma(\mathcal{N}) \\
+      \flatsem{P}
         &= \textstyle\bigcup_{j=1}^{m} \left\{ \flatsem{F_j}^{\texttt{Preserve}^{n_j}} \right\}
            \cup
            \begin{cases}
@@ -963,16 +971,7 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
                & \text{if } \sigma_f' = \sigma_f \text{ or limit reached} \\
              \sembrack{\mathcal{N}}_{\sigma_f'}
                & \text{otherwise}
-           \end{cases} \\
-      \mathcal{N}
-        &= \textstyle\bigcup_{j=1}^{m}
-             \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^{n_j}\} \right\},
-      \qquad
-      \sigma_f'
-        = \sigma_f \cup \Sigma(\mathcal{N}) \\
-      \mathcal{D}(F_j)
-        &= \{ \texttt{Preserve}^{n_j} \} \cup
-          \{ \sigma_f(f_j, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f_j \}
+           \end{cases}
     \end{aligned}
     \]
   \end{subfigure}
