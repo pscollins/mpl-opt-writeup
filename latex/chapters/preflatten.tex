@@ -827,9 +827,10 @@ flat sequence of variables, $\texttt{Flatten}_C$ passes the \texttt{ConApp}
 payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 
 
-\item We emit fresh, globally unique names for all
-symbols defined in the newly-emitted flat functions in order to restore the SSA
-property, \cref{fig:tuple_rename} \hl{TODO: REMOVE?}
+TODO(agy): remove the references to the renaming step in the diagram
+%% \item We emit fresh, globally unique names for all
+%% symbols defined in the newly-emitted flat functions in order to restore the SSA
+%% property, \cref{fig:tuple_rename}
 
 %% For the function arguments and for each basic block in an emitted specialization
 %% $\texttt{f}_{\vec{d}}$, we introduce fresh, globally unique names for every
