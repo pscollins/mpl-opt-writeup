@@ -1,45 +1,133 @@
-\section{Motivation}
-As outlined above, the MLton default array-of-pointers is disasterous from the
-perspective of efficiently utilizing the memory controller, in terms of both
-bandwidth and latency. The MLton priorities in the MLton approach appear to be
-inverted: rather than treating array-of-pointers elimination as the
-highest-priority among the potential flattening options, it is treated as a
-final, best-effort transformation. For common array-oriented workloads (HPC,
-graphics, etc), this has demonstrably-poor results. These workloads appear to be
-under-represented in the MLton benchmark suite, but they have good coverage in
-parallel-ml-bench, as we'll see below.
+The action of the \texttt{ShallowFlatten} pass is to eliminate array-of-tuple
+types from the program, converting them to either a single flat array or a tuple
+of arrays. It is intended to be a more ``agressive'' extension of the existing
+\texttt{DeepFlatten} pass, extending to cases where temporary tuple allocations
+are required.
 
-How can we generalize the argument-centric \texttt{Flatten} transformation to
-arrays? In the \texttt{SSA} representation, the action of the \texttt{Flatten}
-transformation is to dissovle the association between the conjoined elements by
-providing them separate names, i.e.;
+%% supporting the cases where it is necessary to
+%% introduce new temporary tuple allocation
+%% \texttt{ShallowFlatten} aims to be a ``more-agressive'' extension 
+
+\section{Motivation}
+As outlined in \cref{sec:background_deep_flatten}, the MLton default
+array-of-pointers is disasterous from the perspective of cache-efficiency. With
+this in mind, the priorities of the \texttt{DeepFlatten} pass seem to be
+inverted: \texttt{DeepFlatten} is a ``best-effort'' optimization that only
+applies in the case when it is completely free -- i.e. the case when no new
+\texttt{tuple} constructor calls must be inserted. 
+
+%% From
+%% this perspective, the priority of the \texttt{DeepFlatten} pass seem to be
+%% inverted: eliminating the array-of-pointers representation is a ``best-effort''
+%% optimization, only applied when it requires minimal program transformation. In
+%% the \texttt{ShallowFlatten}, we explore the opposite 
+
+
+%% However, the priorities 
+
+%% The MLton priorities in the MLton approach appear to be inverted: rather than
+%% treating array-of-pointers elimination as the highest-priority among the
+%% potential flattening options, it is treated as a final, best-effort
+%% transformation. For common array-oriented workloads (HPC, graphics, etc), this
+%% has demonstrably-poor results. These workloads appear to be under-represented in
+%% the MLton benchmark suite, but they have good coverage in parallel-ml-bench, as
+%% we'll see below.
+
+Given a container-of-\texttt{tuple} type in the source language, what
+transformations could we apply in order to guarantee that the generated C
+contains no container-of-pointer types? How can we generalize the
+\texttt{Flatten} transformation to apply to containers?
+
+For one possible strategy, consider the action of \texttt{Flatten} on function
+arguments in the \texttt{SSA} representation: it dissolves the association
+between conjoined \texttt{tuple} elements by introducing a new name for each
+member. Mapping this on to arrays, we can, likewise, dissolve the association
+between \texttt{tuple} members by providing a distinct (array-valued) name for
+each element of the \texttt{tuple}. See \cref{fig:ssa_flatten_vs_soa} for an
+example.
+
+TODO(agy): make this into ssa flatten vs soa figure
 \begin{minted}{python}
   t: a * b * c * ... -->
   x: a, y: b, z: c, ...
 \end{minted}
-Mapping this on to arrays, we would, likewise, provide a name for each element
-in the tuple, i.e.:
 \begin{minted}{python}
   arr: (a * b * c * ...) array -->
   arr_x: a array, arr_y: b array, arr_z: c array * ...
 \end{minted}
-Considering the \texttt{Flatten} transformation on the \texttt{Machine}
-representation (focusing on the non-tail-recursive case), the action is to copy
-the \hl{conjoined elements} themselves into the buffer carrying on the function
-arguments (rather than a pointer to them), i.e.:
+
+For another strategy, consider the action of \texttt{Flatten} on inter-chunk
+function calls in the generated C: rather than copying a pointer into the stack,
+we copy the elements of the pointed-to object into the stack themselves. Mapping
+this on to arrays, we can, likewise, eliminate pointers by copying the elements
+of the pointed-to object directly into the array's backing storage. See
+\cref{fig:ssa_flatten_vs_aos} for an example.
+
+\hl{TODO: compare to deepFlatten}
+
+TODO(agy): make this into ssa flatten vs aos figure
 \begin{minted}{cpp}
   *stack.Push<void*>() = t ->
   *stack.Push<typeA>() = t[0], 
   *stack.Push<typeB>() = t[1],
    ...
 \end{minted}
-The analogue for arrays is to copy the elements themselves into the array, i.e.:
 \begin{minted}{cpp}
   arr[i] = t ->
   arr[i * tuplelen(*t)] = t[0],
   arr[i * tuplelen(*t) + 1] = t[1],
   ...
 \end{minted}
+
+
+%% \texttt{tuple} types by storing 
+
+%% copying the tuple members themselves into a 
+
+%% just like \texttt{Flatten}
+%% dissolves the association between conjoined arguments by providing separate
+%% names, we could dissovle the association between 
+
+%% How can we generalize the action of
+%% \texttt{Flatten} pass to apply to containers
+
+%% What
+%% forms could a generalization of the \texttt{Flatten} transformation to 
+
+%% generalizations of the \t
+
+%% How can we generalize the argument-centric \texttt{Flatten} transformation to
+%% arrays? In the \texttt{SSA} representation, the action of the \texttt{Flatten}
+%% transformation is to dissovle the association between the conjoined elements by
+%% providing them separate names, i.e.;
+%% \begin{minted}{python}
+%%   t: a * b * c * ... -->
+%%   x: a, y: b, z: c, ...
+%% \end{minted}
+%% Mapping this on to arrays, we would, likewise, provide a name for each element
+%% in the tuple, i.e.:
+%% \begin{minted}{python}
+%%   arr: (a * b * c * ...) array -->
+%%   arr_x: a array, arr_y: b array, arr_z: c array * ...
+%% \end{minted}
+%% Considering the \texttt{Flatten} transformation on the \texttt{Machine}
+%% representation (focusing on the non-tail-recursive case), the action is to copy
+%% the \hl{conjoined elements} themselves into the buffer carrying on the function
+%% arguments (rather than a pointer to them), i.e.:
+%% \begin{minted}{cpp}
+%%   *stack.Push<void*>() = t ->
+%%   *stack.Push<typeA>() = t[0], 
+%%   *stack.Push<typeB>() = t[1],
+%%    ...
+%% \end{minted}
+%% The analogue for arrays is to copy the elements themselves into the array, i.e.:
+%% \begin{minted}{cpp}
+%%   arr[i] = t ->
+%%   arr[i * tuplelen(*t)] = t[0],
+%%   arr[i * tuplelen(*t) + 1] = t[1],
+%%   ...
+%% \end{minted}
+
 Speaking somewhat loosely, these two choices of strategies correspond to the
 familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
 layout is the natural default for a C++ programmer, i.e.:
