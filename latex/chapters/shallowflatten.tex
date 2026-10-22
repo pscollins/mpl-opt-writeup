@@ -218,7 +218,11 @@ int y = arr[i * tuple_len + 1];
 
 Speaking somewhat loosely, these two choices of strategies correspond to the
 familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
-layout is the natural default for a C++ programmer, i.e.:
+layout is the natural default for a C++ programmer, where a composite type is
+embedded directly into the container (\cref{fig:cpp_aos_diagram}. The SoA layout
+is the natural default for SIMD programming, since it makes it simple to load contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}).
+
+TODO(agy): take this snippet and put it alongside a diagram that matches the diagram format up in background.tex fig cpp aos diagram
 \begin{minted}{cpp}
   struct Point {
     int x;
@@ -226,14 +230,15 @@ layout is the natural default for a C++ programmer, i.e.:
   };
   std::vector<Point> array_of_structs;
 \end{minted}
-SoA is the natural default for SIMD operations, since it makes it simple to load
-contiguous chunks of data into SIMD registers:
+
+TODO(agy): take this snippet and put it alongside a diagram that matches the diagram format up in background.tex fig cpp aos diagram
 \begin{minted}{cpp}
   struct PointSoA {
     std::vector<int> xs;
     std::vector<int> ys;
   };
 \end{minted}
+
 Libraries and frameworks to support SIMD CPU programming commonly offer support
 for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
 introduced in \citet{ispc-paper}. ``Manual'' SoA layouts are also a standard
