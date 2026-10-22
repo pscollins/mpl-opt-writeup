@@ -827,7 +827,6 @@ flat sequence of variables, $\texttt{Flatten}_C$ passes the \texttt{ConApp}
 payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 
 
-TODO(agy): remove the references to the renaming step in the diagram
 %% \item We emit fresh, globally unique names for all
 %% symbols defined in the newly-emitted flat functions in order to restore the SSA
 %% property, \cref{fig:tuple_rename}
@@ -880,10 +879,9 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
       \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k}^{\texttt{Preserve}^n}
         &= \mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = \flatsem{B_0} \cdots \flatsem{B_k} \\
       \flatsem{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k}^{\vec{d}}
-        &= \rho_{f,\vec{d}}\Big(
-           \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau = \\
+        &= \mathtt{def}\ f_{\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau = \\
         &\qquad\qquad \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
-           \Big) \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
+           \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau, \qquad
       \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) = x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
       \pi(x{:}T, \texttt{Flatten}_C) &= x^1{:}\tau
@@ -933,18 +931,6 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Renaming the duplicated definitions}
-    \label{fig:tuple_rename}
-    \[
-    \begin{aligned}
-      \rho_{f,\texttt{Preserve}^n} &= \mathrm{id} \\
-      \rho_{f,\vec{d}} &= \text{globally fresh names for every variable, block label, and call label in } f_{\vec{d}}
-        \quad (\vec{d} \neq \texttt{Preserve}^n)
-    \end{aligned}
-    \]
-  \end{subfigure}
-
-  \begin{subfigure}{\textwidth}
     \caption{Recursively analyzing and transforming newly-emitted specializations}
     \label{fig:preflatten_recurse}
     \[
@@ -974,10 +960,9 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     specialization begins with a \texttt{bbBind} block that reconstructs the
     original, unflattened arguments before jumping to the entry block $l_0$ (b); each call is redirected to its
     specialization, passing the constituents of the eliminated \texttt{tuple}
-    or \texttt{ConApp} directly (c); every duplicated definition is
-    $\alpha$-renamed so that names remain globally unique (d); and newly-emitted
+    or \texttt{ConApp} directly (c); and newly-emitted
     specializations $\mathcal{N}$ are iteratively analyzed and transformed until a fixed point
-    or iteration limit is reached (e).}
+    or iteration limit is reached (d).}
   \label{fig:tuple_flattening_impl}
 \end{figure}
 
