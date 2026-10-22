@@ -823,7 +823,8 @@ entry block of the function, \cref{fig:preflatten_rebind_block}.
 \item For each caller \texttt{callN} of a function \texttt{f},
 for each argument with the decision \texttt{Flatten} or $\texttt{Flatten}_C$, we
 elide the access to the temporary \texttt{tuple} or \texttt{datatype} object
-(respectively): \texttt{Flatten} passes the arguments to the \texttt{tuple} as a
+(respectively), relying on subsequent dead-code elimination to remove the
+allocation itself: \texttt{Flatten} passes the arguments to the \texttt{tuple} as a
 flat sequence of variables, $\texttt{Flatten}_C$ passes the \texttt{ConApp}
 payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 
@@ -939,10 +940,6 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
       \flatsem{\mathtt{call}\ L\ f(a_1, \dots, a_n)\ \texttt{\#\,callN}}
         &= \mathtt{call}\ L\ f_{\vec{d}}\big(\alpha(a_1, d_1), \dots, \alpha(a_n, d_n)\big)
            \quad \text{where } \vec{d} = \sigma_f(f, \texttt{callN}) \\
-      \flatsem{a : \tau = \mathtt{tuple}(z_1, \dots, z_k)}
-        &= \epsilon \quad \text{if every use of } a \text{ is a \texttt{Flatten} argument under } \sigma_f \\
-      \flatsem{a : T = \mathtt{con}\ C(z)}
-        &= \epsilon \quad \text{if every use of } a \text{ is a $\texttt{Flatten}_C$ argument under } \sigma_f \\
       \flatsem{s} &= s \quad \text{otherwise} \\
       \alpha(a, \texttt{Preserve}) &= a \\
       \alpha(a, \texttt{Flatten}) &= z_1, \dots, z_k
