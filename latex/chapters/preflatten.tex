@@ -899,9 +899,6 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \begin{aligned}
       F_j
         &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k \\
-      \mathcal{D}(F_j)
-        &= \{ \texttt{Preserve}^n \} \cup
-          \{ \sigma_f(f_j, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f_j \} \\
       \flatsem{F_j}^{\texttt{Preserve}^n}
         &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = \flatsem{B_0} \cdots \flatsem{B_k} \\
       \flatsem{F_j}^{\vec{d}}
@@ -975,7 +972,10 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
              \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \setminus \{\texttt{Preserve}^{n_j}\} \right\},
       \qquad
       \sigma_f'
-        = \sigma_f \cup \Sigma(\mathcal{N})
+        = \sigma_f \cup \Sigma(\mathcal{N}) \\
+      \mathcal{D}(F_j)
+        &= \{ \texttt{Preserve}^{n_j} \} \cup
+          \{ \sigma_f(f_j, \texttt{callN}) \mid \texttt{callN} \text{ is a call to } f_j \}
     \end{aligned}
     \]
   \end{subfigure}
