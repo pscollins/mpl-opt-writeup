@@ -332,9 +332,8 @@ standard technique in high-performance GPU programming, as discussed in e.g.
 
 The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
 described in \cref{sec:background_deep_flatten}, our default memory layout is an
-array-of-pointers (\cref{fig:aop_example}). This construct lacks a name in
-standard performance-engineering parlance (since it is virtually never the right
-choice to achieve high \hl{performance}) -- we will refer to it here as AoP when
+array-of-pointers (\cref{fig:aop_example}). Since this construct lacks a name in
+standard performance-engineering parlance, we will refer to it here as AoP when
 necessary.
 
 \begin{figure}[htbp]
@@ -393,6 +392,8 @@ std::vector<Point*> array_of_pointers;
   \label{fig:aop_example}
 \end{figure}
 
+\hl{TODO: EDIT FROM HERE}
+
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
 operations for elements read from the AoS/SoA versions of the containers, and
@@ -414,150 +415,150 @@ containers in the program are \texttt{ShallowFlatten}ed: the implementation
 below assumes all-or-nothing conversion.
 
 
-\hl{TODO: FIGURE FROM GEMINI -- NEED TO INTEGRATE INTO THE TEXT}
+%% \hl{TODO: FIGURE FROM GEMINI -- NEED TO INTEGRATE INTO THE TEXT}
 
-Figure~\ref{fig:memory-layouts} illustrates the memory layout differences between
-the default Array-of-Pointers (AoP) representation and the two shallow flattening
-strategies, Array-of-Structs (AoS) and Structure-of-Arrays (SoA), alongside their
-representative C++ container definitions.
+%% Figure~\ref{fig:memory-layouts} illustrates the memory layout differences between
+%% the default Array-of-Pointers (AoP) representation and the two shallow flattening
+%% strategies, Array-of-Structs (AoS) and Structure-of-Arrays (SoA), alongside their
+%% representative C++ container definitions.
 
-\begin{figure}[htbp]
-  \centering
-  \tikzset{
-    cell/.style={draw=black!75, line width=0.6pt, minimum height=0.62cm, font=\small, align=center},
-    idx/.style={font=\scriptsize\color{textMuted}},
-    labelnode/.style={font=\small\bfseries, anchor=east},
-    ptr/.style={circle, fill=colorPtrBorder, inner sep=1.8pt},
-    arrptr/.style={-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.8pt, color=colorPtrBorder},
-    brace/.style={decorate, decoration={brace, amplitude=3.5pt, mirror}, line width=0.6pt, black!70}
-  }
+%% \begin{figure}[htbp]
+%%   \centering
+%%   \tikzset{
+%%     cell/.style={draw=black!75, line width=0.6pt, minimum height=0.62cm, font=\small, align=center},
+%%     idx/.style={font=\scriptsize\color{textMuted}},
+%%     labelnode/.style={font=\small\bfseries, anchor=east},
+%%     ptr/.style={circle, fill=colorPtrBorder, inner sep=1.8pt},
+%%     arrptr/.style={-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.8pt, color=colorPtrBorder},
+%%     brace/.style={decorate, decoration={brace, amplitude=3.5pt, mirror}, line width=0.6pt, black!70}
+%%   }
 
-  % -----------------------------------------------------------
-  % (a) Array-of-Pointers (AoP)
-  % -----------------------------------------------------------
-  \begin{subfigure}{\textwidth}
-    \centering
-    \begin{minipage}[c]{0.47\textwidth}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
-struct Point {
-  int x;
-  int y;
-};
-std::vector<Point*> array_of_pointers;
-\end{minted}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[c]{0.51\textwidth}
-      \centering
-      \begin{tikzpicture}
-        % Pointer array
-        \node[labelnode] at (-0.2, 0) {\texttt{arr}:};
-        \foreach \i in {0,1,2,3} {
-          \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=1.3cm] (ptr\i) at (\i*1.3 + 0.65, 0) {};
-          \node[idx] at ($(ptr\i.north) + (0, 0.18)$) {[\i]};
-          \node[ptr] (dot\i) at (ptr\i.center) {};
-        }
+%%   % -----------------------------------------------------------
+%%   % (a) Array-of-Pointers (AoP)
+%%   % -----------------------------------------------------------
+%%   \begin{subfigure}{\textwidth}
+%%     \centering
+%%     \begin{minipage}[c]{0.47\textwidth}
+%% \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
+%% struct Point {
+%%   int x;
+%%   int y;
+%% };
+%% std::vector<Point*> array_of_pointers;
+%% \end{minted}
+%%     \end{minipage}%
+%%     \hfill
+%%     \begin{minipage}[c]{0.51\textwidth}
+%%       \centering
+%%       \begin{tikzpicture}
+%%         % Pointer array
+%%         \node[labelnode] at (-0.2, 0) {\texttt{arr}:};
+%%         \foreach \i in {0,1,2,3} {
+%%           \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=1.3cm] (ptr\i) at (\i*1.3 + 0.65, 0) {};
+%%           \node[idx] at ($(ptr\i.north) + (0, 0.18)$) {[\i]};
+%%           \node[ptr] (dot\i) at (ptr\i.center) {};
+%%         }
 
-        % Heap Objects
-        \node[labelnode] at (-0.2, -1.45) {Heap:};
-        \foreach \i/\addr in {0/0x1040, 1/0x28A0, 2/0x14C0, 3/0x3F00} {
-          \pgfmathsetmacro{\cx}{\i*1.3 + 0.65}
-          \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.45cm, minimum height=0.52cm] 
-            (hx\i) at (\cx - 0.225, -1.45) {\scriptsize$x_\i$};
-          \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.45cm, minimum height=0.52cm, right=0cm of hx\i] 
-            (hy\i) {\scriptsize$y_\i$};
-          \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=2pt, fit=(hx\i)(hy\i), inner sep=0pt] (box\i) {};
-          \node[font=\tiny\ttfamily\color{textMuted}, below=1pt of box\i] {@\addr};
+%%         % Heap Objects
+%%         \node[labelnode] at (-0.2, -1.45) {Heap:};
+%%         \foreach \i/\addr in {0/0x1040, 1/0x28A0, 2/0x14C0, 3/0x3F00} {
+%%           \pgfmathsetmacro{\cx}{\i*1.3 + 0.65}
+%%           \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.45cm, minimum height=0.52cm] 
+%%             (hx\i) at (\cx - 0.225, -1.45) {\scriptsize$x_\i$};
+%%           \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.45cm, minimum height=0.52cm, right=0cm of hx\i] 
+%%             (hy\i) {\scriptsize$y_\i$};
+%%           \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=2pt, fit=(hx\i)(hy\i), inner sep=0pt] (box\i) {};
+%%           \node[font=\tiny\ttfamily\color{textMuted}, below=1pt of box\i] {@\addr};
 
-          % Pointer arrow
-          \draw[arrptr] (dot\i) -- (box\i.north);
-        }
-      \end{tikzpicture}
-    \end{minipage}
-    \caption{Array-of-Pointers (AoP): Pointer array to scattered heap-allocated structs.}
-    \label{fig:layout-aop}
-  \end{subfigure}
+%%           % Pointer arrow
+%%           \draw[arrptr] (dot\i) -- (box\i.north);
+%%         }
+%%       \end{tikzpicture}
+%%     \end{minipage}
+%%     \caption{Array-of-Pointers (AoP): Pointer array to scattered heap-allocated structs.}
+%%     \label{fig:layout-aop}
+%%   \end{subfigure}
 
-  \vspace{1.2em}
+%%   \vspace{1.2em}
 
-  % -----------------------------------------------------------
-  % (b) Array-of-Structs (AoS)
-  % -----------------------------------------------------------
-  \begin{subfigure}{\textwidth}
-    \centering
-    \begin{minipage}[c]{0.47\textwidth}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
-struct Point {
-  int x;
-  int y;
-};
-std::vector<Point> array_of_structs;
-\end{minted}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[c]{0.51\textwidth}
-      \centering
-      \begin{tikzpicture}
-        \node[labelnode] at (-0.2, 0) {\texttt{arr}:};
-        \foreach \i in {0,1,2,3} {
-          \pgfmathsetmacro{\cx}{\i*1.3 + 0.325}
-          \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.65cm] (ax\i) at (\cx, 0) {\scriptsize$x_\i$};
-          \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.65cm, right=0cm of ax\i] (ay\i) {\scriptsize$y_\i$};
+%%   % -----------------------------------------------------------
+%%   % (b) Array-of-Structs (AoS)
+%%   % -----------------------------------------------------------
+%%   \begin{subfigure}{\textwidth}
+%%     \centering
+%%     \begin{minipage}[c]{0.47\textwidth}
+%% \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
+%% struct Point {
+%%   int x;
+%%   int y;
+%% };
+%% std::vector<Point> array_of_structs;
+%% \end{minted}
+%%     \end{minipage}%
+%%     \hfill
+%%     \begin{minipage}[c]{0.51\textwidth}
+%%       \centering
+%%       \begin{tikzpicture}
+%%         \node[labelnode] at (-0.2, 0) {\texttt{arr}:};
+%%         \foreach \i in {0,1,2,3} {
+%%           \pgfmathsetmacro{\cx}{\i*1.3 + 0.325}
+%%           \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.65cm] (ax\i) at (\cx, 0) {\scriptsize$x_\i$};
+%%           \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.65cm, right=0cm of ax\i] (ay\i) {\scriptsize$y_\i$};
 
-          \draw[brace] ($(ax\i.south west) + (0.04,-0.08)$) -- ($(ay\i.south east) + (-0.04,-0.08)$)
-            node[midway, below=2pt, font=\scriptsize] {\texttt{arr[\i]}};
+%%           \draw[brace] ($(ax\i.south west) + (0.04,-0.08)$) -- ($(ay\i.south east) + (-0.04,-0.08)$)
+%%             node[midway, below=2pt, font=\scriptsize] {\texttt{arr[\i]}};
 
-          \node[idx] at ($(ax\i.north) + (0, 0.18)$) {[\pgfmathparse{int(\i*2)}\pgfmathresult]};
-          \node[idx] at ($(ay\i.north) + (0, 0.18)$) {[\pgfmathparse{int(\i*2+1)}\pgfmathresult]};
-        }
-      \end{tikzpicture}
-    \end{minipage}
-    \caption{Array-of-Structs (AoS): Single buffer with contiguous interleaved fields.}
-    \label{fig:layout-aos}
-  \end{subfigure}
+%%           \node[idx] at ($(ax\i.north) + (0, 0.18)$) {[\pgfmathparse{int(\i*2)}\pgfmathresult]};
+%%           \node[idx] at ($(ay\i.north) + (0, 0.18)$) {[\pgfmathparse{int(\i*2+1)}\pgfmathresult]};
+%%         }
+%%       \end{tikzpicture}
+%%     \end{minipage}
+%%     \caption{Array-of-Structs (AoS): Single buffer with contiguous interleaved fields.}
+%%     \label{fig:layout-aos}
+%%   \end{subfigure}
 
-  \vspace{1.2em}
+%%   \vspace{1.2em}
 
-  % -----------------------------------------------------------
-  % (c) Structure-of-Arrays (SoA)
-  % -----------------------------------------------------------
-  \begin{subfigure}{\textwidth}
-    \centering
-    \begin{minipage}[c]{0.47\textwidth}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
-struct PointSoA {
-  std::vector<int> xs;
-  std::vector<int> ys;
-};
-PointSoA struct_of_arrays;
-\end{minted}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[c]{0.51\textwidth}
-      \centering
-      \begin{tikzpicture}
-        % xs
-        \node[labelnode] at (-0.2, 0.38) {\texttt{arr.xs}:};
-        \foreach \i in {0,1,2,3} {
-          \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.3cm] (sx\i) at (\i*1.3 + 0.65, 0.38) {$x_\i$};
-          \node[idx] at ($(sx\i.north) + (0, 0.18)$) {[\i]};
-        }
+%%   % -----------------------------------------------------------
+%%   % (c) Structure-of-Arrays (SoA)
+%%   % -----------------------------------------------------------
+%%   \begin{subfigure}{\textwidth}
+%%     \centering
+%%     \begin{minipage}[c]{0.47\textwidth}
+%% \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
+%% struct PointSoA {
+%%   std::vector<int> xs;
+%%   std::vector<int> ys;
+%% };
+%% PointSoA struct_of_arrays;
+%% \end{minted}
+%%     \end{minipage}%
+%%     \hfill
+%%     \begin{minipage}[c]{0.51\textwidth}
+%%       \centering
+%%       \begin{tikzpicture}
+%%         % xs
+%%         \node[labelnode] at (-0.2, 0.38) {\texttt{arr.xs}:};
+%%         \foreach \i in {0,1,2,3} {
+%%           \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.3cm] (sx\i) at (\i*1.3 + 0.65, 0.38) {$x_\i$};
+%%           \node[idx] at ($(sx\i.north) + (0, 0.18)$) {[\i]};
+%%         }
 
-        % ys
-        \node[labelnode] at (-0.2, -0.38) {\texttt{arr.ys}:};
-        \foreach \i in {0,1,2,3} {
-          \node[cell, fill=colorY, draw=colorYBorder, minimum width=1.3cm] (sy\i) at (\i*1.3 + 0.65, -0.38) {$y_\i$};
-          \node[idx] at ($(sy\i.south) + (0, -0.18)$) {[\i]};
-        }
-      \end{tikzpicture}
-    \end{minipage}
-    \caption{Structure-of-Arrays (SoA): Parallel contiguous buffers segregated by field.}
-    \label{fig:layout-soa}
-  \end{subfigure}
+%%         % ys
+%%         \node[labelnode] at (-0.2, -0.38) {\texttt{arr.ys}:};
+%%         \foreach \i in {0,1,2,3} {
+%%           \node[cell, fill=colorY, draw=colorYBorder, minimum width=1.3cm] (sy\i) at (\i*1.3 + 0.65, -0.38) {$y_\i$};
+%%           \node[idx] at ($(sy\i.south) + (0, -0.18)$) {[\i]};
+%%         }
+%%       \end{tikzpicture}
+%%     \end{minipage}
+%%     \caption{Structure-of-Arrays (SoA): Parallel contiguous buffers segregated by field.}
+%%     \label{fig:layout-soa}
+%%   \end{subfigure}
 
-  \caption{Comparison of memory layouts alongside representative C++ container definitions for an array of 2D points $\langle x_i, y_i \rangle$. In (a) AoP, the array stores pointers to scattered heap tuples, requiring indirect memory loads. In (b) AoS, fields are stored inline contiguously in a single buffer. In (c) SoA, fields are decomposed into parallel contiguous buffers.}
-  \label{fig:memory-layouts}
-\end{figure}
+%%   \caption{Comparison of memory layouts alongside representative C++ container definitions for an array of 2D points $\langle x_i, y_i \rangle$. In (a) AoP, the array stores pointers to scattered heap tuples, requiring indirect memory loads. In (b) AoS, fields are stored inline contiguously in a single buffer. In (c) SoA, fields are decomposed into parallel contiguous buffers.}
+%%   \label{fig:memory-layouts}
+%% \end{figure}
 
 \section{Implementation}
 %% ---whole section outline --
