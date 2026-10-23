@@ -221,34 +221,124 @@ int y = arr[i * tuple_len + 1];
 Speaking somewhat loosely, these two choices of strategies correspond to the
 familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
 layout is the natural default for a C++ programmer, where a composite type is
-embedded directly into the container (\cref{fig:cpp_aos_diagram}. The SoA layout
+embedded directly into the container (\cref{fig:cpp_aos_diagram}). The SoA layout
 is the natural default for SIMD programming, since it makes it simple to load contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}).
 
-TODO(agy): take this snippet and put it alongside a diagram that matches the diagram format up in background.tex fig cpp aos diagram
-\begin{minted}{cpp}
-  struct Point {
-    int x;
-    int y;
-  };
-  std::vector<Point> array_of_structs;
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
+    idx/.style={font=\tiny\color{textMuted}},
+    labelnode/.style={font=\scriptsize\bfseries},
+    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
+  }
+  \begin{subfigure}[t]{0.45\textwidth}
+    \caption{C++ container definition}
+    \label{fig:cpp_aos_code}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
+struct Point {
+  int x;
+  int y;
+};
+std::vector<Point> array_of_structs;
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.53\textwidth}
+    \caption{Memory layout}
+    \label{fig:cpp_aos_mem}
+    \vspace{4mm}
+    \centering
+    \begin{tikzpicture}
+      \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{arr}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, 0.28) rectangle (\s*0.8+0.8, 0.72);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.28) rectangle (6.4, 0.72);
+      \foreach \s in {0,...,7} {
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (ax\s) at (\s*0.8+0.2, 0.5) {\tiny $x_\s$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.4cm, minimum height=0.44cm, inner sep=0pt] (ay\s) at (\s*0.8+0.6, 0.5) {\tiny $y_\s$};
+        \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(ax\s)(ay\s), inner sep=0pt] (abox\s) {};
+        \node[idx] at ($(abox\s.north) + (0, 0.12)$) {[\s]};
+      }
+      \draw[brace] ($(0.0, 0.16)$) -- ($(6.4, 0.16)$)
+        node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Array-of-Structs (AoS) container definition and memory layout. Composite elements are embedded directly and contiguously in a single buffer, with struct members interleaved.}
+  \label{fig:cpp_aos_diagram}
+\end{figure}
 
-TODO(agy): take this snippet and put it alongside a diagram that matches the diagram format up in background.tex fig cpp aos diagram
-\begin{minted}{cpp}
-  struct PointSoA {
-    std::vector<int> xs;
-    std::vector<int> ys;
-  };
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
+    idx/.style={font=\tiny\color{textMuted}},
+    labelnode/.style={font=\scriptsize\bfseries},
+    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
+  }
+  \begin{subfigure}[t]{0.45\textwidth}
+    \caption{C++ container definition}
+    \label{fig:cpp_soa_code}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
+struct PointSoA {
+  std::vector<int> xs;
+  std::vector<int> ys;
+};
+PointSoA struct_of_arrays;
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.53\textwidth}
+    \caption{Memory layout}
+    \label{fig:cpp_soa_mem}
+    \vspace{1mm}
+    \centering
+    \begin{tikzpicture}
+      % Line 0: xs buffer
+      \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{xs}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, 0.28) rectangle (\s*0.8+0.8, 0.72);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, 0.28) rectangle (6.4, 0.72);
+      \foreach \s in {0,...,7} {
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.8cm, minimum height=0.44cm, inner sep=0pt] (sx\s) at (\s*0.8+0.4, 0.5) {\tiny $x_\s$};
+        \node[idx] at ($(sx\s.north) + (0, 0.12)$) {[\s]};
+      }
+
+      % Line 1: ys buffer
+      \node[labelnode, anchor=east] at (-0.05, -0.55) {\texttt{ys}:};
+      \foreach \s in {0,...,7} {
+        \draw[fill=black!4, draw=black!18] (\s*0.8, -0.77) rectangle (\s*0.8+0.8, -0.33);
+      }
+      \draw[draw=black!45, line width=0.5pt, rounded corners=0.8pt] (0.0, -0.77) rectangle (6.4, -0.33);
+      \foreach \s in {0,...,7} {
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.8cm, minimum height=0.44cm, inner sep=0pt] (sy\s) at (\s*0.8+0.4, -0.55) {\tiny $y_\s$};
+        \node[idx] at ($(sy\s.north) + (0, 0.12)$) {[\s]};
+      }
+      \draw[brace] ($(0.0, -0.87)$) -- ($(6.4, -0.87)$)
+        node[midway, below=2pt, font=\tiny\color{textMuted}] {Contiguous SIMD-friendly buffers (eight 4-byte \texttt{int} slots shown)};
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Structure-of-Arrays (SoA) container definition and memory layout. Fields are decomposed into parallel contiguous buffers, facilitating SIMD vector loads.}
+  \label{fig:cpp_soa_diagram}
+\end{figure}
 
 Libraries and frameworks to support SIMD CPU programming commonly offer support
-for accessing SoA-format data in an AoS-like format, e.g. Intel's ISPC,
-introduced in \citet{ispc-paper}. ``Manual'' SoA layouts are also a standard
-technique in high-performance GPU programming, as discussed in e.g.
+for accessing SoA-layout data via AoS-like syntax, e.g. Intel's ISPC, introduced
+in \citet{ispc-paper}. ``Manual,'' source-language-level SoA layouts are also a
+standard technique in high-performance GPU programming, as discussed in e.g.
 \citet{cuda-textbook}.
 
 The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
-described above, our default memory layout is an array-of-pointers:
+described in \cref{sec:background_deep_flatten}, our default memory layout is an
+array-of-pointers (\cref{fig:aop_example}). This construct lacks a name in
+standard performance-engineering parlance (since it is virtually never the right
+choice to achieve high \hl{performance}) -- we will refer to it here as AoP when
+necessary.
+
+TODO(agy): fig aop example should have this struct and then a diagram on the
+side
 \begin{minted}{cpp}
   struct Point {
     int x;
@@ -256,9 +346,6 @@ described above, our default memory layout is an array-of-pointers:
   };
   std::vector<Point*> array_of_pointers;
 \end{minted}
-which lacks a name in standard performance-engineering parlance, since it is
-virtually never the right choice to achieve high \hl{performance}. We will refer
-to it here as AoP when necessary.
 
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
