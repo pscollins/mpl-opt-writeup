@@ -250,7 +250,7 @@ std::vector<Point> array_of_structs;
     \vspace{4mm}
     \centering
     \begin{tikzpicture}
-      \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{arr}:};
+      \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{array\_of\_structs}:};
       \foreach \s in {0,...,7} {
         \draw[fill=black!4, draw=black!18] (\s*0.8, 0.28) rectangle (\s*0.8+0.8, 0.72);
       }
@@ -337,15 +337,61 @@ standard performance-engineering parlance (since it is virtually never the right
 choice to achieve high \hl{performance}) -- we will refer to it here as AoP when
 necessary.
 
-TODO(agy): fig aop example should have this struct and then a diagram on the
-side
-\begin{minted}{cpp}
-  struct Point {
-    int x;
-    int y;
-  };
-  std::vector<Point*> array_of_pointers;
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
+    idx/.style={font=\tiny\color{textMuted}},
+    labelnode/.style={font=\scriptsize\bfseries},
+    ptr/.style={circle, fill=colorPtrBorder, inner sep=1.2pt},
+    arrptr/.style={-{Stealth[length=3.5pt, width=2.8pt]}, line width=0.7pt, color=colorPtrBorder},
+    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
+  }
+  \begin{subfigure}[t]{0.45\textwidth}
+    \caption{C++ container definition}
+    \label{fig:cpp_aop_code}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
+struct Point {
+  int x;
+  int y;
+};
+std::vector<Point*> array_of_pointers;
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.53\textwidth}
+    \caption{Memory layout}
+    \label{fig:cpp_aop_mem}
+    \vspace{1mm}
+    \centering
+    \begin{tikzpicture}
+      % Pointer array
+      \node[labelnode, anchor=east] at (-0.05, 0.45) {\texttt{array\_of\_pointers}:};
+      \foreach \i in {0,1,2,3} {
+        \node[cell, fill=colorPtr, draw=colorPtrBorder, minimum width=1.35cm, minimum height=0.44cm] (ptr\i) at (\i*1.4 + 0.7, 0.45) {};
+        \node[idx] at ($(ptr\i.north) + (0, 0.12)$) {[\i]};
+        \node[ptr] (dot\i) at (ptr\i.center) {};
+      }
+
+      % Heap Objects
+      \node[labelnode, anchor=east] at (-0.05, -0.75) {Heap:};
+      \foreach \i/\addr in {0/0x1040, 1/0x28A0, 2/0x14C0, 3/0x3F00} {
+        \pgfmathsetmacro{\cx}{\i*1.4 + 0.7}
+        \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.45cm, minimum height=0.44cm] 
+          (hx\i) at (\cx - 0.225, -0.75) {\tiny$x_\i$};
+        \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.45cm, minimum height=0.44cm, right=0cm of hx\i] 
+          (hy\i) {\tiny$y_\i$};
+        \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=0.8pt, fit=(hx\i)(hy\i), inner sep=0pt] (box\i) {};
+        \node[font=\tiny\ttfamily\color{textMuted}, below=2pt of box\i] {@\addr};
+
+        % Pointer arrow
+        \draw[arrptr] (dot\i) -- (box\i.north);
+      }
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Array-of-Pointers (AoP) container definition and memory layout. The array contains pointers to individually-allocated \texttt{Point} structs on the heap, requiring an indirection per element access.}
+  \label{fig:aop_example}
+\end{figure}
 
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
@@ -412,17 +458,15 @@ std::vector<Point*> array_of_pointers;
           \node[ptr] (dot\i) at (ptr\i.center) {};
         }
 
-        % Heap Tuples
+        % Heap Objects
         \node[labelnode] at (-0.2, -1.45) {Heap:};
         \foreach \i/\addr in {0/0x1040, 1/0x28A0, 2/0x14C0, 3/0x3F00} {
           \pgfmathsetmacro{\cx}{\i*1.3 + 0.65}
-          \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.34cm, minimum height=0.52cm, font=\tiny\color{textMuted}] 
-            (h\i) at (\cx - 0.38, -1.45) {hdr};
-          \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.38cm, minimum height=0.52cm, right=0cm of h\i] 
-            (hx\i) {\scriptsize$x_\i$};
-          \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.38cm, minimum height=0.52cm, right=0cm of hx\i] 
+          \node[cell, fill=colorX, draw=colorXBorder, minimum width=0.45cm, minimum height=0.52cm] 
+            (hx\i) at (\cx - 0.225, -1.45) {\scriptsize$x_\i$};
+          \node[cell, fill=colorY, draw=colorYBorder, minimum width=0.45cm, minimum height=0.52cm, right=0cm of hx\i] 
             (hy\i) {\scriptsize$y_\i$};
-          \node[draw=black!25, dashed, rounded corners=2pt, fit=(h\i)(hy\i), inner sep=1pt] (box\i) {};
+          \node[draw=ThesisDarkBlue, line width=0.7pt, rounded corners=2pt, fit=(hx\i)(hy\i), inner sep=0pt] (box\i) {};
           \node[font=\tiny\ttfamily\color{textMuted}, below=1pt of box\i] {@\addr};
 
           % Pointer arrow
@@ -430,7 +474,7 @@ std::vector<Point*> array_of_pointers;
         }
       \end{tikzpicture}
     \end{minipage}
-    \caption{Array-of-Pointers (AoP): Pointer array to scattered heap-allocated tuples.}
+    \caption{Array-of-Pointers (AoP): Pointer array to scattered heap-allocated structs.}
     \label{fig:layout-aop}
   \end{subfigure}
 
