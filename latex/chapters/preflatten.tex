@@ -796,17 +796,17 @@ flattening a \texttt{ConApp} results in a \texttt{tuple} argument that is
 no-more-expensive to pass.
 
 After applying these heuristics, we end up with a final analysis result,
-$\sigma_f$. The action of $\sigma_f$ on the program is described
+$\sigma$. The action of $\sigma$ on the program is described
 in \cref{fig:tuple_flattening_impl}, specifically:
 \begin{itemize}
 
 \item
 First, we apply our analysis $\Sigma$ to the program in order
-to arrive at a flattening decision $\sigma_f$ (described above),
+to arrive at a flattening decision $\sigma$ (described above),
 \cref{fig:preflatten_analysis}.
 
 \item For each caller \texttt{callN} of a function \texttt{f} whose
-flattening decision $\vec{d} = \sigma_f(\texttt{f}, \texttt{callN})$ is
+flattening decision $\vec{d} = \sigma(\texttt{f}, \texttt{callN})$ is
 non-trivial (i.e.\ $\vec{d} \neq \texttt{Preserve}^n$), we emit a specialized
 function $\texttt{f}_{\vec{d}}$ for that flattening decision
 (reusing the duplicated definitions where
@@ -842,10 +842,10 @@ payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 %% skip talking completely about the renaming?}
 
 \item
-Finally, we extend $\sigma_f$ with the result of applying the analysis to each
+Finally, we extend $\sigma$ with the result of applying the analysis to each
 newly-emitted flat function $\texttt{f}_{\vec{d}}$
-to obtain a (perhaps-larger) flattening decision $\sigma_f'$. If $\sigma_f'
-= \sigma_f$, or if we have reached a user-configurable iteration limit, the
+to obtain a (perhaps-larger) flattening decision $\sigma'$. If $\sigma'
+= \sigma$, or if we have reached a user-configurable iteration limit, the
 transformation terminates. Otherwise, it is recursively applied to the
 sub-program composed only of new function definitions, \cref{fig:preflatten_recurse}.
 
@@ -854,13 +854,16 @@ sub-program composed only of new function definitions, \cref{fig:preflatten_recu
 %% \hl{TODO: REVIEW START}
 
 \Cref{fig:tuple_flattening_impl} makes this precise, writing
-$\flatsem{\cdot}$ for the action of the transformation on a program $P = F_1 \cdots F_m$ under a
-flattening decision $\sigma_f$ produced by the analysis $\Sigma$. For a function
-definition $F_j = (\mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k)$ of arity $n$, a decision vector $\vec{d} = [d_1, \dots, d_n]$
-assigns each formal parameter either \texttt{Preserve} or \texttt{Flatten} (written
-$\texttt{Flatten}_C$ in the \texttt{ConApp} analysis to record the
-statically-known constructor $C$). The all-\texttt{Preserve} vector
-$\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
+$\flatsem{\cdot}$ for the action of the transformation on a program $P =
+F_1 \cdots F_m$ under a flattening decision $\sigma$ produced by the analysis
+$\Sigma$ (ignoring \texttt{datatype} declarations, which are unchanged). For a
+function definition $F_j = (\mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n)
+: \tau = B_0 \cdots B_k)$ of arity $n$, a decision vector $\vec{d} =
+[d_1, \dots, d_n]$ assigns each formal parameter either \texttt{Preserve}
+or \texttt{Flatten} (written $\texttt{Flatten}_C$ in the \texttt{ConApp}
+analysis to record the statically-known constructor $C$). The
+all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the original,
+unspecialized function.
 %% ($f_{\texttt{Preserve}^n} = f$).
 
 \begin{figure}[htbp]
@@ -871,22 +874,19 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
   \setlength{\belowdisplayskip}{1pt}
   \setlength{\jot}{1pt}
   \begin{subfigure}{\textwidth}
-    \caption{Computing the initial ($\sigma_i$) and final ($\sigma_f$) flattening decisions for a program $P = F_1 \cdots F_m$}
+    \caption{Computing the flattening decision $\sigma$ for $P = F_1 \cdots F_m$}
     \label{fig:preflatten_analysis}
     \[
     \begin{aligned}
-      \sigma_i
-        &= \Sigma_i(P) = \textstyle\bigcup_{j=1}^{m} \Sigma_i(F_j), \qquad
-      \sigma_f
-        = \Sigma(P)
-        = \mathtt{downgrade}\!\left(\textstyle\bigcup_{j=1}^{m} \Sigma_i(F_j)\right) \\
-      \Sigma_i(F_j)
-        &= \big\{\, (g, \texttt{callN}) \mapsto [\delta(a_1), \dots, \delta(a_n)]
-           \;\big|\; (\mathtt{call}\ L\ g(a_1, \dots, a_n)\ \texttt{\#\,callN}) \in F_j \,\big\} \\
-      \delta(a)
+      \sigma
+        &= \Sigma(P) = \textstyle\bigcup_{j=1}^{m} \Sigma(F_j) \\
+      \Sigma(F_j)
+        &= \big\{\, (g, \texttt{callN}) \mapsto [\delta(v_1), \dots, \delta(v_n)]
+           \;\big|\; (\mathtt{call}\ L\ g(v_1, \dots, v_n)\ \texttt{\#\,callN}) \in F_j \,\big\} \\
+      \delta(v)
         &= \begin{cases}
-             \texttt{Flatten}   & \text{if } a : \tau = \mathtt{tuple}(\dots) \text{ in } F_j \text{ (\texttt{tuple} analysis)} \\
-             \texttt{Flatten}_C & \text{if } a : T = \mathtt{con}\ C(\dots) \text{ in } F_j \text{ (\texttt{ConApp} analysis)} \\
+             \texttt{Flatten}   & \text{if } L = \mathtt{tail} \text{ and } v : \tau = \mathtt{tuple}(\dots) \text{ in } F_j \text{ (\texttt{tuple} analysis)} \\
+             \texttt{Flatten}_C & \text{if } v : T = \mathtt{con}\ C(\dots) \text{ in } F_j \text{ (\texttt{ConApp} analysis)} \\
              \texttt{Preserve}  & \text{otherwise}
            \end{cases}
     \end{aligned}
@@ -920,8 +920,8 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \[
     \begin{aligned}
       \mathtt{bbBind}_{\vec{d}}
-        &= \mathtt{block\ bbBind}():\ 
-           \beta(x_1{:}\tau_1, d_1);\ \dots;\ \beta(x_n{:}\tau_n, d_n);\ \mathtt{goto}\ l_0() \\
+        &= \mathtt{block\ bbBind}() :\ 
+           \beta(x_1{:}\tau_1, d_1)\ \dots\ \beta(x_n{:}\tau_n, d_n)\ \mathtt{goto}\ l_0() \\
       \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon, \qquad
       \beta(x{:}T, \texttt{Flatten}_C) = \big(x : T = \mathtt{con}\ C(x^1)\big) \\
       \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
@@ -935,17 +935,17 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \label{fig:preflatten_fix_call}
     \[
     \begin{aligned}
-      \flatsem{\mathtt{block}\ l(\vec{y}):\ s_1; \dots; s_m}
-        &= \mathtt{block}\ l(\vec{y}):\ \flatsem{s_1}; \dots; \flatsem{s_m} \\
-      \flatsem{\mathtt{call}\ L\ f(a_1, \dots, a_n)\ \texttt{\#\,callN}}
-        &= \mathtt{call}\ L\ f_{\vec{d}}\big(\alpha(a_1, d_1), \dots, \alpha(a_n, d_n)\big)
-           \quad \text{where } \vec{d} = \sigma_f(f, \texttt{callN}) \\
-      \flatsem{s} &= s \quad \text{otherwise} \\
-      \alpha(a, \texttt{Preserve}) &= a \\
-      \alpha(a, \texttt{Flatten}) &= z_1, \dots, z_k
-        \quad \text{where } a : \tau = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
-      \alpha(a, \texttt{Flatten}_C) &= z
-        \quad \text{where } a : T = \mathtt{con}\ C(z) \text{ in the caller}
+      \flatsem{\mathtt{block}\ l(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : s_1 \dots s_k \; tr}
+        &= \mathtt{block}\ l(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : s_1 \dots s_k \; \flatsem{tr} \\
+      \flatsem{\mathtt{call}\ L\ f(v_1, \dots, v_n)\ \texttt{\#\,callN}}
+        &= \mathtt{call}\ L\ f_{\vec{d}}\big(\alpha(v_1, d_1), \dots, \alpha(v_n, d_n)\big)
+           \quad \text{where } \vec{d} = \sigma(f, \texttt{callN}) \\
+      \flatsem{tr} &= tr \quad \text{otherwise} \\
+      \alpha(v, \texttt{Preserve}) &= v \\
+      \alpha(v, \texttt{Flatten}) &= z_1, \dots, z_k
+        \quad \text{where } v : \tau = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
+      \alpha(v, \texttt{Flatten}_C) &= z
+        \quad \text{where } v : T = \mathtt{con}\ C(z) \text{ in the caller}
     \end{aligned}
     \]
   \end{subfigure}
@@ -956,35 +956,28 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \[
     \begin{aligned}
       \mathcal{D}(F_j)
-        &= \big\{\, \sigma_f(f_j, \texttt{callN}) \;\big|\; \texttt{callN} \text{ is a call to } f_j \,\big\}
+        &= \big\{\, \sigma(f_j, \texttt{callN}) \;\big|\; \texttt{callN} \text{ is a call to } f_j \,\big\}
            \setminus \{ \texttt{Preserve}^{n_j} \} \\
       \mathcal{N}
         &= \textstyle\bigcup_{j=1}^{m}
              \left\{ \flatsem{F_j}^{\vec{d}} \;\middle|\; \vec{d} \in \mathcal{D}(F_j) \right\} \\
-      \sigma_f'
-        &= \sigma_f \cup \Sigma(\mathcal{N}) \\
+      \sigma'
+        &= \sigma \cup \Sigma(\mathcal{N}) \\
       \flatsem{P}
         &= \textstyle\bigcup_{j=1}^{m} \left\{ \flatsem{F_j}^{\texttt{Preserve}^{n_j}} \right\}
            \cup
            \begin{cases}
              \mathcal{N}
-               & \text{if } \sigma_f' = \sigma_f \text{ or limit reached} \\
-             \sembrack{\mathcal{N}}_{\sigma_f'}
+               & \text{if } \sigma' = \sigma \text{ or limit reached} \\
+             \sembrack{\mathcal{N}}_{\sigma'}
                & \text{otherwise}
            \end{cases}
     \end{aligned}
     \]
   \end{subfigure}
 
-  \caption{The analysis $\Sigma$ and action $\flatsem{\cdot}$ of the \texttt{PreFlatten} transformation
-    on the AST. The analysis $\Sigma$ collects per-call initial flattening decisions across all functions and applies cost heuristics via $\mathtt{downgrade}$ to yield $\sigma_f$ (a); each function $F_j$ of arity $n_j$ is
-    emitted once per distinct decision vector among its callers (b); each new
-    specialization begins with a \texttt{bbBind} block that reconstructs the
-    original, unflattened arguments before jumping to the entry block $l_0$ (c); each call is redirected to its
-    specialization, passing the constituents of the eliminated \texttt{tuple}
-    or \texttt{ConApp} directly (d); and newly-emitted
-    specializations $\mathcal{N}$ are iteratively analyzed and transformed until a fixed point
-    or iteration limit is reached (e).}
+  \caption{The action $\flatsem{\cdot}$ of the \texttt{PreFlatten} transformation
+    on the \texttt{SSA} IR.}
   \label{fig:tuple_flattening_impl}
 \end{figure}
 
