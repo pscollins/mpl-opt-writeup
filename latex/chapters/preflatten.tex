@@ -856,17 +856,15 @@ sub-program composed only of new function definitions, \cref{fig:preflatten_recu
 \Cref{fig:tuple_flattening_impl} makes this precise, writing
 $\flatsem{\cdot}$ for the action of the transformation on a program $P =
 F_1 \cdots F_m$ under a flattening decision $\sigma$ produced by the analysis
-$\Sigma$ (ignoring \texttt{datatype} declarations, which are unchanged). For a
-function definition $F_j = (\mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n)
-: \tau \syneq B_0 \cdots B_k)$ of arity $n$, a decision vector $\vec{d} =
-[d_1, \dots, d_n]$ assigns each formal parameter either \texttt{Preserve}
-or \texttt{Flatten} (written $\texttt{Flatten}_C$ in the \texttt{ConApp}
-analysis to record the statically-known constructor $C$). The
-all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the original,
-unspecialized function.
+$\Sigma$ (ignoring \texttt{datatype} and global variable declarations, which are
+unchanged). For a function definition $F_j = (\mathtt{def}\
+f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq B_0 \cdots B_k)$ of arity
+$n$, a decision vector $\vec{d} = [d_1, \dots, d_n]$ assigns each formal
+parameter either \texttt{Preserve} or \texttt{Flatten} (written
+$\texttt{Flatten}_C$ in the \texttt{ConApp} analysis to record the
+statically-known constructor $C$). The all-\texttt{Preserve} vector
+$\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
 %% ($f_{\texttt{Preserve}^n} = f$).
-
-\hl{TODO: we don't address globals here}
 
 \begin{figure}[htbp]
   \centering
@@ -896,7 +894,7 @@ unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Emitting one specialization per distinct flattening decision (where $x^{d_j}$ is a fresh argument name)}
+    \caption{Emitting one specialization per distinct flattening decision (where $x^{\tau_j}$ is a fresh argument name)}
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
@@ -909,8 +907,8 @@ unspecialized function.
            \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
-      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{d_1}{:}\tau_1, \dots, x^{d_k}{:}\tau_k \\
-      \pi(x{:}T, \texttt{Flatten}_C) &= x^{d_1}{:}\tau
+      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{\tau_1}{:}\tau_1, \dots, x^{\tau_k}{:}\tau_k \\
+      \pi(x{:}T, \texttt{Flatten}_C) &= x^{\tau}{:}\tau
         \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
     \end{aligned}
     \]
@@ -926,9 +924,9 @@ unspecialized function.
            \beta(x_1{:}\tau_1, d_1)\ \dots\ \beta(x_n{:}\tau_n, d_n)\ \mathtt{goto}\ l_0() \\
       \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon \\
       \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
-        &= x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x^{d_1}, \dots, x^{d_k}) \\
+        &= x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x^{\tau_1}, \dots, x^{\tau_k}) \\
       \beta(x{:}T, \texttt{Flatten}_C)
-        &= x : T \syneq \mathtt{con}\ C(x^{d_1})
+        &= x : T \syneq \mathtt{con}\ C(x^{\tau})
     \end{aligned}
     \]
   \end{subfigure}
