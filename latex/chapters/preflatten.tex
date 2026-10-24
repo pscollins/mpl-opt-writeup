@@ -858,13 +858,15 @@ $\flatsem{\cdot}$ for the action of the transformation on a program $P =
 F_1 \cdots F_m$ under a flattening decision $\sigma$ produced by the analysis
 $\Sigma$ (ignoring \texttt{datatype} declarations, which are unchanged). For a
 function definition $F_j = (\mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n)
-: \tau = B_0 \cdots B_k)$ of arity $n$, a decision vector $\vec{d} =
+: \tau \mathrel{\texttt{=}} B_0 \cdots B_k)$ of arity $n$, a decision vector $\vec{d} =
 [d_1, \dots, d_n]$ assigns each formal parameter either \texttt{Preserve}
 or \texttt{Flatten} (written $\texttt{Flatten}_C$ in the \texttt{ConApp}
 analysis to record the statically-known constructor $C$). The
 all-\texttt{Preserve} vector $\texttt{Preserve}^n$ corresponds to the original,
 unspecialized function.
 %% ($f_{\texttt{Preserve}^n} = f$).
+
+\hl{TODO: we don't address globals here}
 
 \begin{figure}[htbp]
   \centering
@@ -885,8 +887,8 @@ unspecialized function.
            \;\big|\; (\mathtt{call}\ L\ g(v_1, \dots, v_n)\ \texttt{\#\,callN}) \in F_j \,\big\} \\
       \delta(v)
         &= \begin{cases}
-             \texttt{Flatten}   & \text{if } L = \mathtt{tail} \text{ and } v : \tau = \mathtt{tuple}(\dots) \text{ in } F_j \text{ (\texttt{tuple} analysis)} \\
-             \texttt{Flatten}_C & \text{if } v : T = \mathtt{con}\ C(\dots) \text{ in } F_j \text{ (\texttt{ConApp} analysis)} \\
+             \texttt{Flatten}   & \text{if } L = \mathtt{tail} \text{ and } v : \tau \mathrel{\texttt{=}} \mathtt{tuple}(\dots) \text{ in } F_j \text{ (\texttt{tuple} analysis)} \\
+             \texttt{Flatten}_C & \text{if } v : T \mathrel{\texttt{=}} \mathtt{con}\ C(\dots) \text{ in } F_j \text{ (\texttt{ConApp} analysis)} \\
              \texttt{Preserve}  & \text{otherwise}
            \end{cases}
     \end{aligned}
@@ -894,21 +896,21 @@ unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Emitting one specialization per distinct flattening decision}
+    \caption{Emitting one specialization per distinct flattening decision (where $x^{d_j}$ is a fresh argument name)}
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
       F_j
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = B_0 \cdots B_k \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \mathrel{\texttt{=}} B_0 \cdots B_k \\
       \flatsem{F_j}^{\texttt{Preserve}^n}
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau = \flatsem{B_0} \cdots \flatsem{B_k} \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \mathrel{\texttt{=}} \flatsem{B_0} \cdots \flatsem{B_k} \\
       \flatsem{F_j}^{\vec{d}}
-        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau =
+        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau \mathrel{\texttt{=}}
            \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
-      \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau, \qquad
-      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) = x^1{:}\tau_1, \dots, x^k{:}\tau_k \\
-      \pi(x{:}T, \texttt{Flatten}_C) &= x^1{:}\tau
+      \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
+      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{d_1}{:}\tau_1, \dots, x^{d_k}{:}\tau_k \\
+      \pi(x{:}T, \texttt{Flatten}_C) &= x^{d_1}{:}\tau
         \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
     \end{aligned}
     \]
@@ -922,10 +924,11 @@ unspecialized function.
       \mathtt{bbBind}_{\vec{d}}
         &= \mathtt{block\ bbBind}() :\ 
            \beta(x_1{:}\tau_1, d_1)\ \dots\ \beta(x_n{:}\tau_n, d_n)\ \mathtt{goto}\ l_0() \\
-      \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon, \qquad
-      \beta(x{:}T, \texttt{Flatten}_C) = \big(x : T = \mathtt{con}\ C(x^1)\big) \\
+      \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon \\
       \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
-        &= \big(x : \tau_1 * \cdots * \tau_k = \mathtt{tuple}(x^1, \dots, x^k)\big)
+        &= x : \tau_1 * \cdots * \tau_k \mathrel{\texttt{=}} \mathtt{tuple}(x^{d_1}, \dots, x^{d_k}) \\
+      \beta(x{:}T, \texttt{Flatten}_C)
+        &= x : T \mathrel{\texttt{=}} \mathtt{con}\ C(x^{d_1})
     \end{aligned}
     \]
   \end{subfigure}
@@ -943,9 +946,9 @@ unspecialized function.
       \flatsem{tr} &= tr \quad \text{otherwise} \\
       \alpha(v, \texttt{Preserve}) &= v \\
       \alpha(v, \texttt{Flatten}) &= z_1, \dots, z_k
-        \quad \text{where } v : \tau = \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
+        \quad \text{where } v : \tau \mathrel{\texttt{=}} \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
       \alpha(v, \texttt{Flatten}_C) &= z
-        \quad \text{where } v : T = \mathtt{con}\ C(z) \text{ in the caller}
+        \quad \text{where } v : T \mathrel{\texttt{=}} \mathtt{con}\ C(z) \text{ in the caller}
     \end{aligned}
     \]
   \end{subfigure}
