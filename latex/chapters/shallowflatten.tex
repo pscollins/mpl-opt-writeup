@@ -408,9 +408,89 @@ sequences as necessary around all \texttt{prim} operations that access container
 types, replacing the AoP container type with its AoS/SoA equivalent
 (\cref{fig:pack_unpack_example}).
 
-TODO(agy): give an example for fig pack unpack example of AoP SSA IR that does
-an array read (lhs) and then the AoS + SoA translation (rhs). do an array write
-also
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{\textwidth}
+    \caption{Array read: AoP $\to$ AoS/SoA conversion}
+    \label{fig:pack_read_example}
+    \vspace{1mm}
+    \begin{minipage}[t]{0.38\textwidth}
+      {\centering\textbf{\footnotesize Original AoP-style \texttt{SSA} IR}\par}\vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Array read in AoP
+arr: (int * int) array = ...
+
+# Direct read returns tuple object
+p: int * int =
+  prim Array_sub[int * int](arr, i)
+
+# Consuming code uses tuple `p`
+x: int = select(p, 0)
+y: int = select(p, 1)
+\end{minted}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[t]{0.60\textwidth}
+      {\centering\textbf{\footnotesize Transformed AoS/SoA-style \texttt{SSA}\par}\vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# AoS: read flat slice, "pack" into tuple
+# (arr: int array of length 2n)
+x: int = prim Array_sub[int](arr, i * 2)
+y: int = prim Array_sub[int](arr, i * 2 + 1)
+p: int * int = tuple(x, y)  # pack
+
+# SoA: read parallel fields, "pack" into tuple
+# (arr: int array * int array)
+arr_x: int array = select(arr, 0)
+x: int = prim Array_sub[int](arr_x, i)
+arr_y: int array = select(arr, 1)
+y: int = prim Array_sub[int](arr_y, i)
+p: int * int = tuple(x, y)  # pack
+\end{minted}
+    \end{minipage}
+  \end{subfigure}
+
+  \vspace{3mm}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Array write: AoP $\to$ AoS/SoA conversion}
+    \label{fig:unpack_write_example}
+    \vspace{1mm}
+    \begin{minipage}[t]{0.38\textwidth}
+      {\centering\textbf{\footnotesize Original AoP-style \texttt{SSA} IR}\par}\vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Array write in AoP
+arr: (int * int) array = ...
+p: int * int = ...
+
+# Direct write of tuple object
+_ = prim Array_update[int * int](
+      arr, i, p)
+\end{minted}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[t]{0.60\textwidth}
+      {\centering\textbf{\footnotesize Transformed SSA IR (AoS and SoA)}\par}\vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# AoS: "unpack" tuple, write to flat slice
+x: int = select(p, 0)       # unpack
+y: int = select(p, 1)
+_ = prim Array_update[int](arr, i * 2, x)
+_ = prim Array_update[int](arr, i * 2 + 1, y)
+
+# SoA: "unpack" tuple, write to parallel arrays
+arr_x: int array = select(arr, 0)
+x: int = select(p, 0)       # unpack
+_ = prim Array_update[int](arr_x, i, x)
+arr_y: int array = select(arr, 1)
+y: int = select(p, 1)
+_ = prim Array_update[int](arr_y, i, y)
+\end{minted}
+    \end{minipage}
+  \end{subfigure}
+  \caption{Pack and unpack sequences inserted by \texttt{ShallowFlatten} around primitive operations on containers of tuples (illustrated for \texttt{int * int})}
+  \label{fig:pack_unpack_example}
+\end{figure}
 
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
