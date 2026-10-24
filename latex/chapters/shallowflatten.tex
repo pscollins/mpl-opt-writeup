@@ -410,48 +410,58 @@ types, replacing the AoP container type with its AoS/SoA equivalent
 pre-existing names and (non-container) types in the consuming code, at the cost
 of potentially-unnecessary tuple allocations. In order to offset this effect,
 the \texttt{ShallowFlatten} pass runs relatively early in the \texttt{SSA} pass
-pipeline -- directly before the regular \texttt{Flatten} pass. This allows for 
+pipeline -- directly before the regular \texttt{Flatten} pass -- which allows us
+to reuse the existing mechanisms for \texttt{tuple}-elimination to the greatest
+extent possible.
 
-\hl{TODO compare here to deep flatten running later -- they have complicated IR,
-we have a simpler impl, this is offset by a restriction on types}
+This choice comes with a tradeoff, however: in the \texttt{SSA} representation,
+memory layouts are abstract, and so it is impossible for us to directly express
+a notion of ``\texttt{tuple} elements embedded into an array'' that the
+\texttt{DeepFlatten} pass produces (depicted in \cref{fig:flatten_generated_c}),
+which would be a direct analogue to the traditional C++ AoS layout depicted in
+\cref{fig:cpp_aos_diagram}. However, for containers of a uniform type, this
+level of control is unnecessary -- we can, for example, simply convert an
+length-$n$ \texttt{(int * int)} into an \texttt{int array} of length $2n$. For
+the benchmarks explored below, restricting the transformation to tuple elements
+with homogoneous types does not sacrifice any performance -- container-of-tuple
+types represented in these workloads generally correspond to e.g. 2-$d$ points
+in space, which are naturally homogeneous.
 
 \hl{TODO: TWEAK COMMENTS}
 \begin{figure}[htbp]
   \centering
   % --- Set 1: Array read ---
-  {\centering\textbf{\footnotesize Array read: AoP $\to$ AoS / SoA (pack)}\par}\vspace{1mm}
+  {\centering\textbf{\footnotesize Array read: AoP $\to$ AoS / SoA + pack}\par}\vspace{1mm}
   \begin{subfigure}[t]{0.32\textwidth}
     \caption{Original AoP read}
     \label{fig:pack_read_aop}
     \label{fig:pack_read_example}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Array read in AoP
-arr: (int * int) array = ...
-
-# Direct read returns tuple
+arr: (int * int) array =
+  ... # length = n
 p: int * int =
   prim Array_sub[int * int](
     arr, i)
 
-# Consuming still code uses `p`
+# Consuming code uses `p`
 x: int = select(p, 0)
 y: int = select(p, 1)
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
-    \caption{AoS read (pack)}
+    \caption{AoS read + pack}
     \label{fig:pack_read_aos}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Read flat slice + "pack"
-# arr: int array (length 2n)
+arr: int array = ... # length 2n
 x0: int =
   prim Array_sub[int](
     arr, i * 2)
 y0: int =
   prim Array_sub[int](
     arr, i * 2 + 1)
+# "pack" to restore `p`
 p: int * int = tuple(x0, y0)
 
 # Consuming still code uses `p`
@@ -460,12 +470,12 @@ y: int = select(p, 1)
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
-    \caption{SoA read (pack)}
+    \caption{SoA read + pack}
     \label{fig:pack_read_soa}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Read member fields + "pack"
-# arr: (int array * int array)
+arr: (int array * int array) =
+  ... # (length n) * (length n)
 arr_x: int array =
   select(arr, 0)
 x0: int =
@@ -474,6 +484,7 @@ arr_y: int array =
   select(arr, 1)
 y0: int =
   prim Array_sub[int](arr_y, i)
+# "pack" to restore `p`
 p: int * int = tuple(x0, y0)
 
 # Consuming code still uses `p`
@@ -485,32 +496,34 @@ y: int = select(p, 1)
   \vspace{3mm}
 
   % --- Set 2: Array write ---
-  {\centering\textbf{\footnotesize Array write: AoP $\to$ AoS / SoA (unpack)}\par}\vspace{1mm}
+  {\centering\textbf{\footnotesize Array write: AoP $\to$ AoS / SoA + unpack}\par}\vspace{1mm}
   \begin{subfigure}[t]{0.32\textwidth}
     \caption{Original AoP write}
     \label{fig:unpack_write_aop}
     \label{fig:unpack_write_example}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Array write in AoP
-arr: (int * int) array = ...
+arr: (int * int) array =
+  ... # length = n
 p: int * int = ...
 
-# Direct write of tuple object
+# Array operation writes `p`
 _ = prim Array_update[
       int * int](arr, i, p)
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
-    \caption{AoS write (unpack)}
+    \caption{AoS write + unpack}
     \label{fig:unpack_write_aos}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Tuple "unpack" + flat write
-# arr: int array (length 2n)
+arr: int array = ... # length 2n
+p: int * int = ...
+# Unpack `p`
 x0: int = select(p, 0)
 y0: int = select(p, 1)
 
+# Separate per-member writes
 _ = prim Array_update[int](
       arr, i * 2, x0)
 _ = prim Array_update[int](
@@ -518,21 +531,25 @@ _ = prim Array_update[int](
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
-    \caption{SoA write (unpack)}
+    \caption{SoA write + unpack}
     \label{fig:unpack_write_soa}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-# Tuple "unpack" + member writes
-# arr: (int array * int array)
+arr: (int array * int array) =
+  ... # length n * length n
+p: int * int = ...
+# Unpack `arr`
 arr_x: int array =
   select(arr, 0)
-x0: int = select(p, 0)
-_ = prim Array_update[int](
-      arr_x, i, x0)
-
 arr_y: int array =
   select(arr, 1)
+# Unpack `p`
+x0: int = select(p, 0)
 y0: int = select(p, 1)
+
+# Separate per-member writes
+_ = prim Array_update[int](
+      arr_x, i, x0)
 _ = prim Array_update[int](
       arr_y, i, y0)
 \end{minted}
