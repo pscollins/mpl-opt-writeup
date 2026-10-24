@@ -221,8 +221,13 @@ int y = arr[i * tuple_len + 1];
 Speaking somewhat loosely, these two choices of strategies correspond to the
 familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
 layout is the natural default for a C++ programmer, where a composite type is
-embedded directly into the container (\cref{fig:cpp_aos_diagram}). The SoA layout
-is the natural default for SIMD programming, since it makes it simple to load contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}).
+embedded directly into the container (\cref{fig:cpp_aos_diagram}). The SoA
+layout is the natural default for SIMD programming, since it makes it simple to
+load contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}).
+The MLton default array-of-pointers layout (\cref{fig:aop_example}) lacks a name
+in standard performance-engineering parlance -- we will refer to it here as
+``AoP'' for simplicity.
+
 
 \begin{figure}[htbp]
   \centering
@@ -324,32 +329,36 @@ PointSoA struct_of_arrays;
   \label{fig:cpp_soa_diagram}
 \end{figure}
 
+\hl{TODO: MESSY}
+
 Libraries and frameworks to support SIMD CPU programming commonly offer support
 for accessing SoA-layout data via AoS-like syntax, e.g. Intel's ISPC, introduced
 in \citet{ispc-paper}. ``Manual,'' source-language-level SoA layouts are also a
 standard technique in high-performance GPU programming, as discussed in e.g.
-\citet{cuda-textbook}.
+\citet{cuda-textbook}. Without such constructs in our source
+language, it is necessary for the compiler to ``bridge the gap'' between
+flat-layout AoS/SoA containers and surrounding code that expects a
+heap-allocated tuple.
 
-The case of MLton differs slightly from the AoS/SoA tradeoff in that, as
-described in \cref{sec:background_deep_flatten}, our default memory layout is an
-array-of-pointers (\cref{fig:aop_example}). Since this construct lacks a name in
-standard performance-engineering parlance, we will refer to it here as AoP when
-necessary.
+%% we need our pass to convert pack/unpack operations
+
+%% The case of MLton differs slightly from the usual tradeoff
+%% between AoS and SoA in C++, since, as described
+%% in \cref{sec:background_deep_flatten}, our default memory layout is an
+%% array-of-pointers (\cref{fig:aop_example}). This construct lacks a name in
+%% standard performance-engineering parlance -- we will refer to it here as AoP
+%% when necessary.
 
 \begin{figure}[htbp]
-  \centering
-  \tikzset{
-    cell/.style={draw=black!75, line width=0.5pt, minimum height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
-    idx/.style={font=\tiny\color{textMuted}},
-    labelnode/.style={font=\scriptsize\bfseries},
-    ptr/.style={circle, fill=colorPtrBorder, inner sep=1.2pt},
-    arrptr/.style={-{Stealth[length=3.5pt, width=2.8pt]}, line width=0.7pt, color=colorPtrBorder},
-    brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line width=0.5pt, black!70}
-  }
-  \begin{subfigure}[t]{0.45\textwidth}
-    \caption{C++ container definition}
-    \label{fig:cpp_aop_code}
-    \vspace{1mm}
+  \centering \tikzset{ cell/.style={draw=black!75, line width=0.5pt, minimum
+  height=0.44cm, font=\scriptsize, align=center, inner sep=0pt},
+  idx/.style={font=\tiny\color{textMuted}},
+  labelnode/.style={font=\scriptsize\bfseries}, ptr/.style={circle,
+  fill=colorPtrBorder, inner sep=1.2pt}, arrptr/.style={-{Stealth[length=3.5pt,
+  width=2.8pt]}, line width=0.7pt, color=colorPtrBorder},
+  brace/.style={decorate, decoration={brace, amplitude=3pt, mirror}, line
+  width=0.5pt, black!70} } \begin{subfigure}[t]{0.45\textwidth} \caption{C++
+  container definition} \label{fig:cpp_aop_code} \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.8mm,rulecolor=\color{black!20}]{cpp}
 struct Point {
   int x;
@@ -394,6 +403,15 @@ std::vector<Point*> array_of_pointers;
 
 \hl{TODO: EDIT FROM HERE}
 
+Bridging the gap consists, broadly, in inserting ``pack'' and ``unpack''
+sequences as necessary around all \texttt{prim} operations that access container
+types, replacing the AoP container type with its AoS/SoA equivalent
+(\cref{fig:pack_unpack_example}).
+
+TODO(agy): give an example for fig pack unpack example of AoP SSA IR that does
+an array read (lhs) and then the AoS + SoA translation (rhs). do an array write
+also
+
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
 operations for elements read from the AoS/SoA versions of the containers, and
@@ -414,6 +432,7 @@ of the transformation in order to enable cases where some, but not all AoP
 containers in the program are \texttt{ShallowFlatten}ed: the implementation
 below assumes all-or-nothing conversion.
 
+\hl{TODO: talk about nesting}
 
 %% \hl{TODO: FIGURE FROM GEMINI -- NEED TO INTEGRATE INTO THE TEXT}
 
