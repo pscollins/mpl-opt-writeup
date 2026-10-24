@@ -401,99 +401,140 @@ std::vector<Point*> array_of_pointers;
   \label{fig:aop_example}
 \end{figure}
 
-\hl{TODO: EDIT FROM HERE}
+%% \hl{TODO: EDIT FROM HERE}
 
 Bridging the gap consists, broadly, in inserting ``pack'' and ``unpack''
 sequences as necessary around all \texttt{prim} operations that access container
 types, replacing the AoP container type with its AoS/SoA equivalent
 (\cref{fig:pack_unpack_example}).
 
-TODO(agy): split the RHS examples into two separate sub-figures (distinct AoS /
-SoA). also change it to include the consuming select operation for the read
-
+\hl{TODO: TWEAK COMMENTS}
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}{\textwidth}
-    \caption{Array read: AoP $\to$ AoS/SoA conversion}
+  % --- Set 1: Array read ---
+  {\centering\textbf{\footnotesize Array read: AoP $\to$ AoS / SoA (pack)}\par}\vspace{1mm}
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{Original AoP read}
+    \label{fig:pack_read_aop}
     \label{fig:pack_read_example}
     \vspace{1mm}
-    \begin{minipage}[t]{0.38\textwidth}
-      {\centering\textbf{\footnotesize Original AoP-style \texttt{SSA} IR}\par}\vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 # Array read in AoP
 arr: (int * int) array = ...
 
-# Direct read returns tuple object
+# Direct read returns tuple
 p: int * int =
-  prim Array_sub[int * int](arr, i)
+  prim Array_sub[int * int](
+    arr, i)
 
-# Consuming code uses tuple `p`
+# Consuming still code uses `p`
 x: int = select(p, 0)
 y: int = select(p, 1)
 \end{minted}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[t]{0.60\textwidth}
-      {\centering\textbf{\footnotesize Transformed AoS/SoA-style \texttt{SSA}\par}\vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# AoS: read flat slice, "pack" into tuple
-# (arr: int array of length 2n)
-x: int = prim Array_sub[int](arr, i * 2)
-y: int = prim Array_sub[int](arr, i * 2 + 1)
-p: int * int = tuple(x, y)  # pack
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{AoS read (pack)}
+    \label{fig:pack_read_aos}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+# Read flat slice + "pack"
+# arr: int array (length 2n)
+x0: int =
+  prim Array_sub[int](
+    arr, i * 2)
+y0: int =
+  prim Array_sub[int](
+    arr, i * 2 + 1)
+p: int * int = tuple(x0, y0)
 
-# SoA: read parallel fields, "pack" into tuple
-# (arr: int array * int array)
-arr_x: int array = select(arr, 0)
-x: int = prim Array_sub[int](arr_x, i)
-arr_y: int array = select(arr, 1)
-y: int = prim Array_sub[int](arr_y, i)
-p: int * int = tuple(x, y)  # pack
+# Consuming still code uses `p`
+x: int = select(p, 0)
+y: int = select(p, 1)
 \end{minted}
-    \end{minipage}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{SoA read (pack)}
+    \label{fig:pack_read_soa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+# Read member fields + "pack"
+# arr: (int array * int array)
+arr_x: int array =
+  select(arr, 0)
+x0: int =
+  prim Array_sub[int](arr_x, i)
+arr_y: int array =
+  select(arr, 1)
+y0: int =
+  prim Array_sub[int](arr_y, i)
+p: int * int = tuple(x0, y0)
+
+# Consuming code still uses `p`
+x: int = select(p, 0)
+y: int = select(p, 1)
+\end{minted}
   \end{subfigure}
 
   \vspace{3mm}
 
-  \begin{subfigure}{\textwidth}
-    \caption{Array write: AoP $\to$ AoS/SoA conversion}
+  % --- Set 2: Array write ---
+  {\centering\textbf{\footnotesize Array write: AoP $\to$ AoS / SoA (unpack)}\par}\vspace{1mm}
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{Original AoP write}
+    \label{fig:unpack_write_aop}
     \label{fig:unpack_write_example}
     \vspace{1mm}
-    \begin{minipage}[t]{0.38\textwidth}
-      {\centering\textbf{\footnotesize Original AoP-style \texttt{SSA} IR}\par}\vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 # Array write in AoP
 arr: (int * int) array = ...
 p: int * int = ...
 
 # Direct write of tuple object
-_ = prim Array_update[int * int](
-      arr, i, p)
+_ = prim Array_update[
+      int * int](arr, i, p)
 \end{minted}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}[t]{0.60\textwidth}
-      {\centering\textbf{\footnotesize Transformed SSA IR (AoS and SoA)}\par}\vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# AoS: "unpack" tuple, write to flat slice
-x: int = select(p, 0)       # unpack
-y: int = select(p, 1)
-_ = prim Array_update[int](arr, i * 2, x)
-_ = prim Array_update[int](arr, i * 2 + 1, y)
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{AoS write (unpack)}
+    \label{fig:unpack_write_aos}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+# Tuple "unpack" + flat write
+# arr: int array (length 2n)
+x0: int = select(p, 0)
+y0: int = select(p, 1)
 
-# SoA: "unpack" tuple, write to parallel arrays
-arr_x: int array = select(arr, 0)
-x: int = select(p, 0)       # unpack
-_ = prim Array_update[int](arr_x, i, x)
-arr_y: int array = select(arr, 1)
-y: int = select(p, 1)
-_ = prim Array_update[int](arr_y, i, y)
+_ = prim Array_update[int](
+      arr, i * 2, x0)
+_ = prim Array_update[int](
+      arr, i * 2 + 1, y0)
 \end{minted}
-    \end{minipage}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{SoA write (unpack)}
+    \label{fig:unpack_write_soa}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+# Tuple "unpack" + member writes
+# arr: (int array * int array)
+arr_x: int array =
+  select(arr, 0)
+x0: int = select(p, 0)
+_ = prim Array_update[int](
+      arr_x, i, x0)
+
+arr_y: int array =
+  select(arr, 1)
+y0: int = select(p, 1)
+_ = prim Array_update[int](
+      arr_y, i, y0)
+\end{minted}
   \end{subfigure}
   \caption{Pack and unpack sequences inserted by \texttt{ShallowFlatten} around primitive operations on containers of tuples (illustrated for \texttt{int * int})}
   \label{fig:pack_unpack_example}
 \end{figure}
+
+\hl{TODO: EDIT FROM HERE}
 
 In order to handle the case where the consuming operations of the array elements
 cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
