@@ -608,6 +608,13 @@ t2: int * (int array * int array) =
   \label{fig:soa_flat_deep_example}
 \end{figure}
 
+Finally, we consider the cases when this transformation is most likely to be
+profitable: since we are concerned with efficiently utilizing memory bandwidth,
+this transformation makes the most sense when the size of the \texttt{tuple}
+member is small -- in the limiting case, an array with elements that are many-KB
+large has little to gain from the AoP to AoS/SoA conversion. Hence we limit the
+transformation to apply only to tuples below a certain size threshold (measured
+in the count of members, for simplicity).
 
 %% As a result, the implementation below assumes an all-or-nothing conversion.
 %% Using non-standard extensions to the SML language provided by MLton and MPL, it
