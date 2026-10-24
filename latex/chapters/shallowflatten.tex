@@ -570,10 +570,43 @@ embedded inside of e.g. \texttt{datatype} definitions or other container types
 flattenable containers are embedded inside of other objects. See
 \cref{fig:soa_flat_deep_example} for an illustration.
 
-TODO(agy): add fig soa flat deep example. show a case where we have a tuple that
-contains an array of int * int element, and we extract it with `select` and do
-some unspecified operation on it. then show the post-transformation IR and note
-that the type inside of the tuple must be transformed
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Before \texttt{ShallowFlatten}}
+    \label{fig:soa_flat_deep_before}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Tuple containing an (int * int) array
+t1: (int * int) array * int = ...
+
+# Extract the embedded array via `select`
+arr: (int * int) array = select(t1, 0)
+
+# Pack `arr` into a different tuple
+t2: int * (int * int) array =
+  tuple(x, arr)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After \texttt{ShallowFlatten} (SoA)}
+    \label{fig:soa_flat_deep_after}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Embedded type in `t1` must be transformed
+t1: (int array * int array) * int = ...
+
+# Extracted container now has SoA type
+arr: int array * int array = select(t1, 0)
+
+# Embedded type in `t2` must also change
+t2: int * (int array * int array) =
+  tuple(x, arr)
+\end{minted}
+  \end{subfigure}
+  \caption{Flattenable container types embedded inside composite objects must be rewritten wherever they appear. Here, \texttt{arr} is projected out of tuple \texttt{t1} via \texttt{select} and packed into a second tuple \texttt{t2}; in both \texttt{t1} and \texttt{t2}, the embedded \texttt{(int * int) array} type must be transformed (\texttt{int array * int array} under SoA, or \texttt{int array} under AoS) so that both operations remain well-typed.}
+  \label{fig:soa_flat_deep_example}
+\end{figure}
 
 
 %% As a result, the implementation below assumes an all-or-nothing conversion.
