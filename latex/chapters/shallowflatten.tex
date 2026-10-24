@@ -427,7 +427,6 @@ with homogoneous types does not sacrifice any performance -- container-of-tuple
 types represented in these workloads generally correspond to e.g. 2-$d$ points
 in space, which are naturally homogeneous.
 
-\hl{TODO: TWEAK COMMENTS}
 \begin{figure}[htbp]
   \centering
   % --- Set 1: Array read ---
@@ -558,29 +557,52 @@ _ = prim Array_update[int](
   \label{fig:pack_unpack_example}
 \end{figure}
 
-\hl{TODO: EDIT FROM HERE}
 
-In order to handle the case where the consuming operations of the array elements
-cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
-operations for elements read from the AoS/SoA versions of the containers, and
-``unpack'' operations for elements written to the AoS/SoA versions. This lets us
-preserve the pre-existing names and types in the consuming code (for the
-elements), simplifying the transformation at the cost of some
-potentially-unnecessary heap operations if the intermediate tuples can't be
-optimzied away by later passes. While this can in theory result in a net
-performance loss, choosing the right heuristic for flattening is a question for
-the benchmarks, and the high cost of the AoP layout means that the bar to clear
-is very low.
+While inserting pack/unpack operations allow us to preserve pre-existing names
+and types in code that consumes container elements, the types of the containers
+themselves must be rewritten in order to reflect the new layouts. Like
+\texttt{PreFlatten} (and unlike \texttt{DeepFlatten}), \texttt{ShallowFlatten}
+aims to be a simple, purely-local transformation (rather than a complicated
+global lattice analysis). Consequently, it is necessary for the pass to
+eliminate every single appearance of a flattenable container type -- even those
+embedded inside of e.g. \texttt{datatype} definitions or other container types
+-- since otherwise we would end up with mismatched types at boundaries where
+flattenable containers are embedded inside of other objects. See
+\cref{fig:soa_flat_deep_example} for an illustration.
 
-For the containers themselves, however, we need to update the types everywhere
-that they appear: not only in variable bindings and function arguments, but also
-in \texttt{datatype} declarations, including \texttt{datatype}s introduced as
-part of closure conversion. This makes it difficult to support partial versions
-of the transformation in order to enable cases where some, but not all AoP
-containers in the program are \texttt{ShallowFlatten}ed: the implementation
-below assumes all-or-nothing conversion.
+TODO(agy): add fig soa flat deep example. show a case where we have a tuple that
+contains an array of int * int element, and we extract it with `select` and do
+some unspecified operation on it. then show the post-transformation IR and note
+that the type inside of the tuple must be transformed
 
-\hl{TODO: talk about nesting}
+
+%% As a result, the implementation below assumes an all-or-nothing conversion.
+%% Using non-standard extensions to the SML language provided by MLton and MPL, it
+%% is possible to construct cases 
+
+%% \hl{TODO: EDIT FROM HERE}
+
+%% In order to handle the case where the consuming operations of the array elements
+%% cannot or should not be flattened, \texttt{ShallowFlatten} inserts ``pack''
+%% operations for elements read from the AoS/SoA versions of the containers, and
+%% ``unpack'' operations for elements written to the AoS/SoA versions. This lets us
+%% preserve the pre-existing names and types in the consuming code (for the
+%% elements), simplifying the transformation at the cost of some
+%% potentially-unnecessary heap operations if the intermediate tuples can't be
+%% optimzied away by later passes. While this can in theory result in a net
+%% performance loss, choosing the right heuristic for flattening is a question for
+%% the benchmarks, and the high cost of the AoP layout means that the bar to clear
+%% is very low.
+
+%% For the containers themselves, however, we need to update the types everywhere
+%% that they appear: not only in variable bindings and function arguments, but also
+%% in \texttt{datatype} declarations, including \texttt{datatype}s introduced as
+%% part of closure conversion. This makes it difficult to support partial versions
+%% of the transformation in order to enable cases where some, but not all AoP
+%% containers in the program are \texttt{ShallowFlatten}ed: the implementation
+%% below assumes all-or-nothing conversion.
+
+%% \hl{TODO: talk about nesting}
 
 %% \hl{TODO: FIGURE FROM GEMINI -- NEED TO INTEGRATE INTO THE TEXT}
 
