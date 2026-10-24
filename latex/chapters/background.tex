@@ -196,31 +196,30 @@ immutable container of objects of type \texttt{a'}, respectively.
   \centering
   \small
   \begin{tabular}{@{}r@{\quad}r@{\;}c@{\;}l@{}}
-    \texttt{constant}  & $c$    & $\in$      & $\mathit{Const}$ \\
-    \texttt{primitive} & $p$    & $\in$      & $\mathit{Prim}$ \\
-    \texttt{variable}  & $x$    & $\in$      & $\mathit{Var}$ \\
-    \texttt{label}     & $l$    & $\in$      & $\mathit{Label}$ \\
-    \texttt{function}  & $f$    & $\in$      & $\mathit{Func}$ \\
-    \texttt{datatype}  & $t, C$ & $\in$      & $\mathit{TypeName} \times \mathit{Con}$ \\[0.6em]
-    \texttt{program}   & $P$    & $\Coloneqq$ & $d \mid P \; P \mid \epsilon$ \\
-    \texttt{top-decl}  & $d$    & $\Coloneqq$ & $D \mid s \mid F$ \\
-    \texttt{datatype}  & $D$    & $\Coloneqq$ & $\texttt{datatype}\; t \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\tau_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\tau_n]$ \\
-    \texttt{function}  & $F$    & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} \tau \mathrel{\texttt{=}} B_1 \dots B_m$ \\
-    \texttt{block}     & $B$    & $\Coloneqq$ & $\texttt{block}\; l\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} s_1 \dots s_k \; T$ \\
-    \texttt{statement} & $s$    & $\Coloneqq$ & $\texttt{(}x \mathbin{\texttt{:}} \tau \mid \texttt{\_}\texttt{)} \mathrel{\texttt{=}} e$ \\[0.4em]
-    \texttt{exp}       & $e$    & $\Coloneqq$ & $v$ \\
-                       &        & $\mid$     & $\texttt{prim}\; p\texttt{[}\tau_1\texttt{,}\;\dots\texttt{,}\;\tau_m\texttt{](}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
-                       &        & $\mid$     & $\texttt{tuple(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
-                       &        & $\mid$     & $\texttt{select(}v\texttt{,}\;i\texttt{)}$ \\
-                       &        & $\mid$     & $\texttt{con}\; C\;\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\[0.4em]
-    \texttt{transfer}  & $T$    & $\Coloneqq$ & $\texttt{return}\; v$ \\
-                       &        & $\mid$     & $\texttt{goto}\; l\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
-                       &        & $\mid$     & $\texttt{call}\;\texttt{(}l \mid \texttt{tail}\texttt{)}\; f\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
-                       &        & $\mid$     & $\texttt{case}\; v \;\texttt{of}\; pat_1 \mathrel{\texttt{=>}} \texttt{goto}\; l_1\texttt{(}\vec{v}_1\texttt{)} \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} pat_m \mathrel{\texttt{=>}} \texttt{goto}\; l_m\texttt{(}\vec{v}_m\texttt{)}$ \\[0.4em]
-    \texttt{pattern}   & $pat$  & $\Coloneqq$ & $C \mid C\texttt{(}x\texttt{)} \mid c \mid \texttt{\_}$ \\
-    \texttt{operand}   & $v$    & $\Coloneqq$ & $x \mid c$ \\
-    \texttt{type}      & $\tau$ & $\Coloneqq$ & $b \mid t \mid \tau_1 \mathbin{\texttt{*}} \dots \mathbin{\texttt{*}} \tau_n \mid \tau\;\texttt{array} \mid \tau\;\texttt{vector}$ \\
-    \texttt{base-type} & $b$    & $\Coloneqq$ & $\texttt{int} \mid \texttt{real} \mid \texttt{bool} \mid \texttt{unit} \mid \dots$
+    \texttt{constant}    & $c$    & $\in$      & $\mathit{Const}$ \\
+    \texttt{primitive}   & $p$    & $\in$      & $\mathit{Prim}$ \\
+    \texttt{variable}    & $x$    & $\in$      & $\mathit{Var}$ \\
+    \texttt{label}       & $l$    & $\in$      & $\mathit{Label}$ \\
+    \texttt{function}    & $f$    & $\in$      & $\mathit{Func}$ \\
+    \texttt{datatype}    & $T$    & $\in$      & $\mathit{TypeName}$ \\
+    \texttt{constructor} & $C$    & $\in$      & $\mathit{Con}$ \\[0.6em]
+    \texttt{program}     & $P$    & $\Coloneqq$ & $D^* \; F^*$ \\
+    \texttt{datatype}    & $D$    & $\Coloneqq$ & $\texttt{datatype}\; T \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\tau_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\tau_n]$ \\
+    \texttt{function}    & $F$    & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} \tau \mathrel{\texttt{=}} B_1 \dots B_m$ \\
+    \texttt{block}       & $B$    & $\Coloneqq$ & $\texttt{block}\; l\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} s_1 \dots s_k \; tr$ \\
+    \texttt{statement}   & $s$    & $\Coloneqq$ & $\texttt{(}x \mathbin{\texttt{:}} \tau \mid \texttt{\_}\texttt{)} \mathrel{\texttt{=}} e$ \\[0.4em]
+    \texttt{exp}         & $e$    & $\Coloneqq$ & $v$ \\
+                         &        & $\mid$     & $\texttt{prim}\; p\texttt{[}\tau_1\texttt{,}\;\dots\texttt{,}\;\tau_m\texttt{](}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                         &        & $\mid$     & $\texttt{tuple(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                         &        & $\mid$     & $\texttt{select(}v\texttt{,}\;i\texttt{)}$ \\
+                         &        & $\mid$     & $\texttt{con}\; C\;\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\[0.4em]
+    \texttt{transfer}    & $tr$   & $\Coloneqq$ & $\texttt{return}\; v$ \\
+                         &        & $\mid$     & $\texttt{goto}\; l\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                         &        & $\mid$     & $\texttt{call}\;\texttt{(}l \mid \texttt{tail}\texttt{)}\; f\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                         &        & $\mid$     & $\texttt{case}\; v \;\texttt{of}\; pat_1 \mathrel{\texttt{=>}} \texttt{goto}\; l_1\texttt{(}\vec{v}_1\texttt{)} \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} pat_m \mathrel{\texttt{=>}} \texttt{goto}\; l_m\texttt{(}\vec{v}_m\texttt{)}$ \\[0.4em]
+    \texttt{pattern}     & $pat$  & $\Coloneqq$ & $C \mid C\texttt{(}x\texttt{)} \mid c \mid \texttt{\_}$ \\
+    \texttt{operand}     & $v$    & $\Coloneqq$ & $x \mid c$ \\
+    \texttt{type}        & $\tau$ & $\Coloneqq$ & $\texttt{int} \mid \texttt{real} \mid \texttt{bool} \mid \texttt{unit} \mid T \mid \tau_1 \mathbin{\texttt{*}} \dots \mathbin{\texttt{*}} \tau_n \mid \tau\;\texttt{array} \mid \tau\;\texttt{vector}$
   \end{tabular}
   \caption{Abstract syntax of the \texttt{SSA} intermediate representation.}
   \label{fig:ssa_grammar}
