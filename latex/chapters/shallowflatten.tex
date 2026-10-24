@@ -1233,6 +1233,219 @@ The other operations follow in the obvious way:
 
 \hl{TODO: DISCUSS SECOND CALL TO PROPAGATE TYPES?}
 
+\section{Formalization}
+\label{sec:shallowflatten_formalization}
+
+Following the grammar of the \texttt{SSA} IR in \cref{fig:ssa_grammar}, we
+formalize the action of \texttt{ShallowFlatten} on a program $P = D_1 \cdots D_l
+\; F_1 \cdots F_m$. The transformation is parameterized by a layout strategy
+(SoA or AoS) and a maximum tuple width threshold $W \ge 2$, which together
+determine a predicate $\Phi(\tau)$ identifying flattenable element types:
+\begin{itemize}
+\item Under the SoA strategy, a tuple type $\tau = \tau_1 * \cdots * \tau_k$ is
+  flattenable ($\Phi_{\text{SoA}}(\tau)$) whenever its width satisfies $2 \le k
+  \le W$. Under the AoS strategy, $\tau$ must additionally be homogeneous
+  ($\Phi_{\text{AoS}}(\tau)$), with $\tau_1 = \cdots = \tau_k = \tau_0$,
+  \cref{fig:shallowflatten_types}.
+
+\item Every type annotation $\tau$ in the program is rewritten by iterating the
+  single-step type transformation $\sembrack{\tau}$ to a fixed point
+  $\sembrack{\tau}^*$, converting containers over flattenable tuple types into
+  tuples of containers (SoA) or single containers over the homogeneous member
+  type (AoS) while traversing deeply into nested composite types,
+  \cref{fig:shallowflatten_types}.
+
+\item Top-level non-statement AST constructs (\texttt{datatype} declarations
+  $D$, function signatures $F$, and basic block headers $B$) replace all
+  embedded type annotations $\tau$ with their fixed-point flattened counterparts
+  $\sembrack{\tau}^*$, while control-flow transfers $tr$ contain no type
+  annotations and remain unchanged, \cref{fig:shallowflatten_ast_top}.
+
+\item Statements $s$ are rewritten by iterating the single-step statement
+  transformation $\sembrack{s}$ to a fixed point $\sembrack{s_1 \cdots s_m}^*$
+  within each basic block, \cref{fig:shallowflatten_ast_top}. Non-\texttt{prim}
+  statements and \texttt{prim} applications that do not manipulate flattenable
+  containers act as passthroughs, updating only their embedded type annotations
+  via $\sembrack{\cdot}$, \cref{fig:shallowflatten_passthrough}.
+
+\item Primitive applications on containers with flattenable element types $\tau$
+  (drawn from the set of container primitives $\mathcal{P}_{\text{container}}$)
+  are expanded into sequences of per-member operations paired with
+  \texttt{tuple} pack and \texttt{select} unpack statements under SoA
+  (\cref{fig:shallowflatten_prims_soa}) or scaled-index slice operations under
+  AoS (\cref{fig:shallowflatten_prims_aos}). Iterating $\sembrack{\cdot}$ to a
+  fixed point both expands nested flattenable containers and propagates updated
+  types across all newly-emitted statements.
+\end{itemize}
+
+\Cref{fig:shallow_flatten_ast,fig:shallow_flatten_prims} make this precise,
+writing $\sembrack{\cdot}$ for a single step of the transformation and
+$\sembrack{\cdot}^*$ for its fixed-point closure. To avoid duplicating identical
+rules across mutable and immutable containers, we write $K \in \{\mathtt{Array},
+\mathtt{Vector}\}$ for a container family and $\kappa_K \in \{\mathtt{array},
+\mathtt{vector}\}$ for its corresponding type constructor (with $\kappa$
+ranging over $\{\mathtt{array}, \mathtt{vector}\}$). In a block body,
+$(S_j)_{j=1}^{k}$ denotes the concatenation $S_1 \cdots S_k$ of the statement
+sequences $S_j$, and inline integer expressions such as $n \cdot k$, $n' / k$,
+and $i \cdot k + (j - 1)$ in operand positions abbreviate the corresponding
+\texttt{Word32} arithmetic \texttt{prim} bindings.
+
+\begin{figure}[htbp]
+  \centering
+  \footnotesize
+  \captionsetup[subfigure]{aboveskip=2pt,belowskip=0pt}
+  \setlength{\abovedisplayskip}{1pt}
+  \setlength{\belowdisplayskip}{1pt}
+  \setlength{\jot}{1pt}
+  \begin{subfigure}{\textwidth}
+    \caption{Flattenable element predicates $\Phi$ and type transformation $\sembrack{\tau}^*$ (with $\kappa \in \{\mathtt{array}, \mathtt{vector}\}$)}
+    \label{fig:shallowflatten_types}
+    \[
+    \begin{aligned}
+      \Phi_{\text{SoA}}(\tau)
+        &\iff \tau = \tau_1 * \cdots * \tau_k \;\text{ and }\; 2 \le k \le W \\
+      \Phi_{\text{AoS}}(\tau)
+        &\iff \tau = \underbrace{\tau_0 * \cdots * \tau_0}_{k} \;\text{ and }\; 2 \le k \le W \\
+      \sembrack{(\tau_1 * \cdots * \tau_k)\;\kappa}
+        &= \begin{cases}
+             \sembrack{\tau_1}\;\kappa * \cdots * \sembrack{\tau_k}\;\kappa
+               & \text{if } \Phi_{\text{SoA}}(\tau_1 * \cdots * \tau_k) \text{ (SoA)} \\
+             \sembrack{\tau_1}\;\kappa
+               & \text{if } \Phi_{\text{AoS}}(\tau_1 * \cdots * \tau_k) \text{ (AoS)} \\
+             (\sembrack{\tau_1} * \cdots * \sembrack{\tau_k})\;\kappa
+               & \text{otherwise}
+           \end{cases} \\
+      \sembrack{\tau\;\kappa}
+        &= \sembrack{\tau}\;\kappa
+           \quad (\tau \text{ not a tuple}), \qquad
+      \sembrack{\tau_1 * \cdots * \tau_k}
+        = \sembrack{\tau_1} * \cdots * \sembrack{\tau_k} \\
+      \sembrack{\tau}
+        &= \tau
+           \quad (\tau \in \{\mathtt{int}, \mathtt{real}, \mathtt{bool}, \mathtt{unit}, T\}), \qquad
+      \sembrack{\tau}^*
+        = \begin{cases}
+            \tau & \text{if } \sembrack{\tau} = \tau \\
+            \sembrack{\sembrack{\tau}}^* & \text{otherwise}
+          \end{cases}
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Action on top-level AST constructs and fixed-point statement sequence flattening}
+    \label{fig:shallowflatten_ast_top}
+    \[
+    \begin{aligned}
+      \sembrack{D_1 \cdots D_l \; F_1 \cdots F_m}
+        &= \sembrack{D_1} \cdots \sembrack{D_l} \; \sembrack{F_1} \cdots \sembrack{F_m} \\
+      \sembrack{\mathtt{datatype}\ T \syneq C_1\ [\mathtt{of}\ \tau_1] \mathrel{\mathtt{|}} \dots \mathrel{\mathtt{|}} C_n\ [\mathtt{of}\ \tau_n]}
+        &= \mathtt{datatype}\ T \syneq C_1\ [\mathtt{of}\ \sembrack{\tau_1}^*] \mathrel{\mathtt{|}} \dots \mathrel{\mathtt{|}} C_n\ [\mathtt{of}\ \sembrack{\tau_n}^*] \\
+      \sembrack{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq B_1 \cdots B_m}
+        &= \mathtt{def}\ f(x_1{:}\sembrack{\tau_1}^*, \dots, x_n{:}\sembrack{\tau_n}^*) : \sembrack{\tau}^* \syneq \sembrack{B_1} \cdots \sembrack{B_m} \\
+      \sembrack{\mathtt{block}\ l(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : s_1 \cdots s_m \; tr}
+        &= \mathtt{block}\ l(x_1{:}\sembrack{\tau_1}^*, \dots, x_n{:}\sembrack{\tau_n}^*) : \sembrack{s_1 \cdots s_m}^* \; tr \\
+      \sembrack{s_1 \cdots s_m}^*
+        &= \begin{cases}
+             s_1 \cdots s_m & \text{if } \sembrack{s_1} \cdots \sembrack{s_m} = s_1 \cdots s_m \\
+             \sembrack{\sembrack{s_1} \cdots \sembrack{s_m}}^* & \text{otherwise}
+           \end{cases}
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \begin{subfigure}{\textwidth}
+    \caption{Single-step statement transformation $\sembrack{s}$ for passthrough statements}
+    \label{fig:shallowflatten_passthrough}
+    \[
+    \begin{aligned}
+      \mathcal{P}_{\text{container}}
+        &= \{\, \mathtt{Array\_alloc}, \mathtt{Array\_uninitIsNop}, \mathtt{Array\_uninit}, \mathtt{Array\_update}, \\
+        &\phantom{= \{\,\,} \mathtt{Array\_length}, \mathtt{Vector\_length}, \mathtt{Array\_sub}, \mathtt{Vector\_sub}, \\
+        &\phantom{= \{\,\,} \mathtt{Array\_toArray}, \mathtt{Array\_toVector} \,\} \\
+      \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq e}
+        &= (x{:}\sembrack{\tau} \mid \mathtt{\_}) \syneq e
+           \qquad (e \text{ is not a } \mathtt{prim} \text{ expression}) \\
+      \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v})}
+        &= (x{:}\sembrack{\tau} \mid \mathtt{\_}) \syneq \mathtt{prim}\ p[\sembrack{\tau_1}, \dots, \sembrack{\tau_m}](\vec{v}) \\
+        &\phantom{=\,\,} (p \notin \mathcal{P}_{\text{container}} \lor \neg \Phi(\tau_1))
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \caption{Type, top-level AST, and passthrough statement rules for the \texttt{ShallowFlatten} transformation on the \texttt{SSA} IR.}
+  \label{fig:shallow_flatten_ast}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \footnotesize
+  \captionsetup[subfigure]{aboveskip=2pt,belowskip=0pt}
+  \setlength{\abovedisplayskip}{1pt}
+  \setlength{\belowdisplayskip}{1pt}
+  \setlength{\jot}{1pt}
+  \begin{subfigure}{\textwidth}
+    \caption{SoA container primitive rewrites for $\tau = \tau_1 * \cdots * \tau_k$ with $\Phi_{\text{SoA}}(\tau)$ (where $a_j, a'_j, x_j$ are fresh names)}
+    \label{fig:shallowflatten_prims_soa}
+    \[
+    \begin{aligned}
+      \sembrack{a : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](n)}
+        &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau_j](n) \,\big)_{j=1}^{k} \\
+        &\phantom{=\,\,} a : \tau_1\;\mathtt{array} * \cdots * \tau_k\;\mathtt{array} \syneq \mathtt{tuple}(a_1, \dots, a_k) \\
+      \sembrack{n : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a)}
+        &= a_1 : \tau_1\;\kappa_K \syneq \mathtt{select}(a, 0); \\
+        &\phantom{=\,\,} n : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau_1](a_1) \\
+      \sembrack{x : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a, i)}
+        &= \big(\, a_j : \tau_j\;\kappa_K \syneq \mathtt{select}(a, j-1); \\
+        &\phantom{= \big(\,\,} x_j : \tau_j \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau_j](a_j, i) \,\big)_{j=1}^{k} \\
+        &\phantom{=\,\,} x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x_1, \dots, x_k) \\
+      \sembrack{\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a, i, x)}
+        &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1); \\
+        &\phantom{= \big(\,\,} x_j : \tau_j \syneq \mathtt{select}(x, j-1); \\
+        &\phantom{= \big(\,\,} \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau_j](a_j, i, x_j) \,\big)_{j=1}^{k} \\
+      \sembrack{b : \mathtt{bool} \syneq \mathtt{prim\ Array\_uninitIsNop}[\tau](a)}
+        &= b : \mathtt{bool} \syneq \mathtt{false} \\
+      \sembrack{\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a, i)}
+        &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1); \\
+        &\phantom{= \big(\,\,} \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau_j](a_j, i) \,\big)_{j=1}^{k} \\
+      \sembrack{a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a)}
+        &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1); \\
+        &\phantom{= \big(\,\,} a'_j : \tau_j\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau_j](a_j) \,\big)_{j=1}^{k} \\
+        &\phantom{=\,\,} a' : \tau_1\;\kappa_K * \cdots * \tau_k\;\kappa_K \syneq \mathtt{tuple}(a'_1, \dots, a'_k)
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \begin{subfigure}{\textwidth}
+    \caption{AoS container primitive rewrites for $\tau = \tau_0 * \cdots * \tau_0$ ($k$ members) with $\Phi_{\text{AoS}}(\tau)$ (where $x_j, n'$ are fresh names)}
+    \label{fig:shallowflatten_prims_aos}
+    \[
+    \begin{aligned}
+      \sembrack{a : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](n)}
+        &= a : \tau_0\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau_0](n \cdot k) \\
+      \sembrack{n : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a)}
+        &= n' : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau_0](a);\;\;
+           n : \mathtt{int} \syneq n' / k \\
+      \sembrack{x : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a, i)}
+        &= \big(\, x_j : \tau_0 \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau_0](a, i \cdot k + (j - 1)) \,\big)_{j=1}^{k} \\
+        &\phantom{=\,\,} x : \tau_0 * \cdots * \tau_0 \syneq \mathtt{tuple}(x_1, \dots, x_k) \\
+      \sembrack{\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a, i, x)}
+        &= \big(\, x_j : \tau_0 \syneq \mathtt{select}(x, j-1); \\
+        &\phantom{= \big(\,\,} \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau_0](a, i \cdot k + (j - 1), x_j) \,\big)_{j=1}^{k} \\
+      \sembrack{b : \mathtt{bool} \syneq \mathtt{prim\ Array\_uninitIsNop}[\tau](a)}
+        &= b : \mathtt{bool} \syneq \mathtt{false} \\
+      \sembrack{\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a, i)}
+        &= \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau_0](a, i \cdot k + (j - 1)) \,\big)_{j=1}^{k} \\
+      \sembrack{a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a)}
+        &= a' : \tau_0\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau_0](a)
+    \end{aligned}
+    \]
+  \end{subfigure}
+
+  \caption{Container primitive rewrite rules $\sembrack{s}$ for the SoA and AoS variants of \texttt{ShallowFlatten}, with $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ and $\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$.}
+  \label{fig:shallow_flatten_prims}
+\end{figure}
+
 \section{Limitations}
 As outlined above, this implementation only supports the case when all AoP
 containers of a given type are flattened -- we cannot support a mix of flattened
