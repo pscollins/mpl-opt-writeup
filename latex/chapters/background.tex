@@ -195,38 +195,34 @@ immutable container of objects of type \texttt{a'}, respectively.
 \begin{figure}[htbp]
   \centering
   \small
-  \begin{align*}
-    \langle\textit{program}\rangle &\Coloneqq \langle\textit{decl}\rangle^+ \\[0.3em]
-    \langle\textit{decl}\rangle &\Coloneqq \langle\textit{datatype\_def}\rangle \mid \langle\textit{stmt}\rangle \mid \langle\textit{function\_def}\rangle \\[0.3em]
-    \langle\textit{datatype\_def}\rangle &\Coloneqq \texttt{datatype} \;\langle\textit{id}\rangle \mathrel{\texttt{=}} \langle\textit{con\_def}\rangle \;(\texttt{|} \;\langle\textit{con\_def}\rangle)^* \\[0.3em]
-    \langle\textit{con\_def}\rangle &\Coloneqq \langle\textit{id}\rangle \;[\texttt{of} \;\langle\textit{type}\rangle] \\[0.3em]
-    \langle\textit{function\_def}\rangle &\Coloneqq \texttt{def} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{type}\rangle \mathrel{\texttt{=}} \langle\textit{block}\rangle^+ \\[0.3em]
-    \langle\textit{param\_list}\rangle &\Coloneqq \langle\textit{param}\rangle \;(\texttt{,} \;\langle\textit{param}\rangle)^* \\[0.3em]
-    \langle\textit{param}\rangle &\Coloneqq \langle\textit{id}\rangle \mathbin{\texttt{:}} \langle\textit{type}\rangle \\[0.3em]
-    \langle\textit{block}\rangle &\Coloneqq \texttt{block} \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{param\_list}\rangle]\, \texttt{)} \mathbin{\texttt{:}} \langle\textit{stmt}\rangle^* \;\langle\textit{transfer}\rangle \\[0.3em]
-    \langle\textit{stmt}\rangle &\Coloneqq (\langle\textit{id}\rangle \mathbin{\texttt{:}} \langle\textit{type}\rangle \mid \texttt{\_}) \mathrel{\texttt{=}} \langle\textit{exp}\rangle \\[0.3em]
-    \langle\textit{exp}\rangle &\Coloneqq \langle\textit{operand}\rangle \\
-    &\quad \mid \texttt{prim} \;\langle\textit{id}\rangle \,[\texttt{[}\langle\textit{type\_list}\rangle\texttt{]}] \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
-    &\quad \mid \texttt{tuple} \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \mid \texttt{(} \;\langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^+ \;\texttt{)} \\
-    &\quad \mid \texttt{select} \;\texttt{(} \;\langle\textit{operand}\rangle \;\texttt{,} \;\langle\textit{integer}\rangle \;\texttt{)} \\
-    &\quad \mid \texttt{con} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
-    \langle\textit{transfer}\rangle &\Coloneqq \texttt{return} \;\langle\textit{operand}\rangle \\
-    &\quad \mid \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\
-    &\quad \mid \texttt{call} \;(\langle\textit{id}\rangle \mid \texttt{tail}) \;\langle\textit{id}\rangle \;\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)} \\
-    &\quad \mid \texttt{case} \;\langle\textit{operand}\rangle \;\texttt{of} \;\langle\textit{case\_arm}\rangle \;(\texttt{|} \;\langle\textit{case\_arm}\rangle)^* \\[0.3em]
-    \langle\textit{case\_arm}\rangle &\Coloneqq \langle\textit{pattern}\rangle \mathrel{\texttt{=>}} \texttt{goto} \;\langle\textit{id}\rangle \;[\texttt{(} \,[\langle\textit{arg\_list}\rangle]\, \texttt{)}] \\[0.3em]
-    \langle\textit{pattern}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \mid \texttt{\_} \\[0.3em]
-    \langle\textit{type}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{tuple\_type}\rangle \mid \langle\textit{type}\rangle \;\texttt{array} \mid \langle\textit{type}\rangle \;\texttt{vector} \mid \texttt{(} \;\langle\textit{type}\rangle \;\texttt{)} \\[0.3em]
-    \langle\textit{tuple\_type}\rangle &\Coloneqq \langle\textit{type}\rangle \;(\mathbin{\texttt{*}} \;\langle\textit{type}\rangle)^+ \\[0.3em]
-    \langle\textit{type\_list}\rangle &\Coloneqq \langle\textit{type}\rangle \;(\texttt{,} \;\langle\textit{type}\rangle)^* \\[0.3em]
-    \langle\textit{arg\_list}\rangle &\Coloneqq \langle\textit{operand}\rangle \;(\texttt{,} \;\langle\textit{operand}\rangle)^* \\[0.3em]
-    \langle\textit{operand}\rangle &\Coloneqq \langle\textit{id}\rangle \mid \langle\textit{const}\rangle \\[0.3em]
-    \langle\textit{const}\rangle &\Coloneqq \langle\textit{integer}\rangle \mid \langle\textit{float}\rangle \mid \texttt{true} \mid \texttt{false} \mid \texttt{()} \\[0.3em]
-    \langle\textit{id}\rangle &\Coloneqq \texttt{[a-zA-Z\_'][a-zA-Z0-9\_']*} \\[0.3em]
-    \langle\textit{integer}\rangle &\Coloneqq \texttt{[0-9]+} \\[0.3em]
-    \langle\textit{float}\rangle &\Coloneqq \texttt{[0-9]+\textbackslash.[0-9]+}
-  \end{align*}
-  \caption{An abstract syntax grammar for \texttt{SSA}.}
+  \begin{tabular}{@{}r@{\quad}r@{\;}c@{\;}l@{}}
+    \texttt{constant}  & $c$    & $\in$      & $\mathit{Const}$ \\
+    \texttt{primitive} & $p$    & $\in$      & $\mathit{Prim}$ \\
+    \texttt{variable}  & $x$    & $\in$      & $\mathit{Var}$ \\
+    \texttt{label}     & $l$    & $\in$      & $\mathit{Label}$ \\
+    \texttt{function}  & $f$    & $\in$      & $\mathit{Func}$ \\
+    \texttt{datatype}  & $t, C$ & $\in$      & $\mathit{TypeName} \times \mathit{Con}$ \\[0.6em]
+    \texttt{program}   & $P$    & $\Coloneqq$ & $d \mid P \; P \mid \epsilon$ \\
+    \texttt{top-decl}  & $d$    & $\Coloneqq$ & $D \mid s \mid F$ \\
+    \texttt{datatype}  & $D$    & $\Coloneqq$ & $\texttt{datatype}\; t \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\tau_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\tau_n]$ \\
+    \texttt{function}  & $F$    & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} \tau \mathrel{\texttt{=}} B_1 \dots B_m$ \\
+    \texttt{block}     & $B$    & $\Coloneqq$ & $\texttt{block}\; l\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} s_1 \dots s_k \; T$ \\
+    \texttt{statement} & $s$    & $\Coloneqq$ & $\texttt{(}x \mathbin{\texttt{:}} \tau \mid \texttt{\_}\texttt{)} \mathrel{\texttt{=}} e$ \\[0.4em]
+    \texttt{exp}       & $e$    & $\Coloneqq$ & $v$ \\
+                       &        & $\mid$     & $\texttt{prim}\; p\texttt{[}\tau_1\texttt{,}\;\dots\texttt{,}\;\tau_m\texttt{](}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                       &        & $\mid$     & $\texttt{tuple(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                       &        & $\mid$     & $\texttt{select(}v\texttt{,}\;i\texttt{)}$ \\
+                       &        & $\mid$     & $\texttt{con}\; C\;\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\[0.4em]
+    \texttt{transfer}  & $T$    & $\Coloneqq$ & $\texttt{return}\; v$ \\
+                       &        & $\mid$     & $\texttt{goto}\; l\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                       &        & $\mid$     & $\texttt{call}\;\texttt{(}l \mid \texttt{tail}\texttt{)}\; f\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
+                       &        & $\mid$     & $\texttt{case}\; v \;\texttt{of}\; pat_1 \mathrel{\texttt{=>}} \texttt{goto}\; l_1\texttt{(}\vec{v}_1\texttt{)} \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} pat_m \mathrel{\texttt{=>}} \texttt{goto}\; l_m\texttt{(}\vec{v}_m\texttt{)}$ \\[0.4em]
+    \texttt{pattern}   & $pat$  & $\Coloneqq$ & $C \mid C\texttt{(}x\texttt{)} \mid c \mid \texttt{\_}$ \\
+    \texttt{operand}   & $v$    & $\Coloneqq$ & $x \mid c$ \\
+    \texttt{type}      & $\tau$ & $\Coloneqq$ & $b \mid t \mid \tau_1 \mathbin{\texttt{*}} \dots \mathbin{\texttt{*}} \tau_n \mid \tau\;\texttt{array} \mid \tau\;\texttt{vector}$ \\
+    \texttt{base-type} & $b$    & $\Coloneqq$ & $\texttt{int} \mid \texttt{real} \mid \texttt{bool} \mid \texttt{unit} \mid \dots$
+  \end{tabular}
+  \caption{Abstract syntax of the \texttt{SSA} intermediate representation.}
   \label{fig:ssa_grammar}
 \end{figure}
 
