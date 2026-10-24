@@ -406,7 +406,14 @@ std::vector<Point*> array_of_pointers;
 Bridging the gap consists, broadly, in inserting ``pack'' and ``unpack''
 sequences as necessary around all \texttt{prim} operations that access container
 types, replacing the AoP container type with its AoS/SoA equivalent
-(\cref{fig:pack_unpack_example}).
+(\cref{fig:pack_unpack_example}). This allows us to preserve all of the
+pre-existing names and (non-container) types in the consuming code, at the cost
+of potentially-unnecessary tuple allocations. In order to offset this effect,
+the \texttt{ShallowFlatten} pass runs relatively early in the \texttt{SSA} pass
+pipeline -- directly before the regular \texttt{Flatten} pass. This allows for 
+
+\hl{TODO compare here to deep flatten running later -- they have complicated IR,
+we have a simpler impl, this is offset by a restriction on types}
 
 \hl{TODO: TWEAK COMMENTS}
 \begin{figure}[htbp]
