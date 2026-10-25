@@ -609,16 +609,96 @@ t2: int * (int array * int array) =
   \label{fig:soa_flat_deep_example}
 \end{figure}
 
-\hl{TDODO: AWKWARD PHRASING}
+In order to ensure that no flattenable types remain anywhere in the final
+program, it is necessary to apply the transformation iteratively until
+convergence: a single application of the transformation can create new
+flattenable program constructs that would otherwise be left unflattened and
+handled inconsistently.
 
-In order to ensure that no flattenable tpyes remain anywhere in the final
-program, it is necessary to imply the transformation iteratively: a single
-application of the transformation can create new flattenable program constructs
-that would otherwise be handled inconsistently.
+\hl{TODO: START REVIEW}
+For example, consider an allocation of a nested container
+\texttt{arr: ((a * b) * c) array} along with a user of the array such as an
+\texttt{Array\_sub} operation.
+A single round of flattening splits the outer tuple, producing an intermediate
+container \texttt{arr\_ab: (a * b) array} and an intermediate container access
+\texttt{prim Array\_sub[a * b](arr\_ab, i)}.
+Because the global type transformation eliminates all occurrences of flattenable
+container types, leaving this intermediate container and its user unflattened
+would result in a type inconsistency.
+Iterating the transformation flattens both the intermediate container
+allocation and its user until reaching a fixed point where no flattenable types
+or container operations remain.
 See \cref{fig:shallow_needs_repeated}.
 
-TODO(agy): fig:shallow needs repeated -- pull the example from below in the
-``old implementation'' that says ``x still admits flattening''
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After first iteration}
+    \label{fig:shallow_repeated_first}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Original program:
+# arr: ((a * b) * c) array =
+#   prim Array_alloc[(a * b) * c](n)
+# elem: (a * b) * c =
+#   prim Array_sub[(a * b) * c](arr, i)
+
+# Outer tuple allocation flattened:
+arr_ab: (a * b) array =
+  prim Array_alloc[a * b](n)
+arr_c: c array =
+  prim Array_alloc[c](n)
+arr: (a * b) array * c array =
+  tuple(arr_ab, arr_c)
+
+# User read decomposed for outer tuple:
+arr_ab: (a * b) array =
+  select(arr, 0)
+arr_c: c array = select(arr, 1)
+
+# arr_ab and its read still admit flattening!
+e_ab: a * b =
+  prim Array_sub[a * b](arr_ab, i)
+e_c: c =
+  prim Array_sub[c](arr_c, i)
+elem: (a * b) * c = tuple(e_ab, e_c)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{After second iteration (fixed point)}
+    \label{fig:shallow_repeated_second}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# Inner tuple allocation flattened:
+arr_a: a array = prim Array_alloc[a](n)
+arr_b: b array = prim Array_alloc[b](n)
+arr_ab: a array * b array =
+  tuple(arr_a, arr_b)
+arr_c: c array =
+  prim Array_alloc[c](n)
+arr: (a array * b array) * c array =
+  tuple(arr_ab, arr_c)
+
+# User read fully flattened:
+arr_ab: a array * b array =
+  select(arr, 0)
+arr_c: c array = select(arr, 1)
+arr_a: a array = select(arr_ab, 0)
+arr_b: b array = select(arr_ab, 1)
+
+# All reads operate on primitive arrays:
+e_a: a = prim Array_sub[a](arr_a, i)
+e_b: b = prim Array_sub[b](arr_b, i)
+e_c: c = prim Array_sub[c](arr_c, i)
+e_ab: a * b = tuple(e_a, e_b)
+elem: (a * b) * c = tuple(e_ab, e_c)
+\end{minted}
+  \end{subfigure}
+  \caption{Iterative flattening for nested container types and their users under Structure-of-Arrays (SoA). Starting from an allocation \texttt{arr: ((a * b) * c) array} and a user read \texttt{prim Array\_sub(arr, i)}, a single pass (a) splits the outer tuple but introduces an intermediate array \texttt{arr\_ab: (a * b) array} and a corresponding access \texttt{prim Array\_sub[a * b](arr\_ab, i)} that still operate on a container of tuples. A second iteration (b) flattens \texttt{arr\_ab} and its user into primitive arrays and reads, reaching a consistent fixed point.}
+  \label{fig:shallow_needs_repeated}
+\end{figure}
+
+\hl{TODO: END REVIEW}
 
 Finally, we consider the cases when this transformation is most likely to be
 profitable: since we are concerned with efficiently utilizing memory bandwidth,
