@@ -570,6 +570,7 @@ embedded inside of e.g. \texttt{datatype} definitions or other container types
 flattenable containers are embedded inside of other objects. See
 \cref{fig:soa_flat_deep_example} for an illustration.
 
+
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
@@ -607,6 +608,17 @@ t2: int * (int array * int array) =
   \caption{Flattenable container types embedded inside composite objects must be rewritten wherever they appear. Here, \texttt{arr} is projected out of tuple \texttt{t1} via \texttt{select} and packed into a second tuple \texttt{t2}; in both \texttt{t1} and \texttt{t2}, the embedded \texttt{(int * int) array} type must be transformed (\texttt{int array * int array} under SoA, or \texttt{int array} under AoS) so that both operations remain well-typed.}
   \label{fig:soa_flat_deep_example}
 \end{figure}
+
+\hl{TDODO: AWKWARD PHRASING}
+
+In order to ensure that no flattenable tpyes remain anywhere in the final
+program, it is necessary to imply the transformation iteratively: a single
+application of the transformation can create new flattenable program constructs
+that would otherwise be handled inconsistently.
+See \cref{fig:shallow_needs_repeated}.
+
+TODO(agy): fig:shallow needs repeated -- pull the example from below in the
+``old implementation'' that says ``x still admits flattening''
 
 Finally, we consider the cases when this transformation is most likely to be
 profitable: since we are concerned with efficiently utilizing memory bandwidth,
@@ -790,6 +802,13 @@ in the count of members, for simplicity).
 %% \end{figure}
 
 \section{Implementation}
+We will formalize the action of the pass in three steps: first, a
+``flavor''-independent high level structure, parameterized on a ``flavor''
+$\Phi \in \{\texttt{AoS}, \texttt{SoA}\}$. Next, we describe the
+flavor-dependent transformation on types, and then the flavor-dependent
+transformation on statemetn.
+
+\section{OLD: Implementation}
 %% ---whole section outline --
 
 %% visit all statements/types
