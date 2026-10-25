@@ -582,10 +582,10 @@ flattenable containers are embedded inside of other objects. See
 # Tuple containing an (int * int) array
 t1: (int * int) array * int = ...
 
-# Extract the embedded array via `select`
+# Unpack `arr` from `t1`
 arr: (int * int) array = select(t1, 0)
 
-# Pack `arr` into a different tuple
+# Re-pack `arr` into `t2`
 t2: int * (int * int) array =
   tuple(x, arr)
 \end{minted}
@@ -595,18 +595,23 @@ t2: int * (int * int) array =
     \label{fig:soa_flat_deep_after}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# Embedded type in `t1` must be transformed
+# AoP type embedded in `t1` must be
+# transformed for consistency with `arr`
 t1: (int array * int array) * int = ...
 
-# Extracted container now has SoA type
+# Freestanding AoP object must be transformed
 arr: int array * int array = select(t1, 0)
 
-# Embedded type in `t2` must also change
+# Type embedded in `t2` must be transformed
+# for consistency
 t2: int * (int array * int array) =
   tuple(x, arr)
 \end{minted}
   \end{subfigure}
-  \caption{Flattenable container types embedded inside composite objects must be rewritten wherever they appear. Here, \texttt{arr} is projected out of tuple \texttt{t1} via \texttt{select} and packed into a second tuple \texttt{t2}; in both \texttt{t1} and \texttt{t2}, the embedded \texttt{(int * int) array} type must be transformed (\texttt{int array * int array} under SoA, or \texttt{int array} under AoS) so that both operations remain well-typed.}
+
+  \caption{\texttt{ShallowFlatten} must transform embedded flattenable types for
+           consistency across the program}
+
   \label{fig:soa_flat_deep_example}
 \end{figure}
 
@@ -706,8 +711,10 @@ e_ab: a * b = tuple(e_a, e_b)
 elem: (a * b) * c = tuple(e_ab, e_c)
 \end{minted}
     \end{subfigure}
-  \end{minipage}
-  \caption{Iterative flattening for nested container types and their users under Structure-of-Arrays (SoA). Starting from the initial program (a) with allocation \texttt{arr: ((a * b) * c) array} and user read \texttt{prim Array\_sub(arr, i)}, a single pass (b) splits the outer tuple but introduces an intermediate array \texttt{arr\_ab: (a * b) array} and a corresponding access \texttt{prim Array\_sub[a * b](arr\_ab, i)} that still operate on a container of tuples. A second iteration (c) flattens \texttt{arr\_ab} and its user into primitive arrays and reads, reaching a consistent fixed point.}
+    \end{minipage}
+    \caption{Flattening nested container types:
+  multiple iterations are required for
+  convergence.}
   \label{fig:shallow_needs_repeated}
 \end{figure}
 
