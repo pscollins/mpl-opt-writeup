@@ -904,7 +904,7 @@ in the count of members, for simplicity).
 \section{Implementation}
 We will formalize the action of the pass in three steps: first, a
 ``flavor''-independent high level structure, parameterized on a ``flavor''
-$\Phi \in \{\texttt{AoS}, \texttt{SoA}\}$; second, we describe the
+$\Phi \in \{\Phi_\texttt{AoS}, \Phi_\texttt{SoA}\}$; second, we describe the
 flavor-dependent transformation on types, and finally the flavor-dependent
 transformation on statements.
 
@@ -941,7 +941,6 @@ or \texttt{vector} types; all other \texttt{prim}s are ``unflattenable.''
 
 Then, at a high level, the action of the pass is:
 \begin{itemize}
-
 \item Visit all non-\texttt{statement}s; recursively
 (i.e. traversing nested types) and iteratively (i.e. repeating until
 convergence) transform all \texttt{type}s under the flavor $\Phi$.
@@ -953,8 +952,32 @@ contain a flattenable \texttt{prim}, it means transforming only \texttt{type}s.
 
 \end{itemize}
 
-See \cref{fig:shallow_flat_toplevel} for a formalization.
+See \cref{fig:shallow_flat_toplevel} for a formalization of this process.
 
+TODO(agy): add fig shallow flat toplevel, following the style above from
+preflatten. in this step you should completely cover the un-flattenable case of
+statements and all other IR constructs. i think that this transformation is the
+only one that should be recursive.
+
+Next, the transformation on types: for $\Phi_{\texttt{SoA}}$, this consists in
+rewriting array-of-pointer types into tuple-of-arrays; for $\Phi_{\texttt{AoS}}$
+it consists in rewriting array-of-pointer types into flat arrays.
+See \cref{fig:shallow_flat_types} for a formalization.
+
+TODO(agy): add fig shallow flat toplevel, following the style above from
+preflatten. in this step you should completely cover the un-flattenable case of
+statements and all other IR constructs
+
+Finally, we consider the transformation on statements -- in particular, the case
+for flattenable \texttt{prim} statements. While the list of these
+transformations is rather long, they broadly follow the example
+of \cref{fig:pack_unpack_example} in the obvious way.
+See \cref{fig:shallow_flat_statements}.
+
+TODO(agy): add fig shallow flat statements, showing the action of the
+transformation on each statement type
+
+TODO(agy): put all of the fig shallow flat formalization steps into one big figure with 3 subfigures
 
 %% \hl{TODO: VERIFY THE INTERPLAY OF 
 
