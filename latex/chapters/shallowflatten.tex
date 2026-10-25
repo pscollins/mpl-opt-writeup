@@ -615,7 +615,7 @@ Note that a single application of the \texttt{prim} rewrite transformation can
 create new flattenable types not present in the original program -- for example,
 SoA-flattening the type \texttt{((a * b) * c) array} yields \texttt{(a * b)
 array * c array}. Therefore, in order to completely eliminate flattenable types,
-it is necessary to iteratively re-apply the transformation until converfence.
+it is necessary to iteratively re-apply the transformation until convergence.
 See \cref{fig:shallow_needs_repeated} for a detailed example.
 
 %% In order to achieve this goal, it is necessary to apply 
@@ -630,21 +630,28 @@ See \cref{fig:shallow_needs_repeated} for a detailed example.
 
 \hl{TODO: START REVIEW}
 
-TODO(agy): split this up into 3 sub-figures LHS is initial + first iter, RHS is second iter
-
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[t]{0.48\textwidth}
-    \caption{After first iteration}
-    \label{fig:shallow_repeated_first}
-    \vspace{1mm}
+  \begin{minipage}[t]{0.48\textwidth}
+    \vspace{0pt}
+    \begin{subfigure}[t]{\linewidth}
+      \caption{Initial program}
+      \label{fig:shallow_repeated_initial}
+      \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# Original program:
-# arr: ((a * b) * c) array =
-#   prim Array_alloc[(a * b) * c](n)
-# elem: (a * b) * c =
-#   prim Array_sub[(a * b) * c](arr, i)
+arr: ((a * b) * c) array =
+  prim Array_alloc[(a * b) * c](n)
+elem: (a * b) * c =
+  prim Array_sub[(a * b) * c](arr, i)
+\end{minted}
+    \end{subfigure}
 
+    \vspace{2mm}
+    \begin{subfigure}[t]{\linewidth}
+      \caption{After first iteration}
+      \label{fig:shallow_repeated_first}
+      \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 # Outer tuple allocation flattened:
 arr_ab: (a * b) array =
   prim Array_alloc[a * b](n)
@@ -665,11 +672,14 @@ e_c: c =
   prim Array_sub[c](arr_c, i)
 elem: (a * b) * c = tuple(e_ab, e_c)
 \end{minted}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\textwidth}
-    \caption{After second iteration (fixed point)}
-    \label{fig:shallow_repeated_second}
-    \vspace{1mm}
+    \end{subfigure}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.48\textwidth}
+    \vspace{0pt}
+    \begin{subfigure}[t]{\linewidth}
+      \caption{After second iteration (fixed point)}
+      \label{fig:shallow_repeated_second}
+      \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 # Inner tuple allocation flattened:
 arr_a: a array = prim Array_alloc[a](n)
@@ -695,8 +705,9 @@ e_c: c = prim Array_sub[c](arr_c, i)
 e_ab: a * b = tuple(e_a, e_b)
 elem: (a * b) * c = tuple(e_ab, e_c)
 \end{minted}
-  \end{subfigure}
-  \caption{Iterative flattening for nested container types and their users under Structure-of-Arrays (SoA). Starting from an allocation \texttt{arr: ((a * b) * c) array} and a user read \texttt{prim Array\_sub(arr, i)}, a single pass (a) splits the outer tuple but introduces an intermediate array \texttt{arr\_ab: (a * b) array} and a corresponding access \texttt{prim Array\_sub[a * b](arr\_ab, i)} that still operate on a container of tuples. A second iteration (b) flattens \texttt{arr\_ab} and its user into primitive arrays and reads, reaching a consistent fixed point.}
+    \end{subfigure}
+  \end{minipage}
+  \caption{Iterative flattening for nested container types and their users under Structure-of-Arrays (SoA). Starting from the initial program (a) with allocation \texttt{arr: ((a * b) * c) array} and user read \texttt{prim Array\_sub(arr, i)}, a single pass (b) splits the outer tuple but introduces an intermediate array \texttt{arr\_ab: (a * b) array} and a corresponding access \texttt{prim Array\_sub[a * b](arr\_ab, i)} that still operate on a container of tuples. A second iteration (c) flattens \texttt{arr\_ab} and its user into primitive arrays and reads, reaching a consistent fixed point.}
   \label{fig:shallow_needs_repeated}
 \end{figure}
 
