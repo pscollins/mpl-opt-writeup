@@ -633,7 +633,8 @@ See \cref{fig:shallow_needs_repeated} for a detailed example.
 
 %% handled inconsistently.
 
-\hl{TODO: START REVIEW}
+\hl{TODO: we use distinct types here, but we don't have to. the rest of the document
+doesnt say that distinct types are supported}
 
 \begin{figure}[htbp]
   \centering
@@ -712,13 +713,12 @@ elem: (a * b) * c = tuple(e_ab, e_c)
 \end{minted}
     \end{subfigure}
     \end{minipage}
-    \caption{Flattening nested container types:
-  multiple iterations are required for
-  convergence.}
+
+    \caption{Flattening nested container types: multiple iterations are required
+  for convergence.}
+
   \label{fig:shallow_needs_repeated}
 \end{figure}
-
-\hl{TODO: END REVIEW}
 
 Finally, we consider the cases when this transformation is most likely to be
 profitable: since we are concerned with efficiently utilizing memory bandwidth,
@@ -904,9 +904,59 @@ in the count of members, for simplicity).
 \section{Implementation}
 We will formalize the action of the pass in three steps: first, a
 ``flavor''-independent high level structure, parameterized on a ``flavor''
-$\Phi \in \{\texttt{AoS}, \texttt{SoA}\}$. Next, we describe the
-flavor-dependent transformation on types, and then the flavor-dependent
-transformation on statemetn.
+$\Phi \in \{\texttt{AoS}, \texttt{SoA}\}$; second, we describe the
+flavor-dependent transformation on types, and finally the flavor-dependent
+transformation on statements.
+
+\hl{TODO: mention the homogeneous tuple restriction in limitaitons
+-- say that we could skip it for AoS but it's easier to keep it}
+
+We define the ``\texttt{tuple} width'' of a type $t$ as $w_t(t)$,
+where:
+\[
+w_t(t) =
+\begin{cases}
+n &: \textrm{if $t$ is of the form $\underbrace{\tau * \cdots * \tau}_{n}$} \\
+0 &: \textrm{otherwise}
+\end{cases}
+\]
+We likewise define the ``container width'' of a type $c$ as $w_c(c)$, where:
+\[
+w_c(c) =
+\begin{cases}
+w_t(t) &: \textrm{if $c$ is $t$ \texttt{array} or $t$ \texttt{vector}} \\
+0 &: \textrm{otherwise}
+\end{cases}
+\]
+In the context of \texttt{ShallowFlatten} We say that a type $\tau$ is
+``flattenable'' if:
+\[
+2 \leq w_c(\tau) \leq W
+\]
+where $W$ is some user-specified upper bound (selected to maximize performance).
+
+We also partition \texttt{prim}s into ``flattenable'' and ``unflattenable:''
+``flattenable'' \texttt{prim}s are those that manipulate \texttt{array}
+or \texttt{vector} types; all other \texttt{prim}s are ``unflattenable.''
+
+Then, at a high level, the action of the pass is:
+\begin{itemize}
+
+\item Visit all non-\texttt{statement}s; recursively
+(i.e. traversing nested types) and iteratively (i.e. repeating until
+convergence) transform all \texttt{type}s under the flavor $\Phi$.
+
+\item Visit all \texttt{statement}s: iteratively transform under $\Phi$ until convergence.
+For \texttt{statement}s that contain a flattenable \texttt{prim}, this means
+rewriting the \texttt{prim} according to $\Phi$; for statements that do not
+contain a flattenable \texttt{prim}, it means transforming only \texttt{type}s.
+
+\end{itemize}
+
+See \cref{fig:shallow_flat_toplevel} for a formalization.
+
+
+%% \hl{TODO: VERIFY THE INTERPLAY OF 
 
 \section{OLD: Implementation}
 %% ---whole section outline --
