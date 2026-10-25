@@ -405,7 +405,8 @@ std::vector<Point*> array_of_pointers;
 
 Bridging the gap consists, broadly, in inserting ``pack'' and ``unpack''
 sequences as necessary around all \texttt{prim} operations that access container
-types, replacing the AoP container type with its AoS/SoA equivalent
+types, replacing the AoP container type with its AoS/SoA equivalent, and
+rewriting the container \texttt{prim}s appropriately
 (\cref{fig:pack_unpack_example}). This allows us to preserve all of the
 pre-existing names and (non-container) types in the consuming code, at the cost
 of potentially-unnecessary tuple allocations. In order to offset this effect,
@@ -609,26 +610,27 @@ t2: int * (int array * int array) =
   \label{fig:soa_flat_deep_example}
 \end{figure}
 
-In order to ensure that no flattenable types remain anywhere in the final
-program, it is necessary to apply the transformation iteratively until
-convergence: a single application of the transformation can create new
-flattenable program constructs that would otherwise be left unflattened and
-handled inconsistently.
+
+Note that a single application of the \texttt{prim} rewrite transformation can
+create new flattenable types not present in the original program -- for example,
+SoA-flattening the type \texttt{((a * b) * c) array} yields \texttt{(a * b)
+array * c array}. Therefore, in order to completely eliminate flattenable types,
+it is necessary to iteratively re-apply the transformation until converfence.
+See \cref{fig:shallow_needs_repeated} for a detailed example.
+
+%% In order to achieve this goal, it is necessary to apply 
+
+%% In order to ensure that no flattenable types remain anywhere in the final
+%% program, it is necessary to apply the transformation iteratively until
+%% convergence: a single application of the transformation can create new
+%% flattenable program constructs that would otherwise be left unflattened. 
+
+
+%% handled inconsistently.
 
 \hl{TODO: START REVIEW}
-For example, consider an allocation of a nested container
-\texttt{arr: ((a * b) * c) array} along with a user of the array such as an
-\texttt{Array\_sub} operation.
-A single round of flattening splits the outer tuple, producing an intermediate
-container \texttt{arr\_ab: (a * b) array} and an intermediate container access
-\texttt{prim Array\_sub[a * b](arr\_ab, i)}.
-Because the global type transformation eliminates all occurrences of flattenable
-container types, leaving this intermediate container and its user unflattened
-would result in a type inconsistency.
-Iterating the transformation flattens both the intermediate container
-allocation and its user until reaching a fixed point where no flattenable types
-or container operations remain.
-See \cref{fig:shallow_needs_repeated}.
+
+TODO(agy): split this up into 3 sub-figures LHS is initial + first iter, RHS is second iter
 
 \begin{figure}[htbp]
   \centering
