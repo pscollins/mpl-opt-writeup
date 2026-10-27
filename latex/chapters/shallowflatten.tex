@@ -965,10 +965,10 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
   \setlength{\jot}{2pt}
   \[
   \begin{aligned}
-    \sembrack{X}_\Phi^*
+    \sembrack{P}_\Phi^*
       &= \begin{cases}
-           X & \text{if } \sembrack{X}_\Phi = X \\
-           \sembrack{\sembrack{X}_\Phi}_\Phi^* & \text{otherwise}
+           P & \text{if } \sembrack{P}_\Phi = P \\
+           \sembrack{\sembrack{P}_\Phi}_\Phi^* & \text{otherwise}
          \end{cases} \\
     \sembrack{P}_\Phi
       &= \sembrack{D_1 \cdots D_l \; s_1 \cdots s_k \; F_1 \cdots F_m}_\Phi \\
@@ -985,7 +985,7 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
     \sembrack{\tau}_\Phi
       &= \begin{cases}
            \Phi(\tau) & \text{if } 2 \le w_c(\tau) \le W \\
-           \sembrack{\tau_0}_\Phi\;\kappa & \text{if } \tau = \tau_0\;\kappa \text{ otherwise} \\
+           \sembrack{\tau_0}_\Phi\;\kappa & \text{if } \tau = \tau_0\;\kappa \text{ and } \neg(2 \le w_c(\tau) \le W) \\
            \sembrack{\tau_1}_\Phi * \cdots * \sembrack{\tau_n}_\Phi & \text{if } \tau = \tau_1 * \cdots * \tau_n \\
            \tau & \text{otherwise}
          \end{cases} \\
@@ -994,20 +994,22 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
       &\phantom{{}= \{\,\,} \mathtt{Array\_length}, \mathtt{Vector\_length}, \mathtt{Array\_sub}, \mathtt{Vector\_sub}, \\
       &\phantom{{}= \{\,\,} \mathtt{Array\_toArray}, \mathtt{Array\_toVector} \,\} \\
     \sembrack{s}_\Phi
-      &= \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v})}_\Phi \\
+      &= \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq e}_\Phi \\
       &= \begin{cases}
-           \Phi\big((x{:}\tau \mid \mathtt{\_}) \syneq \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v})\big)
-             & \text{if } p \in \mathcal{P}_{\text{flat}} \land 2 \le w_t(\tau_1) \le W \\
-           (x{:}\sembrack{\tau}_\Phi \mid \mathtt{\_}) \syneq \mathtt{prim}\ p[\sembrack{\tau_1}_\Phi, \dots, \sembrack{\tau_m}_\Phi](\vec{v})
+           \Phi\big((x{:}\tau \mid \mathtt{\_}) \syneq e\big)
+             & \text{if } e = \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v}),\; p \in \mathcal{P}_{\text{flat}},\; 2 \le w_t(\tau_1) \le W \\
+           (x{:}\sembrack{\tau}_\Phi \mid \mathtt{\_}) \syneq \sembrack{e}_\Phi
              & \text{otherwise}
          \end{cases} \\
-    \sembrack{s}_\Phi
-      &= \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq e}_\Phi \\
-      &= (x{:}\sembrack{\tau}_\Phi \mid \mathtt{\_}) \syneq e
-         \quad (e \text{ is not a } \mathtt{prim} \text{ expression})
+    \sembrack{e}_\Phi
+      &= \begin{cases}
+           \mathtt{prim}\ p[\sembrack{\tau_1}_\Phi, \dots, \sembrack{\tau_m}_\Phi](\vec{v})
+             & \text{if } e = \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v}) \\
+           e & \text{otherwise}
+         \end{cases}
   \end{aligned}
   \]
-  \caption{Top-level AST traversal, recursive type descent, fixed-point closure $\sembrack{\cdot}_\Phi^*$, and unflattenable statement rules for \texttt{ShallowFlatten} ($\kappa \in \{\mathtt{array}, \mathtt{vector}\}$).}
+  \caption{Top-level AST traversal, recursive type descent, fixed-point closure $\sembrack{P}_\Phi^*$, and unflattenable statement rules for \texttt{ShallowFlatten} ($\kappa \in \{\mathtt{array}, \mathtt{vector}\}$).}
   \label{fig:shallow_flat_toplevel}
 \end{figure}
 
@@ -1042,55 +1044,62 @@ See \cref{fig:shallow_flat_statements}.
 
 \begin{figure}[htbp]
   \centering
-  \scriptsize
+  \footnotesize
   \setlength{\abovedisplayskip}{2pt}
   \setlength{\belowdisplayskip}{2pt}
-  \setlength{\jot}{1.5pt}
+  \setlength{\jot}{1pt}
   \[
   \begin{aligned}
     \Phi_{\texttt{SoA}}\big(a : t\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[t](m)\big)
       &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](m) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} a : \tau\;\mathtt{array} * \cdots * \tau\;\mathtt{array} \syneq \mathtt{tuple}(a_1, \dots, a_n) \\
     \Phi_{\texttt{AoS}}\big(a : t\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[t](m)\big)
-      &= a : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](m \cdot n) \\[3pt]
+      &= m' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(m, n) \\
+      &\phantom{{}=} a : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](m') \\[2pt]
     \Phi_{\texttt{SoA}}\big(m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[t](a)\big)
-      &= a_1 : \tau\;\kappa_K \syneq \mathtt{select}(a, 0);\;
-         m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a_1) \\
+      &= a_1 : \tau\;\kappa_K \syneq \mathtt{select}(a, 0) \\
+      &\phantom{{}=} m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a_1) \\
     \Phi_{\texttt{AoS}}\big(m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[t](a)\big)
-      &= m' : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a);\;
-         m : \mathtt{int} \syneq m' / n \\[3pt]
+      &= m' : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a) \\
+      &\phantom{{}=} m : \mathtt{int} \syneq \mathtt{prim\ Word32\_quot}(m', n) \\[2pt]
     \Phi_{\texttt{SoA}}\big(x : t \syneq \mathtt{prim}\ K\mathtt{\_sub}[t](a, i)\big)
-      &= \big(\, a_j : \tau\;\kappa_K \syneq \mathtt{select}(a, j-1);\;
-         x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau\;\kappa_K \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} x : t \syneq \mathtt{tuple}(x_1, \dots, x_n) \\
     \Phi_{\texttt{AoS}}\big(x : t \syneq \mathtt{prim}\ K\mathtt{\_sub}[t](a, i)\big)
-      &= \big(\, x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a, i \cdot n + j - 1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}= \big(\,} x : t \syneq \mathtt{tuple}(x_1, \dots, x_n) \\[3pt]
+      &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
+      &\phantom{{}=} \big(\, i_j : \mathtt{int} \syneq \mathtt{prim\ Word32\_add}(i', j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a, i_j) \,\big)_{j=1}^{n} \\
+      &\phantom{{}= \big(\,} x : t \syneq \mathtt{tuple}(x_1, \dots, x_n) \\[2pt]
     \Phi_{\texttt{SoA}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[t](a, i, x)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1);\;
-         x_j : \tau \syneq \mathtt{select}(x, j-1); \\
-      &\phantom{{}= \big(\,} \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a_j, i, x_j) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{select}(x, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a_j, i, x_j) \,\big)_{j=1}^{n} \\
     \Phi_{\texttt{AoS}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[t](a, i, x)\big)
-      &= \big(\, x_j : \tau \syneq \mathtt{select}(x, j-1); \\
-      &\phantom{{}= \big(\,} \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a, i \cdot n + j - 1, x_j) \,\big)_{j=1}^{n} \\[3pt]
+      &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
+      &\phantom{{}=} \big(\, i_j : \mathtt{int} \syneq \mathtt{prim\ Word32\_add}(i', j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{select}(x, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a, i_j, x_j) \,\big)_{j=1}^{n} \\[2pt]
     \Phi_{\texttt{SoA}}\big(b : \mathtt{bool} \syneq \mathtt{prim\ Array\_uninitIsNop}[t](a)\big)
       &= b : \mathtt{bool} \syneq \mathtt{false} \\
     \Phi_{\texttt{AoS}}\big(b : \mathtt{bool} \syneq \mathtt{prim\ Array\_uninitIsNop}[t](a)\big)
-      &= b : \mathtt{bool} \syneq \mathtt{false} \\[3pt]
+      &= b : \mathtt{bool} \syneq \mathtt{false} \\[2pt]
     \Phi_{\texttt{SoA}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[t](a, i)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1);\;
-         \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
     \Phi_{\texttt{AoS}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[t](a, i)\big)
-      &= \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a, i \cdot n + j - 1) \,\big)_{j=1}^{n} \\[3pt]
+      &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
+      &\phantom{{}=} \big(\, i_j : \mathtt{int} \syneq \mathtt{prim\ Word32\_add}(i', j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a, i_j) \,\big)_{j=1}^{n} \\[2pt]
     \Phi_{\texttt{SoA}}\big(a' : t\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[t](a)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1);\;
-         a'_j : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a_j) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, a'_j : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a_j) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} a' : \tau\;\kappa_K * \cdots * \tau\;\kappa_K \syneq \mathtt{tuple}(a'_1, \dots, a'_n) \\
     \Phi_{\texttt{AoS}}\big(a' : t\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[t](a)\big)
       &= a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a)
   \end{aligned}
   \]
-  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau * \cdots * \tau$ ($w_t(t) = n$), container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, m'$.}
+  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau * \cdots * \tau$ ($w_t(t) = n$), container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, m', i', i_j$.}
   \label{fig:shallow_flat_statements}
 \end{figure}
 
