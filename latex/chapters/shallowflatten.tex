@@ -955,8 +955,6 @@ contain a flattenable \texttt{prim}, it means transforming only \texttt{type}s.
 See \cref{fig:shallow_flat_toplevel} for a formalization of this process -- the
 overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
 
-\hl{TODO: NEEDS REVIEW}
-
 \begin{figure}[htbp]
   \centering
   \footnotesize
@@ -1104,6 +1102,64 @@ See \cref{fig:shallow_flat_statements}.
 \end{figure}
 
 %% \hl{TODO: VERIFY THE INTERPLAY OF 
+\section{Limitations}
+\hl{TODO: EDIT}
+
+As outlined above, this implementation only supports the case when all AoP
+containers of a given type are flattened -- we cannot support a mix of flattened
+and unflattened AoP containers with a given type using the strategy above. The
+implementation discussed in this document simply emits an error if it encounters
+an un-flattenable construct, none of which appear in the benchmark suites that
+we evaluated this optimization against.
+
+It is debatable whether supporting a fallback is required for the transformation
+to be usable by real developers. The problem to worry about is that the
+AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
+an SML program like:
+\begin{minted}{sml}
+  val arr : (int * int) array = Array.array (3, (0, 0))
+  val element = (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Are \texttt{element} and \texttt{element'} physically identical? If this element
+is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
+equality, since the write/read result in pack/unpack operations that construct a
+new tuple. From the perspective of strict StandardML as defined in the language
+specification \citet{sml-def}, this is a non-issue: there is no way to observe
+pointer equality of tuples in the source language, and so the compiler has
+complete freedom. The only spec-compliant way to write this test would be to
+wrap the element type in \texttt{ref}:
+\begin{minted}{sml}
+  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+  val element = ref (1, 2)
+  val _ = Array.update (arr, 1, element)
+  val element' = Array.sub (arr, 1)
+\end{minted}
+Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+by \texttt{PreFlatten}.
+
+However, both MLton and MPL extend the source language with constructs that
+allow user programs to observe this behavior: both have \texttt{MLton.eq}
+(physical equality for arbitrary values), and MPL additionally offers
+compare-and-swap primitives to support implementing lock-free parallel
+algorithms.
+
+Since physical equality of tuples is not defined in \citet{sml-def}, one option
+to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
+to return \texttt{false} in these cases. Another simple option would to be
+disable \texttt{ShallowFlatten} for all values of any types that participate in
+one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
+\texttt{int * int} tuple anywhere in the program disables
+\texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
+refined by a dataflow analysis to determine if the elements in the forbidden
+comparison may have originated in a container.
+
+This results in a potentially-unpleasant performance cliff for users, but there
+are various simple workarounds -- e.g. users can wrap any objects that must be
+tested for pointer equality in \texttt{ref} cells (which are not impacted by
+\texttt{ShallowFlatten}).
+
 
 \section{OLD: Implementation}
 %% ---whole section outline --
@@ -1761,69 +1817,12 @@ and $i \cdot k + (j - 1)$ in operand positions abbreviate the corresponding
   \caption{Container primitive rewrite rules $\sembrack{s}$ for the SoA and AoS variants of \texttt{ShallowFlatten}, with $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ and $\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$.}
   \label{fig:shallow_flatten_prims}
 \end{figure}
-
-\section{Limitations}
-As outlined above, this implementation only supports the case when all AoP
-containers of a given type are flattened -- we cannot support a mix of flattened
-and unflattened AoP containers with a given type using the strategy above. The
-implementation discussed in this document simply emits an error if it encounters
-an un-flattenable construct, none of which appear in the benchmark suites that
-we evaluated this optimization against.
-
-It is debatable whether supporting a fallback is required for the transformation
-to be usable by real developers. The problem to worry about is that the
-AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
-an SML program like:
-\begin{minted}{sml}
-  val arr : (int * int) array = Array.array (3, (0, 0))
-  val element = (1, 2)
-  val _ = Array.update (arr, 1, element)
-  val element' = Array.sub (arr, 1)
-\end{minted}
-Are \texttt{element} and \texttt{element'} physically identical? If this element
-is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
-equality, since the write/read result in pack/unpack operations that construct a
-new tuple. From the perspective of strict StandardML as defined in the language
-specification \citet{sml-def}, this is a non-issue: there is no way to observe
-pointer equality of tuples in the source language, and so the compiler has
-complete freedom. The only spec-compliant way to write this test would be to
-wrap the element type in \texttt{ref}:
-\begin{minted}{sml}
-  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
-  val element = ref (1, 2)
-  val _ = Array.update (arr, 1, element)
-  val element' = Array.sub (arr, 1)
-\end{minted}
-Now we are guaranteed that \texttt{element = element'} holds, which is preserved
-by \texttt{PreFlatten}.
-
-However, both MLton and MPL extend the source language with constructs that
-allow user programs to observe this behavior: both have \texttt{MLton.eq}
-(physical equality for arbitrary values), and MPL additionally offers
-compare-and-swap primitives to support implementing lock-free parallel
-algorithms.
-
-Since physical equality of tuples is not defined in \citet{sml-def}, one option
-to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
-to return \texttt{false} in these cases. Another simple option would to be
-disable \texttt{ShallowFlatten} for all values of any types that participate in
-one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
-\texttt{int * int} tuple anywhere in the program disables
-\texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
-refined by a dataflow analysis to determine if the elements in the forbidden
-comparison may have originated in a container.
-
-This results in a potentially-unpleasant performance cliff for users, but there
-are various simple workarounds -- e.g. users can wrap any objects that must be
-tested for pointer equality in \texttt{ref} cells (which are not impacted by
-\texttt{ShallowFlatten}).
-
 %% \hl{TODO}
 
 
-\section{Comparison to more-agressive \texttt{DeepFlatten}}
+%% \section{Comparison to more-agressive \texttt{DeepFlatten}}
 
-\hl{TODO: implement an benchmark a version of deepflatten that kicks in for this
-  case (i.e. no restriction on nested immutable types) / determine why it
-  doesn't work}
+%% \hl{TODO: implement an benchmark a version of deepflatten that kicks in for this
+%%   case (i.e. no restriction on nested immutable types) / determine why it
+%%   doesn't work}
 
