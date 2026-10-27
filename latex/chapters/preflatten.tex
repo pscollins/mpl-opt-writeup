@@ -103,12 +103,12 @@ i.e. if the argument is the direct result of a \texttt{tuple} constructor call.
 In a flattenable pair, the argument is a candidate to be ``pushed down'' across
 the function boundary so as to elide the allocation.
 
-In the case that all concrete arguments to a given formal function parameter are
-flattenable, then it is sufficient to replace the existing non-flat function
-defintion with a new, flattened function definition. In order to support a
-mixture of flattenable and unflattenable calls to a given function definition,
-however, we must emit duplicate definitions of the function, each specialized to
-a particular flattening decision at some caller
+In the case that all concrete arguments across all callsites to a given formal
+function parameter are flattenable, then it is sufficient to replace the
+existing non-flat function defintion with a new, flattened function definition.
+In order to support a mixture of flattenable and unflattenable calls to a given
+function definition, however, we must emit duplicate definitions of the
+function, each specialized to a particular flattening decision at some caller
 (\cref{fig:pre_flatten_example_dup}).
 
 \begin{figure}[htbp]
@@ -301,7 +301,7 @@ optimizations in subsequent passes:
 \item \texttt{Simplify}: when a \texttt{tuple} ``pack'' operation is pushed
 all the way down into the same function as a corresponding ``unpack''
 operation, \texttt{Simplify} performs ``projection elimination'' to elide the
-access to the intermediate tuple (\cref{fig:simplify_proj_elim}).
+access to the intermediate tuple (\cref{fig:simplify_proj_elim}). \hl{TODO: remark that it may become dead?}
 
 \item \texttt{KnownCase}: when a \texttt{ConApp} constructor call is pushed all
 the way down to the \texttt{case} statement that consumes it, \texttt{KnownCase}
@@ -475,7 +475,7 @@ specializations by a factor of $k$. It is therefore necessary to apply
 heuristics so that we only duplicate functions in the most-profitable cases --
 which we will describe in the following section. After applying these
 heuristics, we observe that the code bloat is marginal -- $< 10\%$ in nearly all
-benchmarks.
+benchmarks. \hl{TODO: add a cref pointing to the benchmarks}
 
 %% \hl{TODO: MORE CONCRETE EXAMPLE?}
 
@@ -787,13 +787,13 @@ heuristics. The cost heuristics evaluated in this project are:
 \end{itemize}
 
 These heuristics are motivated by the MLton calling convention described
-in \cref{sec:background_sml_ssa}: non-tail calls pass data through explicit
-stack operations, so flattening \texttt{tuple} arguments to a non-tail
-corresponds to a \texttt{memcpy} rather than simply leaving data resident in
-registers across a call boundary. Tail calls, by contrast, are more likely to
-pass data in registers. For the \texttt{ConApp} case, no such tradeoff exists:
-flattening a \texttt{ConApp} results in a \texttt{tuple} argument that is
-no-more-expensive to pass.
+in \cref{sec:background_sml_ssa}: non-tail calls (if preserved until C code
+generation) pass data through explicit stack operations, so
+flattening \texttt{tuple} arguments to a non-tail corresponds to a true copy
+rather than simply leaving data resident in registers across a call boundary.
+Tail calls, by contrast, are more likely to pass data in registers. For
+the \texttt{ConApp} case, no such tradeoff exists: flattening a \texttt{ConApp}
+results in a \texttt{tuple} argument that is no-more-expensive to pass.
 
 After applying these heuristics, we end up with a final analysis result,
 $\sigma$. The action of $\sigma$ on the program is described
@@ -843,11 +843,11 @@ payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 
 \item
 Finally, we extend $\sigma$ with the result of applying the analysis to each
-newly-emitted flat function $\texttt{f}_{\vec{d}}$
-to obtain a (perhaps-larger) flattening decision $\sigma'$. If $\sigma'
-= \sigma$, or if we have reached a user-configurable iteration limit, the
-transformation terminates. Otherwise, it is recursively applied to the
-sub-program composed only of new function definitions, \cref{fig:preflatten_recurse}.
+newly-emitted flat function $\texttt{f}_{\vec{d}}$ to obtain a (perhaps-larger)
+flattening decision $\sigma'$. If $\sigma' = \sigma$, or if we have reached a
+user-configurable iteration limit, the transformation terminates. Otherwise, it
+is recursively applied to the sub-program composed only of new function
+definitions, \cref{fig:preflatten_recurse}. \hl{TODO: call back to previous section?}
 
 \end{itemize}
 
