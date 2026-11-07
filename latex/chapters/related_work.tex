@@ -2,7 +2,26 @@
 This work directly builds on the original \texttt{Flattening} transformation of
 \citet{flat-paper}, but extends it to a) handle additional cases where the
 callers cannot be ``unified'' to a single flat/non-flat representation (for
-non-array types), and b) more-agressively flatten cases related to arrays.
+non-array types), and b) more-agressively flatten cases related to arrays, while
+c) pursuing a simpler, strictly-local analysis.
+
+Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
+a graph whose nodes correspond to ``data elements'' in the program (SSA value,
+function/block formal parameter, function \texttt{return}/\texttt{raise} value},
+or \texttt{datatype} constructor argument), and whose edges encode flattening
+constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
+(i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
+be either flat or non-flat). Broadly speaking, program constructs whose
+flattening can leave the original, unflattened name in place correspond to a
+one-way directed edge; program constructs whose flattening removes the
+unflattened name from the program correspond to a two-way directed edge (and
+hence an equality constraint on their flattening decisions).
+See \cref{fig:true_flat_mixed_case} for an illustration.
+
+TODO(agy): add the example here
+
+%% (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is
+%% non-flat, then $v$ may be either flat or non-flat).
 
 %% ConApp-focused examples
 
