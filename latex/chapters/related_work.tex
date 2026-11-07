@@ -7,7 +7,7 @@ c) pursuing a simpler, strictly-local analysis.
 
 Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
 a graph whose nodes correspond to ``data elements'' in the program (SSA value,
-function/block formal parameter, function \texttt{return}/\texttt{raise} value},
+function/block formal parameter, function \texttt{return}/\texttt{raise} value,
 or \texttt{datatype} constructor argument), and whose edges encode flattening
 constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
 (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
@@ -18,6 +18,52 @@ correspond to a one-way directed edge; program constructs whose flattening
 removes the unflattened name from the program correspond to a two-way undirected
 edge (and hence an equality constraint on their flattening decisions).
 See \cref{fig:true_flat_mixed_case} for an illustration.
+
+%% Feedback(agy) on phrasing above:
+%% 1. "leaving the unflattened name in place" vs. "removing the unflattened name"
+%%    (lines 15-19):
+%%    - The core intuition makes sense: at a `goto` or `call` argument edge
+%%      (u -> v), the caller has a named SSA variable `u` in scope whose
+%%      `tuple(...)` definition can stay in place (or, if `u` is a flattened
+%%      formal parameter, be reconstructed at block/function entry) so `u` can
+%%      simultaneously feed both flattened and unflattened targets. By contrast,
+%%      at a `call` return/raise transfer (u <-> v), control passes directly from
+%%      the callee's anonymous `return` slot into the caller's continuation block
+%%      parameters with no intermediate variable bound at the call site.
+%%    - However, saying "constructs whose flattening removes the unflattened name
+%%      from the program" is slightly ambiguous because flattening a block or
+%%      function formal parameter also replaces the unflattened parameter name in
+%%      the signature (and `Flatten` actually re-binds `p = tuple(p_0, p_1)` in
+%%      the body, which `Shrink` later deletes if unused). Also, one directed
+%%      edge (`case` dispatch from constructor payload `conArgs(C)` to branch
+%%      target `labelArgs(bb)`) does not leave a name in place, but instead
+%%      synthesizes an adapter/coercion block on the `case` edge when `C` is flat
+%%      and `bb` is non-flat.
+%%    - Suggestion: clarify that directed edges correspond to value transfers
+%%      where the source either has both the boxed tuple name and its unpacked
+%%      components in scope (or, for `case`, can interpose a coercion block),
+%%      whereas undirected edges occur at `call` return/exception transfers where
+%%      the callee's return value flows directly into the continuation block
+%%      without an intermediate variable binding or edge block.
+%% 2. Connecting paragraph 1 ("callers cannot be unified") to paragraph 2:
+%%    - A reader might wonder: if `Flatten` supports mixed flat/non-flat edges
+%%      via directed constraints, why did paragraph 1 say `Flatten` cannot handle
+%%      cases where callers cannot be unified?
+%%    - Consider adding a sentence noting the direction of the constraint at
+%%      function calls: because edges point along data flow from caller arguments
+%%      u_i to the callee's formal parameter v (u_i -> v), a single flat value u
+%%      can flow into both flat and non-flat consumers (v_1, v_2), *but* a single
+%%      callee formal parameter v receiving from both a flat caller (u_1) and a
+%%      non-flat caller (u_2) is forced to be non-flat (since u_2 is non-flat and
+%%      v must be no-flatter-than u_2). That bridges the graph explanation back
+%%      to `PreFlatten`'s function specialization.
+%% 3. Minor typos in this file:
+%%    - Line 5: `more-agressively` -> `more aggressively`
+%%    - Line 38 (now below): `rather than optimize-out` -> `rather than optimizing out`
+%%    - Line 40 / 49 (now below): straight quotes `"clean up"`, `"data-only flattening"` -> ``...''
+%%    - Line 42 (now below): `an higher-order IR` -> `a higher-order IR`
+%%    - Line 45 (now below): `flattening optimations` -> `flattening optimizations`
+%%    - Line 51 (now below): `jane street` -> `Jane Street`
 
 \begin{figure}[htbp]
   \centering
