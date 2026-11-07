@@ -157,12 +157,26 @@ block bb_nonflat(q: int * int):
   ...
 \end{minted}
   \end{subfigure}
-  \caption{Flattening an undirected edge versus a mixed pair of directed edges in \texttt{Flatten}. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): at a non-tail \texttt{call}, the callee's return value passes directly into the continuation block \texttt{bb\_cont} with no intermediate variable binding in the caller, inducing an equality constraint between \texttt{g}'s return representation and \texttt{bb\_cont}'s parameters. Bottom (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): a local tuple binding \texttt{x} induces one-way directed edges to its uses; when \texttt{bb\_flat} is flattened while \texttt{bb\_nonflat} remains unflattened (forced by \texttt{bb\_other}), \texttt{x} is left behind in \texttt{bb\_start} to supply \texttt{bb\_nonflat(x)} while its unpacked components \texttt{(a, b)} are passed to \texttt{bb\_flat(a, b)}.}
+  \caption{Flattening an undirected edge versus a mixed pair of directed edges in \texttt{Flatten}. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): at a non-tail \texttt{call}, the callee's return value passes directly into the continuation block \texttt{bb\_cont} with no intermediate variable binding in the caller, inducing an equality constraint between \texttt{g}'s return representation and \texttt{bb\_cont}'s parameters. Bottom (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): a local tuple binding \texttt{x} induces one-way directed edges to its uses; when \texttt{bb\_flat} is flattened while \texttt{bb\_nonflat} remains unflattened (forced by \texttt{bb\_other}), \texttt{x} is left behind in \texttt{bb\_start} to supply \texttt{bb\_nonflat(x)} while its unpacked components \texttt{(a, b)} are passed to \texttt{bb\_flat(a, b)}. \hl{TODO: EDIT -- TOO VERBOSE}}
   \label{fig:true_flat_mixed_case}
 \end{figure}
 
-%% (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is
-%% non-flat, then $v$ may be either flat or non-flat).
+
+By contrast, the analysis of \texttt{PreFlatten} simply reasons
+about \textit{callsites} that might benefit from flattening, matching on the
+purely-local pattern of ``\texttt{tuple} constructor call\texttt{;} function
+call,'' and duplicates the callee with the appropriate signature to ensure that
+all such sequences are flattened. Duplicating callees allows \texttt{PreFlatten}
+to handle cases that are ``mixed'' in the opposite sense from the one described
+in \cref{fig:true_flat_mixed_case} -- functions with a mixture of flattenable
+and unflattenable callers, rather than data with a mixture of flattenable and
+unflattenable users. \texttt{PreFlatten} additionally supports the ``mixed''
+case of vanilla \texttt{Flatten} in the obvious way (leaving behind the
+unflattend name). See \cref{fig:pre_flatten_mixed_case} for an example.
+
+TODO(agy): add fig:pre flatten mixed case. i think the LHS should have the same
+``mixed edge'' example as above, and then the RHS should have a ``mixed edge''
+that shows the new, supported direction
 
 %% ConApp-focused examples
 
@@ -177,6 +191,7 @@ block bb_nonflat(q: int * int):
 \citet{manticore-arity-paper} treats a problem very similar to \citet{flat-paper}. Much of their complexity stems from performing the transformation on an higher-order IR, whereas we (like \citet{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
 
 The recent work \citet{closure-sharing-paper} examines the opposite optimization strategy to the one discussed here – introducing new layers of indirection in closure representations as a performance optimization. Like \citet{manticore-arity-paper}, their analysis differs substantially from anything in MLton, since MLton implements higher-order functions via defunctionalization rather than closure conversion.
+
 \citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
 
 %% DeepFlatten-focused examples
