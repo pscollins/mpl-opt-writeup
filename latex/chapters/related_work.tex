@@ -1,4 +1,4 @@
-
+\subsection{\texttt{tuple} Flattening}
 This work directly builds on the original \texttt{Flattening} transformation of
 \citet{flat-paper}, but extends it to a) handle additional cases where the
 callers cannot be ``unified'' to a single flat/non-flat representation (for
@@ -341,6 +341,38 @@ def g(p: int * int) -> ...:
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
 
+\hl{TODO: edit}
+
+Thinking in terms of the structure of the overall data-flow graph, then, we can
+say the following:
+
+\begin{itemize}
+\item For \texttt{Flatten}, since constraints ``flow forward''
+along directed edges, the action of the pass is to identify a path through the
+dataflow graph that is both tuple-valued and flattenable at each edge,
+traversing inside function/block bodies. The transformation then rewrites the
+type of each edge, leaving the structure of the dataflow graph unchanged.
+
+\item For \texttt{PreFlatten}, we look at only single edges (rather than full paths),
+and the only action is to duplicate nodes in the dataflow graph, introducing
+new, flat edges.
+
+\end{itemize}
+
+See \cref{fig:flatten_dataflow_comparison} for an illustration.
+
+(TODO(agy): diagrams 1) LHS: graph with a marked path (maybe in red?) with a
+caption that explains that it's flattenable. RHSes: one is the Flatten version,
+with a marker explaining that the whole path is flattened (including internal
+nodes within funciton bodies); the other is the PreFlatten version, with a
+marker explaining that the call edges are flattened, but the bodies are
+unflattened 2) LHS: graph with a marked edge -- indicating a single single
+flatttenable caller for a particular function (but non-flattenable callers exist
+too). RHSes: one is Flatten (left unchanged), the other is PreFlattne (shows
+duplication)
+
+
+\subsection{\texttt{ConApp} Flattening}
 %% ConApp-focused examples
 
 \citet{mlton-closure-paper} introduced the MLton defunctionalization pass, whose \texttt{datatype} objects we seek to eliminate through our \texttt{PreFlatten} pass. We, effectively, repurpose their control flow analysis in order to drive function specialization decisions.
@@ -353,11 +385,17 @@ def g(p: int * int) -> ...:
 
 \citet{manticore-arity-paper} treats a problem very similar to \citet{flat-paper}. Much of their complexity stems from performing the transformation on an higher-order IR, whereas we (like \citet{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
 
-The recent work \citet{closure-sharing-paper} examines the opposite optimization strategy to the one discussed here – introducing new layers of indirection in closure representations as a performance optimization. Like \citet{manticore-arity-paper}, their analysis differs substantially from anything in MLton, since MLton implements higher-order functions via defunctionalization rather than closure conversion.
+The recent work \citet{closure-sharing-paper} examines the opposite optimization
+strategy to the one discussed here – introducing new layers of indirection in
+closure representations as a performance optimization.
+Like \citet{manticore-arity-paper}, their analysis differs substantially from
+anything in MLton, since MLton implements higher-order functions via
+defunctionalization rather than closure conversion.
 
 \citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
 
 %% DeepFlatten-focused examples
+\subsection{\texttt{array}, \texttt{vector} Flattening}
 
 \citet{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their "data-only flattening" is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations
 
