@@ -174,9 +174,61 @@ unflattenable users. \texttt{PreFlatten} additionally supports the ``mixed''
 case of vanilla \texttt{Flatten} in the obvious way (leaving behind the
 unflattend name). See \cref{fig:pre_flatten_mixed_case} for an example.
 
-TODO(agy): add fig:pre flatten mixed case. i think the LHS should have the same
-``mixed edge'' example as above, and then the RHS should have a ``mixed edge''
-that shows the new, supported direction
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_users}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    # Unflattened `x` is left behind for
+    # the unflattened jump to bb_nonflat
+    x: int * int = tuple(a, b)
+    case test of
+      true  => call bb_cont g_flat(a, b)
+    | false => goto bb_nonflat(x)
+
+  block bb_nonflat(q: int * int):
+    # Unflattenable use of `q`
+    ...
+
+def g_flat(p_0: int, p_1: int) -> ...:
+  block bb0():
+    p: int * int = tuple(p_0, p_1)
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_callers}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    # Flattenable caller calls specialized
+    # `g_flat` with unpacked arguments
+    x: int * int = tuple(a, b)
+    call bb_cont g_flat(a, b)
+
+  block bb_other():
+    # Unflattenable caller calls original `g`
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g_flat(p_0: int, p_1: int) -> ...:
+  block bb0():
+    p: int * int = tuple(p_0, p_1)
+    ...
+
+def g(p: int * int) -> ...:
+  ...
+\end{minted}
+  \end{subfigure}
+  \caption{Handling both directions of mixed flattening edges in \texttt{PreFlatten}. Left (\subref{fig:pre_flatten_mixed_users}): when a tuple \texttt{x} has both a flattenable callsite and an unflattened consumer, \texttt{PreFlatten} leaves the binding of \texttt{x} in place while passing unpacked arguments \texttt{(a, b)} to \texttt{g\_flat}. Right (\subref{fig:pre_flatten_mixed_callers}): when a function \texttt{g} has both a flattenable caller (\texttt{bb\_start}) and an unflattenable caller (\texttt{bb\_other}), \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so each caller can use its preferred representation.}
+  \label{fig:pre_flatten_mixed_case}
+\end{figure}
 
 %% ConApp-focused examples
 
