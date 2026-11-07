@@ -11,14 +11,20 @@ function/block formal parameter, function \texttt{return}/\texttt{raise} value},
 or \texttt{datatype} constructor argument), and whose edges encode flattening
 constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
 (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
-be either flat or non-flat). Broadly speaking, program constructs whose
-flattening can leave the original, unflattened name in place correspond to a
-one-way directed edge; program constructs whose flattening removes the
-unflattened name from the program correspond to a two-way directed edge (and
-hence an equality constraint on their flattening decisions).
+be either flat or non-flat). Any program construct that induces an edge in the
+data-flow graph also induces an edge in this graph. Broadly speaking, program
+constructs whose flattening can leave the original, unflattened name in place
+correspond to a one-way directed edge; program constructs whose flattening
+removes the unflattened name from the program correspond to a two-way undirected
+edge (and hence an equality constraint on their flattening decisions).
 See \cref{fig:true_flat_mixed_case} for an illustration.
 
-TODO(agy): add the example here
+TODO(agy): add the example here -- read ~/mixed_flatten.md and translate the
+SML-style IR with the ``mixed flattening'' example to the python-style used in
+the rest of this document. two examples, both have LHS pre-Flatten and RHS
+post-Flatten. the first example is flattening an undirected edge, to demonstrate
+that there is no ``unflattened name'' to leave behind; the second example is a
+mixed case where the unflattened name is left behind
 
 %% (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is
 %% non-flat, then $v$ may be either flat or non-flat).
