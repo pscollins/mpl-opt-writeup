@@ -68,10 +68,9 @@ See \cref{fig:true_flat_mixed_case} for an illustration.
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Undirected edge before \texttt{Flatten}}
+    \caption{Undirected return edge before \texttt{Flatten}}
     \label{fig:true_flat_undirected_before}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def g(a: int, b: int) -> int * int:
   block bb0():
     ret: int * int = tuple(a, b)
@@ -79,85 +78,117 @@ def g(a: int, b: int) -> int * int:
 
 def f(a: int, b: int) -> ...:
   block bb0():
-    # Return value of g flows directly
-    # into bb_cont without a local name
+    # Return value flows directly into bb_cont
     call bb_cont g(a, b)
 
   block bb_cont(res: int * int):
     x0: int = select(res, 0)
     x1: int = select(res, 1)
-    # ...use x0, x1...
+    ...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Undirected edge after \texttt{Flatten}}
+    \caption{Undirected return edge after \texttt{Flatten}}
     \label{fig:true_flat_undirected_after}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int) -> (int, int):
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int) -> int, int:
   block bb0():
-    return (a, b)
+    return a, b
 
 def f(a: int, b: int) -> ...:
   block bb0():
-    # No unflattened name exists at call
-    # to leave behind; g's return and
-    # bb_cont's formals must match
+    # g's return and bb_cont flattened together
     call bb_cont g(a, b)
 
   block bb_cont(res_0: int, res_1: int):
     # ...use res_0, res_1...
+    ...
 \end{minted}
   \end{subfigure}
 
-  \vspace{3mm}
+  \vspace{1mm}
 
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Mixed directed edges before \texttt{Flatten}}
+    \caption{Mixed users before \texttt{Flatten}}
     \label{fig:true_flat_mixed_before}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-block bb_start(a: int, b: int):
-  x: int * int = tuple(a, b)
-  case test of
-    true  => goto bb_flat(x)
-  | false => goto bb_nonflat(x)
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    x: int * int = tuple(a, b)
+    case test of
+      true  => call bb_cont g(x)
+    | false => goto bb_nonflat(x)
 
-block bb_other():
-  y: int * int = prim ...
-  goto bb_nonflat(y)
+  block bb_nonflat(q: int * int):
+    # Unflattenable primitive use of q
+    prim ...(q)
 
-block bb_flat(p: int * int):
-  ...
-block bb_nonflat(q: int * int):
-  ...
+def g(p: int * int) -> ...:
+  block bb0():
+    ...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Mixed directed edges after \texttt{Flatten}}
+    \caption{Mixed users after \texttt{Flatten}}
     \label{fig:true_flat_mixed_after}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-block bb_start(a: int, b: int):
-  # Unflattened `x` is left behind for
-  # the unflattened jump to bb_nonflat
-  x: int * int = tuple(a, b)
-  case test of
-    true  => goto bb_flat(a, b)
-  | false => goto bb_nonflat(x)
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    # Unflattened `x` left behind for bb_nonflat
+    x: int * int = tuple(a, b)
+    case test of
+      true  => call bb_cont g(a, b)
+    | false => goto bb_nonflat(x)
 
-block bb_other():
-  y: int * int = prim ...
-  goto bb_nonflat(y)
+  block bb_nonflat(q: int * int):
+    prim ...(q)
 
-block bb_flat(p_0: int, p_1: int):
-  p: int * int = tuple(p_0, p_1)
-  ...
-block bb_nonflat(q: int * int):
-  ...
+def g(p_0: int, p_1: int) -> ...:
+  block bb0():
+    ...
 \end{minted}
   \end{subfigure}
-  \caption{Flattening an undirected edge versus a mixed pair of directed edges in \texttt{Flatten}. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): at a non-tail \texttt{call}, the callee's return value passes directly into the continuation block \texttt{bb\_cont} with no intermediate variable binding in the caller, inducing an equality constraint between \texttt{g}'s return representation and \texttt{bb\_cont}'s parameters. Bottom (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): a local tuple binding \texttt{x} induces one-way directed edges to its uses; when \texttt{bb\_flat} is flattened while \texttt{bb\_nonflat} remains unflattened (forced by \texttt{bb\_other}), \texttt{x} is left behind in \texttt{bb\_start} to supply \texttt{bb\_nonflat(x)} while its unpacked components \texttt{(a, b)} are passed to \texttt{bb\_flat(a, b)}. \hl{TODO: EDIT -- TOO VERBOSE}}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers before \texttt{Flatten}}
+    \label{fig:true_flat_mixed_callers_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    x: int * int = tuple(a, b)
+    call bb_cont g(x)
+
+  block bb_other():
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g(p: int * int) -> ...:
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers after \texttt{Flatten}}
+    \label{fig:true_flat_mixed_callers_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    # Unchanged: bb_other forces `g` non-flat
+    x: int * int = tuple(a, b)
+    call bb_cont g(x)
+
+  block bb_other():
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g(p: int * int) -> ...:
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}
+  \caption{How \texttt{Flatten} handles three data-flow patterns. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): an undirected return edge flattens \texttt{g}'s return value and \texttt{bb\_cont}'s parameters together. Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left behind for \texttt{bb\_nonflat(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g(a, b)}. Bottom (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}): when \texttt{g} has mixed callers, the unflattened caller \texttt{bb\_other} forces \texttt{g} to remain unflattened. \hl{TODO: EDIT -- TOO VERBOSE}}
   \label{fig:true_flat_mixed_case}
 \end{figure}
 
@@ -177,43 +208,122 @@ unflattend name). See \cref{fig:pre_flatten_mixed_case} for an example.
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Mixed users after \texttt{PreFlatten}}
-    \label{fig:pre_flatten_mixed_users}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+    \caption{Undirected return edge before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_undirected_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int) -> int * int:
+  block bb0():
+    ret: int * int = tuple(a, b)
+    return ret
+
+def f(a: int, b: int) -> ...:
+  block bb0():
+    # Return value flows directly into bb_cont
+    call bb_cont g(a, b)
+
+  block bb_cont(res: int * int):
+    x0: int = select(res, 0)
+    x1: int = select(res, 1)
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Undirected return edge after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_undirected_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int) -> int * int:
+  block bb0():
+    ret: int * int = tuple(a, b)
+    return ret
+
+def f(a: int, b: int) -> ...:
+  block bb0():
+    # Unchanged: PreFlatten only acts on arguments
+    call bb_cont g(a, b)
+
+  block bb_cont(res: int * int):
+    x0: int = select(res, 0)
+    x1: int = select(res, 1)
+    ...
+\end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_users_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int) -> ...:
   block bb_start():
-    # Unflattened `x` is left behind for
-    # the unflattened jump to bb_nonflat
+    x: int * int = tuple(a, b)
+    case test of
+      true  => call bb_cont g(x)
+    | false => goto bb_nonflat(x)
+
+  block bb_nonflat(q: int * int):
+    # Unflattenable primitive use of q
+    prim ...(q)
+
+def g(p: int * int) -> ...:
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_users_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    # Unflattened `x` left behind for bb_nonflat
     x: int * int = tuple(a, b)
     case test of
       true  => call bb_cont g_flat(a, b)
     | false => goto bb_nonflat(x)
 
   block bb_nonflat(q: int * int):
-    # Unflattenable use of `q`
-    ...
+    prim ...(q)
 
 def g_flat(p_0: int, p_1: int) -> ...:
   block bb0():
     p: int * int = tuple(p_0, p_1)
     ...
 \end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_callers_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int) -> ...:
+  block bb_start():
+    x: int * int = tuple(a, b)
+    call bb_cont g(x)
+
+  block bb_other():
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g(p: int * int) -> ...:
+  block bb0():
+    ...
+\end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
     \caption{Mixed callers after \texttt{PreFlatten}}
-    \label{fig:pre_flatten_mixed_callers}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+    \label{fig:pre_flatten_mixed_callers_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int) -> ...:
   block bb_start():
-    # Flattenable caller calls specialized
-    # `g_flat` with unpacked arguments
+    # Calls specialized `g_flat`
     x: int * int = tuple(a, b)
     call bb_cont g_flat(a, b)
 
   block bb_other():
-    # Unflattenable caller calls original `g`
+    # Calls original unflattened `g`
     y: int * int = prim ...
     call bb_cont g(y)
 
@@ -223,10 +333,11 @@ def g_flat(p_0: int, p_1: int) -> ...:
     ...
 
 def g(p: int * int) -> ...:
-  ...
+  block bb0():
+    ...
 \end{minted}
   \end{subfigure}
-  \caption{Handling both directions of mixed flattening edges in \texttt{PreFlatten}. Left (\subref{fig:pre_flatten_mixed_users}): when a tuple \texttt{x} has both a flattenable callsite and an unflattened consumer, \texttt{PreFlatten} leaves the binding of \texttt{x} in place while passing unpacked arguments \texttt{(a, b)} to \texttt{g\_flat}. Right (\subref{fig:pre_flatten_mixed_callers}): when a function \texttt{g} has both a flattenable caller (\texttt{bb\_start}) and an unflattenable caller (\texttt{bb\_other}), \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so each caller can use its preferred representation.}
+  \caption{How \texttt{PreFlatten} handles the same three data-flow patterns as \cref{fig:true_flat_mixed_case}. Top (\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}): \texttt{PreFlatten} only pushes constructor allocations down across call arguments and leaves return values to \texttt{Flatten}. Middle (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left in place for \texttt{bb\_nonflat(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g\_flat}. Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): when \texttt{g} has mixed callers, \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so \texttt{bb\_start} is flattened while \texttt{bb\_other} calls the original \texttt{g}.}
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
 
