@@ -19,6 +19,8 @@ removes the unflattened name from the program correspond to a two-way undirected
 edge (and hence an equality constraint on their flattening decisions).
 See \cref{fig:true_flat_mixed_case} for an illustration.
 
+\hl{TODO: MENTION HOW WE SEED}
+
 %% Feedback(agy) on phrasing above:
 %% 1. "leaving the unflattened name in place" vs. "removing the unflattened name"
 %%    (lines 15-19):
@@ -399,6 +401,9 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
     edgeFlat/.style={
       -{Stealth[length=4.5pt, width=3.6pt]}, line width=1.25pt, draw=colorXBorder
     },
+    edgeProp/.style={
+      -{Stealth[length=3.6pt, width=2.8pt]}, line width=0.75pt, densely dashed, draw=black!65
+    },
     notelbl/.style={
       font=\scriptsize\sffamily, align=left, text=black!80, inner sep=1.5pt
     },
@@ -572,9 +577,13 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \draw[edgeUnflat] (c2) -- (b0);
       \draw[edgeUnflat] (b0) -- (b1);
 
+      % Curved dashed arrow showing non-flatness propagating from f2 along directed edges
+      \draw[edgeProp] (0.90, 0.22) to[bend left=16] (0.24, -0.88);
+      \draw[edgeProp] (0.24, -0.98) -- (0.24, -1.68);
+
       % Annotation outside box to the right
-      \node[notelbl, text=black!75, anchor=west] (note5) at (0.96, -1.15) {unchanged\\(blocked by\\non-flat caller)};
-      \draw[notearr] (note5.north west) -- (b0.east);
+      \node[notelbl, text=black!75, anchor=west] (note5) at (0.96, -1.18) {non-flatness\\propagates\\from \texttt{f2}};
+      \draw[notearr] (note5.north west) -- (0.28, -0.90);
     \end{tikzpicture}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
@@ -692,7 +701,7 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \draw[notearr, draw=colorXBorder] (note8a.north east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
       \draw[notearr, draw=colorXBorder] (note8a.south east) -- ($(b0)!0.5!(b1)+(-0.04,0)$);
 
-      \node[notelbl, text=black!75, anchor=west] (note8b) at (1.24, 0.14) {tuple name\\kept for\\non-flat use};
+      \node[notelbl, text=black!75, anchor=west] (note8b) at (1.24, 0.14) {no backward\\propagation;\\tuple kept};
       \draw[notearr] (note8b.south west) -- ($(c1)!0.65!(c2)$);
     \end{tikzpicture}
   \end{subfigure}\hfill
