@@ -16,8 +16,13 @@ data-flow graph also induces an edge in this graph. Broadly speaking, program
 constructs whose flattening can leave the original, unflattened name in place
 correspond to a one-way directed edge; program constructs whose flattening
 removes the unflattened name from the program correspond to a two-way undirected
-edge (and hence an equality constraint on their flattening decisions).
-See \cref{fig:true_flat_mixed_case} for an illustration.
+edge (and hence an equality constraint on their flattening decisions). Finally,
+the pass marks nodes as ``flattenable'' or ``non-flattenable'' -- all
+non-\texttt{tuple}-typed objects are ``non-flattenable;'' all
+\texttt{tuple}-typed objects are non-flattenable unless they are created by a
+\texttt{select} or \texttt{PrimApp} statement -- and propagates the
+``flattenable'' decision as far as possible subject to the constaints encoded by
+edges. See \cref{fig:true_flat_mixed_case} for an illustration.
 
 \hl{TODO: MENTION HOW WE SEED}
 
