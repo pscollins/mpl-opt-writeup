@@ -1,8 +1,8 @@
-\subsection{\texttt{tuple} Flattening}
+\section{\texttt{tuple} Flattening}
 This work directly builds on the original \texttt{Flattening} transformation of
 \citet{flat-paper}, but extends it to a) handle additional cases where the
 callers cannot be ``unified'' to a single flat/non-flat representation (for
-non-array types), and b) more-agressively flatten cases related to arrays, while
+non-array types), and b) more aggressively flatten cases related to arrays, while
 c) pursuing a simpler, strictly-local analysis.
 
 Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
@@ -21,7 +21,7 @@ the pass marks nodes as ``flattenable'' or ``non-flattenable'' -- all
 non-\texttt{tuple}-typed objects are ``non-flattenable;'' all
 \texttt{tuple}-typed objects are non-flattenable unless they are created by a
 \texttt{select} or \texttt{PrimApp} statement -- and propagates the
-``flattenable'' decision as far as possible subject to the constaints encoded by
+``flattenable'' decision as far as possible subject to the constraints encoded by
 edges. See \cref{fig:true_flat_mixed_case} for an illustration.
 
 \hl{TODO: MENTION HOW WE SEED}
@@ -78,12 +78,12 @@ edges. See \cref{fig:true_flat_mixed_case} for an illustration.
     \caption{Undirected return edge before \texttt{Flatten}}
     \label{fig:true_flat_undirected_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int) -> int * int:
+def g(a: int, b: int): int * int =
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb0():
     # Return value flows directly into bb_cont
     call bb_cont g(a, b)
@@ -98,11 +98,11 @@ def f(a: int, b: int) -> ...:
     \caption{Undirected return edge after \texttt{Flatten}}
     \label{fig:true_flat_undirected_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int) -> int, int:
+def g(a: int, b: int): int, int =
   block bb0():
     return a, b
 
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb0():
     # g's return and bb_cont flattened together
     call bb_cont g(a, b)
@@ -119,18 +119,21 @@ def f(a: int, b: int) -> ...:
     \caption{Mixed users before \texttt{Flatten}}
     \label{fig:true_flat_mixed_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     case test of
-      true  => call bb_cont g(x)
+      true  => goto bb_flat()
     | false => goto bb_nonflat(x)
+
+  block bb_flat():
+    call bb_cont g(x)
 
   block bb_nonflat(q: int * int):
     # Unflattenable primitive use of q
     prim ...(q)
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -139,18 +142,21 @@ def g(p: int * int) -> ...:
     \caption{Mixed users after \texttt{Flatten}}
     \label{fig:true_flat_mixed_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     # Unflattened `x` left behind for bb_nonflat
     x: int * int = tuple(a, b)
     case test of
-      true  => call bb_cont g(a, b)
+      true  => goto bb_flat()
     | false => goto bb_nonflat(x)
+
+  block bb_flat():
+    call bb_cont g(a, b)
 
   block bb_nonflat(q: int * int):
     prim ...(q)
 
-def g(p_0: int, p_1: int) -> ...:
+def g(p_0: int, p_1: int): ... =
   block bb0():
     ...
 \end{minted}
@@ -162,7 +168,7 @@ def g(p_0: int, p_1: int) -> ...:
     \caption{Mixed callers before \texttt{Flatten}}
     \label{fig:true_flat_mixed_callers_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     call bb_cont g(x)
@@ -171,7 +177,7 @@ def f(a: int, b: int) -> ...:
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -180,7 +186,7 @@ def g(p: int * int) -> ...:
     \caption{Mixed callers after \texttt{Flatten}}
     \label{fig:true_flat_mixed_callers_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     # Unchanged: bb_other forces `g` non-flat
     x: int * int = tuple(a, b)
@@ -190,7 +196,7 @@ def f(a: int, b: int) -> ...:
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -210,7 +216,7 @@ in \cref{fig:true_flat_mixed_case} -- functions with a mixture of flattenable
 and unflattenable callers, rather than data with a mixture of flattenable and
 unflattenable users. \texttt{PreFlatten} additionally supports the ``mixed''
 case of vanilla \texttt{Flatten} in the obvious way (leaving behind the
-unflattend name). See \cref{fig:pre_flatten_mixed_case} for an example.
+unflattened name). See \cref{fig:pre_flatten_mixed_case} for an example.
 
 \begin{figure}[htbp]
   \centering
@@ -218,12 +224,12 @@ unflattend name). See \cref{fig:pre_flatten_mixed_case} for an example.
     \caption{Undirected return edge before \texttt{PreFlatten}}
     \label{fig:pre_flatten_undirected_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int) -> int * int:
+def g(a: int, b: int): int * int =
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb0():
     # Return value flows directly into bb_cont
     call bb_cont g(a, b)
@@ -238,12 +244,12 @@ def f(a: int, b: int) -> ...:
     \caption{Undirected return edge after \texttt{PreFlatten}}
     \label{fig:pre_flatten_undirected_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int) -> int * int:
+def g(a: int, b: int): int * int =
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb0():
     # Unchanged: PreFlatten only acts on arguments
     call bb_cont g(a, b)
@@ -261,18 +267,21 @@ def f(a: int, b: int) -> ...:
     \caption{Mixed users before \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_users_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     case test of
-      true  => call bb_cont g(x)
+      true  => goto bb_flat()
     | false => goto bb_nonflat(x)
+
+  block bb_flat():
+    call bb_cont g(x)
 
   block bb_nonflat(q: int * int):
     # Unflattenable primitive use of q
     prim ...(q)
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -281,18 +290,21 @@ def g(p: int * int) -> ...:
     \caption{Mixed users after \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_users_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     # Unflattened `x` left behind for bb_nonflat
     x: int * int = tuple(a, b)
     case test of
-      true  => call bb_cont g_flat(a, b)
+      true  => goto bb_flat()
     | false => goto bb_nonflat(x)
+
+  block bb_flat():
+    call bb_cont g_flat(a, b)
 
   block bb_nonflat(q: int * int):
     prim ...(q)
 
-def g_flat(p_0: int, p_1: int) -> ...:
+def g_flat(p_0: int, p_1: int): ... =
   block bb0():
     p: int * int = tuple(p_0, p_1)
     ...
@@ -305,7 +317,7 @@ def g_flat(p_0: int, p_1: int) -> ...:
     \caption{Mixed callers before \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_callers_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     call bb_cont g(x)
@@ -314,7 +326,7 @@ def f(a: int, b: int) -> ...:
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -323,7 +335,7 @@ def g(p: int * int) -> ...:
     \caption{Mixed callers after \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_callers_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int) -> ...:
+def f(a: int, b: int): ... =
   block bb_start():
     # Calls specialized `g_flat`
     x: int * int = tuple(a, b)
@@ -334,12 +346,12 @@ def f(a: int, b: int) -> ...:
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g_flat(p_0: int, p_1: int) -> ...:
+def g_flat(p_0: int, p_1: int): ... =
   block bb0():
     p: int * int = tuple(p_0, p_1)
     ...
 
-def g(p: int * int) -> ...:
+def g(p: int * int): ... =
   block bb0():
     ...
 \end{minted}
@@ -633,7 +645,7 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \draw[edgeUnflat] (b0) -- (b1);
 
       % Annotation in gap pointing to duplicated callee
-      \node[notelbl, text=colorXBorder!90!black, align=center] (note6) at (0.06, -0.18) {duplicated\\[-1pt]callee};
+      \node[notelbl, text=colorXBorder!90!black, align=center] (note6) at (0.06, -0.26) {duplicated\\[-1pt]callee};
       \draw[notearr, draw=colorXBorder] (note6.south) -- (-0.36, -0.68);
     \end{tikzpicture}
   \end{subfigure}
@@ -673,8 +685,8 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \draw[notearr, draw=ThesisRed!80!black] (note7a.north east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
       \draw[notearr, draw=ThesisRed!80!black] (note7a.south east) -- ($(b0)!0.5!(b1)+(-0.04,0)$);
 
-      \node[notelbl, text=black!70, anchor=west] (note7b) at (1.24, 0.14) {non-flat\\consumer};
-      \draw[notearr] (note7b.south west) -- (c2.east);
+      \node[notelbl, text=black!70, anchor=west] (note7b) at (1.24, -0.04) {non-flat\\consumer};
+      \draw[notearr] (note7b.west) -- (c2.east);
     \end{tikzpicture}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
@@ -706,8 +718,8 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \draw[notearr, draw=colorXBorder] (note8a.north east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
       \draw[notearr, draw=colorXBorder] (note8a.south east) -- ($(b0)!0.5!(b1)+(-0.04,0)$);
 
-      \node[notelbl, text=black!75, anchor=west] (note8b) at (1.24, 0.14) {no backward\\propagation;\\tuple kept};
-      \draw[notearr] (note8b.south west) -- ($(c1)!0.65!(c2)$);
+      \node[notelbl, text=black!75, anchor=west] (note8b) at (1.24, -0.04) {no backward\\propagation;\\tuple kept};
+      \draw[notearr] (note8b.west) -- (c2.east);
     \end{tikzpicture}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.32\textwidth}
@@ -738,8 +750,8 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       \node[notelbl, text=colorXBorder!90!black, anchor=east, align=right] (note9a) at (-1.18, -0.58) {call edge\\flattened};
       \draw[notearr, draw=colorXBorder] (note9a.east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
 
-      \node[notelbl, text=black!75, anchor=west] (note9b) at (1.24, 0.14) {tuple name\\kept for\\non-flat use};
-      \draw[notearr] (note9b.south west) -- ($(c1)!0.65!(c2)$);
+      \node[notelbl, text=black!75, anchor=west] (note9b) at (1.24, -0.04) {tuple name\\kept for\\non-flat use};
+      \draw[notearr] (note9b.west) -- (c2.east);
 
       \node[notelbl, text=black!75, anchor=west] (note9c) at (0.54, -1.48) {body left\\unflattened};
       \draw[notearr] (note9c.west) -- ($(b0)!0.5!(b1)+(0.04,0)$);
@@ -762,18 +774,18 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
 \end{figure}
 
 
-\subsection{\texttt{ConApp} Flattening}
+\section{\texttt{ConApp} Flattening}
 %% ConApp-focused examples
 
 \citet{mlton-closure-paper} introduced the MLton defunctionalization pass, whose \texttt{datatype} objects we seek to eliminate through our \texttt{PreFlatten} pass. We, effectively, repurpose their control flow analysis in order to drive function specialization decisions.
 
-\citet{local-paper} and \citet{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format)
+\citet{local-paper} and \citet{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format).
 
-\citet{double-steal-paper} also investigates a similar problem to our \texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the source language); however their contribution focuses on a novel, lossless in-memory representation for the ADT rather than optimize-out the ADT metadata entirely.
+\citet{double-steal-paper} also investigates a similar problem to our \texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the source language); however their contribution focuses on a novel, lossless in-memory representation for the ADT rather than optimizing out the ADT metadata entirely.
 
-\citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to "clean up" in the specialized blocks).
+\citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to ``clean up'' in the specialized blocks).
 
-\citet{manticore-arity-paper} treats a problem very similar to \citet{flat-paper}. Much of their complexity stems from performing the transformation on an higher-order IR, whereas we (like \citet{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
+\citet{manticore-arity-paper} treats a problem very similar to \citet{flat-paper}. Much of their complexity stems from performing the transformation on a higher-order IR, whereas we (like \citet{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
 
 The recent work \citet{closure-sharing-paper} examines the opposite optimization
 strategy to the one discussed here – introducing new layers of indirection in
@@ -782,14 +794,14 @@ Like \citet{manticore-arity-paper}, their analysis differs substantially from
 anything in MLton, since MLton implements higher-order functions via
 defunctionalization rather than closure conversion.
 
-\citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
+\citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimizations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
 
 %% DeepFlatten-focused examples
-\subsection{\texttt{array}, \texttt{vector} Flattening}
+\section{\texttt{array}, \texttt{vector} Flattening}
 
-\citet{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their "data-only flattening" is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations
+\citet{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their ``data-only flattening'' is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations.
 
-Various work at jane street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
+Various work at Jane Street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
 
 \citet{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \citet{mpl-sched-paper}.
 
