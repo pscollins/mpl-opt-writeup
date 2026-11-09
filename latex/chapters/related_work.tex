@@ -162,16 +162,9 @@ def f(a: int, b: int): ... =
 def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
-    case test of
-      true  => goto bb_flat()
-    | false => goto bb_nonflat(x)
-
-  block bb_flat():
+    # Unflattenable primitive use of x
+    prim ...(x)
     call bb_cont g(x)
-
-  block bb_nonflat(q: int * int):
-    # Unflattenable primitive use of q
-    prim ...(q)
 
 def g(p: int * int): ... =
   block bb0():
@@ -184,17 +177,10 @@ def g(p: int * int): ... =
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int): ... =
   block bb_start():
-    # Unflattened `x` left behind for bb_nonflat
+    # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
-    case test of
-      true  => goto bb_flat()
-    | false => goto bb_nonflat(x)
-
-  block bb_flat():
+    prim ...(x)
     call bb_cont g(a, b)
-
-  block bb_nonflat(q: int * int):
-    prim ...(q)
 
 def g(p_0: int, p_1: int): ... =
   block bb0():
@@ -241,7 +227,7 @@ def g(p: int * int): ... =
     ...
 \end{minted}
   \end{subfigure}
-  \caption{How \texttt{Flatten} handles three data-flow patterns. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): an undirected return edge flattens \texttt{g}'s return value and \texttt{bb\_cont}'s parameters together. Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left behind for \texttt{bb\_nonflat(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g(a, b)}. Bottom (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}): when \texttt{g} has mixed callers, the unflattened caller \texttt{bb\_other} forces \texttt{g} to remain unflattened. \hl{TODO: EDIT -- TOO VERBOSE}}
+  \caption{How \texttt{Flatten} handles three data-flow patterns. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): an undirected return edge flattens \texttt{g}'s return value and \texttt{bb\_cont}'s parameters together. Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left behind for \texttt{prim ...(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g(a, b)}. Bottom (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}): when \texttt{g} has mixed callers, the unflattened caller \texttt{bb\_other} forces \texttt{g} to remain unflattened. \hl{TODO: EDIT -- TOO VERBOSE}}
   \label{fig:true_flat_mixed_case}
 \end{figure}
 
@@ -310,16 +296,9 @@ def f(a: int, b: int): ... =
 def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
-    case test of
-      true  => goto bb_flat()
-    | false => goto bb_nonflat(x)
-
-  block bb_flat():
+    # Unflattenable primitive use of x
+    prim ...(x)
     call bb_cont g(x)
-
-  block bb_nonflat(q: int * int):
-    # Unflattenable primitive use of q
-    prim ...(q)
 
 def g(p: int * int): ... =
   block bb0():
@@ -332,17 +311,10 @@ def g(p: int * int): ... =
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int): ... =
   block bb_start():
-    # Unflattened `x` left behind for bb_nonflat
+    # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
-    case test of
-      true  => goto bb_flat()
-    | false => goto bb_nonflat(x)
-
-  block bb_flat():
+    prim ...(x)
     call bb_cont g_flat(a, b)
-
-  block bb_nonflat(q: int * int):
-    prim ...(q)
 
 def g_flat(p_0: int, p_1: int): ... =
   block bb0():
@@ -396,7 +368,7 @@ def g(p: int * int): ... =
     ...
 \end{minted}
   \end{subfigure}
-  \caption{How \texttt{PreFlatten} handles the same three data-flow patterns as \cref{fig:true_flat_mixed_case}. Top (\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}): \texttt{PreFlatten} only pushes constructor allocations down across call arguments and leaves return values to \texttt{Flatten}. Middle (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left in place for \texttt{bb\_nonflat(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g\_flat}. Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): when \texttt{g} has mixed callers, \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so \texttt{bb\_start} is flattened while \texttt{bb\_other} calls the original \texttt{g}.}
+  \caption{How \texttt{PreFlatten} handles the same three data-flow patterns as \cref{fig:true_flat_mixed_case}. Top (\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}): \texttt{PreFlatten} only pushes constructor allocations down across call arguments and leaves return values to \texttt{Flatten}. Middle (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left in place for \texttt{prim ...(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g\_flat}. Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): when \texttt{g} has mixed callers, \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so \texttt{bb\_start} is flattened while \texttt{bb\_other} calls the original \texttt{g}.}
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
 
