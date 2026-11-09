@@ -1,28 +1,68 @@
 \section{\texttt{tuple} Flattening}
-This work directly builds on the original \texttt{Flattening} transformation of
-\citet{flat-paper}, but extends it to a) handle additional cases where the
-callers cannot be ``unified'' to a single flat/non-flat representation (for
-non-array types), and b) more aggressively flatten cases related to arrays, while
-c) pursuing a simpler, strictly-local analysis.
+The \texttt{tuple}-\texttt{PreFlatten} transformation introduced in work
+builds directly on the original \texttt{Flattening} transformation of
+\citet{flat-paper}, but extends it to handle additional cases where the callers cannot be
+``unified'' to a single flat/non-flat representation (for non-array types), and
+pursues a simpler, strictly-local analysis.
+
+
+%% but extends it to a) handle additional cases where the
+%% callers cannot be ``unified'' to a single flat/non-flat representation (for
+%% non-array types), and b) more aggressively flatten cases related to arrays, while
+%% c) pursuing a simpler, strictly-local analysis.
+
+TODO(agy):fig ssa grammar should refer to the SSA grammar in background.tex
 
 Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
-a graph whose nodes correspond to ``data elements'' in the program (SSA value,
-function/block formal parameter, function \texttt{return}/\texttt{raise} value,
-or \texttt{datatype} constructor argument), and whose edges encode flattening
-constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
-(i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
-be either flat or non-flat). Any program construct that induces an edge in the
-data-flow graph also induces an edge in this graph. Broadly speaking, program
-constructs whose flattening can leave the original, unflattened name in place
-correspond to a one-way directed edge; program constructs whose flattening
-removes the unflattened name from the program correspond to a two-way undirected
-edge (and hence an equality constraint on their flattening decisions). Finally,
-the pass marks nodes as ``flattenable'' or ``non-flattenable'' -- all
-non-\texttt{tuple}-typed objects are ``non-flattenable;'' all
-\texttt{tuple}-typed objects are non-flattenable unless they are created by a
-\texttt{select} or \texttt{PrimApp} statement -- and propagates the
-``flattenable'' decision as far as possible subject to the constraints encoded by
-edges. See \cref{fig:true_flat_mixed_case} for an illustration.
+a graph whose nodes correspond to ``data elements'' in the program (SSA values,
+function/block formal parameters, function \texttt{return}/\texttt{raise}
+arguments, or \texttt{datatype} constructor argument), and whose edges encode
+flattening constraints: a directed edge $(u, v)$ means that $v$ must be
+no-flatter-than $u$ (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if
+$u$ is flat, $v$ may be either flat or non-flat). Most IR constructs that induce
+an edge in the dataflow graph also induce an edge in this graph -- two
+exceptions (using the names from the grammar of \cref{fig:ssa_grammar}) are
+input edges to \texttt{prim} and \texttt{select} statements. Since there is no
+way to flatten these constructs, they are excluded from the constraint graph;
+correctness is ensured by leaving behind the original, unflattened objects after
+the transformation.
+
+
+Broadly speaking, program constructs that allow for the insertion of an
+intermediate packing step correspond to one-way directed edges (arguments passed
+to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
+or \texttt{goto}); program constructs that do not allow such a repacking (the
+return type of $f$ must exactly match the argument type of the continuation
+block in a \texttt{call} statement; the argument type of target blocks
+of \texttt{case} arms must exactly match the corresponding \texttt{datatype}
+constructors).
+
+%% Broadly speaking, program constructs whose flattening can leave the original,
+%% unflattened name in place correspond to a one-way directed edge; program
+%% constructs whose flattening removes the unflattened name from the program
+%% correspond to a two-way undirected edge (and hence an equality constraint on
+%% their flattening decisions).
+
+%% Most program constructs that induce an edge in the data-flow graph also induce
+%% an edge in this graph: one major exception is 
+
+After constructing the constraint graph, the pass marks a subset of nodes as
+``unflattenable'' -- specifically, all non-\texttt{tuple}-typed objects are
+unflattenable, and \texttt{tuple} values returned from a \texttt{select}
+or \texttt{prim} statement are unflattenable. Finally, the pass uses the
+constraint edges to propagate the unflattenable label to all nodes that require
+it, and any nodes that are left unmarked will be flattened.
+See \cref{fig:true_flat_mixed_case} for an illustration.
+
+%% the pass marks nodes as ``flattenable''
+%% or ``non-flattenable'' -- all non-\texttt{tuple}-typed objects are
+%% ``non-flattenable;'' all
+%% \texttt{tuple}-typed objects are non-flattenable unless they are created by a
+%% \texttt{select} or \texttt{PrimApp} statement.
+
+%% -- and propagates the ``flattenable'' decision as far as possible subject to the
+%% constraints encoded by edges. See \cref{fig:true_flat_mixed_case} for an
+%% illustration.
 
 \hl{TODO: MENTION HOW WE SEED}
 
