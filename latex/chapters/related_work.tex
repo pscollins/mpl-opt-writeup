@@ -1,6 +1,6 @@
 \section{\texttt{tuple} Flattening}
-The \texttt{tuple}-\texttt{PreFlatten} transformation introduced in work
-builds directly on the original \texttt{Flattening} transformation of
+The \texttt{tuple}-\texttt{PreFlatten} transformation introduced in this work
+builds directly on the original \texttt{Flatten} transformation of
 \citet{flat-paper}, but extends it to handle additional cases where the callers cannot be
 ``unified'' to a single flat/non-flat representation (for non-array types), and
 pursues a simpler, strictly-local analysis.
@@ -14,7 +14,7 @@ pursues a simpler, strictly-local analysis.
 Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
 a graph whose nodes correspond to ``data elements'' in the program (SSA values,
 function/block formal parameters, function \texttt{return}/\texttt{raise}
-arguments, or \texttt{datatype} constructor argument), and whose edges encode
+arguments, or \texttt{datatype} constructor arguments), and whose edges encode
 flattening constraints: a directed edge $(u, v)$ means that $v$ must be
 no-flatter-than $u$ (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if
 $u$ is flat, $v$ may be either flat or non-flat). Most IR constructs that induce
@@ -28,10 +28,10 @@ the transformation.
 
 Broadly speaking, program constructs that allow for the insertion of an
 intermediate packing step correspond to one-way directed edges; program
-constructs that do not allow for such a repacking corresond to two-way
+constructs that do not allow for such a repacking correspond to two-way
 undirected edges. Examples of the former category include: input arguments
 $\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
-argument, argument $\rightarrow$ \texttt{goto} argument $\rightarrow$ block
+argument, \texttt{goto} argument $\rightarrow$ \texttt{block}
 formal parameter; examples of the latter category include: function return type
 $\leftrightarrow$ continuation
 \texttt{block} formal parameter type, \texttt{datatype} constructor formal parameter types
@@ -249,23 +249,24 @@ def g(p: int * int): ... =
   ignoring \texttt{prim} user.
   Bottom
   (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}):
-  propagating ``unflattenable'' from \texttt{y} across the directed \texttt{call ... g(y)} edge prevents flattening}
+  propagating ``unflattenable'' from \texttt{y} across the directed \texttt{call ... g(y)} edge prevents flattening.}
   \label{fig:true_flat_mixed_case}
 \end{figure}
-
-\hl{TODO(agy): can we try to put the figure before the following paragraph?}
+\FloatBarrier
 
 By contrast, the analysis of \texttt{PreFlatten} simply reasons about callsites
 that might benefit from flattening, matching on the purely-local pattern of
-``\texttt{tuple} constructor call\texttt{;} function call,'' and duplicates the
+``\texttt{tuple} constructor call\texttt{;} function call'' (ignoring, for
+comparison purposes, the tail-call restriction of
+\cref{fig:preflatten_analysis}), and duplicates the
 callee with the appropriate signature to ensure that all such sequences are
 flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
 are ``mixed'' in the sense of
 (\cref{fig:true_flat_mixed_callers_before}, \cref{fig:true_flat_mixed_callers_after})
--- i..e functions with a mixture of flattenable and unflattenable callers.
+-- i.e. functions with a mixture of flattenable and unflattenable callers.
 \texttt{PreFlatten} also supports the cases that are ``mixed'' in the sense of
 (\cref{fig:true_flat_mixed_before}, \cref{fig:true_flat_mixed_after}), in the
-same way as \texttt{Flatten}, leving behind the original, unflattened names.
+same way as \texttt{Flatten}, leaving behind the original, unflattened names.
 See \cref{fig:pre_flatten_mixed_case} for an example.
 
 \begin{figure}[htbp]
@@ -341,8 +342,12 @@ def f(a: int, b: int): ... =
     call bb_cont g_flat(a, b)
 
 def g_flat(p_0: int, p_1: int): ... =
-  block bb0():
+  block bbBind():
+    # Rebind to the original name
     p: int * int = tuple(p_0, p_1)
+    ...
+
+  block bb0():
     ...
 \end{minted}
   \end{subfigure}
@@ -406,7 +411,7 @@ no impact on \texttt{return} edges.
 Middle
 (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}):
 handling of mixed users matches \texttt{Flatten}.
-Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): mixed callers are flattend by emitting a new specialization.}
+Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): mixed callers are flattened by emitting a new specialization.}
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
 
