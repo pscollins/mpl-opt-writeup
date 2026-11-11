@@ -11,8 +11,6 @@ pursues a simpler, strictly-local analysis.
 %% non-array types), and b) more aggressively flatten cases related to arrays, while
 %% c) pursuing a simpler, strictly-local analysis.
 
-TODO(agy):fig ssa grammar should refer to the SSA grammar in background.tex
-
 Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
 a graph whose nodes correspond to ``data elements'' in the program (SSA values,
 function/block formal parameters, function \texttt{return}/\texttt{raise}
@@ -29,13 +27,22 @@ the transformation.
 
 
 Broadly speaking, program constructs that allow for the insertion of an
-intermediate packing step correspond to one-way directed edges (arguments passed
-to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
-or \texttt{goto}); program constructs that do not allow such a repacking (the
-return type of $f$ must exactly match the argument type of the continuation
-block in a \texttt{call} statement; the argument type of target blocks
-of \texttt{case} arms must exactly match the corresponding \texttt{datatype}
-constructors).
+intermediate packing step correspond to one-way directed edges; program
+constructs that do not allow for such a repacking corresond to two-way
+undirected edges. Examples of the former category include: input arguments
+$\rightarrow$ \texttt{ConApp}, returned variable $\mapsto$ \texttt{return}
+argument, block argument $\rightarrow$ \texttt{goto} argument; examples of the
+latter category include: function return type $\leftrightarrow$ continuation
+\texttt{block} argument type, \texttt{datatype} constructor argument types
+$\leftrightarrow$ \texttt{case} statement target \texttt{block} argument type.
+
+%% (arguments passed
+%% to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
+%% or \texttt{goto}); program constructs that do not allow such a repacking (the
+%% return type of $f$ must exactly match the argument type of the continuation
+%% block in a \texttt{call} statement; the argument type of target blocks
+%% of \texttt{case} arms must exactly match the corresponding \texttt{datatype}
+%% constructors).
 
 %% Broadly speaking, program constructs whose flattening can leave the original,
 %% unflattened name in place correspond to a one-way directed edge; program
@@ -64,7 +71,7 @@ See \cref{fig:true_flat_mixed_case} for an illustration.
 %% constraints encoded by edges. See \cref{fig:true_flat_mixed_case} for an
 %% illustration.
 
-\hl{TODO: MENTION HOW WE SEED}
+%% \hl{TODO: MENTION HOW WE SEED}
 
 %% Feedback(agy) on phrasing above:
 %% 1. "leaving the unflattened name in place" vs. "removing the unflattened name"
@@ -197,10 +204,12 @@ def g(p_0: int, p_1: int): ... =
 def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
+    # Flattenable call
     call bb_cont g(x)
 
   block bb_other():
     y: int * int = prim ...
+    # Unflattenable call
     call bb_cont g(y)
 
 def g(p: int * int): ... =
@@ -227,17 +236,29 @@ def g(p: int * int): ... =
     ...
 \end{minted}
   \end{subfigure}
-  \caption{How \texttt{Flatten} handles three data-flow patterns. Top (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}): an undirected return edge flattens \texttt{g}'s return value and \texttt{bb\_cont}'s parameters together. Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left behind for \texttt{prim ...(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g(a, b)}. Bottom (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}): when \texttt{g} has mixed callers, the unflattened caller \texttt{bb\_other} forces \texttt{g} to remain unflattened. \hl{TODO: EDIT -- TOO VERBOSE}}
+
+\caption{\texttt{Flatten} propagation. Top
+  (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}):
+  successful flattening across an undirected constraint edge.
+  Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}):
+  successful flattening across a directed constraint edge,
+  ignoring \texttt{prim} user.
+
+  Bottom
+  (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}):
+  propagating ``unflattenable'' from \texttt{y} across the directed \texttt
+  {call ... g(y)} edge prevents flattening}
   \label{fig:true_flat_mixed_case}
 \end{figure}
 
+\hl{TODO(agy): can we try to put the figure before the following paragraph?}
 
-By contrast, the analysis of \texttt{PreFlatten} simply reasons
-about \textit{callsites} that might benefit from flattening, matching on the
-purely-local pattern of ``\texttt{tuple} constructor call\texttt{;} function
-call,'' and duplicates the callee with the appropriate signature to ensure that
-all such sequences are flattened. Duplicating callees allows \texttt{PreFlatten}
-to handle cases that are ``mixed'' in the opposite sense from the one described
+By contrast, the analysis of \texttt{PreFlatten} simply reasons about callsites
+that might benefit from flattening, matching on the purely-local pattern of
+``\texttt{tuple} constructor call\texttt{;} function call,'' and duplicates the
+callee with the appropriate signature to ensure that all such sequences are
+flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
+are ``mixed'' in the opposite sense from the one described
 in \cref{fig:true_flat_mixed_case} -- functions with a mixture of flattenable
 and unflattenable callers, rather than data with a mixture of flattenable and
 unflattenable users. \texttt{PreFlatten} additionally supports the ``mixed''
