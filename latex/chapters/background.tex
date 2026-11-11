@@ -1591,6 +1591,254 @@ memory operations that are linear in the number of function arguments.
 %%     chunk boundaries are not known until late so we need to make uncertain
 %%     decisions
 
+\subsubsection{Analysis}
+\label{sec:flatten_analysis}
+
+\hl{TODO: FIX THE TRANSITION}
+
+Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
+a graph whose nodes correspond to ``data elements'' in the program (SSA values,
+function/block formal parameters, function \texttt{return}/\texttt{raise}
+arguments, or \texttt{datatype} constructor arguments), and whose edges encode
+flattening constraints: a directed edge $(u, v)$ means that $v$ must be
+no-flatter-than $u$ (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if
+$u$ is flat, $v$ may be either flat or non-flat). Most IR constructs that induce
+an edge in the dataflow graph also induce an edge in this graph -- two
+exceptions (using the names from the grammar of \cref{fig:ssa_grammar}) are
+input edges to \texttt{prim} and \texttt{select} statements. Since there is no
+way to flatten these constructs, they are excluded from the constraint graph;
+correctness is ensured by leaving behind the original, unflattened objects after
+the transformation.
+
+
+Broadly speaking, program constructs that allow for the insertion of an
+intermediate packing step correspond to one-way directed edges; program
+constructs that do not allow for such a repacking correspond to two-way
+undirected edges. Examples of the former category include: input arguments
+$\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
+argument, \texttt{goto} argument $\rightarrow$ \texttt{block}
+formal parameter; examples of the latter category include: function return type
+$\leftrightarrow$ continuation
+\texttt{block} formal parameter type, \texttt{datatype} constructor formal parameter types
+$\leftrightarrow$ \texttt{case} statement target \texttt{block} formal parameter
+types.
+
+%% (arguments passed
+%% to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
+%% or \texttt{goto}); program constructs that do not allow such a repacking (the
+%% return type of $f$ must exactly match the argument type of the continuation
+%% block in a \texttt{call} statement; the argument type of target blocks
+%% of \texttt{case} arms must exactly match the corresponding \texttt{datatype}
+%% constructors).
+
+%% Broadly speaking, program constructs whose flattening can leave the original,
+%% unflattened name in place correspond to a one-way directed edge; program
+%% constructs whose flattening removes the unflattened name from the program
+%% correspond to a two-way undirected edge (and hence an equality constraint on
+%% their flattening decisions).
+
+%% Most program constructs that induce an edge in the data-flow graph also induce
+%% an edge in this graph: one major exception is 
+
+After constructing the constraint graph, the pass marks a subset of nodes as
+``unflattenable'' -- specifically, all non-\texttt{tuple}-typed objects are
+unflattenable, and \texttt{tuple} values returned from a \texttt{select}
+or \texttt{prim} statement are unflattenable. Finally, the pass uses the
+constraint edges to propagate the unflattenable label to all nodes that require
+it, and any nodes that are left unmarked will be flattened.
+See \cref{fig:true_flat_mixed_case} for an illustration.
+
+%% the pass marks nodes as ``flattenable''
+%% or ``non-flattenable'' -- all non-\texttt{tuple}-typed objects are
+%% ``non-flattenable;'' all
+%% \texttt{tuple}-typed objects are non-flattenable unless they are created by a
+%% \texttt{select} or \texttt{PrimApp} statement.
+
+%% -- and propagates the ``flattenable'' decision as far as possible subject to the
+%% constraints encoded by edges. See \cref{fig:true_flat_mixed_case} for an
+%% illustration.
+
+%% \hl{TODO: MENTION HOW WE SEED}
+
+%% Feedback(agy) on phrasing above:
+%% 1. "leaving the unflattened name in place" vs. "removing the unflattened name"
+%%    (lines 15-19):
+%%    - The core intuition makes sense: at a `goto` or `call` argument edge
+%%      (u -> v), the caller has a named SSA variable `u` in scope whose
+%%      `tuple(...)` definition can stay in place (or, if `u` is a flattened
+%%      formal parameter, be reconstructed at block/function entry) so `u` can
+%%      simultaneously feed both flattened and unflattened targets. By contrast,
+%%      at a `call` return/raise transfer (u <-> v), control passes directly from
+%%      the callee's anonymous `return` slot into the caller's continuation block
+%%      parameters with no intermediate variable bound at the call site.
+%%    - However, saying "constructs whose flattening removes the unflattened name
+%%      from the program" is slightly ambiguous because flattening a block or
+%%      function formal parameter also replaces the unflattened parameter name in
+%%      the signature (and `Flatten` actually re-binds `p = tuple(p_0, p_1)` in
+%%      the body, which `Shrink` later deletes if unused). Also, one directed
+%%      edge (`case` dispatch from constructor payload `conArgs(C)` to branch
+%%      target `labelArgs(bb)`) does not leave a name in place, but instead
+%%      synthesizes an adapter/coercion block on the `case` edge when `C` is flat
+%%      and `bb` is non-flat.
+%%    - Suggestion: clarify that directed edges correspond to value transfers
+%%      where the source either has both the boxed tuple name and its unpacked
+%%      components in scope (or, for `case`, can interpose a coercion block),
+%%      whereas undirected edges occur at `call` return/exception transfers where
+%%      the callee's return value flows directly into the continuation block
+%%      without an intermediate variable binding or edge block.
+%% 2. Connecting paragraph 1 ("callers cannot be unified") to paragraph 2:
+%%    - A reader might wonder: if `Flatten` supports mixed flat/non-flat edges
+%%      via directed constraints, why did paragraph 1 say `Flatten` cannot handle
+%%      cases where callers cannot be unified?
+%%    - Consider adding a sentence noting the direction of the constraint at
+%%      function calls: because edges point along data flow from caller arguments
+%%      u_i to the callee's formal parameter v (u_i -> v), a single flat value u
+%%      can flow into both flat and non-flat consumers (v_1, v_2), *but* a single
+%%      callee formal parameter v receiving from both a flat caller (u_1) and a
+%%      non-flat caller (u_2) is forced to be non-flat (since u_2 is non-flat and
+%%      v must be no-flatter-than u_2). That bridges the graph explanation back
+%%      to `PreFlatten`'s function specialization.
+%% 3. Minor typos in this file:
+%%    - Line 5: `more-agressively` -> `more aggressively`
+%%    - Line 38 (now below): `rather than optimize-out` -> `rather than optimizing out`
+%%    - Line 40 / 49 (now below): straight quotes `"clean up"`, `"data-only flattening"` -> ``...''
+%%    - Line 42 (now below): `an higher-order IR` -> `a higher-order IR`
+%%    - Line 45 (now below): `flattening optimations` -> `flattening optimizations`
+%%    - Line 51 (now below): `jane street` -> `Jane Street`
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Undirected return edge before \texttt{Flatten}}
+    \label{fig:true_flat_undirected_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int): int * int =
+  block bb0():
+    ret: int * int = tuple(a, b)
+    return ret
+
+def f(a: int, b: int): ... =
+  block bb0():
+    # Return value flows directly into bb_cont
+    call bb_cont g(a, b)
+
+  block bb_cont(res: int * int):
+    x0: int = select(res, 0)
+    x1: int = select(res, 1)
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Undirected return edge after \texttt{Flatten}}
+    \label{fig:true_flat_undirected_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int): int, int =
+  block bb0():
+    return a, b
+
+def f(a: int, b: int): ... =
+  block bb0():
+    # g's return and bb_cont flattened together
+    call bb_cont g(a, b)
+
+  block bb_cont(res_0: int, res_1: int):
+    # ...use res_0, res_1...
+    ...
+\end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users before \texttt{Flatten}}
+    \label{fig:true_flat_mixed_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    x: int * int = tuple(a, b)
+    # Unflattenable primitive use of x
+    _: unit = prim ... (x)
+    call bb_cont g(x)
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users after \texttt{Flatten}}
+    \label{fig:true_flat_mixed_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Unflattened `x` left behind for `prim`
+    x: int * int = tuple(a, b)
+    _: unit = prim ...(x)
+    call bb_cont g(a, b)
+
+def g(p_0: int, p_1: int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers before \texttt{Flatten}}
+    \label{fig:true_flat_mixed_callers_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Flattenable allocation via `tuple`
+    x: int * int = tuple(a, b)
+    # Flattenable call
+    call bb_cont g(x)
+
+  block bb_other():
+    # Unflattenable allocation via `prim`
+    y: int * int = prim ...
+    # Unflattenable call
+    call bb_cont g(y)
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers after \texttt{Flatten}}
+    \label{fig:true_flat_mixed_callers_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Unchanged: bb_other call forces `g` non-flat
+    x: int * int = tuple(a, b)
+    call bb_cont g(x)
+
+  block bb_other():
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}
+
+\caption{\texttt{Flatten} propagation. Top
+  (\subref{fig:true_flat_undirected_before}, \subref{fig:true_flat_undirected_after}):
+  successful flattening across an undirected constraint edge.
+  Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}):
+  successful flattening across a directed constraint edge,
+  ignoring \texttt{prim} user.
+  Bottom
+  (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}):
+  propagating ``unflattenable'' from \texttt{y} across the directed \texttt{call ... g(y)} edge prevents flattening.}
+  \label{fig:true_flat_mixed_case}
+\end{figure}
+\FloatBarrier
+
 \label{sec:background_deep_flatten}
 \subsection{\texttt{DeepFlatten}}
 The \texttt{Flatten} transformation fixes the problem that the source language

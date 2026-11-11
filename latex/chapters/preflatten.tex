@@ -982,6 +982,582 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
   \label{fig:tuple_flattening_impl}
 \end{figure}
 
+\FloatBarrier
+\section{Comparison with \texttt{Flatten}}
+\label{sec:preflatten_comparison_flatten}
+By contrast, the analysis of \texttt{PreFlatten} simply reasons about callsites
+that might benefit from flattening, matching on the purely-local pattern of
+``\texttt{tuple} constructor call\texttt{;} function call'' (ignoring, for
+comparison purposes, the tail-call restriction of
+\cref{fig:preflatten_analysis}), and duplicates the
+callee with the appropriate signature to ensure that all such sequences are
+flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
+are ``mixed'' in the sense of
+(\cref{fig:true_flat_mixed_callers_before}, \cref{fig:true_flat_mixed_callers_after})
+-- i.e. functions with a mixture of flattenable and unflattenable callers.
+\texttt{PreFlatten} also supports the cases that are ``mixed'' in the sense of
+(\cref{fig:true_flat_mixed_before}, \cref{fig:true_flat_mixed_after}), in the
+same way as \texttt{Flatten}, leaving behind the original, unflattened names.
+See \cref{fig:pre_flatten_mixed_case} for an example.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Undirected return edge before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_undirected_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int): int * int =
+  block bb0():
+    ret: int * int = tuple(a, b)
+    return ret
+
+def f(a: int, b: int): ... =
+  block bb0():
+    # Return value flows directly into bb_cont
+    call bb_cont g(a, b)
+
+  block bb_cont(res: int * int):
+    x0: int = select(res, 0)
+    x1: int = select(res, 1)
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Undirected return edge after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_undirected_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def g(a: int, b: int): int * int =
+  block bb0():
+    ret: int * int = tuple(a, b)
+    return ret
+
+def f(a: int, b: int): ... =
+  block bb0():
+    # Unchanged: PreFlatten only acts on arguments
+    call bb_cont g(a, b)
+
+  block bb_cont(res: int * int):
+    x0: int = select(res, 0)
+    x1: int = select(res, 1)
+    ...
+\end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_users_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    x: int * int = tuple(a, b)
+    # Unflattenable primitive use of x
+    _: unit = prim ...(x)
+    call bb_cont g(x)
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed users after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_users_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Unflattened `x` left behind for `prim`
+    x: int * int = tuple(a, b)
+    _: unit = prim ...(x)
+    call bb_cont g_flat(a, b)
+
+def g_flat(p_0: int, p_1: int): ... =
+  block bbBind():
+    # Rebind to the original name
+    p: int * int = tuple(p_0, p_1)
+    ...
+
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}
+
+  \vspace{1mm}
+
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers before \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_callers_before}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Flattenable allocation via `tuple`
+    x: int * int = tuple(a, b)
+    # Flattenable call
+    call bb_cont g(x)
+
+  block bb_other():
+    # Unflattenable allocation via `prim`
+    y: int * int = prim ...
+    # Unflattenable call
+    call bb_cont g(y)
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Mixed callers after \texttt{PreFlatten}}
+    \label{fig:pre_flatten_mixed_callers_after}
+\begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
+def f(a: int, b: int): ... =
+  block bb_start():
+    # Calls specialized `g_flat`
+    call bb_cont g_flat(a, b)
+
+  block bb_other():
+    # Calls original unflattened `g`
+    y: int * int = prim ...
+    call bb_cont g(y)
+
+def g_flat(p_0: int, p_1: int): ... =
+  block bbBind():
+    # Rebind to the original name
+    p: int * int = tuple(p_0, p_1)
+    ...
+
+  block bb0():
+    ...
+
+def g(p: int * int): ... =
+  block bb0():
+    ...
+\end{minted}
+  \end{subfigure}
+  \caption{\texttt{PreFlatten} applied to \cref{fig:true_flat_mixed_case} examples.
+Top
+(\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}):
+no impact on \texttt{return} edges.
+Middle
+(\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}):
+handling of mixed users matches \texttt{Flatten}.
+Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): mixed callers are flattened by emitting a new specialization.}
+  \label{fig:pre_flatten_mixed_case}
+\end{figure}
+
+Thinking in terms of the structure of the overall data-flow graph, then, we can
+say the following:
+
+\begin{itemize}
+\item For \texttt{Flatten}, since constraints ``flow forward''
+along directed edges, the action of the pass is to identify a path through the
+dataflow graph that is both tuple-valued and flattenable at each edge,
+traversing inside function/block bodies. The transformation then rewrites the
+type of each edge, leaving the structure of the dataflow graph unchanged.
+
+\item For \texttt{PreFlatten}, we look at only single edges (rather than full paths),
+and the action of the pass is to duplicate nodes in the dataflow graph, introducing
+new, flat edges.
+
+\end{itemize}
+
+See \cref{fig:flatten_dataflow_comparison} for an illustration.
+
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    dfnode/.style={
+      circle, draw=black!65, fill=colorHdr, line width=0.65pt,
+      minimum size=0.28cm, inner sep=0pt
+    },
+    dfnodeMark/.style={
+      circle, draw=ThesisRed, fill=ThesisRed!18, line width=0.85pt,
+      minimum size=0.28cm, inner sep=0pt
+    },
+    dfnodeFlat/.style={
+      circle, draw=colorXBorder, fill=colorX, line width=0.85pt,
+      minimum size=0.28cm, inner sep=0pt
+    },
+    fnbox/.style={
+      rectangle, rounded corners=3pt, draw=black!40, dashed,
+      fill=black!2, line width=0.5pt
+    },
+    fnboxFlat/.style={
+      rectangle, rounded corners=3pt, draw=colorXBorder!75, dashed,
+      fill=colorX!25, line width=0.6pt
+    },
+    fnlbl/.style={
+      font=\scriptsize\ttfamily\bfseries, text=black!70, anchor=south, inner sep=1.5pt
+    },
+    fnlblTop/.style={
+      font=\scriptsize\ttfamily\bfseries, text=black!70, anchor=north west, inner sep=2pt
+    },
+    edgeUnflat/.style={
+      -{Stealth[length=4pt, width=3.2pt]}, line width=0.75pt, draw=black!55
+    },
+    edgeMark/.style={
+      -{Stealth[length=4.5pt, width=3.6pt]}, line width=1.25pt, draw=ThesisRed
+    },
+    edgeFlat/.style={
+      -{Stealth[length=4.5pt, width=3.6pt]}, line width=1.25pt, draw=colorXBorder
+    },
+    edgeProp/.style={
+      -{Stealth[length=3.6pt, width=2.8pt]}, line width=0.75pt, densely dashed, draw=black!65
+    },
+    notelbl/.style={
+      font=\scriptsize\sffamily, align=left, text=black!80, inner sep=1.5pt
+    },
+    notearr/.style={
+      -{Stealth[length=3.2pt, width=2.5pt]}, line width=0.5pt, draw=black!50, shorten >=1pt
+    }
+  }
+
+  % =========================================================================
+  % Row 1: Simple linear flattenable path through a function body
+  % =========================================================================
+  {\centering\textbf{\footnotesize (1) Linear flattenable path through a function body}\par}\vspace{1mm}
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{Before flattening}
+    \label{fig:df_path_before}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-0.80, 0.08) rectangle (0.80, 0.84);
+      \node[fnlblTop] at (-0.75, 0.80) {def f};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-0.80, -2.28) rectangle (0.80, -0.60);
+      \node[fnlbl] at (0, -2.26) {def g};
+
+      % Nodes (unlabeled linear chain)
+      \node[dfnodeMark] (c1) at (0, 0.34) {};
+      \node[dfnodeMark] (b0) at (0, -0.92) {};
+      \node[dfnodeMark] (b1) at (0, -1.72) {};
+
+      % Edges
+      \draw[edgeMark] (c1) -- (b0);
+      \draw[edgeMark] (b0) -- (b1);
+
+      % Annotation outside box to the right
+      \node[notelbl, text=ThesisRed!90!black, anchor=west] (note1) at (0.96, -1.02) {flattenable\\tuple path};
+      \draw[notearr, draw=ThesisRed!80!black] (note1.north west) -- ($(c1)!0.5!(b0)+(0.04,0)$);
+      \draw[notearr, draw=ThesisRed!80!black] (note1.south west) -- ($(b0)!0.5!(b1)+(0.04,0)$);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{Flatten}}
+    \label{fig:df_path_flatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-0.80, 0.08) rectangle (0.80, 0.84);
+      \node[fnlblTop] at (-0.75, 0.80) {def f};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-0.80, -2.28) rectangle (0.80, -0.60);
+      \node[fnlbl] at (0, -2.26) {def g};
+
+      % Nodes (unlabeled linear chain)
+      \node[dfnodeFlat] (c1) at (0, 0.34) {};
+      \node[dfnodeFlat] (b0) at (0, -0.92) {};
+      \node[dfnodeFlat] (b1) at (0, -1.72) {};
+
+      % Single flat edges along entire path
+      \draw[edgeFlat] (c1) -- (b0);
+      \draw[edgeFlat] (b0) -- (b1);
+
+      % Annotation outside box to the right
+      \node[notelbl, text=colorXBorder!90!black, anchor=west] (note2) at (0.96, -1.02) {whole path\\flattened\\(incl.\ body)};
+      \draw[notearr, draw=colorXBorder] (note2.north west) -- ($(c1)!0.5!(b0)+(0.04,0)$);
+      \draw[notearr, draw=colorXBorder] (note2.south west) -- ($(b0)!0.5!(b1)+(0.04,0)$);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:df_path_preflatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-0.80, 0.08) rectangle (0.80, 0.84);
+      \node[fnlblTop] at (-0.75, 0.80) {def f};
+
+      % Callee function box (def g_flat)
+      \draw[fnboxFlat] (-0.80, -2.28) rectangle (0.80, -0.60);
+      \node[fnlbl, text=colorXBorder!90!black] at (0, -2.26) {def g\_flat};
+
+      % Nodes (unlabeled linear chain)
+      \node[dfnodeFlat] (c1) at (0, 0.34) {};
+      \node[dfnode]     (b0) at (0, -0.92) {};
+      \node[dfnode]     (b1) at (0, -1.72) {};
+
+      % Flat call edge, unflattened internal edge
+      \draw[edgeFlat]   (c1) -- (b0);
+      \draw[edgeUnflat] (b0) -- (b1);
+
+      % Annotations outside box to the right
+      \node[notelbl, text=colorXBorder!90!black, anchor=west] (note3a) at (0.96, -0.26) {call edge\\flattened};
+      \draw[notearr, draw=colorXBorder] (note3a.west) -- ($(c1)!0.5!(b0)+(0.04,0)$);
+
+      \node[notelbl, text=black!75, anchor=west] (note3b) at (0.96, -1.35) {body left\\unflattened};
+      \draw[notearr] (note3b.west) -- ($(b0)!0.5!(b1)+(0.04,0)$);
+    \end{tikzpicture}
+  \end{subfigure}
+
+  \vspace{2.5mm}
+
+  % =========================================================================
+  % Row 2: Mixed callers (single flattenable caller edge + non-flattenable caller)
+  % =========================================================================
+  {\centering\textbf{\footnotesize (2) Two callers of \texttt{g}: one flattenable call edge and one non-flattenable call edge}\par}\vspace{1mm}
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{Before flattening}
+    \label{fig:df_mixed_before}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box 1 (def f1)
+      \draw[fnbox] (-1.36, 0.08) rectangle (-0.12, 0.84);
+      \node[fnlblTop] at (-1.31, 0.80) {def f1};
+
+      % Caller function box 2 (def f2)
+      \draw[fnbox] (0.12, 0.08) rectangle (1.36, 0.84);
+      \node[fnlblTop] at (0.17, 0.80) {def f2};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-0.80, -2.28) rectangle (0.80, -0.60);
+      \node[fnlbl] at (0, -2.26) {def g};
+
+      % Caller nodes (unlabeled)
+      \node[dfnodeMark] (c1) at (-0.74, 0.34) {};
+      \node[dfnode]     (c2) at (0.74, 0.34) {};
+
+      % Internal nodes (unlabeled linear chain)
+      \node[dfnode] (b0) at (0, -0.92) {};
+      \node[dfnode] (b1) at (0, -1.72) {};
+
+      % Edges
+      \draw[edgeMark]   (c1) -- (b0);
+      \draw[edgeUnflat] (c2) -- (b0);
+      \draw[edgeUnflat] (b0) -- (b1);
+
+      % Annotations outside box
+      \node[notelbl, text=ThesisRed!90!black, anchor=east, align=right] (note4a) at (-0.96, -0.26) {flattenable\\call edge};
+      \draw[notearr, draw=ThesisRed!80!black] (note4a.east) -- ($(c1)!0.48!(b0)$);
+
+      \node[notelbl, text=black!70, anchor=west] (note4b) at (0.96, -0.26) {non-flat\\call edge};
+      \draw[notearr] (note4b.west) -- ($(c2)!0.48!(b0)$);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{Flatten}}
+    \label{fig:df_mixed_flatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box 1 (def f1)
+      \draw[fnbox] (-1.36, 0.08) rectangle (-0.12, 0.84);
+      \node[fnlblTop] at (-1.31, 0.80) {def f1};
+
+      % Caller function box 2 (def f2)
+      \draw[fnbox] (0.12, 0.08) rectangle (1.36, 0.84);
+      \node[fnlblTop] at (0.17, 0.80) {def f2};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-0.80, -2.28) rectangle (0.80, -0.60);
+      \node[fnlbl] at (0, -2.26) {def g};
+
+      % Caller nodes (unlabeled)
+      \node[dfnode] (c1) at (-0.74, 0.34) {};
+      \node[dfnode] (c2) at (0.74, 0.34) {};
+
+      % Internal nodes (unlabeled linear chain)
+      \node[dfnode] (b0) at (0, -0.92) {};
+      \node[dfnode] (b1) at (0, -1.72) {};
+
+      % Edges (all unflattened)
+      \draw[edgeUnflat] (c1) -- (b0);
+      \draw[edgeUnflat] (c2) -- (b0);
+      \draw[edgeUnflat] (b0) -- (b1);
+
+      % Curved dashed arrow showing non-flatness propagating from f2 along directed edges
+      \draw[edgeProp] (0.90, 0.22) to[bend left=16] (0.24, -0.88);
+      \draw[edgeProp] (0.24, -0.98) -- (0.24, -1.68);
+
+      % Annotation outside box to the right
+      \node[notelbl, text=black!75, anchor=west] (note5) at (0.96, -1.18) {non-flatness\\propagates\\from \texttt{f2}};
+      \draw[notearr] (note5.north west) -- (0.28, -0.90);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:df_mixed_preflatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box 1 (def f1)
+      \draw[fnbox] (-1.68, 0.08) rectangle (-0.06, 0.84);
+      \node[fnlblTop] at (-1.63, 0.80) {def f1};
+
+      % Caller function box 2 (def f2)
+      \draw[fnbox] (0.18, 0.08) rectangle (1.68, 0.84);
+      \node[fnlblTop] at (0.23, 0.80) {def f2};
+
+      % Duplicated function body box 1 (def g_flat)
+      \draw[fnboxFlat] (-1.68, -2.28) rectangle (-0.06, -0.68);
+      \node[fnlbl, text=colorXBorder!90!black] at (-0.87, -2.26) {def g\_flat};
+
+      % Original function body box 2 (def g)
+      \draw[fnbox] (0.18, -2.28) rectangle (1.68, -0.68);
+      \node[fnlbl] at (0.93, -2.26) {def g};
+
+      % Caller nodes (unlabeled)
+      \node[dfnodeFlat] (c1) at (-0.87, 0.34) {};
+      \node[dfnode]     (c2) at (0.93, 0.34) {};
+
+      % Internal nodes for g_flat (unlabeled linear chain)
+      \node[dfnode] (b0f) at (-0.87, -0.96) {};
+      \node[dfnode] (b1f) at (-0.87, -1.74) {};
+
+      % Internal nodes for g (unlabeled linear chain)
+      \node[dfnode] (b0) at (0.93, -0.96) {};
+      \node[dfnode] (b1) at (0.93, -1.74) {};
+
+      % Edges for g_flat (single flat call edge)
+      \draw[edgeFlat]   (c1) -- (b0f);
+      \draw[edgeUnflat] (b0f) -- (b1f);
+
+      % Edges for g
+      \draw[edgeUnflat] (c2) -- (b0);
+      \draw[edgeUnflat] (b0) -- (b1);
+
+      % Annotation in gap pointing to duplicated callee
+      \node[notelbl, text=colorXBorder!90!black, align=center] (note6) at (0.06, -0.26) {duplicated\\[-1pt]callee};
+      \draw[notearr, draw=colorXBorder] (note6.south) -- (-0.36, -0.68);
+    \end{tikzpicture}
+  \end{subfigure}
+
+  \vspace{2.5mm}
+
+  % =========================================================================
+  % Row 3: Fan-out from tuple in caller (one consumer flattenable, one non-flattenable)
+  % =========================================================================
+  {\centering\textbf{\footnotesize (3) Tuple value in \texttt{f} with multiple data-flow consumers (one flattenable, one non-flattenable)}\par}\vspace{1mm}
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{Before flattening}
+    \label{fig:df_branch_before}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-1.00, -0.34) rectangle (1.16, 0.84);
+      \node[fnlblTop] at (-0.95, 0.80) {def f};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-1.08, -2.28) rectangle (0.44, -0.78);
+      \node[fnlbl] at (-0.32, -2.26) {def g};
+
+      % Nodes (tuple c1 in f fans out to g's param b0 and local non-flat use c2)
+      \node[dfnodeMark] (c1) at (-0.20, 0.38) {};
+      \node[dfnode]     (c2) at (0.64, -0.04) {};
+      \node[dfnodeMark] (b0) at (-0.32, -1.08) {};
+      \node[dfnodeMark] (b1) at (-0.32, -1.78) {};
+
+      % Edges
+      \draw[edgeMark]   (c1) -- (b0);
+      \draw[edgeUnflat] (c1) -- (c2);
+      \draw[edgeMark]   (b0) -- (b1);
+
+      % Annotations outside box
+      \node[notelbl, text=ThesisRed!90!black, anchor=east, align=right] (note7a) at (-1.18, -1.05) {flattenable\\consumer\\path};
+      \draw[notearr, draw=ThesisRed!80!black] (note7a.north east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
+      \draw[notearr, draw=ThesisRed!80!black] (note7a.south east) -- ($(b0)!0.5!(b1)+(-0.04,0)$);
+
+      \node[notelbl, text=black!70, anchor=west] (note7b) at (1.24, -0.04) {non-flat\\consumer};
+      \draw[notearr] (note7b.west) -- (c2.east);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{Flatten}}
+    \label{fig:df_branch_flatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-1.00, -0.34) rectangle (1.16, 0.84);
+      \node[fnlblTop] at (-0.95, 0.80) {def f};
+
+      % Callee function box (def g)
+      \draw[fnbox] (-1.08, -2.28) rectangle (0.44, -0.78);
+      \node[fnlbl] at (-0.32, -2.26) {def g};
+
+      % Nodes
+      \node[dfnodeFlat] (c1) at (-0.20, 0.38) {};
+      \node[dfnode]     (c2) at (0.64, -0.04) {};
+      \node[dfnodeFlat] (b0) at (-0.32, -1.08) {};
+      \node[dfnodeFlat] (b1) at (-0.32, -1.78) {};
+
+      % Edges: call + g body flattened, local use in f unflattened
+      \draw[edgeFlat]   (c1) -- (b0);
+      \draw[edgeUnflat] (c1) -- (c2);
+      \draw[edgeFlat]   (b0) -- (b1);
+
+      % Annotations outside box
+      \node[notelbl, text=colorXBorder!90!black, anchor=east, align=right] (note8a) at (-1.18, -1.05) {whole path\\into \texttt{g}\\flattened};
+      \draw[notearr, draw=colorXBorder] (note8a.north east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
+      \draw[notearr, draw=colorXBorder] (note8a.south east) -- ($(b0)!0.5!(b1)+(-0.04,0)$);
+
+      \node[notelbl, text=black!75, anchor=west] (note8b) at (1.24, -0.04) {no backward\\propagation;\\tuple kept};
+      \draw[notearr] (note8b.west) -- (c2.east);
+    \end{tikzpicture}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \caption{After \texttt{PreFlatten}}
+    \label{fig:df_branch_preflatten}
+    \centering
+    \begin{tikzpicture}[ baseline=(current bounding box.north) ]
+      % Caller function box (def f)
+      \draw[fnbox] (-1.00, -0.34) rectangle (1.16, 0.84);
+      \node[fnlblTop] at (-0.95, 0.80) {def f};
+
+      % Callee function box (def g_flat)
+      \draw[fnboxFlat] (-1.08, -2.28) rectangle (0.44, -0.78);
+      \node[fnlbl, text=colorXBorder!90!black] at (-0.32, -2.26) {def g\_flat};
+
+      % Nodes
+      \node[dfnodeFlat] (c1) at (-0.20, 0.38) {};
+      \node[dfnode]     (c2) at (0.64, -0.04) {};
+      \node[dfnode]     (b0) at (-0.32, -1.08) {};
+      \node[dfnode]     (b1) at (-0.32, -1.78) {};
+
+      % Flat call edge, local use and g_flat body unflattened
+      \draw[edgeFlat]   (c1) -- (b0);
+      \draw[edgeUnflat] (c1) -- (c2);
+      \draw[edgeUnflat] (b0) -- (b1);
+
+      % Annotations outside box
+      \node[notelbl, text=colorXBorder!90!black, anchor=east, align=right] (note9a) at (-1.18, -0.58) {call edge\\flattened};
+      \draw[notearr, draw=colorXBorder] (note9a.east) -- ($(c1)!0.55!(b0)+(-0.04,0)$);
+
+      \node[notelbl, text=black!75, anchor=west] (note9b) at (1.24, -0.04) {tuple name\\kept for\\non-flat use};
+      \draw[notearr] (note9b.west) -- (c2.east);
+
+      \node[notelbl, text=black!75, anchor=west] (note9c) at (0.54, -1.48) {body left\\unflattened};
+      \draw[notearr] (note9c.west) -- ($(b0)!0.5!(b1)+(0.04,0)$);
+    \end{tikzpicture}
+  \end{subfigure}
+
+  \vspace{2mm}
+  % Legend
+  \begin{tikzpicture}
+    \draw[-{Stealth[length=4pt, width=3.2pt]}, line width=0.75pt, draw=black!55] (0,0) -- (0.65,0)
+      node[right=2pt, font=\scriptsize\sffamily, text=black!80] {Unflattened tuple edge};
+    \draw[-{Stealth[length=4.5pt, width=3.6pt]}, line width=1.25pt, draw=ThesisRed] (3.9,0) -- (4.55,0)
+      node[right=2pt, font=\scriptsize\sffamily, text=black!80] {Marked flattenable path/edge};
+    \draw[-{Stealth[length=4.5pt, width=3.6pt]}, line width=1.25pt, draw=colorXBorder] (8.6,0) -- (9.25,0)
+      node[right=2pt, font=\scriptsize\sffamily, text=black!80] {Flattened edge};
+  \end{tikzpicture}
+
+  \caption{Action of \texttt{Flatten} and \texttt{PreFlatten} on the data-flow graph.}
+  \label{fig:flatten_dataflow_comparison}
+\end{figure}
+\FloatBarrier
+
 %% \hl{TODO: REVIEW END}
 
 %% \hl{TODO: DEPRECATED PORTION BEGIN}
