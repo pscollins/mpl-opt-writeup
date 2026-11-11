@@ -170,7 +170,7 @@ def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     # Unflattenable primitive use of x
-    prim ...(x)
+    _: unit = prim ... (x)
     call bb_cont g(x)
 
 def g(p: int * int): ... =
@@ -186,7 +186,7 @@ def f(a: int, b: int): ... =
   block bb_start():
     # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
-    prim ...(x)
+    _: unit = prim ...(x)
     call bb_cont g(a, b)
 
 def g(p_0: int, p_1: int): ... =
@@ -203,11 +203,13 @@ def g(p_0: int, p_1: int): ... =
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int): ... =
   block bb_start():
+    # Flattenable allocation via `tuple`
     x: int * int = tuple(a, b)
     # Flattenable call
     call bb_cont g(x)
 
   block bb_other():
+    # Unflattenable allocation via `prim`
     y: int * int = prim ...
     # Unflattenable call
     call bb_cont g(y)
@@ -223,7 +225,7 @@ def g(p: int * int): ... =
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int): ... =
   block bb_start():
-    # Unchanged: bb_other forces `g` non-flat
+    # Unchanged: bb_other call forces `g` non-flat
     x: int * int = tuple(a, b)
     call bb_cont g(x)
 
@@ -243,11 +245,9 @@ def g(p: int * int): ... =
   Middle (\subref{fig:true_flat_mixed_before}, \subref{fig:true_flat_mixed_after}):
   successful flattening across a directed constraint edge,
   ignoring \texttt{prim} user.
-
   Bottom
   (\subref{fig:true_flat_mixed_callers_before}, \subref{fig:true_flat_mixed_callers_after}):
-  propagating ``unflattenable'' from \texttt{y} across the directed \texttt
-  {call ... g(y)} edge prevents flattening}
+  propagating ``unflattenable'' from \texttt{y} across the directed \texttt{call ... g(y)} edge prevents flattening}
   \label{fig:true_flat_mixed_case}
 \end{figure}
 
@@ -258,12 +258,13 @@ that might benefit from flattening, matching on the purely-local pattern of
 ``\texttt{tuple} constructor call\texttt{;} function call,'' and duplicates the
 callee with the appropriate signature to ensure that all such sequences are
 flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
-are ``mixed'' in the opposite sense from the one described
-in \cref{fig:true_flat_mixed_case} -- functions with a mixture of flattenable
-and unflattenable callers, rather than data with a mixture of flattenable and
-unflattenable users. \texttt{PreFlatten} additionally supports the ``mixed''
-case of vanilla \texttt{Flatten} in the obvious way (leaving behind the
-unflattened name). See \cref{fig:pre_flatten_mixed_case} for an example.
+are ``mixed'' in the sense of
+(\cref{fig:true_flat_mixed_callers_before}, \cref{fig:true_flat_mixed_callers_after})
+-- i..e functions with a mixture of flattenable and unflattenable callers.
+\texttt{PreFlatten} also supports the cases that are ``mixed'' in the sense of
+(\cref{fig:true_flat_mixed_before}, \cref{fig:true_flat_mixed_after}), in the
+same way as \texttt{Flatten}, leving behind the original, unflattened names.
+See \cref{fig:pre_flatten_mixed_case} for an example.
 
 \begin{figure}[htbp]
   \centering
@@ -318,7 +319,7 @@ def f(a: int, b: int): ... =
   block bb_start():
     x: int * int = tuple(a, b)
     # Unflattenable primitive use of x
-    prim ...(x)
+    _: unit = prim ...(x)
     call bb_cont g(x)
 
 def g(p: int * int): ... =
@@ -352,11 +353,15 @@ def g_flat(p_0: int, p_1: int): ... =
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 def f(a: int, b: int): ... =
   block bb_start():
+    # Flattenable allocation via `tuple`
     x: int * int = tuple(a, b)
+    # Flattenable call
     call bb_cont g(x)
 
   block bb_other():
+    # Unflattenable allocation via `prim`
     y: int * int = prim ...
+    # Unflattenable call
     call bb_cont g(y)
 
 def g(p: int * int): ... =
@@ -389,7 +394,17 @@ def g(p: int * int): ... =
     ...
 \end{minted}
   \end{subfigure}
-  \caption{How \texttt{PreFlatten} handles the same three data-flow patterns as \cref{fig:true_flat_mixed_case}. Top (\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}): \texttt{PreFlatten} only pushes constructor allocations down across call arguments and leaves return values to \texttt{Flatten}. Middle (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}): when a tuple \texttt{x} has mixed users, \texttt{x} is left in place for \texttt{prim ...(x)} while unpacked \texttt{(a, b)} are passed to \texttt{g\_flat}. Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): when \texttt{g} has mixed callers, \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} so \texttt{bb\_start} is flattened while \texttt{bb\_other} calls the original \texttt{g}.}
+  \caption{\texttt{PreFlatten} applied to \cref{fig:true_flat_mixed_case} examples.
+Top
+(\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}):
+no impact on \texttt{return} edges.
+
+Middle
+(\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}):
+handling of mixed users matches \texttt{Flatten}.
+
+
+Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): mixed callers are flattend by emitting a new specialization.}
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
 
@@ -406,7 +421,7 @@ traversing inside function/block bodies. The transformation then rewrites the
 type of each edge, leaving the structure of the dataflow graph unchanged.
 
 \item For \texttt{PreFlatten}, we look at only single edges (rather than full paths),
-and the only action is to duplicate nodes in the dataflow graph, introducing
+and the action of the pass is to duplicate nodes in the dataflow graph, introducing
 new, flat edges.
 
 \end{itemize}
