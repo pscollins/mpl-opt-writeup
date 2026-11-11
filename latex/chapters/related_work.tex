@@ -30,11 +30,13 @@ Broadly speaking, program constructs that allow for the insertion of an
 intermediate packing step correspond to one-way directed edges; program
 constructs that do not allow for such a repacking corresond to two-way
 undirected edges. Examples of the former category include: input arguments
-$\rightarrow$ \texttt{ConApp}, returned variable $\mapsto$ \texttt{return}
-argument, block argument $\rightarrow$ \texttt{goto} argument; examples of the
-latter category include: function return type $\leftrightarrow$ continuation
-\texttt{block} argument type, \texttt{datatype} constructor argument types
-$\leftrightarrow$ \texttt{case} statement target \texttt{block} argument type.
+$\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
+argument, argument $\rightarrow$ \texttt{goto} argument $\rightarrow$ block
+formal parameter; examples of the latter category include: function return type
+$\leftrightarrow$ continuation
+\texttt{block} formal parameter type, \texttt{datatype} constructor formal parameter types
+$\leftrightarrow$ \texttt{case} statement target \texttt{block} formal parameter
+types.
 
 %% (arguments passed
 %% to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
@@ -335,7 +337,7 @@ def f(a: int, b: int): ... =
   block bb_start():
     # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
-    prim ...(x)
+    _: unit = prim ...(x)
     call bb_cont g_flat(a, b)
 
 def g_flat(p_0: int, p_1: int): ... =
@@ -376,7 +378,6 @@ def g(p: int * int): ... =
 def f(a: int, b: int): ... =
   block bb_start():
     # Calls specialized `g_flat`
-    x: int * int = tuple(a, b)
     call bb_cont g_flat(a, b)
 
   block bb_other():
@@ -385,8 +386,12 @@ def f(a: int, b: int): ... =
     call bb_cont g(y)
 
 def g_flat(p_0: int, p_1: int): ... =
-  block bb0():
+  block bbBind():
+    # Rebind to the original name
     p: int * int = tuple(p_0, p_1)
+    ...
+
+  block bb0():
     ...
 
 def g(p: int * int): ... =
@@ -398,12 +403,9 @@ def g(p: int * int): ... =
 Top
 (\subref{fig:pre_flatten_undirected_before}, \subref{fig:pre_flatten_undirected_after}):
 no impact on \texttt{return} edges.
-
 Middle
 (\subref{fig:pre_flatten_mixed_users_before}, \subref{fig:pre_flatten_mixed_users_after}):
 handling of mixed users matches \texttt{Flatten}.
-
-
 Bottom (\subref{fig:pre_flatten_mixed_callers_before}, \subref{fig:pre_flatten_mixed_callers_after}): mixed callers are flattend by emitting a new specialization.}
   \label{fig:pre_flatten_mixed_case}
 \end{figure}
@@ -817,7 +819,7 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
       node[right=2pt, font=\scriptsize\sffamily, text=black!80] {Flattened edge};
   \end{tikzpicture}
 
-  \caption{Action of \texttt{Flatten} and \texttt{PreFlatten} on the data-flow graph. Top (\subref{fig:df_path_before}--\subref{fig:df_path_preflatten}): on a linear flattenable path (\subref{fig:df_path_before}), \texttt{Flatten} flattens the entire path including internal edges inside \texttt{g} (\subref{fig:df_path_flatten}), whereas \texttt{PreFlatten} flattens only the call edge into \texttt{g\_flat} and leaves the body unflattened (\subref{fig:df_path_preflatten}). Middle (\subref{fig:df_mixed_before}--\subref{fig:df_mixed_preflatten}): when \texttt{g} is called from both a flattenable caller \texttt{f1} and a non-flattenable caller \texttt{f2} (\subref{fig:df_mixed_before}), \texttt{Flatten} leaves the graph unchanged (\subref{fig:df_mixed_flatten}), whereas \texttt{PreFlatten} duplicates \texttt{g} into \texttt{g\_flat} and \texttt{g} (\subref{fig:df_mixed_preflatten}). Bottom (\subref{fig:df_branch_before}--\subref{fig:df_branch_preflatten}): when a tuple constructed in \texttt{f} fans out to both a flattenable call to \texttt{g} and a non-flattenable consumer (\subref{fig:df_branch_before}), both passes leave the original tuple binding in place in \texttt{f} for the non-flattenable consumer while passing the unpacked components to \texttt{g} (\subref{fig:df_branch_flatten}) or \texttt{g\_flat} (\subref{fig:df_branch_preflatten}).}
+  \caption{Action of \texttt{Flatten} and \texttt{PreFlatten} on the data-flow graph.}
   \label{fig:flatten_dataflow_comparison}
 \end{figure}
 
