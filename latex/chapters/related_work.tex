@@ -12,30 +12,49 @@ pursues a simpler, strictly-local analysis. See
 %% non-array types), and b) more aggressively flatten cases related to arrays, while
 %% c) pursuing a simpler, strictly-local analysis.
 
-\FloatBarrier
+%% \FloatBarrier
 \section{\texttt{ConApp} Flattening}
 %% ConApp-focused examples
 
-\citet{mlton-closure-paper} introduced the MLton defunctionalization pass, whose \texttt{datatype} objects we seek to eliminate through our \texttt{PreFlatten} pass. We, effectively, repurpose their control flow analysis in order to drive function specialization decisions.
+\citet{mlton-closure-paper} introduced the MLton defunctionalization pass,
+whose \texttt{datatype} objects we seek to eliminate through
+our \texttt{PreFlatten} pass. The choice to defunctionalize and lower to
+SSA-form IR in the middle-end is one of the defining features of the MLton
+family of SML compilers -- implementations of the SML-NJ lineage, by contrast,
+preserve higher order functions and lower to a continuation-passing style
+middle-end IR. A risk of the MLton strategy is that converting function calls to
+dispatch tables may introduce overhead in the caller: our contribution is to
+eliminate this overhead in cases where the callee is known statically.
 
-\hl{TODO: function-typed? is that correct?}
+%% reduce the overhead 
 
-Specifically: MLton's defunctionalization runs as part of the from \texttt{SXML}
-(monomorphic, higher order) to \texttt{SSA} (first-order). It removes
-higher-order functions from the program, replacing all function-typed formal
-parameters with \texttt{datatype} (whose tag type indicates the callee, and
-whose payload carries the captured closure environment), and replacing all calls
-of function-valued variables with \texttt{case} statements that dispatch to the
-necessary callee. The mechanics of this transformation are detailed
-in \cref{sec:background_polyvar}, depicted in e.g. \cref{fig:hofo_no_polyvar} --
-here, we will focus on discussing the analysis.
+%% The choice to defunctionalize and lower to
+%% SSA-form IR in the middle-end is one of the defining features of the MLton
+%% family of SML compilers -- implementations of the SML-NJ lineage, by contrast,
+%% preserve higher order functions and lower to a continuation-passing style
+%% middle-end IR. Targetting MLton's \texttt{SSA} IR
 
-The choice to defunctionalize and lower to SSA-form IR in the middle-end is one
-of the defining features of the MLton-family of SML compilers -- implementations
-that descend from the SML-NJ lineage, by contrast, preserve higher order
-functions and lower to continuation-passing style middle-end IR. In essence, the
-job the defunctionalization analysis is to compute an upper bound on the set of
-all posible values that a function-valued variable might take, \hl{TODO: FINISH}
+%% dWe, effectively, repurpose their control flow
+%% analysis in order to drive function specialization decisions.
+
+%% \hl{TODO: function-typed? is that correct?}
+
+%% Specifically: MLton's defunctionalization runs as part of the from \texttt{SXML}
+%% (monomorphic, higher order) to \texttt{SSA} (first-order). It removes
+%% higher-order functions from the program, replacing all function-typed formal
+%% parameters with \texttt{datatype} (whose tag type indicates the callee, and
+%% whose payload carries the captured closure environment), and replacing all calls
+%% of function-valued variables with \texttt{case} statements that dispatch to the
+%% necessary callee. The mechanics of this transformation are detailed
+%% in \cref{sec:background_polyvar}, depicted in e.g. \cref{fig:hofo_no_polyvar} --
+%% here, we will focus on discussing the analysis.
+
+%% The choice to defunctionalize and lower to SSA-form IR in the middle-end is one
+%% of the defining features of the MLton-family of SML compilers -- implementations
+%% that descend from the SML-NJ lineage, by contrast, preserve higher order
+%% functions and lower to continuation-passing style middle-end IR. In essence, the
+%% job the defunctionalization analysis is to compute an upper bound on the set of
+%% all posible values that a function-valued variable might take, \hl{TODO: FINISH}
 
 
 \citet{local-paper} and \citet{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format).
