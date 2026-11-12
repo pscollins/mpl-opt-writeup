@@ -40,13 +40,14 @@ substantially from anything in MLton, working in the context of an SML-NJ-style
 compiler.
 
 \citet{compiling-with-types} addresses the problem of tuple flattening
-for SML in in the context of separate compilation, where the type of a
+for SML in in the context of separate compilation, where the concrete type of a
 (source-language) polymorphic function may be unknown at compile time. Their
-solution is to unconditionally interpret a tuple argument of member count $n$ as
-a function call with $n$ values in registers, emitting code that inspects the
-argument type at runtime if necessary. Our \texttt{tuple}-\texttt{PreFlatten}
-transformation differs by targetting a monomorphic IR, and by employing a more
-limited flattening heuristic.
+solution is to unconditionally interpret a tuple argument of member count $n <
+n$ (for some limit $k$ selected for profitability) as a function call with $n$
+values in registers, emitting code that inspects the argument type at runtime in
+order to handle the case where the concrete type is unknown.
+Our \texttt{tuple}-\texttt{PreFlatten} transformation differs by targetting a
+monomorphic IR, and by employing a more limited flattening heuristic.
 
 %% but extends it to a) handle additional cases where the
 %% callers cannot be ``unified'' to a single flat/non-flat representation (for
@@ -54,7 +55,7 @@ limited flattening heuristic.
 %% c) pursuing a simpler, strictly-local analysis.
 
 %% \FloatBarrier
-\section{\texttt{ConApp} Flattening}
+%% \section{\texttt{ConApp} Flattening}
 %% ConApp-focused examples
 
 
@@ -95,9 +96,6 @@ limited flattening heuristic.
 
 \citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to ``clean up'' in the specialized blocks).
 
-
-\citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimizations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
-
 %% DeepFlatten-focused examples
 \section{\texttt{array}, \texttt{vector} Flattening}
 
@@ -115,7 +113,4 @@ to emit.
 
 \citet{realtime-sml-paper} also investigates the impact of deep flattening optimizations on performance: the authors there disable \texttt{DeepFlatten} in order to avoid complexity when computing byte offsets for post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of different sizes. We avoid this issue by simply restricting ourselves to tuples with uniform element types and observe that this is sufficient for all opportunities in our benchmark suites.
 
-
-
-\hl{TODO}
-
+\citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimizations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
