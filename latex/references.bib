@@ -591,3 +591,33 @@
   month     =  mar,
   year      =  2014
 }
+
+@ARTICLE{higher-order-flattening,
+  title     = "Higher-order arity raising",
+  author    = "Hannan, John and Hicks, Patrick",
+  journal   = "SIGPLAN Not.",
+  publisher = "Association for Computing Machinery (ACM)",
+  volume    =  34,
+  number    =  1,
+  pages     = "27--38",
+  abstract  = "Arity raising, also known as variable splitting or flattening, is
+               the program optimization which transforms a function of one
+               argument into a function of several arguments by decomposing the
+               structure of the original one argument into individual components
+               in that structure. This optimization eliminates the need for the
+               structuring of the components and also allows more arguments to
+               be passed in registers during a function call. We present a
+               formal specification of arity raising for a higher-order
+               functional language. This specification supports the general
+               arity raising of functions, even for functions which are passed
+               as arguments or returned as values. We define a practical
+               algorithm, based on algorithm W , which implements arity raising,
+               and we prove this algorithm sound with respect to the deductive
+               system. These results provide a declarative framework for
+               reasoning about arity raising and support a richer form of the
+               transformation than is currently found in compilers for
+               functional languages.",
+  month     =  jan,
+  year      =  1999,
+  language  = "en"
+}

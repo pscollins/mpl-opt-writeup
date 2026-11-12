@@ -1,10 +1,43 @@
-\section{\texttt{tuple} Flattening}
+\section{Flattening Function Arguments}
+
 The \texttt{tuple}-\texttt{PreFlatten} transformation introduced in this work
 builds directly on the original \texttt{Flatten} transformation of
 \citet{flat-paper}, but extends it to handle additional cases where the callers cannot be
-``unified'' to a single flat/non-flat representation (for non-array types), and
-pursues a simpler, strictly-local analysis. See
+``unified'' to a single flat/non-flat representation and pursues a simpler,
+strictly-local analysis. See
 \cref{sec:preflatten_comparison_flatten} for a detailed discussion.
+
+\citet{mlton-closure-paper} introduced the MLton defunctionalization pass,
+whose \texttt{datatype} objects we seek to eliminate through
+our \texttt{ConApp}-\texttt{PreFlatten} transformation. The choice to
+defunctionalize and lower to SSA-form IR in the middle-end is one of the
+defining features of the MLton family of SML compilers -- implementations of the
+SML-NJ lineage, by contrast, preserve higher order functions and lower to a
+continuation-passing style (CPS) middle-end IR. A risk of the MLton strategy is
+that converting function calls to dispatch tables may introduce overhead in the
+caller: our contribution is to eliminate this overhead in cases where the callee
+is known statically.
+
+\citet{higher-order-flattening} introduces a theoretical
+framework to solve the problem of the \texttt{tuple}-\texttt{PreFlatten}
+transformation in the context of a higher order language, i.e. solving the
+SML-NJ-lineage (CPS IR) equivalent of MLton's \citet{mlton-closure-paper}. We
+avoid the complexity that \citet{higher-order-flattening} addresses by
+implementing our optimizations in MLton's first-order \texttt{SSA} IR.
+
+\citet{manticore-arity-paper} solves the problem of tuple flattening for
+a CPS IR (as addressed in \citet{higher-order-flattening}) in the context of a
+parallel dialect of SML. We, again, differ by targetting a first-order SSA IR,
+We also differ in that their flattening heuristic is maximally conservative
+(i.e. it never introduces unnecessary pack/unpack operations), whereas we
+explore tradeoffs that favor more-aggressive flattening.
+
+The recent work \citet{closure-sharing-paper} examines the opposite optimization
+strategy to our \texttt{ConApp}-\texttt{PreFlatten} optimization -- introducing
+new layers of indirection in closure representations as a performance
+optimization. Like \citet{manticore-arity-paper}, their analysis differs
+substantially from anything in MLton, working in the context of an
+SML-NJ-dervied compiler.
 
 
 %% but extends it to a) handle additional cases where the
@@ -16,15 +49,6 @@ pursues a simpler, strictly-local analysis. See
 \section{\texttt{ConApp} Flattening}
 %% ConApp-focused examples
 
-\citet{mlton-closure-paper} introduced the MLton defunctionalization pass,
-whose \texttt{datatype} objects we seek to eliminate through
-our \texttt{PreFlatten} pass. The choice to defunctionalize and lower to
-SSA-form IR in the middle-end is one of the defining features of the MLton
-family of SML compilers -- implementations of the SML-NJ lineage, by contrast,
-preserve higher order functions and lower to a continuation-passing style
-middle-end IR. A risk of the MLton strategy is that converting function calls to
-dispatch tables may introduce overhead in the caller: our contribution is to
-eliminate this overhead in cases where the callee is known statically.
 
 %% reduce the overhead 
 
@@ -63,14 +87,6 @@ eliminate this overhead in cases where the callee is known statically.
 
 \citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to ``clean up'' in the specialized blocks).
 
-\citet{manticore-arity-paper} treats a problem very similar to \citet{flat-paper}. Much of their complexity stems from performing the transformation on a higher-order IR, whereas we (like \citet{flat-paper}) target a first-order IR, and so allow for a simpler analysis. They also provide a flattening heuristic that is maximally conservative in the sense that it never introduces unnecessary pack/unpack operations, whereas we aim to explore more aggressive tradeoffs.
-
-The recent work \citet{closure-sharing-paper} examines the opposite optimization
-strategy to the one discussed here – introducing new layers of indirection in
-closure representations as a performance optimization.
-Like \citet{manticore-arity-paper}, their analysis differs substantially from
-anything in MLton, since MLton implements higher-order functions via
-defunctionalization rather than closure conversion.
 
 \citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimizations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
 
@@ -79,7 +95,13 @@ defunctionalization rather than closure conversion.
 
 \citet{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their ``data-only flattening'' is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion. i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations.
 
-Various work at Jane Street for unboxed types in OCaml aims to materialize the same wins that we demonstrate here through the SoA transformation, as discussed in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that they seek to overcome – selecting the appropriate function specialization for a potentially-unboxed type – does not apply to MPL: since MLton does whole-program compilation, we always know at compile time which specializations are necessary to emit.
+Various work at Jane Street for unboxed types in OCaml aims to materialize the
+same wins that we demonstrate here through the SoA transformation, as discussed
+in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that
+they seek to overcome – selecting the appropriate function specialization for a
+potentially-unboxed type – does not apply to MPL: since MLton does whole-program
+compilation, we always know at compile time which specializations are necessary
+to emit.
 
 \citet{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \citet{mpl-sched-paper}.
 
