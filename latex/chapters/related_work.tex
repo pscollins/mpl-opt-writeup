@@ -50,16 +50,15 @@ Our \texttt{tuple}-\texttt{PreFlatten} transformation differs by targetting a
 monomorphic IR, and by employing a more limited flattening heuristic.
 
 \citet{haskell-fc-unbox} introduces a strategy for tuple flattening in the context of an
-IR that is both higher-order and polymorphic, as well as non-strict. Their
-solution is to rewrite a functions with tuple arguments into a
-``wrapper/worker'' pair, where the ``wrapper'' preserves the original argument
-type and the ``worker'' operates on unboxed arguments: the ``wrapper'' is an
-unpack sequence followed by a call to the ``worker'', and the ``worker'' is a
-re-pack sequence followed by the original function body.
+IR that is both higher-order and non-strict. Their solution is to rewrite a
+functions with tuple arguments into a ``wrapper/worker'' pair, where the
+``wrapper'' an unpack sequence followed by a call to the ``worker'', and the
+``worker'' is a re-pack sequence followed by the original function body. The net
+effect of inlining the ``wrapper'' at a callsite preceeded by a pack operation
+is identical to our \texttt{tuple}-\texttt{Flatten}; our approach differs in
+that we \textit{only} flatten such callsites, avoiding overhead for
+unflattenable callers (at the potential cost of code size).
 
-
-
-and a function $\mathtt{f_{worker}}$
 
 %% but extends it to a) handle additional cases where the
 %% callers cannot be ``unified'' to a single flat/non-flat representation (for
