@@ -49,16 +49,29 @@ order to handle the case where the concrete type is unknown.
 Our \texttt{tuple}-\texttt{PreFlatten} transformation differs by targetting a
 monomorphic IR, and by employing a more limited flattening heuristic.
 
-\citet{haskell-fc-unbox} introduces a strategy for tuple flattening in the context of an
-IR that is both higher-order and non-strict. Their solution is to rewrite a
-functions with tuple arguments into a ``wrapper/worker'' pair, where the
-``wrapper'' an unpack sequence followed by a call to the ``worker'', and the
-``worker'' is a re-pack sequence followed by the original function body. The net
-effect of inlining the ``wrapper'' at a callsite preceeded by a pack operation
-is identical to our \texttt{tuple}-\texttt{Flatten}; our approach differs in
-that we \textit{only} flatten such callsites, avoiding overhead for
-unflattenable callers (at the potential cost of code size).
+\citet{haskell-fc-unbox} introduces a strategy for tuple
+flattening in the context of an IR that is both higher-order and non-strict.
+Their solution is to rewrite a functions with tuple arguments into a
+``wrapper/worker'' pair, where the ``wrapper'' an unpack sequence followed by a
+call to the ``worker'', and the ``worker'' is a re-pack sequence followed by the
+original function body. The net effect of inlining the ``wrapper'' at a callsite
+preceeded by a pack operation is identical to
+our \texttt{tuple}-\texttt{Flatten}; our approach differs in that
+we \textit{only} flatten such callsites, avoiding overhead for unflattenable
+callers (at the potential cost of code size).
 
+\citet{haskell-callspec} presents a strategy for emitting specializations of
+functions when certain ``call patterns'' appear in the source program. In
+essence, a ``call pattern'' is a per-argument pattern-match for callsites where
+the tag of a \texttt{datatype} object is known statically; it is therefore
+closely related to the \texttt{ConApp}-\texttt{Flatten} transformation presented
+here. Since \citet{haskell-callspec} targets GHC, like \citet{haskell-fc-unbox},
+its optimizations are implemented for a lazy, higher-order polymorphic language
+-- consequently, they choose different cost heuristics (e.g. only specializing
+recursive funcitons), and are unable to make specialization decisions on the
+basis of function-valued arguments (which we naturally subsume under
+by \texttt{datatype} constructor matching in the context of MLton's first-order
+IR).
 
 %% but extends it to a) handle additional cases where the
 %% callers cannot be ``unified'' to a single flat/non-flat representation (for
