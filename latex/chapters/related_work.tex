@@ -97,7 +97,7 @@ latter relying entirely on standard, pre-existing optimization techniques to
 \hl{TODO: CHECK}
 
 The equivalent transformation in C/C++ compilers like \texttt{clang} or
-\texttt{gcc} is referred to as ``scalar replacement of aggregates,'' as
+\texttt{gcc} is referred to as ``scalar replacement of aggregates,'' (SROA) as
 described in \cref{munchick-compiler-design}. Since these languages natively
 support ``unboxed'' \texttt{struct} value types, the goal in this context is to
 enable subsequent optimizations like constant or copy propagation, rather than
@@ -109,6 +109,19 @@ constraints, \texttt{clang} and \texttt{gcc} do not, in general, have the
 freedom to change function signatures in the style of our \texttt{PreFlatten}.
 \hl{TODO: NEED REFERENCE FOR THE SECOND PART}
 
+SROA is also a common optimization technique in higher-level, JIT-compiled
+languages, such as Java. \cref{parital-escape-thesis} provides a detailed
+introduction to the general optimization for Java, and additionally introduces a
+new ``partial escape analysis'' that solves a similar problem to our
+mixed-caller \texttt{PreFlatten} transformation. In the Java case, the benefits
+of SROA are more-similar to the MLton case than the \texttt{clang} case -- Java
+aggregate objects are heap allocated, and hence replacement with scalars
+eliminates an allocation. The soundness analysis in the Java case is identical
+to the C/C++ case -- the compiler must prove that references to the flattenable
+object do not escape the current scope. \cref{partial-escape-analysis}
+introduces a novel technique to enable SROA when an object escapes in some (but
+not all) control flow paths: their solution is to delay the ``pack'' operation
+in order to exclude the non-escaping paths \hl{TODO: how to summarize difference?}
 
 
 %% DeepFlatten-focused examples
