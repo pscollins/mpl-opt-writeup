@@ -105,8 +105,11 @@ to eliminate heap allocations. In order for the transformation to be sound, the
 compiler must prove that no references to the aggregate escape the current
 function, since (like our tuple flattening), the transformation cannot preserve
 \hl{pointers to the original object}. Due to separate compilation and fixed ABI
-constraints, C/C++ compilers do not have freedom to change function signatures
-in the style of our \texttt{PreFlatten}.
+constraints, \texttt{clang} and \texttt{gcc} do not, in general, have the
+freedom to change function signatures in the style of our \texttt{PreFlatten}.
+\hl{TODO: NEED REFERENCE FOR THE SECOND PART}
+
+
 
 %% DeepFlatten-focused examples
 \section{\texttt{array}, \texttt{vector} Flattening}
