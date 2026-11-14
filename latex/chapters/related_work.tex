@@ -73,52 +73,40 @@ basis of function-valued arguments (which we naturally subsume under
 by \texttt{datatype} constructor matching in the context of MLton's first-order
 IR).
 
-%% but extends it to a) handle additional cases where the
-%% callers cannot be ``unified'' to a single flat/non-flat representation (for
-%% non-array types), and b) more aggressively flatten cases related to arrays, while
-%% c) pursuing a simpler, strictly-local analysis.
+\citet{local-paper} and \citet{adt4hpc-paper} aim to achieve a similar goal to
+our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs),
+but address it in a different context: they are concerned with manual control
+over the format of serialized data on disk, rather than (like us) specializing
+the in-memory format of data based on its users (while, jointly, specializing
+users according to the in-memory format).
 
-%% \FloatBarrier
-%% \section{\texttt{ConApp} Flattening}
-%% ConApp-focused examples
+\citet{double-steal-paper} also investigates a similar problem to our
+\texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the
+source language); however their contribution focuses on a novel, lossless
+in-memory representation for the ADT rather than optimizing out the ADT metadata
+entirely.
 
+\citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening
+(i.e. emitting specialized code based on callers) in the context of optimizing a
+dynamically-typed language. Our work differs from theirs in that we specialize
+only on properties that we can guarantee from the type system, and so both our
+policy decisions and our implementation mechanism are greatly simplified (the
+latter relying entirely on standard, pre-existing optimization techniques to
+``clean up'' in the specialized blocks).
 
-%% reduce the overhead 
+\hl{TODO: CHECK}
 
-%% The choice to defunctionalize and lower to
-%% SSA-form IR in the middle-end is one of the defining features of the MLton
-%% family of SML compilers -- implementations of the SML-NJ lineage, by contrast,
-%% preserve higher order functions and lower to a continuation-passing style
-%% middle-end IR. Targetting MLton's \texttt{SSA} IR
-
-%% dWe, effectively, repurpose their control flow
-%% analysis in order to drive function specialization decisions.
-
-%% \hl{TODO: function-typed? is that correct?}
-
-%% Specifically: MLton's defunctionalization runs as part of the from \texttt{SXML}
-%% (monomorphic, higher order) to \texttt{SSA} (first-order). It removes
-%% higher-order functions from the program, replacing all function-typed formal
-%% parameters with \texttt{datatype} (whose tag type indicates the callee, and
-%% whose payload carries the captured closure environment), and replacing all calls
-%% of function-valued variables with \texttt{case} statements that dispatch to the
-%% necessary callee. The mechanics of this transformation are detailed
-%% in \cref{sec:background_polyvar}, depicted in e.g. \cref{fig:hofo_no_polyvar} --
-%% here, we will focus on discussing the analysis.
-
-%% The choice to defunctionalize and lower to SSA-form IR in the middle-end is one
-%% of the defining features of the MLton-family of SML compilers -- implementations
-%% that descend from the SML-NJ lineage, by contrast, preserve higher order
-%% functions and lower to continuation-passing style middle-end IR. In essence, the
-%% job the defunctionalization analysis is to compute an upper bound on the set of
-%% all posible values that a function-valued variable might take, \hl{TODO: FINISH}
-
-
-\citet{local-paper} and \citet{adt4hpc-paper} aim to achieve a similar goal to our \texttt{ConApp} flattening (eliminating indirections while traversing ADTs), but address it in a different context: they are concerned with manual control over the format of serialized data on disk, rather than (like us) specializing the in-memory format of data based on its users (while, jointly, specializing users according to the in-memory format).
-
-\citet{double-steal-paper} also investigates a similar problem to our \texttt{ConApp} flattening (eliminating pointers introduced by ADTs in the source language); however their contribution focuses on a novel, lossless in-memory representation for the ADT rather than optimizing out the ADT metadata entirely.
-
-\citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening (i.e. emitting specialized code based on callers) in the context of optimizing a dynamically-typed language. Our work differs from theirs in that we specialize only on properties that we can guarantee from the type system, and so both our policy decisions and our implementation mechanism are greatly simplified (the latter relying entirely on standard, pre-existing optimization techniques to ``clean up'' in the specialized blocks).
+The equivalent transformation in C/C++ compilers like \texttt{clang} or
+\texttt{gcc} is referred to as ``scalar replacement of aggregates,'' as
+described in \cref{munchick-compiler-design}. Since these languages natively
+support ``unboxed'' \texttt{struct} value types, the goal in this context is to
+enable subsequent optimizations like constant or copy propagation, rather than
+to eliminate heap allocations. In order for the transformation to be sound, the
+compiler must prove that no references to the aggregate escape the current
+function, since (like our tuple flattening), the transformation cannot preserve
+\hl{pointers to the original object}. Due to separate compilation and fixed ABI
+constraints, C/C++ compilers do not have freedom to change function signatures
+in the style of our \texttt{PreFlatten}.
 
 %% DeepFlatten-focused examples
 \section{\texttt{array}, \texttt{vector} Flattening}
