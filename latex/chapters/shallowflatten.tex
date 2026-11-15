@@ -1119,14 +1119,6 @@ consider the case when a \texttt{tuple} element round-trips through an array, as
 in \cref{fig:push_pop}. At the end of this sequence, are \texttt{element}
 and \texttt{element'} physically identical?
 
-TODO(agy): make this fig push pop
-\begin{minted}{sml}
-  val arr : (int * int) array = Array.array (3, (0, 0))
-  val element = (1, 2)
-  val _ = Array.update (arr, 1, element)
-  val element' = Array.sub (arr, 1)
-\end{minted}
-
 If \texttt{arr} has been \texttt{ShallowFlatten}ed, the answer is ``no:'' we
 cannot preserve pointer equality, since the write/read result in pack/unpack
 operations that construct a new tuple. From the perspective of strict StandardML
@@ -1137,15 +1129,36 @@ to write this test would be to wrap the element type in \texttt{ref}, as
 depicted in \cref{fig:push_pop_ref} -- in which case we are guaranteed
 that \texttt{element = element'}, which is preserved by \texttt{PreFlatten}.
 
-%% TODO(agy): make this fig push pop ref
-%% \begin{minted}{sml}
-%%   val arr : (int * int) ref array = Array.array (3, ref (0, 0))
-%%   val element = ref (1, 2)
-%%   val _ = Array.update (arr, 1, element)
-%%   val element' = Array.sub (arr, 1)
-%% \end{minted}
-%% Now we are guaranteed that \texttt{element = element'} holds, which is preserved
-%% by \texttt{PreFlatten}.
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{tuple}-\textt{array} round-trip}
+    \label{fig:push_pop}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{sml}
+val arr : (int * int) array =
+  Array.array (3, (0, 0))
+val element = (1, 2)
+val _ = Array.update (arr, 1, element)
+val element' = Array.sub (arr, 1)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{\texttt{tuple ref}-\textt{array} round-trip}
+    \label{fig:push_pop_ref}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{sml}
+val arr : (int * int) ref array =
+  Array.array (3, ref (0, 0))
+val element = ref (1, 2)
+val _ = Array.update (arr, 1, element)
+val element' = Array.sub (arr, 1)
+\end{minted}
+  \end{subfigure}
+  \caption{Illustrative examples for when \texttt{ShallowFlatten} preserves
+  physical equality.}
+  \label{fig:push_pop_comparison}
+\end{figure}
 
 %% It is debatable whether supporting a fallback is required for the transformation
 %% to be usable by real developers. The problem to worry about is that the
