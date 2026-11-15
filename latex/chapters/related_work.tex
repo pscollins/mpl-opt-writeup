@@ -49,16 +49,18 @@ order to handle the case where the concrete type is unknown.
 Our \texttt{tuple}-\texttt{PreFlatten} transformation differs by targeting a
 monomorphic IR, and by employing a more limited flattening heuristic.
 
-\citet{haskell-fc-unbox} introduces a strategy for tuple
-flattening in the context of an IR that is both higher-order and non-strict.
-Their solution is to rewrite a function with tuple arguments into a
-``wrapper/worker'' pair, where the ``wrapper'' is an unpack sequence followed by a
-call to the ``worker'', and the ``worker'' is a re-pack sequence followed by the
-original function body. The net effect of inlining the ``wrapper'' at a callsite
-preceded by a pack operation is identical to
-our \texttt{tuple}-\texttt{PreFlatten}; our approach differs in that
-we \textit{only} flatten such callsites, avoiding overhead for unflattenable
-callers (at the potential cost of code size).
+\citet{haskell-fc-unbox} introduces a strategy for tuple flattening in the
+context of an IR that is both higher-order and non-strict. Their solution is to
+rewrite a function with tuple arguments into a ``wrapper/worker'' pair, where
+the ``wrapper'' is an unpack sequence followed by a call to the ``worker'', and
+the ``worker'' is a re-pack sequence followed by the original function body.
+Their rewrite is conditional on a strictness analyis, which must prove that
+evaluating the tuple's producing thunk does not cause the program to diverge.
+The net effect of inlining the ``wrapper'' at a callsite preceded by a pack
+operation is identical to our \texttt{tuple}-\texttt{PreFlatten}; our approach
+differs in that we \textit{only} flatten at callsites containing pack
+operations, avoiding overhead for unflattenable callers (at the potential cost
+of code size).
 
 \citet{haskell-callspec} presents a strategy for emitting specializations of
 functions when certain ``call patterns'' appear in the source program. In

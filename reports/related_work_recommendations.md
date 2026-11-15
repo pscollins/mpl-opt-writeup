@@ -20,7 +20,7 @@ This document contains:
    - **Verified accurate in `related_work.tex`:** Morrisett's thesis (*Compiling with Types*, CMU-CS-95-226, Section 5.2.4 pp. 78–87 and Section 8.5.4 p. 184) explicitly presents the 3-case translation of functions and applications (known tuple with $\le k$ elements, known non-tuple / tuple with $> k$ elements, and unknown type variable $t$ handled via `Vararg`/`vararg`/`onearg` using `typecase` at runtime).
    - **Optional complementary citation:** If desired, you can also cite **Shao & Appel (PLDI '95)** (`shao-appel-1995`) alongside `\citet{compiling-with-types}` (which Morrisett himself cites on p. 70 and p. 184 as the coercion-based SML/NJ counterpart to his `vararg`/`onearg` dynamic type dispatch approach), or keep the paragraph as-is since its description of `\citet{compiling-with-types}` is completely spot-on.
 
-4. **Lines 52–61 (`\citet{haskell-fc-unbox}` — Peyton Jones & Launchbury 1991):**
+4. ~~**Lines 52–61 (`\citet{haskell-fc-unbox}` — Peyton Jones & Launchbury 1991):**~~
    - Currently describes the `worker` as *"a re-pack sequence followed by the original function body."*
    - **Recommendation:** Clarify that the worker/wrapper split is driven by **strictness analysis** (requiring the callee to be strict in the tuple on *all* control-flow paths), and that the inlineable `wrapper` unpacks the tuple and calls the `worker` with flattened scalar arguments, while inside the `worker` the temporary re-pack cancels with projections in the function body via known-constructor simplification.
 
