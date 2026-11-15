@@ -16,9 +16,9 @@ This document contains:
    - Currently reads: *"solving the SML-NJ-lineage (CPS IR) equivalent of MLton's `\citet{mlton-closure-paper}`."*
    - **Recommendation:** Since `higher-order-flattening` (Hannan & Hicks 1998) is about higher-order arity raising (tuple flattening) rather than closure conversion, comparing it to MLton's `\citet{flat-paper}` (or both `\citet{flat-paper}` and `\citet{mlton-closure-paper}`) is more precise.
 
-3. **Lines 42–50 (`\citet{compiling-with-types}` — Morrisett 1995 vs. FLINT / TIL):**
-   - Currently attributes unconditional flattening of $n$-tuples ($n < k$) into registers under separate compilation to `\citet{compiling-with-types}` (Morrisett 1995), and states that code inspects the argument type at runtime when the concrete type is unknown.
-   - **Recommendation:** Unconditional $n$-tuple flattening up to register limits ($n \le k$) in SML/NJ is primarily described in **Shao & Appel (PLDI '95)** (`shao-appel-1995`, FLINT) and **Tarditi et al. (PLDI '96)** (`til-paper`, TIL), whereas Morrisett's thesis focuses on intensional type analysis (`typecase`) for unboxed arrays/floats. Also note that in SML/NJ's coercion-based unboxing, conversions at polymorphic boundaries are handled via compile-time coercion wrappers (`wrap`/`unwrap`) where polymorphic instantiations occur, whereas intensional polymorphism (`TIL` / Morrisett) inspects runtime type representations only when the tuple structure itself is hidden behind an abstract type variable `'a`.
+3. **Lines 42–50 (`\citet{compiling-with-types}` — Morrisett 1995, Section 5.2.4 & 8.5.4):**
+   - **Verified accurate in `related_work.tex`:** Morrisett's thesis (*Compiling with Types*, CMU-CS-95-226, Section 5.2.4 pp. 78–87 and Section 8.5.4 p. 184) explicitly presents the 3-case translation of functions and applications (known tuple with $\le k$ elements, known non-tuple / tuple with $> k$ elements, and unknown type variable $t$ handled via `Vararg`/`vararg`/`onearg` using `typecase` at runtime).
+   - **Optional complementary citation:** If desired, you can also cite **Shao & Appel (PLDI '95)** (`shao-appel-1995`) alongside `\citet{compiling-with-types}` (which Morrisett himself cites on p. 70 and p. 184 as the coercion-based SML/NJ counterpart to his `vararg`/`onearg` dynamic type dispatch approach), or keep the paragraph as-is since its description of `\citet{compiling-with-types}` is completely spot-on.
 
 4. **Lines 52–61 (`\citet{haskell-fc-unbox}` — Peyton Jones & Launchbury 1991):**
    - Currently describes the `worker` as *"a re-pack sequence followed by the original function body."*
@@ -129,7 +129,7 @@ To improve the precision of monovariant 0CFA during defunctionalization, MLton a
 #### 6. Shao & Appel (PLDI 1995) — *A Type-Based Compiler for Standard ML (FLINT)* & Tarditi et al. (PLDI 1996) — *TIL*
 - **Where it fits:** Alongside `\citet{compiling-with-types}` in `related_work.tex` (lines 42–50).
 - **Why it is valuable:**
-  - Grounds your discussion of how separately compiled SML compilers (`SML/NJ`'s FLINT middle-end and CMU's `TIL` compiler) flatten $n$-tuple arguments up to register limits ($n \le k$) and insert coercions or wrapper functions at polymorphic boundaries, sharpening the paragraph that currently cites only `compiling-with-types` (Morrisett 1995).
+  - `compiling-with-types` (Morrisett 1995, Chapter 5 & Section 8.5.4) already covers the TIL approach of flattening $n$-tuple arguments ($n < k$) and using dynamic `typecase` (`vararg`/`onearg`) for polymorphic/unknown argument types. Optionally citing **Tarditi et al. (PLDI '96)** (`til-paper`) adds the peer-reviewed conference paper for TIL, and citing **Shao & Appel (PLDI '95)** (`shao-appel-1995`) provides the SML/NJ counterpart that Morrisett explicitly contrasts with on pp. 70 & 81 (which uses static wrapper/coercion functions rather than runtime `typecase` at polymorphic boundaries).
 
 #### 7. Boquist (1999) & Podlovics, Hruska, & Pénzes (2021) — *The GRIN Whole-Program Compiler*
 - **Where it fits:** Section 1 (`ConApp` flattening discussion) in `related_work.tex`.
