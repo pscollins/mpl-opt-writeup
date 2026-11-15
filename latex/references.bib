@@ -737,3 +737,81 @@
   year      =  2015,
   language  = "en"
 }
+
+@INPROCEEDINGS{object-inlining,
+  title     = "An automatic object inlining optimization and its evaluation",
+  author    = "Dolby, Julian and Chien, Andrew",
+  booktitle = "Proceedings of the ACM SIGPLAN 2000 conference on Programming
+               language design and implementation",
+  publisher = "ACM",
+  address   = "New York, NY, USA",
+  pages     = "345--357",
+  abstract  = "Automatic object inlining [19, 20] transforms heapdata structures
+               by fusing parent and child objects together. It canimprove
+               runtime by reducing object allocation and pointer
+               dereferencecosts. We report continuing work studying object
+               inlining optimizations. In particular, we present a new semantic
+               derivation of the correctness conditions for object inlining, and
+               program analysis which extends our previous work. And we present
+               an object inlining transformation, focusing on a new algorithm
+               which optimizes class field layout to minimize code expansion.
+               Finally, we detail a fuller evaluation on eleven programs and
+               libraries (including Xpdf, the 25,000 line Portable Document
+               Format (PDF) file browser) that utilizes hardware measures of
+               impact on the memory system. We show that our analysis scales
+               effectively to large programs,finding many inlinable fields (45
+               in xpdf) at acceptable cost, and weshow that, on some programs,
+               it finds nearly all fields for which object inlining is correct,
+               and averages 40\% of such fields across our benchmarks. We
+               implement our analyses in an advanced analysis infrastructure,
+               and we show that, compared to traditional 1-CFA, that
+               infrastructure provides better results and lower and more
+               scalable cost. Across all programs, analysis identified about
+               30\% of objects as inlinable on average. Our transformation
+               increases code size by only 20\% while inlining this 30\% of
+               fields. Inlining these objects eliminated on average 28\% of
+               field reads, 58\% of object creations, 12\% of all loads.
+               Further, the optimized programs have significantly improved
+               memory reference behavior, producing 25\% fewer L1 data cache
+               misses and 25\% fewer read stalls. On average the runtime
+               improved by 14\%.",
+  month     =  may,
+  year      =  2000,
+  language  = "en"
+}
+
+@ARTICLE{java-scicomp,
+  title     = "Improving compilation of Java scientific applications",
+  author    = "Budimlić, Zoran and Joyner, Mackale and Kennedy, Ken",
+  journal   = "Int. J. High Perform. Comput. Appl.",
+  publisher = "SAGE Publications",
+  volume    =  21,
+  number    =  3,
+  pages     = "251--265",
+  abstract  = "Java is a high productivity object-oriented programming language
+               that is rapidly gaining popularity in high-performance
+               application development. One major obstacle to its broad
+               acceptance is its mediocre performance when compared with Fortran
+               or C, especially if the developers use object-oriented features
+               of the language extensively. Previous work in improving the
+               performance of object-oriented, high-performance, scientific Java
+               applications consisted of high level compiler optimization and
+               analysis strategies, such as class specialization and object
+               inlining. This paper extends prior work on object inlining by
+               improving the analysis and developing new code transformation
+               techniques to further improve the performance of high performance
+               applications written in high-productivity, object-oriented style.
+               Two major impediments to effective object inlining are object and
+               array aliasing and binary method invocations. This paper
+               implements object and array alias strategies to address the
+               aliasing problem while utilizing an idea from Telescoping
+               Languages to address the binary method invocation problem.
+               Application runtime gains of up to 20\% result from employing
+               these techniques. These improvements should further increase the
+               scientific community's acceptance of the Java programming
+               language in the development of high-performance,
+               high-productivity, scientific applications.",
+  month     =  aug,
+  year      =  2007,
+  language  = "en"
+}

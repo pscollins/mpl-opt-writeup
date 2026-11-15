@@ -179,7 +179,14 @@ representations (analogously to our inserted pack/unpack sequences); their
 approach is different in that both the transformation heuristic and the data
 representations are provided by the programmer.
 
-
+\citet{object-inlining} addresses the problem of the MLton \texttt{DeepFlatten}
+pass in the context of object oriented languages, proposing a mechanism to
+``flatten'' nested objects by inlining pointed-to children. \citet{java-scicomp}
+extends the mechanism of \citet{object-inlining} in order to replace
+array-of-pointers containers in Java with the corresponding struct-of-arrays
+representation, like our \texttt{SoA}-\texttt{ShallowFlatten}. Their approach
+differs from ours in that (like \texttt{DeepFlatten}) they restrict their
+optimization to cases where no coercion pack/unpack sequences are required.
 
 \hl{TODO: Dolby & Chien, Blelloch here, OpenJDK Project Valhalla in
   shallowflatten.tex}
