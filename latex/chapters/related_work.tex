@@ -129,7 +129,15 @@ in order to exclude the non-escaping paths \hl{TODO: how to summarize difference
 %% DeepFlatten-focused examples
 \section{\texttt{array}, \texttt{vector} Flattening}
 
-\citet{dataonly-paper} applies a similar transformation (tuple flattening) in a similar context: in fact, their ``data-only flattening'' is roughly the SoA transformation that we apply. Our SoA transformation differs from theirs by lacking shape descriptors. We differ from their approach by a) considering a broader class of flattening strategies, and b) applying our pass in tandem with the existing flattening passes to eliminate intermediate tuples, rather than relying on a single huge pass to do the fusion; i.e. we have a simpler transformation by operating at a higher level of abstraction in the compiler and leveraging pre-existing optimizations.
+\citet{dataonly-paper} applies a similar transformation (tuple flattening) in a
+similar context: in fact, their ``data-only flattening'' is roughly the SoA
+transformation that we apply. Our SoA transformation differs from theirs by
+lacking shape descriptors. We differ from their approach by a) considering a
+broader class of flattening strategies, and b) applying our pass in tandem with
+the existing flattening passes to eliminate intermediate tuples, rather than
+relying on a single huge pass to do the fusion; i.e. we have a simpler
+transformation by operating at a higher level of abstraction in the compiler and
+leveraging pre-existing optimizations.
 
 Various work at Jane Street for unboxed types in OCaml aims to materialize the
 same wins that we demonstrate here through the SoA transformation, as discussed
@@ -139,8 +147,36 @@ potentially-unboxed type – does not apply to MPL: since MLton does whole-progr
 compilation, we always know at compile time which specializations are necessary
 to emit.
 
-\citet{futhark-flatten} also discusses the problem of choosing an optimum flattened representation from among the possible choices – here on the GPU for the Futhark programming language. Their problem differs from ours in that MPL resolves the issue of work imbalance between functional units (CPU cores or GPU SMs) through low-overhead scheduling of tasks at runtime, rather than at compile time, as explored in \citet{mpl-sched-paper}.
+\citet{futhark-flatten} also discusses the problem of choosing an optimum
+flattened representation from among the possible choices – here on the GPU for
+the Futhark programming language. Their problem differs from ours in that MPL
+resolves the issue of work imbalance between functional units (CPU cores or GPU
+SMs) through low-overhead scheduling of tasks at runtime, rather than at compile
+time, as explored in \citet{mpl-sched-paper}.
 
-\citet{realtime-sml-paper} also investigates the impact of deep flattening optimizations on performance: the authors there disable \texttt{DeepFlatten} in order to avoid complexity when computing byte offsets for post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of different sizes. We avoid this issue by simply restricting ourselves to tuples with uniform element types and observe that this is sufficient for all opportunities in our benchmark suites.
+\citet{realtime-sml-paper} also investigates the impact of deep flattening
+optimizations on performance: the authors there disable \texttt{DeepFlatten} in
+order to avoid complexity when computing byte offsets for
+post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of
+different sizes. We avoid this issue by simply restricting ourselves to tuples
+with uniform element types and observe that this is sufficient for all
+opportunities in our benchmark suites.
 
-\citet{virgil-paper} explores an even more-aggressive tradeoff than the flattening optimizations discussed here, choosing to flatten-away all tuple data structures in their compilation pipeline: for variables and arguments this is equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS ``[d]epending on the compilation target.'' In line with our observations above, they remark that extreme flattening can be harmful for large tuples.
+\citet{virgil-paper} explores an even more-aggressive tradeoff than the
+flattening optimizations discussed here, choosing to flatten-away all tuple data
+structures in their compilation pipeline: for variables and arguments this is
+equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS
+``[d]epending on the compilation target.'' In line with our observations above,
+they remark that extreme flattening can be harmful for large tuples.
+
+\citet{automating-adhoc-paper} proposes a generic mechanism (in the context of
+the Scala compiler) to allow programmers to regions of code with representation
+decisions (e.g. all arays within a particular region use an SoA representation,
+or all 32-bit complex numbers use a packed 64-bit representation). Their
+approach is similar to ours in that their transformation inserts ``coercion''
+operations at the boundary of such regions in order to ensure the correct
+representations (analogously to our inserted pack/unpack sequences); their
+approach is different in that both the transformation heuristic and the data
+representations are provided by the programmer.
+
+
