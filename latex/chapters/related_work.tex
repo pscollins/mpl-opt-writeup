@@ -18,12 +18,12 @@ that converting function calls to dispatch tables may introduce overhead in the
 caller: our contribution is to eliminate this overhead in cases where the callee
 is known statically.
 
-\citet{higher-order-flattening} introduces a theoretical
-framework to solve the problem of the \texttt{tuple}-\texttt{PreFlatten}
-transformation in the context of a higher-order language, i.e. solving the
-SML-NJ-lineage (CPS IR) equivalent of MLton's \citet{mlton-closure-paper}. We
-avoid the complexity that \citet{higher-order-flattening} addresses by
-implementing our optimizations in MLton's first-order \texttt{SSA} IR.
+\citet{higher-order-flattening} introduces a theoretical framework to solve the
+problem of the \texttt{tuple}-\texttt{PreFlatten} transformation in the context
+of a higher-order language, i.e. solving the SML-NJ-lineage (CPS IR) equivalent
+of MLton's \citet{flat-paper}. We avoid the complexity that
+\citet{higher-order-flattening} addresses by implementing our optimizations in
+MLton's first-order \texttt{SSA} IR.
 
 \citet{manticore-arity-paper} solves the problem of tuple flattening for
 a CPS IR (as addressed in \citet{higher-order-flattening}) in the context of a
