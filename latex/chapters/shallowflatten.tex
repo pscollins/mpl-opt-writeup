@@ -1119,34 +1119,60 @@ consider the case when a \texttt{tuple} element round-trips through an array, as
 in \cref{fig:push_pop}. At the end of this sequence, are \texttt{element}
 and \texttt{element'} physically identical?
 
-If \texttt{arr} has been \texttt{ShallowFlatten}ed
-
-It is debatable whether supporting a fallback is required for the transformation
-to be usable by real developers. The problem to worry about is that the
-AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
-an SML program like:
+TODO(agy): make this fig push pop
 \begin{minted}{sml}
   val arr : (int * int) array = Array.array (3, (0, 0))
   val element = (1, 2)
   val _ = Array.update (arr, 1, element)
   val element' = Array.sub (arr, 1)
 \end{minted}
-Are \texttt{element} and \texttt{element'} physically identical? If this element
-is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
-equality, since the write/read result in pack/unpack operations that construct a
-new tuple. From the perspective of strict StandardML as defined in the language
-specification \citet{sml-def}, this is a non-issue: there is no way to observe
-pointer equality of tuples in the source language, and so the compiler has
-complete freedom. The only spec-compliant way to write this test would be to
-wrap the element type in \texttt{ref}:
-\begin{minted}{sml}
-  val arr : (int * int) ref array = Array.array (3, ref (0, 0))
-  val element = ref (1, 2)
-  val _ = Array.update (arr, 1, element)
-  val element' = Array.sub (arr, 1)
-\end{minted}
-Now we are guaranteed that \texttt{element = element'} holds, which is preserved
-by \texttt{PreFlatten}.
+
+If \texttt{arr} has been \texttt{ShallowFlatten}ed, the answer is ``no:'' we
+cannot preserve pointer equality, since the write/read result in pack/unpack
+operations that construct a new tuple. From the perspective of strict StandardML
+as defined in the language specification \citet{sml-def}, this is a non-issue:
+there is no way to observe pointer equality of tuples in the source language,
+and so the compiler has complete freedom. The only language-extension-free way
+to write this test would be to wrap the element type in \texttt{ref}, as
+depicted in \cref{fig:push_pop_ref} -- in which case we are guaranteed
+that \texttt{element = element'}, which is preserved by \texttt{PreFlatten}.
+
+%% TODO(agy): make this fig push pop ref
+%% \begin{minted}{sml}
+%%   val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+%%   val element = ref (1, 2)
+%%   val _ = Array.update (arr, 1, element)
+%%   val element' = Array.sub (arr, 1)
+%% \end{minted}
+%% Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+%% by \texttt{PreFlatten}.
+
+%% It is debatable whether supporting a fallback is required for the transformation
+%% to be usable by real developers. The problem to worry about is that the
+%% AoP->AoS/SoA transformation breaks pointer equality for array elements, i.e. for
+%% an SML program like:
+%% \begin{minted}{sml}
+%%   val arr : (int * int) array = Array.array (3, (0, 0))
+%%   val element = (1, 2)
+%%   val _ = Array.update (arr, 1, element)
+%%   val element' = Array.sub (arr, 1)
+%% \end{minted}
+%% Are \texttt{element} and \texttt{element'} physically identical? If this element
+%% is \texttt{ShallowFlatten}ed, the answer is ``no:'' we cannot preserve pointer
+%% equality, since the write/read result in pack/unpack operations that construct a
+%% new tuple. From the perspective of strict StandardML as defined in the language
+%% specification \citet{sml-def}, this is a non-issue: there is no way to observe
+%% pointer equality of tuples in the source language, and so the compiler has
+%% complete freedom. The only spec-compliant way to write this test would be to
+%% wrap the element type in \texttt{ref}:
+%% \begin{minted}{sml}
+%%   val arr : (int * int) ref array = Array.array (3, ref (0, 0))
+%%   val element = ref (1, 2)
+%%   val _ = Array.update (arr, 1, element)
+%%   val element' = Array.sub (arr, 1)
+%% \end{minted}
+%% Now we are guaranteed that \texttt{element = element'} holds, which is preserved
+%% by \texttt{PreFlatten}.
 
 However, both MLton and MPL extend the source language with constructs that
 allow user programs to observe this behavior: both have \texttt{MLton.eq}
@@ -1156,9 +1182,10 @@ algorithms.
 
 Since physical equality of tuples is not defined in \citet{sml-def}, one option
 to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
-to return \texttt{false} in these cases. Another simple option would to be
-disable \texttt{ShallowFlatten} for all values of any types that participate in
-one of the forbidden comparisons (i.e. a \texttt{MLton.eq} applied to an
+to (perhaps spuriously) return \texttt{false} in these cases. Another simple
+option would to be disable \texttt{ShallowFlatten} for all values of any types
+that participate in one of the forbidden comparisons (i.e. a \texttt{MLton.eq}
+applied to an
 \texttt{int * int} tuple anywhere in the program disables
 \texttt{ShallowFlatten} for all containers of \texttt{int * int}), perhaps
 refined by a dataflow analysis to determine if the elements in the forbidden
@@ -1166,10 +1193,15 @@ comparison may have originated in a container.
 
 This results in a potentially-unpleasant performance cliff for users, but there
 are various simple workarounds -- e.g. users can wrap any objects that must be
-tested for pointer equality in \texttt{ref} cells (which are not impacted by
-\texttt{ShallowFlatten}).
+tested for pointer equality in \texttt{ref} cells, as described above. 
 
-\hl{TODO: ALSO CALL OUT THE UNIFORM TYPE RESTRICTION}
+An additional limitation that is specific to the AoS flavor, as described above,
+is the restriction to tuples of uniform, hy
+
+%% (which are not impacted by
+%% \texttt{ShallowFlatten}).
+
+%% \hl{TODO: ALSO CALL OUT THE UNIFORM TYPE RESTRICTION}
 
 %% \section{OLD: Implementation}
 %% %% ---whole section outline --
