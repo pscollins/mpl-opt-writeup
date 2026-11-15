@@ -188,5 +188,27 @@ representation, like our \texttt{SoA}-\texttt{ShallowFlatten}. Their approach
 differs from ours in that (like \texttt{DeepFlatten}) they restrict their
 optimization to cases where no coercion pack/unpack sequences are required.
 
-\hl{TODO: Dolby & Chien, Blelloch here, OpenJDK Project Valhalla in
-  shallowflatten.tex}
+AoS container layouts have a long history in the literature of data-parallel
+computing. In the context of functional, SML-like languages, it was first
+introduced by way of the NESL programming language, in \cref{nesl-book} (which
+also proposed the \texttt{quickhull} and \texttt{linearrec} benchmarks that
+appear in this work), in which AoS is the canonical layout for
+container-of-tuple types. The Data Parallel Haskell project of
+\cref{data-parallel-haskell}, likewise, commits exclusively to AoS layouts for
+in-memory representations. Our approach differs from theirs by operating in the
+context of a language whose default representation is array-of-pointers.
+
+In the broader computer architecture context, a major motivation for flat
+AoS/SoA layouts is to enable SIMD parallelism -- in fact, the ``AoS/SoA''
+terminology itself was coined in \citet{intel-simd-journal}, which introduced
+the SSE instruction set extension for the Pentium III processor. While this work
+does not leverage SIMD parallelism, we hope that the \texttt{ShallowFlatten}
+transformation can enable future investigation in this area for both MaPLe and
+MLton.
+
+%% AoS and SoA layouts are 
+
+%% representation data-parallel computation has a long history in the
+%% literature
+
+\hl{TODO: OpenJDK Project Valhalla in shallowflatten.tex}
