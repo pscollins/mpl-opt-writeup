@@ -56,20 +56,8 @@ impact is included only for MLton.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/delunay_mlton_parallel_ml_bench_scatter.pdf}
-    \caption{\texttt{delunay}}
-    \label{fig:delunay_mlton_parallel_ml_bench_scatter}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/dedup_mlton_parallel_ml_bench_scatter.pdf}
-    \caption{\texttt{dedup}}
-    \label{fig:dedup_mlton_parallel_ml_bench_scatter}
-  \end{subfigure}
-  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delunay} and \texttt{ConApp}-flattening for \texttt{dedup}.}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/example_scatter_trials_shared.pdf}
+  \caption{Trial-by-trial execution time for two benchmarks (\texttt{delaunay} and \texttt{dedup}) for the MLton compiler. The experimental side is the \texttt{tuple}-flattening configuration for \texttt{delaunay} and \texttt{ConApp}-flattening for \texttt{dedup}.}
   \label{fig:example_scatter_trials}
 \end{figure}
 
@@ -123,26 +111,7 @@ For the evaluation below, we use the following configuration:
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:tuple_mlton_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_compile_mlton_vs_mlton.pdf}
-    \caption{Compile time}
-    \label{fig:tuple_mlton_compile_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_mlton_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:tuple_mlton_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten} on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_mlton}
 \end{figure}
@@ -154,19 +123,7 @@ neutral for MLton on the MLton benchmark suite, with <5\% impact on all metrics.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:tuple_parallel_bench_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:tuple_parallel_bench_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_parallel_bench_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench}
 \end{figure}
@@ -183,7 +140,7 @@ effect of the tuple flattening optimzation.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{../analysis/charts/reverb_mlton_parallel_ml_bench_scatter.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/reverb_mlton_parallel_ml_bench_scatter.pdf}
   \caption{Trial-by-trial execution time for \texttt{reverb} in the \texttt{tuple}-flattening configuration.}
   \label{fig:reverb_tuple_scatter}
 \end{figure}
@@ -193,32 +150,19 @@ effect of the tuple flattening optimzation.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
-    \caption{Run time}
-    \label{fig:tuple_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}\hfill
-  \begin{minipage}[b]{0.48\textwidth}
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
-      \caption{Geomean only}
-      \label{fig:tuple_parallel_bench_geomean_mpl_vs_mpl}
-    \end{subfigure}
-
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/tuple_parallel_bench_size_mpl_vs_mpl.pdf}
-      \caption{Binary size}
-      \label{fig:tuple_parallel_bench_size_mpl_vs_mpl}
-    \end{subfigure}
-  \end{minipage}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative run-time performance for with- vs without-\texttt{PreFlatten}, applied to tuple constructors on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_parallel_bench_mpl}
 \end{figure}
 
-As we see in \cref{fig:tuple_parallel_bench_mpl}, the \texttt{tuple}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_parallel_bench_mpl_summary.pdf}
+  \caption{Geomean run-time performance across core counts and binary size comparison for with- vs without-\texttt{PreFlatten} (tuple constructors) on \texttt{parallel-ml-bench} for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:tuple_parallel_bench_mpl_summary}
+\end{figure}
+
+As we see in \cref{fig:tuple_parallel_bench_mpl,fig:tuple_parallel_bench_mpl_summary}, the \texttt{tuple}
 optimization has a mixed effect, with some benchmarks showing consistent wins
 across core counts, and others showing losses. In order to further investigate
 this effect, we'll select two representative benchmarks: \texttt{bfs} (a
@@ -586,33 +530,21 @@ neutral-to-positive, with an impact of $< 2\%$ on performance in most cases.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_bfs.pdf}
-    \caption{\texttt{bfs}}
-    \label{fig:tuple_exp_bfs}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_delaunay.pdf}
-    \caption{\texttt{delaunay}}
-    \label{fig:tuple_exp_delaunay}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_standouts_only.pdf}
   \caption{Comparison of speedups across core counts for \texttt{bfs} and \texttt{delaunay} under three configurations: baseline tuple-vs-tuple, baseline with fixup, and with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_standouts_only}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{../analysis/charts/tuple_exp_geomeans.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_exp_geomeans.pdf}
   \caption{Comparison of geometric mean speedups across core counts for the baseline tuple configuration, baseline with fixup, and with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_exp_geomeans}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/tuple_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for tuple flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:tuple_all_chunkify_one}
 \end{figure}
@@ -646,26 +578,7 @@ For the evaluation below, we use the following configuration:
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:con_mlton_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_compile_mlton_vs_mlton.pdf}
-    \caption{Compile time}
-    \label{fig:con_mlton_compile_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_mlton_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:con_mlton_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_mlton}
 \end{figure}
@@ -715,7 +628,7 @@ rather than a win.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_con_chunkify_one_mlton_bench.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/mlton_con_chunkify_one_mlton_bench.pdf}
   \caption{Comparison of benchmark performance for \texttt{ConApp} flattening on the MLton benchmark suite under MLton, comparing the baseline configuration against \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:mlton_bench_mlton_con_chunkify_one}
 \end{figure}
@@ -726,19 +639,7 @@ rather than a win.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:con_parallel_bench_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:con_parallel_bench_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_parallel_bench_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench}
 \end{figure}
@@ -762,7 +663,7 @@ due to chunkification.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_con_chunkify_one_parallel_bench.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/mlton_con_chunkify_one_parallel_bench.pdf}
   \caption{Comparison of benchmark performance for \texttt{ConApp} flattening on \texttt{parallel-ml-bench} under MLton, comparing the baseline configuration against \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mlton_chunkify}
 \end{figure}
@@ -771,29 +672,16 @@ due to chunkification.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
-    \caption{Run time}
-    \label{fig:con_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}\hfill
-  \begin{minipage}[b]{0.48\textwidth}
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
-      \caption{Geomean only}
-      \label{fig:con_parallel_bench_geomean_mpl_vs_mpl}
-    \end{subfigure}
-
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/con_parallel_bench_size_mpl_vs_mpl.pdf}
-      \caption{Binary size}
-      \label{fig:con_parallel_bench_size_mpl_vs_mpl}
-    \end{subfigure}
-  \end{minipage}
-  \caption{Relative performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative run-time performance for with- vs without-\texttt{PreFlatten}, applied to \texttt{ConApp} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_parallel_bench_mpl}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_parallel_bench_mpl_summary.pdf}
+  \caption{Geomean run-time performance across core counts and binary size comparison for with- vs without-\texttt{PreFlatten} (\texttt{ConApp}) on \texttt{parallel-ml-bench} for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:con_parallel_bench_mpl_summary}
 \end{figure}
 
 \hl{UPDATED THE CHARTS: NEED TO RE-CHECK THE BENCHMARK NAMES BELOW}
@@ -813,19 +701,7 @@ investigation.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_exp_suffix_array.pdf}
-    \caption{\texttt{suffix-array}}
-    \label{fig:con_exp_suffix_array}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/con_exp_linearrec.pdf}
-    \caption{\texttt{linearrec}}
-    \label{fig:con_exp_linearrec}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_chunkify_one_outliers.pdf}
   \caption{Comparison of speedups across core counts for \texttt{suffix-array} and \texttt{linearrec} under baseline \texttt{ConApp} flattening versus with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_chunkify_one_outliers}
 \end{figure}
@@ -838,14 +714,14 @@ neutral-to-positive when excluding chunk overhead. See
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{../analysis/charts/con_exp_geomean.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_exp_geomean.pdf}
   \caption{Comparison of geometric mean speedups across core counts for baseline \texttt{ConApp} flattening versus with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:con_chunkify_one_geomeans}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/con_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/con_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for \texttt{ConApp} flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:mpl_con_chunkify_one_all}
   \label{mpl_con_chunkify_one_all}
@@ -859,94 +735,44 @@ neutral-to-positive when excluding chunk overhead. See
 In the data below, we applied the Array-of-Struct \texttt{ShallowFlatten}
 transformation to all containers-of-tuples of less than or equal to 3 elements.
 
-\subsection{MLton Benchmarks}
+\subsection{MLton Benchmarks} \label{sec:aos_mlton}
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:aos_mlton_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_compile_mlton_vs_mlton.pdf}
-    \caption{Compile time}
-    \label{fig:aos_mlton_compile_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_mlton_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:aos_mlton_size_mlton_vs_mlton}
-  \end{subfigure}
-  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
-  \label{fig:aos_mlton}
-\end{figure}
-
-As we can see in \cref{fig:aos_mlton}, this transformation is essentially a
-no-op on the MLton benchmark suite, impacting only a single benchmark for a win
-smaller than 1\%.
+On the MLton benchmark suite, this transformation is essentially a no-op,
+modifying the generated binary for only a single benchmark (\texttt{flat-array}),
+with negligible impact across all metrics ($-0.3\%$ run time, $+1.7\%$ compile
+time, and $0.0\%$ binary size).
 
 
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:aos_parallel_bench_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:aos_parallel_bench_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_parallel_bench_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench}
 \end{figure}
 
 AOS flattening has a largely poisitive impact on MLton for the
-\texttt{parallel\_bench} suite. We'll focus on MPL for a more detailed analysis,
+\texttt{parallel\_bench} suite (\cref{fig:aos_parallel_bench}). We'll focus on MPL for a more detailed analysis,
 in the style of the previous sections.
 
 \subsection{\texttt{parallel-ml-bench}: MPL vs MPL}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
-    \caption{Run time}
-    \label{fig:aos_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}\hfill
-  \begin{minipage}[b]{0.48\textwidth}
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
-      \caption{Geomean only}
-      \label{fig:aos_parallel_bench_geomean_mpl_vs_mpl}
-    \end{subfigure}
-
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/aos_parallel_bench_size_mpl_vs_mpl.pdf}
-      \caption{Binary size}
-      \label{fig:aos_parallel_bench_size_mpl_vs_mpl}
-    \end{subfigure}
-  \end{minipage}
-  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative run-time performance for with- vs without-\texttt{ShallowFlatten}, using the AoS transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_parallel_bench_mpl}
 \end{figure}
 
-For MPL, the AOS transformation is overwhelmingly positive. For a deep dive,
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_parallel_bench_mpl_summary.pdf}
+  \caption{Geomean run-time performance across core counts and binary size comparison for with- vs without-\texttt{ShallowFlatten} (AoS) on \texttt{parallel-ml-bench} for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:aos_parallel_bench_mpl_summary}
+\end{figure}
+
+For MPL, the AOS transformation is overwhelmingly positive (\cref{fig:aos_parallel_bench_mpl,fig:aos_parallel_bench_mpl_summary}). For a deep dive,
 we'll focus on two cases with large effects: \texttt{quickhull} (a large,
 consistent win) and \texttt{linearrec} (a win at low core counts that becomes a
 noisy loss at high core counts.
@@ -1304,16 +1130,17 @@ benchmarks. As expected, the effect is broadly neutral. See
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
+  \begin{subfigure}[b]{\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/quickhull_default_aos_mpl_parallel_ml_bench_scatter.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/thesis/quickhull_default_aos_mpl_parallel_ml_bench_scatter.pdf}
     \caption{\texttt{quickhull}}
     \label{fig:quickhull_default_aos_mpl_parallel_ml_bench_scatter}
   \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
+
+  \vspace{0.6em}
+  \begin{subfigure}[b]{\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/linearrec_default_aos_mpl_parallel_ml_bench_scatter.pdf}
+    \includegraphics[width=\textwidth]{../analysis/charts/thesis/linearrec_default_aos_mpl_parallel_ml_bench_scatter_nolegend.pdf}
     \caption{\texttt{linearrec}}
     \label{fig:linearrec_default_aos_mpl_parallel_ml_bench_scatter}
   \end{subfigure}
@@ -1323,26 +1150,7 @@ benchmarks. As expected, the effect is broadly neutral. See
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_geomean.pdf}
-    \caption{Geometric mean}
-    \label{fig:aos_fixed_iters_geomean}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_quickhull.pdf}
-    \caption{\texttt{quickhull}}
-    \label{fig:aos_fixed_iters_quickhull}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_fixed_iters_linearrec.pdf}
-    \caption{\texttt{linearrec}}
-    \label{fig:aos_fixed_iters_linearrec}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_fixed_iters_focus.pdf}
   \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus fixed iteration count (fixed trials). <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:quickhull_linearrec_aos_fixed_trials}
   \label{fig_quickhull_linearrec_aos_fixed_trials}
@@ -1350,73 +1158,35 @@ benchmarks. As expected, the effect is broadly neutral. See
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for AoS flattening with fixed trial counts on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_full_fixed_trial}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_geomean.pdf}
-    \caption{Geometric mean}
-    \label{fig:aos_sync_gc_geomean}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_quickhull.pdf}
-    \caption{\texttt{quickhull}}
-    \label{fig:aos_sync_gc_quickhull}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_sync_gc_linearrec.pdf}
-    \caption{\texttt{linearrec}}
-    \label{fig:aos_sync_gc_linearrec}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_sync_gc_focus.pdf}
   \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus synchronous GC. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:quickhull_linearrec_aos_sync_gc}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_sync_gc_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_sync_gc_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for AoS flattening with synchronous GC on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_full_sync_gc}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_geomean.pdf}
-    \caption{Geometric mean}
-    \label{fig:aos_chunkify_one_geomean}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_quickhull.pdf}
-    \caption{\texttt{quickhull}}
-    \label{fig:aos_chunkify_one_quickhull}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/aos_chunkify_one_linearrec.pdf}
-    \caption{\texttt{linearrec}}
-    \label{fig:aos_chunkify_one_linearrec}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_chunkify_one_focus.pdf}
   \caption{Comparison of speedups across core counts for geometric mean, \texttt{quickhull}, and \texttt{linearrec} under default AoS flattening versus AoS with \texttt{-chunkify one}. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:quickhull_linearrec_aos_chunkify_one}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{../analysis/charts/aos_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/aos_chunkify_one_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
   \caption{Relative performance for AoS flattening with \texttt{-chunkify one} on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, across core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:aos_full_chunkify_one}
 \end{figure}
@@ -1429,51 +1199,16 @@ transformation to all containers-of-tuples of less than or equal to 3 elements.
 
 \subsection{MLton Benchmarks}
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:soa_mlton_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_compile_mlton_vs_mlton.pdf}
-    \caption{Compile time}
-    \label{fig:soa_mlton_compile_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_mlton_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:soa_mlton_size_mlton_vs_mlton}
-  \end{subfigure}
-  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the MLton benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
-  \label{fig:soa_mlton}
-\end{figure}
-
-The effect here, like in \cref{fig:aos_mlton}, is essentially negligible.
+Like in \cref{sec:aos_mlton}, the SoA transformation only modifies a single
+benchmark (\texttt{flat-array}) on the MLton benchmark suite, with negligible
+impact across all metrics ($-0.3\%$ run time, $+3.3\%$ compile time, and
+$+0.2\%$ binary size).
 
 \subsection{\texttt{parallel-ml-bench}: MLton vs MLton}
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mlton_vs_mlton.pdf}
-    \caption{Run time}
-    \label{fig:soa_parallel_bench_run_mlton_vs_mlton}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mlton_vs_mlton.pdf}
-    \caption{Binary size}
-    \label{fig:soa_parallel_bench_size_mlton_vs_mlton}
-  \end{subfigure}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/soa_parallel_bench_mlton_shared.pdf}
   \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench}
   \label{fig:soa_mlton_bench}
@@ -1490,7 +1225,7 @@ significant loss for the SoA configuration. See
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{../analysis/charts/mlton_aos_vs_soa_parallel_bench.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/mlton_aos_vs_soa_parallel_bench.pdf}
   \caption{Comparison of benchmark performance for AoS versus SoA flattening on the \texttt{parallel-ml-bench} benchmark suite under MLton. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:mlton_aos_vs_soa_parallel_bench}
 \end{figure}
@@ -1643,39 +1378,26 @@ hierarchy (indicated by the increase in L1 misses) or pushed out entirely
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[b]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
-    \caption{Run time}
-    \label{fig:soa_parallel_bench_run_mpl_vs_mpl}
-  \end{subfigure}\hfill
-  \begin{minipage}[b]{0.48\textwidth}
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_run_mpl_vs_mpl_geomean.pdf}
-      \caption{Geomean only}
-      \label{fig:soa_parallel_bench_geomean_mpl_vs_mpl}
-    \end{subfigure}
-
-    \begin{subfigure}{\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{../analysis/charts/soa_parallel_bench_size_mpl_vs_mpl.pdf}
-      \caption{Binary size}
-      \label{fig:soa_parallel_bench_size_mpl_vs_mpl}
-    \end{subfigure}
-  \end{minipage}
-  \caption{Relative performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/soa_parallel_bench_run_mpl_vs_mpl_trellis.pdf}
+  \caption{Relative run-time performance for with- vs without-\texttt{ShallowFlatten}, using the SoA transformation on the \texttt{parallel-ml-bench} benchmark suite, for the MPL compiler, at a variety of core counts. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_parallel_bench_mpl}
 \end{figure}
 
-See \cref{fig:soa_parallel_bench_mpl} for measurements of the SoA transformation
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/soa_parallel_bench_mpl_summary.pdf}
+  \caption{Geomean run-time performance across core counts and binary size comparison for with- vs without-\texttt{ShallowFlatten} (SoA) on \texttt{parallel-ml-bench} for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
+  \label{fig:soa_parallel_bench_mpl_summary}
+\end{figure}
+
+See \cref{fig:soa_parallel_bench_mpl,fig:soa_parallel_bench_mpl_summary} for measurements of the SoA transformation
 on the \texttt{parallel\_bench} benchmark suite. As we can see from
 \cref{fig:soa_vs_aos_parallel_bench_geomean}, the impact of the SoA
 transformation is broadly the same as the AoS transformation.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{../analysis/charts/soa_vs_aos_geomean.pdf}
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/soa_vs_aos_geomean.pdf}
   \caption{Comparison of geometric mean speedups across core counts for AoS versus SoA flattening on the \texttt{parallel-ml-bench} benchmark suite for the MPL compiler. <0\% represents an improvement, >0\% represents a regression.}
   \label{fig:soa_vs_aos_parallel_bench_geomean}
   \label{fig:soa_vs_aos_geomean}

@@ -4,6 +4,7 @@ import os
 import sys
 
 from build_charts_lib import process_config
+from build_thesis_charts import process_thesis_config
 
 USE_NEW_ANALYSIS_STYLE = True
 
@@ -28,6 +29,12 @@ def main():
         action="store_false",
         help="Use old analysis style (average of ratios and sample stddev).",
     )
+    parser.add_argument(
+        "--skip-thesis-charts",
+        action="store_true",
+        default=False,
+        help="Skip generating thesis-formatted charts in <output_directory>/thesis/.",
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.config):
@@ -38,6 +45,8 @@ def main():
         config = json.load(f)
 
     process_config(config, use_new_analysis_style=args.use_new_analysis_style)
+    if not args.skip_thesis_charts:
+        process_thesis_config(config, use_new_analysis_style=args.use_new_analysis_style)
 
 
 if __name__ == "__main__":
