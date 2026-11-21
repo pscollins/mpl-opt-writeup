@@ -232,21 +232,24 @@ def format_caption(base_caption: str, data_file: str) -> str:
 
 def render_mlton_subsection(t: str, data_file: str) -> str:
     test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
-    base_cap = MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the MLton benchmark suite.")
+    t_escaped = t.replace('_', r'\_')
+    base_cap = MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t_escaped}}} on the MLton benchmark suite.")
     cap = format_caption(base_cap, data_file)
     return Template(MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mlton_subsection(t: str, data_file: str) -> str:
     test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
-    base_cap = PARALLEL_MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the \texttt{{parallel-ml-bench}} benchmark suite.")
+    t_escaped = t.replace('_', r'\_')
+    base_cap = PARALLEL_MLTON_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t_escaped}}} on the \texttt{{parallel-ml-bench}} benchmark suite.")
     cap = format_caption(base_cap, data_file)
     return Template(PARALLEL_BENCH_MLTON_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
 
 def render_parallel_bench_mpl_subsection(t: str, data_file: str) -> str:
     test_type = SECTION_TITLES.get(t, f"{t.replace('_', ' ').title()} Flattening")
-    base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t.replace('_', r'\_')}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.")
+    t_escaped = t.replace('_', r'\_')
+    base_cap = PARALLEL_MPL_CAPTIONS.get(t, fr"Relative performance for \texttt{{{t_escaped}}} on the \texttt{{parallel-ml-bench}} benchmark suite, for the MPL compiler, at a variety of core counts.")
     cap = format_caption(base_cap, data_file)
     return Template(PARALLEL_BENCH_MPL_SUBSECTION_TEMPLATE).substitute(t=t, test_type=test_type, caption=cap)
 
@@ -267,12 +270,13 @@ def render_parallel_bench_mpl_tables_subsection(t: str) -> str:
 
 
 def render_trial_scatter_subsection(out_filename: str, bench: str, data_file: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
-    bench_display = fr"\texttt{{{bench.replace('_', r'\_')}}}"
+    bench_escaped = bench.replace('_', r'\_')
+    bench_display = fr"\texttt{{{bench_escaped}}}"
     test_type = SECTION_TITLES.get(exp_type, f"{exp_type.replace('_', ' ').title()} Flattening")
     suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
     compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())
     context_desc = fr'{suite_name}: {compiler_display} ({test_type})' if compiler else f'{suite_name} ({test_type})'
-    caption = fr'Per-trial execution times for \texttt{{{bench.replace("_", r"\_")}}} on the {suite_name} benchmark suite. Data: \protect\nolinkurl{{{data_file}}}.'
+    caption = fr'Per-trial execution times for \texttt{{{bench_escaped}}} on the {suite_name} benchmark suite. Data: \protect\nolinkurl{{{data_file}}}.'
     return Template(TRIAL_SCATTER_SUBSECTION_TEMPLATE).substitute(
         bench_display=bench_display,
         context_desc=context_desc,
@@ -282,7 +286,8 @@ def render_trial_scatter_subsection(out_filename: str, bench: str, data_file: st
 
 
 def render_trial_scatter_tables_subsection(out_filename: str, bench: str, compiler: str = 'mlton', suite: str = 'parallel_bench', exp_type: str = 'tuple') -> str:
-    bench_display = fr"\texttt{{{bench.replace('_', r'\_')}}}"
+    bench_escaped = bench.replace('_', r'\_')
+    bench_display = fr"\texttt{{{bench_escaped}}}"
     test_type = SECTION_TITLES.get(exp_type, f"{exp_type.replace('_', ' ').title()} Flattening")
     suite_name = r'\texttt{parallel-ml-bench}' if suite == 'parallel_bench' else suite
     compiler_display = 'MLton' if compiler.lower() == 'mlton' else ('MPL' if compiler.lower() == 'mpl' else compiler.capitalize())

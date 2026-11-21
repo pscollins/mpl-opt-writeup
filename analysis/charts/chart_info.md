@@ -1,4 +1,4 @@
-Data generated at 2026-10-14 08:57:20.812929 using the following config:
+Data generated at 2026-11-21 05:55:24.489636 using the following config:
 
 {
   "output_directory": "charts/",
@@ -6,6 +6,7 @@ Data generated at 2026-10-14 08:57:20.812929 using the following config:
     "compiler": "mlton",
     "suite": "mlton",
     "tuple": "tuple_test_o3_fixed_downgrade:flattening-tests:964de7355:20261013_131143.jsonl",
+    "tuple_chunkify_one": "tuple_chunkify_one:flattening-tests:2194c3541:20261116_040536.jsonl",
     "con": "test_conapp_flatten_test_o3:flattening-tests:cd5550ce5:20260909_171650.jsonl",
     "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",
     "aos": "test_aos_flatten_test_o3:flattening-tests:cd5550ce5:20260909_131724.jsonl",
@@ -15,6 +16,7 @@ Data generated at 2026-10-14 08:57:20.812929 using the following config:
     "compiler": "mlton",
     "suite": "parallel_bench",
     "tuple": "mlton_tuple_mlton_parallel_o3:260825-001542:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260825-001542.processed.jsonl",
+    "tuple_chunkify_one": "mlton_tuple_vs_tuple_chunkify_one:261116-020022:flattening-tests:51f313a899d857f16a29a69ec49b665dcb80d063:261116-020022.processed.jsonl",
     "con": "mlton_con_mlton_parallel_o3:260824-223054:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-223054.processed.jsonl",
     "aos": "mlton_aos_mlton_parallel_o3:260824-220328:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-220328.processed.jsonl",
     "soa": "mlton_soa_mlton_parallel_o3:260824-234803:flattening-tests:dcd9cf195eacea093ebe838dcb1d190333218ffd:260824-234803.processed.jsonl",
@@ -36,6 +38,7 @@ Data generated at 2026-10-14 08:57:20.812929 using the following config:
     "aos_sync_gc": "mpl_aos_vs_aos_sync_gc:260912-192129:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-192129.processed.jsonl",
     "aos_fixed_iters": "mpl_aos_vs_aos_fixed_iters:260914-130756:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-130756.processed.jsonl",
     "soa": "mpl_soa_mpl_parallel_o3_morecores:260825-191404:flattening-tests:475993b514ca4e4f6921a54f390c1ba9bc2350a1:260825-191404.processed.jsonl",
+    "soa_chunkify_one": "mpl_soa_vs_soa_chunkify_one:261116-022732:flattening-tests:51f313a899d857f16a29a69ec49b665dcb80d063:261116-022732.processed.jsonl",
     "soa_sync_gc": "mpl_soa_vs_soa_sync_gc:260912-205545:flattening-tests:c332d1391205d178b4d667102fffda834a4c89f9:260912-205545.processed.jsonl",
     "soa_fixed_iters": "mpl_soa_vs_soa_fixed_iters:260914-135505:flattening-tests:04ef12979aba919263dc1abf2cf294a744caf6d9:260914-135505.processed.jsonl"
   },
@@ -341,9 +344,48 @@ Data generated at 2026-10-14 08:57:20.812929 using the following config:
           "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa"
         }
       ]
+    },
+    "soa_chunkify_one_geomean": {
+      "source_series_type": "geomean",
+      "source_series": [
+        {
+          "series_name": "SOA-default",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa"
+        },
+        {
+          "series_name": "SOA-chunkify one",
+          "series_path": "parallel_bench_benchmarks_mpl_vs_mpl.soa_chunkify_one"
+        }
+      ]
     }
   },
   "compare_bar_charts": {
+    "mlton_tuple_chunkify_one_parallel_bench": {
+      "suite": "parallel_bench",
+      "source_series": [
+        {
+          "series_name": "Baseline MLton Tuple-vs-Tuple",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.tuple"
+        },
+        {
+          "series_name": "MLton Tuple-vs-Tuple, with -chunkify one",
+          "series_path": "parallel_bench_benchmarks_mlton_vs_mlton.tuple_chunkify_one"
+        }
+      ]
+    },
+    "mlton_tuple_chunkify_one_mlton_bench": {
+      "suite": "mlton",
+      "source_series": [
+        {
+          "series_name": "Baseline MLton Tuple-vs-Tuple",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.tuple"
+        },
+        {
+          "series_name": "MLton Tuple-vs-Tuple, with -chunkify one",
+          "series_path": "mlton_benchmarks_mlton_vs_mlton.tuple_chunkify_one"
+        }
+      ]
+    },
     "mlton_con_chunkify_one_parallel_bench": {
       "suite": "parallel_bench",
       "source_series": [
