@@ -1,6 +1,22 @@
 %% Abstract placeholder
 
-\hl{TODO: FILL IN}
+Unlike C, C++, or even the most recent versions of Java, Standard ML does not
+expose direct control of memory layouts to the programmer: it is impossible to
+observe in the source language whether an object of an aggregate type is passed
+as a boxed reference or an unboxed value. Consequently, the compiler has a wide
+degree of freedom to choose representations so as to maximize performance. As a
+general rule, on modern CPU architectures, the overarching goal is to eliminate
+indirections so as to improve locality.
 
-We evaluate their impact across a suite of sequential and parallel
-benchmarks, demonstrating performance wins of up to 50\%.
+This paper explores two novel flattening optimizations: \textttt{PreFlatten},
+which seeks to unbox aggregates passed across function calls,
+and \texttt{ShallowFlatten}, which seeks to unbox aggregates stored in
+containers. We implement thes optimizations in both the MLton compiler and its
+parallel variant, MaPLe, and measure their impact across two
+benchmark \hl{suites}: MLton's (sequential) benchmarks, and
+MaPLe's \texttt{parallel-ml-bench}.
+
+%% \hl{TODO: FILL IN}
+
+%% We evaluate their impact across a suite of sequential and parallel
+%% benchmarks, demonstrating performance wins of up to 50\%.

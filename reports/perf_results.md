@@ -31,8 +31,8 @@ Legend:
 
 | Optimization | Compiler / Suite | Default (`coalesce`) | `-chunkify one` | `-chunkify func` | Baseline Fixup (`Simplify`) | Fixed Trials (`fixed_iters`) | Sync GC (`sync_gc`) | `perf stat` Top-Down |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`PreFlatten` (`tuple`)** | **MLton / `mlton`** (1c) | In Text + Config | **MISSING** | **MISSING** | **MISSING** | N/A | N/A | — |
-| | **MLton / `parallel_bench`** (1c) | In Text + Config | **MISSING** | **MISSING** | **MISSING** | **MISSING** | N/A | — |
+| **`PreFlatten` (`tuple`)** | **MLton / `mlton`** (1c) | In Text + Config | *Config Only* | **MISSING** | **MISSING** | N/A | N/A | — |
+| | **MLton / `parallel_bench`** (1c) | In Text + Config | *Config Only* | **MISSING** | **MISSING** | **MISSING** | N/A | — |
 | | **MPL / `parallel_bench`** (1–160c) | In Text + Config | In Text + Config | *Config Only* | In Text + Config | **MISSING** | **MISSING** | `delaunay`, `bfs` (1c, 160c) |
 | **`PreFlatten` (`con`)** | **MLton / `mlton`** (1c) | In Text + Config | In Text + Config | **MISSING** | **MISSING** | N/A | N/A | — |
 | | **MLton / `parallel_bench`** (1c) | In Text + Config | In Text + Config | **MISSING** | **MISSING** | **MISSING** | N/A | — |
@@ -42,7 +42,7 @@ Legend:
 | | **MPL / `parallel_bench`** (1–160c) | In Text + Config | In Text + Config | *Config Only* | N/A | In Text + Config | In Text + Config | `quickhull`, `linearrec` (1c, 160c) |
 | **`ShallowFlatten` (`soa`)** | **MLton / `mlton`** (1c) | In Text + Config | **MISSING** | **MISSING** | N/A | N/A | N/A | — |
 | | **MLton / `parallel_bench`** (1c) | In Text + Config | **MISSING** | **MISSING** | N/A | **MISSING** | N/A | `delaunay`, `linearrec` (1c) |
-| | **MPL / `parallel_bench`** (1–160c) | In Text + Config | **MISSING** | **MISSING** | N/A | *Config Only* | *Config Only* | — |
+| | **MPL / `parallel_bench`** (1–160c) | In Text + Config | *Config Only* | **MISSING** | N/A | *Config Only* | *Config Only* | — |
 
 ---
 
@@ -53,11 +53,13 @@ Legend:
 | Suite | Condition (`config.json` key) | Optimization & Setting | Impacted Benchmarks | Geomean $\Delta\%$ | Best Win (Min $\Delta\%$) | Worst Regression (Max $\Delta\%$) | Status in `evaluation.tex` |
 | :--- | :--- | :--- | :---: | :---: | :--- | :--- | :--- |
 | **`mlton`** | `tuple` | `PreFlatten` (tuple, default) | 7 / 45 | **-0.45%** | **-4.45%** (`count-graphs`) | **+2.28%** (`hamlet`) | Fig. 5.2 (§5.2.1) |
+| **`mlton`** | `tuple_chunkify_one` | `PreFlatten` (tuple, `-chunkify one`) | 7 / 45 | **+0.99%** | **-0.02%** (`simple`) | **+2.84%** (`model-elimination`) | *Not in text* (`config.json` only) |
 | **`mlton`** | `con` | `PreFlatten` (`ConApp`, default) | 23 / 45 | **-0.98%** | **-22.29%** (`wc-input1`) | **+8.82%** (`logic`) | Fig. 5.8 (§5.3.1) |
 | **`mlton`** | `con_chunkify_one` | `PreFlatten` (`ConApp`, `-chunkify one`) | 22 / 45 | **+0.33%** | **-3.28%** (`count-graphs`) | **+11.77%** (`logic`) | Fig. 5.9 (§5.4) |
 | **`mlton`** | `aos` | `ShallowFlatten` (AoS, default) | 1 / 45 | **-0.27%** | **-0.27%** (`flat-array`) | **-0.27%** (`flat-array`) | Fig. 5.15 (§5.6.1) |
 | **`mlton`** | `soa` | `ShallowFlatten` (SoA, default) | 1 / 45 | **-0.28%** | **-0.28%** (`flat-array`) | **-0.28%** (`flat-array`) | Fig. 5.25 (§5.7.1) |
 | **`parallel_bench`** | `tuple` | `PreFlatten` (tuple, default) | 11 / 11* | **+4.23%** | **-1.64%** (`delaunay`) | **+18.21%** (`reverb`) | Fig. 5.3 (§5.2.2) |
+| **`parallel_bench`** | `tuple_chunkify_one` | `PreFlatten` (tuple, `-chunkify one`) | 11 / 11* | **-0.77%** | **-3.84%** (`range-query`) | **+2.76%** (`msort-ints`) | *Not in text* (`config.json` only) |
 | **`parallel_bench`** | `con` | `PreFlatten` (`ConApp`, default) | 34 / 34 | **-2.65%** | **-54.87%** (`linearrec`) | **+21.49%** (`linefit-opt`) | Fig. 5.10 (§5.5) |
 | **`parallel_bench`** | `con_chunkify_one` | `PreFlatten` (`ConApp`, `-chunkify one`) | 34 / 34 | **-2.92%** | **-50.44%** (`linearrec`) | **+15.44%** (`mcss-opt`) | Fig. 5.11 (§5.5) |
 | **`parallel_bench`** | `aos` | `ShallowFlatten` (AoS, default) | 11 / 11* | **-11.40%** | **-64.48%** (`linearrec`) | **+16.14%** (`linefit-opt`) | Fig. 5.16 (§5.6.2) |
@@ -86,6 +88,7 @@ All MPL configurations are measured across 10 core counts: `procs` $\in \{1, 2, 
 | **`aos_fixed_iters`** | `ShallowFlatten` (AoS, fixed trial count) | 11 | **-16.44%**<br>(-51.28% `linearrec` / +4.40% `seam-carve`) | **-6.06%**<br>(-33.61% `quickhull` / +48.08% `linearrec`) | **-16.44%** (1c) to **-6.06%** (160c) | **-51.28%**<br>(`linearrec` @ 1c) | **+48.08%**<br>(`linearrec` @ 160c) | Fig. 5.19–5.20 (§5.6.6) |
 | **`aos_sync_gc`** | `ShallowFlatten` (AoS, synchronous GC) | 11 | **-10.24%**<br>(-40.04% `linearrec` / +13.27% `ocaml-game-of-life`) | **-49.27%**<br>(-96.94% `quickhull` / +3.13% `ocaml-game-of-life`) | **-49.27%** (160c) to **-10.24%** (1c) | **-96.95%** (~33$\times$)<br>(`quickhull` @ 128c) | **+13.27%**<br>(`ocaml-game-of-life` @ 1c) | Fig. 5.21–5.22 (§5.6.6) |
 | **`soa`** | `ShallowFlatten` (SoA, default) | 11 | **-9.98%**<br>(-51.64% `linearrec` / +12.58% `ocaml-game-of-life`) | **-3.10%**<br>(-40.37% `quickhull` / +20.12% `linearrec`) | **-9.98%** (1c) to **-2.26%** (80c) | **-51.64%**<br>(`linearrec` @ 1c) | **+20.12%**<br>(`linearrec` @ 160c) | Fig. 5.28–5.29 (§5.7.3) |
+| **`soa_chunkify_one`** | `ShallowFlatten` (SoA, `-chunkify one`) | 11 | **-12.83%**<br>(-53.78% `linearrec` / +3.66% `seam-carve`) | **+0.08%**<br>(-41.97% `quickhull` / +55.52% `linearrec`) | **-12.83%** (1c) to **+0.08%** (160c) | **-53.78%**<br>(`linearrec` @ 1c) | **+55.52%**<br>(`linearrec` @ 160c) | *Not in text* (`config.json` only) |
 | **`soa_fixed_iters`** | `ShallowFlatten` (SoA, fixed trial count) | 11 | **-14.64%**<br>(-52.26% `linearrec` / +2.74% `seam-carve`) | **-3.78%**<br>(-35.32% `suffix-array` / +27.58% `linearrec`) | **-14.64%** (1c) to **-3.78%** (160c) | **-52.26%**<br>(`linearrec` @ 1c) | **+52.45%**<br>(`linearrec` @ 128c) | *Not in text* (`config.json` only) |
 | **`soa_sync_gc`** | `ShallowFlatten` (SoA, synchronous GC) | 11 | **-8.27%**<br>(-41.07% `linearrec` / +12.70% `ocaml-game-of-life`) | **-48.08%**<br>(-96.67% `quickhull` / +2.01% `ocaml-nbody-imm`) | **-48.39%** (128c) to **-8.27%** (1c) | **-96.67%** (~30$\times$)<br>(`quickhull` @ 160c) | **+21.41%**<br>(`ocaml-game-of-life` @ 2c) | *Not in text* (`config.json` only) |
 
@@ -98,11 +101,13 @@ All MPL configurations are measured across 10 core counts: `procs` $\in \{1, 2, 
 | Suite / Compiler | Condition | Compile Time Geomean (Min / Max) | Binary Size Geomean (Min / Max) |
 | :--- | :--- | :--- | :--- |
 | **MLton / `mlton`** | `tuple` | **+1.97%** (-1.00% `model-elimination` / +4.33% `tensor`) | **+1.73%** (+0.07% `simple` / +4.87% `model-elimination`) |
+| | `tuple_chunkify_one` | **+2.67%** (+0.51% `DLXSimulator` / +3.55% `model-elimination`) | **+2.00%** (+0.17% `simple` / +5.42% `model-elimination`) |
 | | `con` | **+7.53%** (-1.07% `vliw` / +192.67% `logic`) | **+9.24%** (-1.77% `boyer` / +565.24% `logic`) |
 | | `con_chunkify_one` | **+7.92%** (-7.78% `mlyacc` / +244.04% `logic`) | **+10.17%** (-1.42% `boyer` / +676.23% `logic`) |
 | | `aos` | **+1.73%** (+1.73% `flat-array`, $n=1$) | **+0.00%** (+0.00% `flat-array`, $n=1$) |
 | | `soa` | **+3.29%** (+3.29% `flat-array`, $n=1$) | **+0.18%** (+0.18% `flat-array`, $n=1$) |
 | **MLton / `parallel_bench`** | `tuple` | *Not measured* | **+1.71%** (+0.00% `nqueens` / +4.94% `msort`) |
+| | `tuple_chunkify_one` | *Not measured* | **+2.07%** (+0.00% `reverb` / +5.43% `nearest-nbrs`) |
 | | `con` | *Not measured* | **+0.40%** (-1.67% `ocaml-lu-decomp` / +3.76% `bfs`) |
 | | `con_chunkify_one` | *Not measured* | **+0.60%** (-1.70% `ocaml-binarytrees5` / +5.02% `max-indep-set`) |
 | | `aos` | *Not measured* | **-0.02%** (-1.27% `tinykaboom` / +1.04% `delaunay`) |
@@ -110,7 +115,7 @@ All MPL configurations are measured across 10 core counts: `procs` $\in \{1, 2, 
 | **MPL / `parallel_bench`** | `tuple` (all 4 variants) | *Not measured* | **+2.14% to +2.19%** (-1.41% `dense-matmul` / +7.36% `delaunay`) |
 | | `con` (all 3 variants) | *Not measured* | **+8.54% to +8.81%** (-0.51% `integrate-opt` / +36.73% `tinykaboom`) |
 | | `aos` (all 5 variants) | *Not measured* | **-0.13% to -0.03%** (-1.45% `delaunay` / +0.99% `suffix-array`) |
-| | `soa` (all 3 variants) | *Not measured* | **+0.09% to +0.20%** (-0.90% `quickhull` / +0.99% `suffix-array`) |
+| | `soa` (all 4 variants) | *Not measured* | **+0.09% to +0.20%** (-0.90% `quickhull` / +1.02% `tinykaboom`) |
 
 ---
 
@@ -118,24 +123,19 @@ All MPL configurations are measured across 10 core counts: `procs` $\in \{1, 2, 
 
 ### 3A. Missing Experimental Conditions (Not Measured at All)
 
-1. **`PreFlatten (tuple)` Missing `-chunkify one` on MLton (Both Suites):**
-   - While `PreFlatten (con)` has `-chunkify one` measurements across **all three** environments (`mlton/mlton`, `mlton/parallel_bench`, and `mpl/parallel_bench`), `PreFlatten (tuple)` **only** has `-chunkify one` for `mpl/parallel_bench`.
-   - It is **missing `-chunkify one` for `mlton/mlton` and `mlton/parallel_bench`**.
-   - This is especially notable for `mlton/parallel_bench`, where `tuple` currently shows a **+4.23% geomean slowdown** (10 of 11 impacted benchmarks regress, including `msort-strings` at +9.95% and `tokens` at +9.62%, not just `reverb` at +18.21%), yet there is no `-chunkify one` run to test whether that regression is also chunkification noise.
-
-2. **`ShallowFlatten (soa)` Missing Chunkify Controls (`-chunkify one` and `-chunkify func`):**
+1. **`ShallowFlatten (soa)` Missing `-chunkify func` on MPL (and Chunkify Controls on MLton):**
    - `ShallowFlatten (aos)` has both `aos_chunkify_one` and `aos_chunkify_func` measured on `mpl/parallel_bench` as a methodological sanity check (§5.6.6).
-   - `ShallowFlatten (soa)` has **no `-chunkify one` or `-chunkify func` runs** in any suite.
+   - `ShallowFlatten (soa)` now has `soa_chunkify_one` on `mpl/parallel_bench`, but still has **no `-chunkify func` run** on `mpl/parallel_bench` (and neither `aos` nor `soa` has chunkify controls on MLton).
 
-3. **`PreFlatten (con)` Missing Baseline Fixup Control (`con_vs_fixup`):**
+2. **`PreFlatten (con)` Missing Baseline Fixup Control (`con_vs_fixup`):**
    - For `tuple` on MPL, `tuple_vs_fixup` runs post-pass `Simplify` on the baseline to prove that the extra `Simplify` pass is not responsible for the performance difference (§5.2.6).
    - No analogous `con_vs_fixup` control exists for `ConApp` flattening (nor for MLton on either `tuple` or `con`).
 
-4. **`PreFlatten` (`tuple` and `con`) Missing `fixed_iters` and `sync_gc` Controls on MPL:**
+3. **`PreFlatten` (`tuple` and `con`) Missing `fixed_iters` and `sync_gc` Controls on MPL:**
    - Only `aos` and `soa` have `fixed_iters` and `sync_gc` runs on `mpl/parallel_bench`.
    - Even though `evaluation.tex` (§5.2.4, line 337) hypothesizes that `bfs`'s vanishing speedup at high core counts under `tuple` is due to GC pauses, and `con_chunkify_one` exhibits a massive +59.21% spike at 128c vs. -21.32% win at 160c on `linearrec`, neither `tuple` nor `con` has `fixed_iters` or `sync_gc` measurements.
 
-5. **Missing `perf stat` Top-Down Profiles for `ConApp` and Multi-Core `SoA`:**
+4. **Missing `perf stat` Top-Down Profiles for `ConApp` and Multi-Core `SoA`:**
    - `evaluation.tex` includes `perf stat` tables for `tuple` (MPL 1c & 160c on `delaunay`, `bfs`), `aos` (MPL 1c & 160c on `quickhull`, `linearrec`), and single-core MLton `aos` vs. `soa` (1c on `delaunay`, `linearrec`).
    - There are no `perf stat` tables for `con` (`ConApp` flattening) or for 160-core `soa` on MPL.
 
@@ -143,12 +143,19 @@ All MPL configurations are measured across 10 core counts: `procs` $\in \{1, 2, 
 
 ### 3B. Measured in `config.json` / `analysis/charts/` but Missing from `evaluation.tex`
 
-1. **`soa_sync_gc` and `soa_fixed_iters` (MPL `parallel-ml-bench`):**
-   - Both datasets are configured in [`analysis/config.json`](../analysis/config.json#L38-L39) and their plots (`soa_sync_gc_parallel_bench_run_mpl_vs_mpl_trellis.pdf`, `soa_fixed_iters_parallel_bench_run_mpl_vs_mpl_trellis.pdf`) are generated in `analysis/charts/`, showing the exact same dramatic GC effect as AoS (`soa_sync_gc` reaches **-48.39% geomean** at 128c and **-48.08%** at 160c, with `quickhull` at **-96.67%**).
-   - However, §5.7.3 of [`latex/chapters/evaluation.tex`](../latex/chapters/evaluation.tex#L1642-L1683) only includes the default `soa` plot and `soa_vs_aos_geomean.pdf`, never mentioning or plotting `soa_sync_gc` or `soa_fixed_iters` (and `config.json` lacks `compare_series` entries for `soa_sync_gc_geomean` and `soa_fixed_iters_geomean`).
+1. **`PreFlatten (tuple)` `-chunkify one` on MLton (`mlton` and `parallel-ml-bench`):**
+   - Both `mlton_benchmarks_mlton_vs_mlton.tuple_chunkify_one` and `parallel_bench_benchmarks_mlton_vs_mlton.tuple_chunkify_one` (along with `compare_bar_charts` entries `mlton_tuple_chunkify_one_mlton_bench` and `mlton_tuple_chunkify_one_parallel_bench`) are now configured in [`analysis/config.json`](../analysis/config.json).
+   - On `mlton/parallel_bench`, `-chunkify one` flips the default **+4.23%** geomean regression (`reverb` at +18.21%) into a **-0.77%** geomean improvement (`range-query` -3.84%, `msort-strings` -3.37%, `reverb` -3.29%, `msort-ints` +2.76%), confirming that the default slowdown was chunkification noise. On `mlton/mlton`, it shifts the **-0.45%** default geomean to **+0.99%** (`simple` -0.02% / `model-elimination` +2.84%).
+   - Neither dataset is plotted or discussed in [`latex/chapters/evaluation.tex`](../latex/chapters/evaluation.tex) yet.
 
-2. **`-chunkify func` Runs (`tuple_chunkify_func`, `con_chunkify_func`, `aos_chunkify_func`):**
-   - All three are present in [`analysis/config.json`](../analysis/config.json#L27-L33) (and `aos_exp_geomean` in `config.json` even plots `aos_chunkify_func`), with `.pdf` and `.csv` files generated in `analysis/charts/`.
+2. **`soa_chunkify_one`, `soa_sync_gc`, and `soa_fixed_iters` (MPL `parallel-ml-bench`):**
+   - All three datasets are configured in [`analysis/config.json`](../analysis/config.json#L39-L41) (with `compare_series.soa_chunkify_one_geomean` added for `soa_chunkify_one`).
+   - `soa_chunkify_one` reaches **-12.83%** geomean at 1c (`linearrec` -53.78%) and **+0.08%** at 160c (`quickhull` -41.97%, `linearrec` +55.52%).
+   - `soa_sync_gc` and `soa_fixed_iters` show the exact same dramatic GC effect as AoS (`soa_sync_gc` reaches **-48.39% geomean** at 128c and **-48.08%** at 160c, with `quickhull` at **-96.67%**).
+   - However, §5.7.3 of [`latex/chapters/evaluation.tex`](../latex/chapters/evaluation.tex) only includes the default `soa` plot and `soa_vs_aos_geomean.pdf`, never mentioning or plotting `soa_chunkify_one`, `soa_sync_gc`, or `soa_fixed_iters` (and `config.json` still lacks `compare_series` entries for `soa_sync_gc_geomean` and `soa_fixed_iters_geomean`).
+
+3. **`-chunkify func` Runs (`tuple_chunkify_func`, `con_chunkify_func`, `aos_chunkify_func`):**
+   - All three are present in [`analysis/config.json`](../analysis/config.json#L28-L34) (and `aos_exp_geomean` in `config.json` even plots `aos_chunkify_func`), with `.pdf` and `.csv` files generated in `analysis/charts/`.
    - None of the `-chunkify func` results are mentioned or included in [`latex/chapters/evaluation.tex`](../latex/chapters/evaluation.tex).
 
 ---
