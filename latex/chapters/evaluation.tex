@@ -2,9 +2,6 @@
 \section{Methodology}
 In the evalutation below, we will use two sets of benchmarks:
 \begin{enumerate}
-\item \texttt{parallel-ml-bench}: an MPL-specific benchmark suite introduced as
-  part of \citet{mpl-orig}. This benchmark suite is focused largely on
-  parallelism-friendly workloads, i.e. HPC, computational geometry, etc.
 
 \item The MLton benchmark suite: shipped as part of the MLton codebase, this
   benchmark suite captures only single-core performance, and emphasizes some
@@ -12,22 +9,28 @@ In the evalutation below, we will use two sets of benchmarks:
   comparison between tail-recursive and non-tail-recursive Fibonacci
   implementations).
 
+\item \texttt{parallel-ml-bench}: an MPL-specific benchmark suite introduced as
+  part of \citet{mpl-orig}. This benchmark suite is focused largely on
+  parallelism-friendly workloads, i.e. HPC, computational geometry, etc.
+
 \end{enumerate}
 
-As we will see below, while the MLton benchmark suite does try to explicitly
-cover array flattening, the workloads it exhibits seem to under-weight the
-importance of the transformation.
+%% As we will see below, while the MLton benchmark suite does try to explicitly
+%% cover array flattening, the workloads it exhibits seem to under-weight the
+%% importance of the transformation.
 
 All measurements were performed using the same compiler binary on both test
 sides (MLton or MPL, respectively), using compiler flags to enable/disable
-passes as needed to test the impact of each optimization. All ratios are
-reported as \texttt{test / base}, i.e. <1.0 means ``smaller number on the test
-side'' (the ``good'' outcome) and >1.0 means ``bigger number on the test side
-(the ``bad'' outcome). Here \texttt{test} corresponds to the average across all
-trials on the test side, and \texttt{base} corresponds to the average across all
-trials on the base side. The number of trials is managed by the respective
-benchmark frameworks in order to collect on the order of a few seconds of data
-in each configuration.
+passes as needed to test the impact of each optimization. All measurements are
+reported as a relative runtime change $\frac{\texttt{test}}{\texttt{base}}
+\times 100\%$: negative values indicate a reduction in runtime (i.e. the
+``good'' outcome); while positive values indicate an increase in runtime (i.e. a
+regression, the ``bad'' outcome). Here, \texttt{test} and \texttt{base}
+correspond to the mean runtime across all trials for the test or base side
+(respectively), and the reported goemean impacts are calculated over the
+underlying $\frac{\texttt{test}}{\texttt{base}}$ ratios, before converting to a
+percentage change.
+
 
 All benchmarks use the C backend of MLton/MPL for codegen, calling into GCC
 (version 15.2.0) to emit the final binary. We found that it was necessary to

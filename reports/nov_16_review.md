@@ -12,7 +12,7 @@ Overall, the core technical narrative of the thesis is strong, well-motivated, a
 If you are triaging edits before submission, the highest-impact items to address first are:
 
 1. **Critical Factual / Pass-Name Swaps & Stale Numbers (Part 1):**
-   - [`introduction.tex:32`](../latex/chapters/introduction.tex#L32) says `ShallowFlatten` where it means `PreFlatten`.
+   - ~~[`introduction.tex:32`](../latex/chapters/introduction.tex#L32) says `ShallowFlatten` where it means `PreFlatten`.~~
    - [`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`, and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).
    - [`related_work.tex:191-199`](../latex/chapters/related_work.tex#L191-L199) says `AoS` three times for NESL and Data Parallel Haskell, both of which use **SoA**; [`related_work.tex:143`](../latex/chapters/related_work.tex#L143) says `SoA` for Jane Street's unboxed product arrays, which are **AoS**.
    - [`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114) says `PreFlatten` only transforms *non-tail-recursive* functions (inverted: it only transforms `tail` calls), alongside several stale numbers/claims left over from earlier benchmark runs (§5.1, §5.2.2, §5.3.1, §5.5, §5.7.2).
@@ -31,7 +31,7 @@ If you are triaging edits before submission, the highest-impact items to address
 
 ### 1.1 Wrong Pass or Layout Named in Prose
 
-1. **`ShallowFlatten` written instead of `PreFlatten` ([`introduction.tex:30-35`](../latex/chapters/introduction.tex#L30-L35)):**
+1. ~~**`ShallowFlatten` written instead of `PreFlatten` ([`introduction.tex:30-35`](../latex/chapters/introduction.tex#L30-L35)):**~~
    - **Current:** *"After controlling for the effect of the `\texttt{Chunkify}` heuristic (by forcing all generated code into a single chunk), the `\texttt{ShallowFlatten}` optimizations are neutral-to-positive, generally demonstrating a geomean win on the order of 1-2% across all impacted benchmarks."*
    - **Issue:** That paragraph is about `PreFlatten` (and the next paragraph begins *"On the other hand, both `\texttt{ShallowFlatten}` transformations are overwhelmingly positive..."*). Replace `\texttt{ShallowFlatten}` with `\texttt{PreFlatten}` on line 32.
 
@@ -58,7 +58,7 @@ If you are triaging edits before submission, the highest-impact items to address
 
 ### 1.3 Evaluation Prose vs. Plotted Data & Experimental Configurations
 
-1. **Metric definition mismatch ([`evaluation.tex:23-26`](../latex/chapters/evaluation.tex#L23-L26) vs. all figures, and [`introduction.tex:38-44`](../latex/chapters/introduction.tex#L38-L44)):**
+1. ~~**Metric definition mismatch ([`evaluation.tex:23-26`](../latex/chapters/evaluation.tex#L23-L26) vs. all figures, and [`introduction.tex:38-44`](../latex/chapters/introduction.tex#L38-L44)):**~~
    - `evaluation.tex:23-26` states that all results are reported as raw ratios `\texttt{test / base}` where `<1.0` is good and `>1.0` is bad (also missing a closing `''` after `test side` on line 25). However, **every chart and caption in Chapter 5** plots relative percentage change $(\text{test}/\text{base} - 1) \times 100\%$, where `<0%` is an improvement and `>0%` is a regression.
    - In [`introduction.tex:38-44`](../latex/chapters/introduction.tex#L38-L44) and [`abstract.tex:6`](../latex/abstract.tex#L6), speedup multipliers (*"by as much as 2x"*, *"as large as 10x"*) are mixed with percentage runtime reductions (*"geomean wins on the order of 10%"*, *"a 50% geomean win"*, *"wins of up to 50%"*). Note that a 50% runtime reduction *is* a $2\times$ speedup (and under `sync_gc`, `quickhull` achieves `-96.94%` runtime change $\approx 33\times$ speedup at 128–160c). Defining the percentage metric once in Ch. 1 and §5.1 will avoid ambiguity.
 
