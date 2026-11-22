@@ -360,12 +360,37 @@
 }
 
 @MISC{layout-poly-paper,
-  title        = "Unboxed types for {OCaml} :: Jane Street",
-  abstract     = "Jane Street is a quantitative trading firm and liquidity
-                  provider with a unique focus on technology and collaborative
-                  problem solving.",
-  howpublished = "\url{https://www.janestreet.com/tech-talks/unboxed-types-for-ocaml/}",
-  note         = "Accessed: 2026-3-6",
+  title        = "Layout Polymorphism: Using static computation to allow
+                  efficient polymorphism over variable representations",
+  author       = "Eisenberg, Richard A.",
+  howpublished = "{ACM SIGPLAN} Workshop on {ML} ({ML} '23)",
+  year         = "2023",
+  url          = "https://richarde.dev/papers/2023/layout-poly/layout-poly.pdf",
+  abstract     = "In a small subset of the OCaml programs in use at Jane Street,
+                  the unpredictable latency induced by garbage collection is
+                  problematic. We are thus in the process of designing and
+                  implementing unboxed types for OCaml. These unboxed types can
+                  be created and manipulated without the need for allocation or
+                  the production of garbage. However, all is not well.
+                  Heap-allocated types (along with int) have a uniform
+                  representation, enabling polymorphic functions to work over
+                  any type even while the types themselves are erased. On the
+                  other hand, unboxed types come in a wide array of
+                  representations, thwarting parametric polymorphism. We dub the
+                  representation of an unboxed type its layout. This proposal
+                  describes an approach to layout polymorphism, allowing a
+                  function to work over a variety of representations. The
+                  underlying mechanism essentially echoes C++-style templates,
+                  requiring layout-polymorphic functions to be specialized at
+                  compile time. The innovation, however, is in continuing ML's
+                  tradition of abstraction: in contrast to C++, we wish to
+                  type-check the layout-polymorphic functions before
+                  specializing, guaranteeing that the specialized version will
+                  run successfully. The talk will describe our approach,
+                  including both type-system design (including a novel static
+                  mode) and implementation concerns around managing generating
+                  the specializations without interfering with separate
+                  compilation.",
   language     = "en"
 }
 

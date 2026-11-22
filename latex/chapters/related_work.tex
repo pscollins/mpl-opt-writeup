@@ -141,7 +141,7 @@ leveraging pre-existing optimizations.
 
 Various work at Jane Street for unboxed types in OCaml aims to materialize the
 same wins that we demonstrate here through the AoS transformation, as discussed
-in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that
+by e.g. \citet{layout-poly-paper}. However, the primary technical challenge that
 they seek to overcome -- selecting the appropriate function specialization for a
 potentially-unboxed type -- does not apply to MPL: since MLton does whole-program
 compilation, we always know at compile time which specializations are necessary
