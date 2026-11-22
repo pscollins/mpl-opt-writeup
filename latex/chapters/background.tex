@@ -272,15 +272,21 @@ immutable container of objects of type \texttt{$\tau$}, respectively.
 %% \end{itemize}
 \FloatBarrier
 \subsection{\texttt{SSA} $\Rightarrow$ C}
-The core problems that we need to fix in order to translate from \texttt{SSA} to
-C are:
+The core problems that we need to fix in order to translate
+\footnote{As noted in
+\cref{fig:mlton-ir-pipeline}, MLton's actual lowering from \texttt{SSA} to C
+proceeds gradually through a number of different IRs, each of which
+incrementally move closer to C-like structure and semantics. Within this
+section, we treat the lowering as if it was a single monolithic step for the
+sake of brevity, since our work focuses primarily on \texttt{SSA} and C.}
+from \texttt{SSA} to C are:
 \begin{itemize}
 \item \texttt{SSA} control flow constructs (\texttt{goto}-with-arguments,
   \texttt{call}-with-return) map poorly to C
 \item \texttt{SSA} data types leave in-memory representations abstract
 \end{itemize}
 
-\hl{TODO: where to note that the match isn't exact?}
+%% \hl{TODO: where to note that the match isn't exact?}
 
 To solve the first problem, the essence of MLton's strategy is to compile all
 control flow (both \texttt{goto}-with-arguments and \texttt{call}-with-return)
