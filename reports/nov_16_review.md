@@ -293,6 +293,8 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 
 ### 5.3 Exhaustive Line-by-Line Typo & Grammar Table
 
+> **Note:** `MLton` is pronounced "milton", so `"a MLton ..."` (e.g., `a MLton stack operation`, `a \texttt{MLton.eq}`) is correct; do not change `"a MLton"` to `"an MLton"`.
+
 | File & Line | Current Text | Suggested Fix |
 | :--- | :--- | :--- |
 | [`introduction.tex:8`](../latex/chapters/introduction.tex#L8) | ~~`disasterous`~~ | `disastrous` |
@@ -306,7 +308,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`background.tex:187`](../latex/chapters/background.tex#L187) | `introduces new sum type` | `introduces a new sum type` |
 | [`background.tex:561, 563`](../latex/chapters/background.tex#L561) | `correspondance` (×2) | `correspondence` |
 | [`background.tex:916`](../latex/chapters/background.tex#L916) | `Type types are mapped to C \texttt{struct} types` | `Tuple types are mapped to C \texttt{struct} types` |
-| [`background.tex:919-920`](../latex/chapters/background.tex#L919-L920) | `a MLton stack operation ... medatadata` | `an MLton stack operation ... metadata` |
+| [`background.tex:919-920`](../latex/chapters/background.tex#L919-L920) | ~~`a MLton stack operation`~~ `... medatadata` | ~~`an MLton stack operation`~~ `... metadata` |
 | [`background.tex:1288`](../latex/chapters/background.tex#L1288) | `hte` (in TODO) | `the` |
 | [`background.tex:1505`](../latex/chapters/background.tex#L1505) | `pathogical` | `pathological` |
 | [`background.tex:1985`](../latex/chapters/background.tex#L1985) | `disasterous` | `disastrous` |
@@ -326,7 +328,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`shallowflatten.tex:557, 613`](../latex/chapters/shallowflatten.tex#L557) | Captions missing final period | Add trailing `.` |
 | [`shallowflatten.tex:562`](../latex/chapters/shallowflatten.tex#L562) | `inserting pack/unpack operations allow us` | `inserting pack/unpack operations allows us` |
 | [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | `of \texttt{ShallowFlatten} We say` | `of \texttt{ShallowFlatten}, we say` |
-| [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | `would to be disable ... a \texttt{MLton.eq}` | `would be to disable ... an \texttt{MLton.eq}` |
+| [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | `would to be disable ...` ~~`a \texttt{MLton.eq}`~~ | `would be to disable ...` ~~`an \texttt{MLton.eq}`~~ |
 | [`shallowflatten.tex:1214, 1222`](../latex/chapters/shallowflatten.tex#L1214) | `substanial` (×2) | `substantial` |
 | [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | `evalutation` | `evaluation` |
 | [`evaluation.tex:25`](../latex/chapters/evaluation.tex#L25) | ``` ``bigger number on the test side ``` | ``` ``bigger number on the test side'' ``` |
