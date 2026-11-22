@@ -24,15 +24,15 @@ more-aggressive elimination of heap allocations at callsites. The second,
 pass) transforms layouts of containers in order to eliminate pointers.
 
 As we will see below, in practice, the \texttt{PreFlatten} optimizations
-interact poorly with the existing \texttt{Chunkify} pass, and so fails to
-materialize consistent wins in practice: most benchmark configurations show a
-loss (on the order of a 1\% geomean regression across all impacted benchmarks,
-generally driven by a handful of large outlier regressions). After controlling
-for the effect of the \texttt{Chunkify} heuristic (by forcing all generated code
-into a single chunk), the \texttt{ShallowFlatten} optimizations are
-neutral-to-positive, generally demonstrating a geomean win on the order of 1-2\%
-across all impacted benchmarks. This suggests that the \texttt{Chunkify}
-heuristic may be over-tuned to the existing benchmark suite.
+interact poorly with the existing \texttt{Chunkify} pass, and so fail to
+materialize a consistent win: most benchmark configurations show a loss (on the
+order of a 1\% geomean regression across all impacted benchmarks, generally
+driven by a handful of large outlier regressions). After controlling for the
+effect of the \texttt{Chunkify} heuristic (by forcing all generated code into a
+single chunk), the \texttt{PreFlatten} optimizations are neutral-to-positive,
+demonstrating a geomean win on the order of 1-2\% across most impacted
+benchmarks. This suggests that the \texttt{Chunkify} heuristic may be over-tuned
+to the existing benchmark suite.
 
 On the other hand, both \texttt{ShallowFlatten} transformations are
 overwhelmingly positive in the single-threaded case, improving performance of
