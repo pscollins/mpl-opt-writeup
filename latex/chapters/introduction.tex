@@ -5,7 +5,7 @@ the compiler's responsibility to choose a memory layout that efficiently
 utilizes the hardware of the target platform. However, the most ``literal''
 translation of the source language to machine code (i.e. the one which preserves
 exactly the data structures present in the user's original input) has
-disasterous performance characteristics on modern CPUs: every function call and
+disastrous performance characteristics on modern CPUs: every function call and
 every access into a (non-primitive) container incurs a cache miss at an
 unpredictable address in the heap.
 

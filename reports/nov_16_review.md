@@ -295,10 +295,10 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 
 | File & Line | Current Text | Suggested Fix |
 | :--- | :--- | :--- |
-| [`introduction.tex:8`](../latex/chapters/introduction.tex#L8) | `disasterous` | `disastrous` |
-| [`introduction.tex:27`](../latex/chapters/introduction.tex#L27) | `optimizations interact poorly ... and so fails` | `...and so fail` (subject-verb agreement) |
-| [`introduction.tex:39`](../latex/chapters/introduction.tex#L39) | `materialzing` | `materializing` |
-| [`introduction.tex:40`](../latex/chapters/introduction.tex#L40) | `on the order of as 10\%` | `on the order of 10\%` |
+| [`introduction.tex:8`](../latex/chapters/introduction.tex#L8) | ~~`disasterous`~~ | `disastrous` |
+| [`introduction.tex:27`](../latex/chapters/introduction.tex#L27) | ~~`optimizations interact poorly ... and so fails`~~ | `...and so fail` (subject-verb agreement) |
+| [`introduction.tex:39`](../latex/chapters/introduction.tex#L39) | ~~`materialzing`~~ | `materializing` |
+| [`introduction.tex:40`](../latex/chapters/introduction.tex#L40) | ~~`on the order of as 10\%`~~ | `on the order of 10\%` |
 | [`background.tex:10`](../latex/chapters/background.tex#L10) | `MLton and MPL broadly interchangeable` | `MLton and MPL are broadly interchangeable` |
 | [`background.tex:64`](../latex/chapters/background.tex#L64) | `guarntees` | `guarantees` |
 | [`background.tex:70-71`](../latex/chapters/background.tex#L70-L71) | `codgen backends ... consider only on the C backend` | `codegen backends ... consider only the C backend` |
