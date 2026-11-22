@@ -1,5 +1,3 @@
-\paragraph{Overview}
-
 In the source language, Standard ML offers the programmer no direct control over
 the memory layout for data structures in the generated code: consequently, it is
 the compiler's responsibility to choose a memory layout that efficiently
@@ -30,10 +28,10 @@ which we benchmark and analyze separately. The high-level goal of the pass is to
 pull ``pack'' operations (i.e. object constructor calls, corresponding to
 potential heap allocations) across function call boundaries, enabling subsequent
 optimization passes to eliminate the constructed object completely (in some
-cases). The two concrete optimizations target two of the languages' object
+cases). The two concrete optimizations target two of the language's object
 types: \texttt{tuple} aggregates and tagged-union \texttt{datatype} values.
 
-In order to achieve this goal, the pass emits a duplicate definitions of the
+In order to achieve this goal, the pass emits duplicate definitions of the
 callee that are specialized to the particular patterns of ``pack'' operations
 that immediately precede calls. For \texttt{tuple} pack operations, this is
 necessary in order to handle cases where different callers exhibit different
@@ -83,11 +81,11 @@ struct-of-array (SoA) \hl{layout}. Our second strategy replaces an
 array-of-homogeneous-tuple with a flattened array whose primitive members are
 allocated inline (i.e. replacing a \texttt{($\tau$ * $\tau$) array} of length
 $n$ by a \texttt{$\tau$ array} of length $2n$), achieving a layout analogous to
-standard the C/C++ array-of-struct (AoS). The \texttt{ShallowFlatten} pass is a
+the standard C/C++ array-of-struct (AoS). The \texttt{ShallowFlatten} pass is a
 close sibling to the existing \texttt{DeepFlatten} pass, but it differs from it
 by: 1) optimizing layouts even in cases where coercions are required, 2)
-targetting an early, high-level IR so as to better-leverage existing
-optimization passes, and 3) supporting an SoA layout in addition to SoA.
+targeting an early, high-level IR so as to better-leverage existing
+optimization passes, and 3) supporting an SoA layout in addition to AoS.
 
 
 Evaluations show that both \texttt{ShallowFlatten} transformations are
@@ -98,7 +96,7 @@ within a particular suite. Multithreaded benchmarks show mixed results that
 appear to indicate a bad interaction with MPL's garbage collection heuristics:
 controlling for this effect by forcing a synchronous GC pause at the beginning
 of each benchmark iteration produces latency reductions on individual benchmarks
-as large as 90\% (i.e. 10x speeups) and suite-geomean latency reductions of
+as large as 90\% (i.e. 10x speedups) and suite-geomean latency reductions of
 50\%.
 
 Apart from the optimizations developed for this document, our evaluation also
@@ -107,14 +105,14 @@ collected from MLton-derived compilers using the C backend with its default C
 toolchain configuration: no-op changes to end-stage MLton IR can result in
 performance swings as large as 50\%. \hl{TODO: say more? move this to earlier?}
 
-\paragraph{Contributions}
+\section{Contributions}
 
 \begin{itemize}
 \item The design and implementation of the \texttt{PreFlatten} pass for MLton and MPL,
-which aim to eliminate indirections around function call boundaries.
+which aims to eliminate indirections around function call boundaries.
 
 \item The design and implementation of the \texttt{ShallowFlatten} pass for MLton
-and MPL, which aim to eliminate indiractions around containers.
+and MPL, which aims to eliminate indirections around containers.
 
 \item An empirical evaluation of the two new passes across both MLton and MPL,
 with a detailed investigation of their interactions with existing system
@@ -125,9 +123,9 @@ components and sources of noise.
 
 \end{itemize}
 
-\paragraph{Outline}
+\section{Outline}
 
-The remainder of this document is structured as follows:
+The remainder of this document is structured as follows.
 First, \cref{ch:background} provides an overview of the existing MLton
 compilation pipeline, with a focus on the intermediate representation that our
 optimizations target, alongside closely-related pre-existing optimizations.
