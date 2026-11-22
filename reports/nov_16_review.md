@@ -15,7 +15,7 @@ If you are triaging edits before submission, the highest-impact items to address
    - ~~[`introduction.tex:32`](../latex/chapters/introduction.tex#L32) says `ShallowFlatten` where it means `PreFlatten`.~~
    - [`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`, and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).
    - ~~[`related_work.tex:191-199`](../latex/chapters/related_work.tex#L191-L199) says `AoS` three times for NESL and Data Parallel Haskell, both of which use **SoA**; [`related_work.tex:143`](../latex/chapters/related_work.tex#L143) says `SoA` for Jane Street's unboxed product arrays, which are **AoS**.~~
-   - [`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114) says `PreFlatten` only transforms *non-tail-recursive* functions (inverted: it only transforms `tail` calls), alongside several stale numbers/claims left over from earlier benchmark runs (§5.1, §5.2.2, §5.3.1, §5.5, §5.7.2).
+   - ~~[`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114) says `PreFlatten` only transforms *non-tail-recursive* functions (inverted: it only transforms `tail` calls)~~, alongside several stale numbers/claims left over from earlier benchmark runs (§5.1, §5.2.2, §5.3.1, §5.5, §5.7.2).
 2. **`perf stat -dd` Multiplexing Artifact in `Topdown L1` Metrics (Part 1.4):**
    - Every `perf` table in Chapter 5 reports `80%–97.3%` `Bad Speculation` and `0.9%–9.6%` `Retiring`—even on 1-core `linearrec` where `Branch Miss Rate = 0.0%` and `IPC = 3.20` (physically impossible on a 5-wide Ice Lake pipeline, where `3.3%` retiring caps IPC at $\le 0.17$). Raw files in `analysis/perf_data/*.txt` show that `-dd` multiplexed ~18 counters at mismatched duty cycles (`14%–57%`), corrupting Ice Lake's `PERF_METRICS` Topdown L1 registers. This directly explains your open `\hl{TODO}` questions at [`evaluation.tex:1070`](../latex/chapters/evaluation.tex#L1070) and [`evaluation.tex:1092`](../latex/chapters/evaluation.tex#L1092).
 3. **Formalism & Code-Snippet Bugs (Part 2):**
@@ -48,7 +48,7 @@ If you are triaging edits before submission, the highest-impact items to address
 
 ### 1.2 Tail Calls vs. Non-Tail Calls vs. Tail-Recursive Functions
 
-1. **Direct inversion in [`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114):**
+1. ~~**Direct inversion in [`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114):**~~
    - **Current:** `"\item \texttt{PreFlatten} only transforms non-tail-recursive functions"`
    - **Actual (`preflatten.tex:784`, Fig. 3.8a line 888, and `-pre-flatten-transfer-policy tail_only`):** `tuple`-`PreFlatten` **only transforms tail calls** ($L = \mathtt{tail}$), *excluding* non-tail calls.
 
