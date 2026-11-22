@@ -295,12 +295,19 @@ become backend-bound? Did we introduce code bloat that caused the workload to
 become backend bound? One standard methodology for analyzing CPU performance
 counter events in order to draw these conflusions is the ``top-down'' method,
 introduced by \citet{topdown-paper}, and now supported by the standard Linux
-\texttt{perf} tool. The data in this section was collected by running:
+\texttt{perf} tool. The execution overview and cache/branch miss-rate data in this section was collected by running:
 \begin{minted}{bash}
   $ perf stat -dd -D $DELAY ... benchmark invocation...
 \end{minted}
 with the value \texttt{\$DELAY} manually adjusted in order to exclude benchmark
-initialization.
+initialization. Because \texttt{-dd} multiplexes hardware counters and Ice Lake's
+\texttt{PERF\_METRICS} register saturates over multi-second uninterrupted runs,
+the Topdown L1 rows in all tables were collected in a separate unmultiplexed
+pass (verified at 100\% active time) using the standard Intel TMA Level-1
+counters (\texttt{cpu\_clk\_unhalted.thread}, \texttt{topdown.slots},
+\texttt{uops\_retired.slots}, \texttt{uops\_issued.any},
+\texttt{idq\_uops\_not\_delivered.core}, and \texttt{int\_misc.recovery\_cycles})
+with the same \texttt{-D \$DELAY}.
 
 
 Beginning with \texttt{delaunay}, we have, for a single core (in \cref{tab:perf_comparison_delaunay_1core}):
@@ -324,10 +331,10 @@ Beginning with \texttt{delaunay}, we have, for a single core (in \cref{tab:perf_
         \quad dTLB Load Miss Rate      & 2.3\%      & 2.0\%      & -0.3 pp   \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 0.9\%      & 1.0\%      & +0.1 pp   \\
-        \quad Bad Speculation          & 97.3\%     & 97.3\%     & 0.0 pp    \\
-        \quad Frontend Bound           & 0.0\%      & 0.0\%      & 0.0 pp    \\
-        \quad Backend Bound            & 1.8\%      & 1.7\%      & -0.1 pp   \\
+        \quad Retiring                 & 18.2\%     & 18.5\%     & +0.3 pp   \\
+        \quad Bad Speculation          & 20.2\%     & 20.0\%     & -0.2 pp   \\
+        \quad Frontend Bound           & 7.9\%     & 8.8\%     & +0.9 pp   \\
+        \quad Backend Bound            & 53.8\%     & 52.6\%     & -1.2 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -353,10 +360,10 @@ Examining the same benchmark at 160 cores, we get (in \cref{tab:perf_comparison_
     \quad dTLB Load Miss Rate      & 0.6\%      & 0.6\%      & 0.0 pp    \\
     \midrule
     \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-    \quad Retiring                 & 9.6\%      & 11.3\%     & +1.7 pp   \\
-    \quad Bad Speculation          & 60.0\%     & 58.5\%     & -1.5 pp   \\
-    \quad Frontend Bound           & 8.1\%      & 8.8\%      & +0.7 pp   \\
-    \quad Backend Bound            & 22.3\%     & 21.4\%     & -0.9 pp   \\
+    \quad Retiring                 & 35.6\%     & 36.3\%     & +0.7 pp   \\
+    \quad Bad Speculation          & 5.8\%     & 5.7\%     & -0.1 pp   \\
+    \quad Frontend Bound           & 14.2\%     & 14.5\%     & +0.3 pp   \\
+    \quad Backend Bound            & 44.4\%     & 43.5\%     & -0.9 pp   \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -364,14 +371,16 @@ This allows us to draw the following conclusions:
 \begin{itemize}
 \item On an instruction-for-instruction basis, the \texttt{tuple} transformation
   increases efficiency: both instructions per cycle and the fraction of retiring
-  instructions increase between the base and test side.
+  slots increase between the base and test side, while backend-bound stalls
+  decrease slightly.
 \item The \texttt{tuple} transformation increases the total instruction count
-  required to complete the benchmark by a sufficiently-large amount to balance
-  out the IPC improvement (for 1 core).
-\item Single-threaded performance is dominated by branch predictor effects, with
-  a shocking 97\% of utilization lost to bad speculation. At the full core
-  count, the bottleneck shifts towards memory, with a larger fraction of CPU
-  time spent waiting on memory (the ``backend bound'' increase).
+  required to complete the benchmark by a sufficiently-large amount to outweigh
+  the IPC improvement (for 1 core).
+\item Single-threaded performance is primarily backend-bound (53.8\%), with a
+  substantial secondary contribution from bad speculation (20.2\%, consistent
+  with the 2.6\% branch miss rate). At 160 cores, per-thread retiring slots
+  increase under SMT while backend stalls remain the dominant bottleneck (44.4\%)
+  and bad speculation drops to 5.8\%.
 \item \hl{TODO: MISS RATE METRICS?}
 \end{itemize}
 
@@ -396,10 +405,10 @@ Next, for \texttt{bfs}, at one core we have (in \cref{tab:perf_comparison_bfs_1c
     \quad dTLB Load Miss Rate      & 2.7\%      & 2.8\%      & +0.1 pp   \\
     \midrule
     \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-    \quad Retiring                 & 1.1\%      & 1.2\%      & +0.1 pp   \\
-    \quad Bad Speculation          & 90.9\%     & 90.3\%     & -0.6 pp   \\
-    \quad Frontend Bound           & 0.0\%      & 0.0\%      & 0.0 pp    \\
-    \quad Backend Bound            & 7.9\%      & 8.5\%      & +0.6 pp   \\
+    \quad Retiring                 & 11.6\%     & 12.4\%     & +0.8 pp   \\
+    \quad Bad Speculation          & 7.8\%     & 8.2\%     & +0.4 pp   \\
+    \quad Frontend Bound           & 4.3\%     & 5.6\%     & +1.3 pp   \\
+    \quad Backend Bound            & 76.3\%     & 73.8\%     & -2.5 pp   \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -424,29 +433,33 @@ and at 160 cores (in \cref{tab:perf_comparison_bfs_160cores}):
     \quad dTLB Load Miss Rate      & 1.2\%      & 1.3\%      & +0.1 pp   \\
     \midrule
     \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-    \quad Retiring                 & 3.3\%      & 3.0\%      & -0.3 pp   \\
-    \quad Bad Speculation          & 77.0\%     & 79.7\%     & +2.7 pp   \\
-    \quad Frontend Bound           & 1.2\%      & 1.2\%      & 0.0 pp    \\
-    \quad Backend Bound            & 18.6\%     & 16.1\%     & -2.5 pp   \\
+    \quad Retiring                 & 23.9\%     & 24.7\%     & +0.8 pp   \\
+    \quad Bad Speculation          & 4.3\%     & 4.1\%     & -0.2 pp   \\
+    \quad Frontend Bound           & 10.4\%     & 11.6\%     & +1.2 pp   \\
+    \quad Backend Bound            & 61.4\%     & 59.5\%     & -1.9 pp   \\
     \bottomrule
   \end{tabular}
 \end{table}
 Here, we can see:
 \begin{itemize}
-\item While we still have instruction bloat, the increase to IPC / retiring
-  pipeline slots was large enough to improve performance overall (showing as a
-  decrease in ``Task Clock'').
-\item This benchmark still suffers from extreme utilization loss due to bad speculation.
+\item While we still have slight instruction bloat on 1 core, the increase to IPC
+  and retiring pipeline slots (alongside a 2.5\,pp reduction in backend-bound
+  stalls) was large enough to improve performance overall (showing as a decrease
+  in ``Task Clock'').
+\item Consistent with its 51.3\% LLC load miss rate, \texttt{bfs} is
+  overwhelmingly backend-bound (76.3\% on 1 core and 61.4\% on 160 cores), with
+  bad speculation playing a much smaller role (7.8\% on 1 core, 4.3\% on 160
+  cores).
 \item \hl{TODO: miss rates?}
 \end{itemize}
 
-On the whole, the microarchitectural data is not particularly enlightening in
-terms of understanding the output of the \texttt{tuple} transformation: the main
-interesting finding here is that the generated code evidently interacts
-extremely poorly with the CPU's branch predictor.
+On the whole, the microarchitectural data shows only modest shifts under the
+\texttt{tuple} transformation, with both workloads primarily backend-bound;
+nevertheless, \texttt{delaunay} still loses roughly a fifth of its pipeline
+slots (20.2\%) to bad speculation on 1 core (compared to 7.8\% for \texttt{bfs}).
 
-Briefly examining the poor branch predictor behavior: one potential hypothesis
-is that the observed behavior is the result of the heavy use of the jump table
+Briefly examining this branch predictor behavior: one potential hypothesis
+is that the observed mispredictions are a result of the heavy use of the jump table
 structure of the generated C code described above. We can drill down into this
 further by examinining the types of mispredicted branches: conditional
 (taken/not-taken) vs indirect. If the high mispredict rate is a consequence of
@@ -889,29 +902,40 @@ cacheline that each point is allocated on).
 
 For \texttt{quickhull}, we can see the single-threaded effect in
 \cref{tab:perf_comparison_aos_quickhull_1core}. We observe, broadly, the effect
-that we expect: we see better locality show up as a lower miss rate in both L1
-and L3, translating into higher IPC. In additon to higher IPC, we also see a
-reduction in total instructions, matching out expectations (since the packed AOS
-loads require fewer instructions than the unpacked tuple loads, so long as the
-intermediate tuples are optimized away). \hl{TODO: WHY BAD SPEC? LOWER MISS RATE
-  SHOUHD SHOW UP AS LESS BACKEND BOUND}
+that we expect: better locality shows up as a lower miss rate in both L1
+(-1.3\,pp) and L3 (-15.1\,pp), which translates directly into a 5.9\,pp drop in
+backend-bound pipeline slots (from 45.8\% to 39.9\%). In addition, we see a
+24.95\% reduction in total instructions, matching our expectations (since the
+packed AOS loads require fewer instructions than the unpacked tuple loads, so
+long as the intermediate tuples are optimized away). Because fewer cycles are
+spent stalled on memory, bad speculation and frontend bound occupy a slightly
+larger share of the remaining slots.
 
 Comparing with the 160 core data in
-\cref{tab:perf_comparison_aos_quickhull_160cores}, trend for \texttt{quickhull}
-is similar to the benchmarks we analyzed above, with the microarchitectural
-bottleneck shifting from bad speculation towards backend bound as contention on
-the memory subsystem increases.
+\cref{tab:perf_comparison_aos_quickhull_160cores}, the effect for \texttt{quickhull}
+is even more pronounced: as contention on the memory subsystem increases,
+baseline becomes heavily backend-bound (67.3\%), and AoS flattening cuts
+backend-bound stalls by 14.9\,pp (down to 52.4\%) while lifting retiring slots
+by 7.6\,pp (19.6\% to 27.2\%) and IPC by 40\%.
 
 For \texttt{linearrec}, the primary effect we observe in the single core data
-from \cref{tab:perf_comparison_aos_linearrec_1core} is a massive reduction in
-instruction count, which again corresponds with what we expect based on the
-action of the transformation. Here, we see a slightly higher L1 miss rate
-alongside a lower L3 miss rate, which we could explain as follows: for the
-baseline verison, we tend to keep the pointers-to-tuples in L1 (i.e. the array
-of pointers is small and has good locality) and miss in L3 when we load through
-the poiners, whereas in the AOS version, the packed array is large enough to
-exceed the size of L1, but we still have enough locality to keep it in lower
-levels of the cache hierachy.
+from \cref{tab:perf_comparison_aos_linearrec_1core} is a massive 72.86\%
+reduction in instruction count, which again corresponds with what we expect
+based on the action of the transformation (eliminating per-element tuple
+allocation and the associated GC work). In the baseline, those extra allocation
+and GC instructions retire at high throughput (IPC 3.20, 63.8\% retiring, only
+1.4\% bad speculation); once AoS eliminates them, the remaining execution is
+dominated by the memory-bound array scan, shifting retiring slots down to 34.8\%
+and backend-bound slots up to 54.9\% while still cutting total runtime in half
+(-50.44\%). Here, we also see a slightly higher L1 miss rate alongside a lower
+L3 miss rate, which we could explain as follows: for the baseline version, we
+tend to keep the pointers-to-tuples in L1 (i.e. the array of pointers is small
+and has good locality) and miss in L3 when we load through the pointers, whereas
+in the AOS version, the packed array is large enough to exceed the size of L1,
+but we still have enough locality to keep it in lower levels of the cache
+hierarchy. At 160 cores (\cref{tab:perf_comparison_aos_linearrec_160cores}),
+AoS improves retiring slots (+3.3\,pp) and reduces backend-bound stalls
+(-3.3\,pp), while bad speculation stays negligible (2.4\% vs.\ 2.3\%).
 
 
 
@@ -943,10 +967,10 @@ levels of the cache hierachy.
         \quad dTLB Load Miss Rate      & 0.1\%      & 0.1\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 2.6\%      & 5.3\%      & +2.7 pp    \\
-        \quad Bad Speculation          & 88.9\%     & 85.6\%     & -3.3 pp    \\
-        \quad Frontend Bound           & 0.3\%      & 0.3\%      & 0.0 pp     \\
-        \quad Backend Bound            & 8.3\%      & 8.8\%      & +0.5 pp    \\
+        \quad Retiring                 & 30.0\%     & 28.7\%     & -1.3 pp   \\
+        \quad Bad Speculation          & 17.2\%     & 22.5\%     & +5.3 pp   \\
+        \quad Frontend Bound           & 7.0\%     & 8.8\%     & +1.8 pp   \\
+        \quad Backend Bound            & 45.8\%     & 39.9\%     & -5.9 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -973,10 +997,10 @@ levels of the cache hierachy.
         \quad dTLB Load Miss Rate      & 0.1\%      & 0.1\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 3.8\%      & 9.6\%      & +5.8 pp    \\
-        \quad Bad Speculation          & 64.6\%     & 59.3\%     & -5.3 pp    \\
-        \quad Frontend Bound           & 0.9\%      & 1.9\%      & +1.0 pp    \\
-        \quad Backend Bound            & 30.7\%      & 29.2\%      & -1.5 pp    \\
+        \quad Retiring                 & 19.6\%     & 27.2\%     & +7.6 pp   \\
+        \quad Bad Speculation          & 5.6\%     & 9.9\%     & +4.3 pp   \\
+        \quad Frontend Bound           & 7.5\%     & 10.5\%     & +3.0 pp   \\
+        \quad Backend Bound            & 67.3\%     & 52.4\%     & -14.9 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1003,10 +1027,10 @@ levels of the cache hierachy.
         \quad dTLB Load Miss Rate      & 0.0\%      & 0.0\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 3.3\%      & 8.0\%      & +4.7 pp    \\
-        \quad Bad Speculation          & 94.6\%     & 81.5\%     & -13.1 pp   \\
-        \quad Frontend Bound           & 0.1\%      & 0.9\%      & +0.8 pp    \\
-        \quad Backend Bound            & 2.0\%      & 9.7\%      & +7.7 pp    \\
+        \quad Retiring                 & 63.8\%     & 34.8\%     & -29.0 pp   \\
+        \quad Bad Speculation          & 1.4\%     & 1.3\%     & -0.1 pp   \\
+        \quad Frontend Bound           & 6.3\%     & 9.0\%     & +2.7 pp   \\
+        \quad Backend Bound            & 28.5\%     & 54.9\%     & +26.4 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1033,10 +1057,10 @@ levels of the cache hierachy.
         \quad dTLB Load Miss Rate      & 0.0\%      & 0.0\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 8.7\%      & 7.5\%      & -1.2 pp    \\
-        \quad Bad Speculation          & 61.1\%     & 71.6\%     & +10.5 pp   \\
-        \quad Frontend Bound           & 3.4\%      & 2.0\%      & -1.4 pp    \\
-        \quad Backend Bound            & 26.9\%      & 18.9\%      & -8.0 pp    \\
+        \quad Retiring                 & 30.6\%     & 33.9\%     & +3.3 pp   \\
+        \quad Bad Speculation          & 2.4\%     & 2.3\%     & -0.1 pp   \\
+        \quad Frontend Bound           & 12.7\%     & 12.8\%     & +0.1 pp   \\
+        \quad Backend Bound            & 54.3\%     & 51.0\%     & -3.3 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1234,9 +1258,11 @@ To diagnose the slowdown, we can briefly dig into microarchitectural data again.
 
 For a win that is consistent across both AoS and SoA, we can inspect
 \cref{tab:perf_comparison_soa_linearrec_1core} and
-\cref{tab:perf_comparison_aos_linearrec_1core}. Both AoS and SoA exhbit improved
-IPC and reduced DRAM traffic, with AoS at a higher instruction count but a lower
-IPC, and SoA at a lower instruction count at a higher IPC. The metrics suggest
+\cref{tab:perf_comparison_aos_linearrec_1core}. Both AoS and SoA exhibit improved
+IPC, reduced DRAM traffic, and lower backend-bound stalls (-2.0\,pp for AoS,
+-7.3\,pp for SoA, with retiring slots rising +2.1\,pp and +7.7\,pp respectively),
+with AoS at a lower instruction count but a lower IPC, and SoA at a slightly
+higher instruction count at a higher IPC. The metrics suggest
 that in the SoA flavor, we have better locality for the array operations
 themselves, but some extra tuple pack/unpack operations, whereas in the AoS
 flavor, the workload pushes some hot data out of L1, but we do fewer tuple
@@ -1245,9 +1271,10 @@ pack/unpack operations.
 By contrast, comparing \cref{tab:perf_comparison_soa_delaunay_1core} with
 \cref{tab:perf_comparison_aos_delaunay_1core}, we see a sharp drop in IPC for
 the SoA version as compared to the AoS version, at roughly a fixed instruction
-count. Here, the measures of cache locality show a sharp decrease in the SoA
+count, accompanied by a +9.0\,pp jump in backend-bound stalls (47.7\% to 56.7\%,
+compared to a -1.6\,pp reduction under AoS). Here, the measures of cache locality show a sharp decrease in the SoA
 version -- the increase in dTLB miss rate suggests that the SoA layout results
-in the algorith thrashing across extremely distant memory addreses.
+in the algorithm thrashing across extremely distant memory addresses.
 
 One possible explanation is the following: for the SoA layout, unlike the AoS
 layout, we do separate allocations for each of the members of the
@@ -1281,10 +1308,10 @@ hierarchy (indicated by the increase in L1 misses) or pushed out entirely
         \quad dTLB Load Miss Rate      & 2.5\%      & 2.6\%      & +0.1 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 1.9\%      & 1.9\%      & 0.0 pp    \\
-        \quad Bad Speculation          & 83.6\%     & 83.5\%     & -0.1 pp   \\
-        \quad Frontend Bound           & 0.0\%      & 0.0\%      & 0.0 pp    \\
-        \quad Backend Bound            & 14.5\%      & 14.6\%      & +0.1 pp    \\
+        \quad Retiring                 & 16.5\%     & 16.9\%     & +0.4 pp   \\
+        \quad Bad Speculation          & 25.7\%     & 26.6\%     & +0.9 pp   \\
+        \quad Frontend Bound           & 8.8\%     & 9.1\%     & +0.3 pp   \\
+        \quad Backend Bound            & 48.9\%     & 47.3\%     & -1.6 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1309,10 +1336,10 @@ hierarchy (indicated by the increase in L1 misses) or pushed out entirely
         \quad dTLB Load Miss Rate      & 2.5\%      & 5.4\%      & +2.9 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 1.9\%      & 1.7\%      & -0.2 pp    \\
-        \quad Bad Speculation          & 83.8\%     & 82.1\%     & -1.7 pp   \\
-        \quad Frontend Bound           & 0.0\%      & 0.1\%      & +0.1 pp    \\
-        \quad Backend Bound            & 14.5\%      & 16.1\%      & +1.6 pp    \\
+        \quad Retiring                 & 16.9\%     & 13.5\%     & -3.4 pp   \\
+        \quad Bad Speculation          & 26.4\%     & 23.0\%     & -3.4 pp   \\
+        \quad Frontend Bound           & 9.0\%     & 6.8\%     & -2.2 pp   \\
+        \quad Backend Bound            & 47.7\%     & 56.7\%     & +9.0 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1337,10 +1364,10 @@ hierarchy (indicated by the increase in L1 misses) or pushed out entirely
         \quad dTLB Load Miss Rate      & 0.0\%      & 0.0\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 6.3\%      & 11.0\%      & +4.7 pp    \\
-        \quad Bad Speculation          & 82.4\%     & 73.9\%     & -8.5 pp   \\
-        \quad Frontend Bound           & 1.9\%      & 3.6\%      & +1.7 pp    \\
-        \quad Backend Bound            & 9.4\%      & 11.5\%      & +2.1 pp    \\
+        \quad Retiring                 & 36.3\%     & 38.4\%     & +2.1 pp   \\
+        \quad Bad Speculation          & 2.5\%     & 2.3\%     & -0.2 pp   \\
+        \quad Frontend Bound           & 13.1\%     & 13.2\%     & +0.1 pp   \\
+        \quad Backend Bound            & 48.1\%     & 46.1\%     & -2.0 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
@@ -1365,10 +1392,10 @@ hierarchy (indicated by the increase in L1 misses) or pushed out entirely
         \quad dTLB Load Miss Rate      & 0.0\%      & 0.0\%      & 0.0 pp     \\
         \midrule
         \multicolumn{4}{l}{\textit{Topdown L1 Metrics}} \\
-        \quad Retiring                 & 6.4\%      & 7.9\%      & +1.5 pp    \\
-        \quad Bad Speculation          & 83.6\%     & 85.2\%     & +1.6 pp   \\
-        \quad Frontend Bound           & 1.6\%      & 0.4\%      & -1.2 pp    \\
-        \quad Backend Bound            & 8.4\%      & 6.5\%      & -1.9 pp    \\
+        \quad Retiring                 & 36.4\%     & 44.1\%     & +7.7 pp   \\
+        \quad Bad Speculation          & 2.6\%     & 2.3\%     & -0.3 pp   \\
+        \quad Frontend Bound           & 13.1\%     & 12.9\%     & -0.2 pp   \\
+        \quad Backend Bound            & 47.9\%     & 40.6\%     & -7.3 pp   \\
         \bottomrule
       \end{tabular}
     \end{table}
