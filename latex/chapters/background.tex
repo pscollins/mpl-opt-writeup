@@ -1016,7 +1016,7 @@ struct ArrTypeT1 {
 // arr points directly to elements[0]
 int* arr = ...;
 
-// Positive offset accesses element 16
+// Positive offset accesses elements[15]
 int tmp = *(int*)((char*)arr + 15 * sizeof(int));
 
 // Negative offset accesses metadata
