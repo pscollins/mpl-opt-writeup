@@ -199,7 +199,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 ### 4.1 Missing Sections & Architectural Context
 
 1. **Abstract ([`latex/abstract.tex`](../latex/abstract.tex)) & Conclusion ([`latex/chapters/conclusion.tex`](../latex/chapters/conclusion.tex)):**
-   - `abstract.tex` is currently `\hl{TODO: FILL IN}` plus one sentence, and `conclusion.tex` is `\hl{TODO}`.
+   - ~~`abstract.tex` is currently `\hl{TODO: FILL IN}` plus one sentence, and `conclusion.tex` is `\hl{TODO}`.~~
    - A crisp 1–2 page **Conclusion** can synthesize: (a) the central design thesis—that simple, local pack/unpack-inserting IR passes (`PreFlatten` and `ShallowFlatten`) composed with existing SSA cleanup passes (`Simplify`, `KnownCase`, `Flatten`) avoid the fragility of global all-or-nothing lattice analyses (`Flatten`, `DeepFlatten`); (b) why `ShallowFlatten` delivers large single-core wins (~10–12% geomean, up to $>2\times$) while exposing parallel GC pause sensitivity in MPL (up to ~49% geomean reduction under `sync_gc`); (c) why `PreFlatten` is largely neutralized or destabilized by `Chunkify` boundary perturbations; and (d) concrete **Future Work** (chunk-aware cost modeling or evaluating MLton's native x86_64/LLVM backends where `Chunkify` trampolines do not apply; MPL parallel GC heuristic co-design; heterogeneous AoS in `SSA2`; SIMD vectorization over `ShallowFlatten` buffers; and static `MLton.eq`/CAS fallback or value-type semantics).
 
 2. **Introduction Roadmap & Explicit Contributions ([`latex/chapters/introduction.tex`](../latex/chapters/introduction.tex)):**
@@ -216,7 +216,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
    - **Explain `"10 recursive steps"` ([`evaluation.tex:116, 642`](../latex/chapters/evaluation.tex#L116)):** Replace both `\hl{TODO: EXPLAIN? REMOVE?}` notes with a cross-reference to the iteration limit in [`preflatten.tex:848`](../latex/chapters/preflatten.tex#L848) and `\cref{fig:preflatten_recurse}` (`-pre-flatten-recursive-steps 10`, capping mutual/self-recursive specialization depth at 10 rounds).
    - **Submission cleanup ([`solution.tex:161, 260-262`](../latex/solution.tex#L260-L262)):**
      - Comment out `\appendix \chapter{Working Notes} \input{chapters/appendix_notes}` before final build (currently pages 97–99 of `solution.pdf` contain personal meeting notes).
-     - Check NYU Courant MS title-page wording on [`solution.tex:161`](../latex/solution.tex#L161): *"A **dissertation** submitted in partial fulfillment... Master of Science"* $\to$ NYU MS templates typically use *"A **thesis** submitted..."* (*dissertation* is reserved for PhD).
+     - ~~Check NYU Courant MS title-page wording on [`solution.tex:161`](../latex/solution.tex#L161): *"A **dissertation** submitted in partial fulfillment... Master of Science"* $\to$ NYU MS templates typically use *"A **thesis** submitted..."* (*dissertation* is reserved for PhD).~~
 
 ### 4.2 Unincorporated Experimental Datasets in `analysis/`
 
