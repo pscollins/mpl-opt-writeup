@@ -379,13 +379,13 @@ block bb0():
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
 L_bb0:
   // Read function argument from the stack
-  n = *((uint32*)(*stackTopPtr) + 0);
+  n = *(int*)(*stackTopPtr + 0);
   isEq = n == 0;
   // Direct branch
   if (isEq) {
-    goto l_bb1;
+    goto L_bb1;
   } else {
-    goto l_bb2;
+    goto L_bb2;
   }
 \end{minted}
   \end{subfigure}
@@ -401,7 +401,7 @@ L_bb0:
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 block bb1():
-  return 1;
+  return 1
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.55\textwidth}
@@ -412,7 +412,7 @@ block bb1():
 L_bb1:
   // Write the function return value to the
   // top of the stack
-  *((uint32*)(*stackTopPtr + 0)) = 1;
+  *(int*)(*stackTopPtr + 0) = 1;
   // Read the label for the continuation block
   // from the end of the caller's stack frame.
   nextBlock = *(Label*)(*stackTopPtr - sizeof(Label));
@@ -451,7 +451,8 @@ L_bb2:
   callArg = Word32_sub(n, 1);
   // Store the return address for the callee at the
   // end of our stack frame.
-  *(Label*)(*stackTopPtr + sizeof(Label)) = bb2;
+  *(Label*)(*stackTopPtr + kFactStackSize
+            - sizeof(Label)) = bb3;
   // Store the function call argument in the first slot
   // in the next stack frame. The size of each stack
   // frame is calculated by MLton at compile time.
@@ -459,7 +460,7 @@ L_bb2:
   // Bump the stack pointer to allocate a new frame.
   *stackTopPtr += kFactStackSize;
   // Recursive, non-tail call
-  goto bb0;
+  goto L_bb0;
 \end{minted}
   \end{subfigure}
   \caption{Lowering of block \texttt{bb2} (recursive non-tail call) from \texttt{SSA} to C.}
@@ -497,9 +498,9 @@ L_bb3:
   funcResult = Word32_mul(callResult, n);
   // Store this call's return value at the start of
   // its stack frame
-  (*stackTopPtr + 0) = funcResult;
+  *(int*)(*stackTopPtr + 0) = funcResult;
   // Return to the caller
-  nextBlock = *(Label*)(*stackTop - sizeof(Label));
+  nextBlock = *(Label*)(*stackTopPtr - sizeof(Label));
   goto doSwitchNextBlock;
 \end{minted}
   \end{subfigure}
@@ -523,7 +524,7 @@ across chunks is orchestrated by a global trampoline function, illustrated in
 \begin{figure}[htbp]
   \centering
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{cpp}
-typedef ChunkFn = ...; // Pointer to chunk function
+typedef Label (*ChunkFn)(char**, Label); // Pointer to chunk function
 void MLton_Trampoline(char* stackTop, Label nextBlock) {
   // Global mapping, Label -> enclosing chunk
   static ChunkFn chunkMap[] = {
