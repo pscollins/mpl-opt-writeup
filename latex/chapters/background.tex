@@ -2445,13 +2445,13 @@ def doOp(l: int, r: int, env: lambda1) -> int:
 def call1() -> int:
   block bb0():
     env: lambda1 = xEnv_add
-    call bb1 doOp(1, 2, env)
+    call bb1 doOp(2, 2, env)
   ...
 
 def call2() -> int:
   block bb0():
     env: lambda1 = xEnv_sub
-    call bb1 doOp(1, 2, env)
+    call bb1 doOp(2, 2, env)
   ...
 \end{minted}
   \end{subfigure}
@@ -2511,7 +2511,7 @@ def doOp(l: int, r: int, env: lambda1) -> int:
 def call3() -> int:
   block bb0():
     env: lambda1 = con xEnv_AddBias (4)
-    call bb1 doOp(1, 2, env)
+    call bb1 doOp(2, 2, env)
   ...
 \end{minted}
   \end{subfigure}
