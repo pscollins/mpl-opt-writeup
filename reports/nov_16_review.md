@@ -19,7 +19,7 @@ If you are triaging edits before submission, the highest-impact items to address
 2. **`perf stat -dd` Multiplexing Artifact in `Topdown L1` Metrics (Part 1.4):**
    - Every `perf` table in Chapter 5 reports `80%–97.3%` `Bad Speculation` and `0.9%–9.6%` `Retiring`—even on 1-core `linearrec` where `Branch Miss Rate = 0.0%` and `IPC = 3.20` (physically impossible on a 5-wide Ice Lake pipeline, where `3.3%` retiring caps IPC at $\le 0.17$). Raw files in `analysis/perf_data/*.txt` show that `-dd` multiplexed ~18 counters at mismatched duty cycles (`14%–57%`), corrupting Ice Lake's `PERF_METRICS` Topdown L1 registers. This directly explains your open `\hl{TODO}` questions at [`evaluation.tex:1070`](../latex/chapters/evaluation.tex#L1070) and [`evaluation.tex:1092`](../latex/chapters/evaluation.tex#L1092).
 3. **Formalism & Code-Snippet Bugs (Part 2):**
-   - Concrete bugs in the lowered C code for `fib` in Chapter 2 (which actually computes factorial, jumps to `bb2` instead of `bb3`, and has invalid C pointer assignments), a type-superscript collision (`x^{\tau}`) and untransformed specialization bodies in `PreFlatten`'s Fig. 3.8, and a homogeneous-tuple contradiction (`w_t`) against `ShallowFlatten`'s Fig. 4.6 (`((a * b) * c) array`).
+   - Concrete bugs in the lowered C code for `fib` in Chapter 2 (~~which actually computes factorial,~~ jumps to `bb2` instead of `bb3`, and has invalid C pointer assignments), a type-superscript collision (`x^{\tau}`) and untransformed specialization bodies in `PreFlatten`'s Fig. 3.8, and a homogeneous-tuple contradiction (`w_t`) against `ShallowFlatten`'s Fig. 4.6 (`((a * b) * c) array`).
 4. **Structural & Build Defects in Chapter 5 & Bibliography (Part 3 & Part 5):**
    - Two `\section` commands in `ConApp Flattening` ([`evaluation.tex:707, 725`](../latex/chapters/evaluation.tex#L707)) that should be `\subsection`s; a duplicate `\label{tab:perf_comparison_aos_linearrec_1core}` collision ([`evaluation.tex:1163, 1588`](../latex/chapters/evaluation.tex#L1163)); stray numbered list text floating between tables ([`evaluation.tex:1098-1188`](../latex/chapters/evaluation.tex#L1098)); a figure overflowing the page by 2.2 inches ([`evaluation.tex:776`](../latex/chapters/evaluation.tex#L776)); `. en.` printed in ~25 bibliography entries; and missing author/venue/article metadata in 4 BibTeX entries.
 5. **Missing Sections & Unincorporated Data (Part 4):**
@@ -97,7 +97,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 
 ### 2.1 Chapter 2 (`background.tex`): C Lowering & `SSA` Grammar
 
-1. **`fib` computes factorial rather than Fibonacci ([`background.tex:105-133, 297-315`](../latex/chapters/background.tex#L105-L133)):**
+1. ~~**`fib` computes factorial rather than Fibonacci ([`background.tex:105-133, 297-315`](../latex/chapters/background.tex#L105-L133)):**~~
    - `fun fib(n) = if n = 0 then 1 else n * fib(n - 1)` computes $n!$ (`fact`), not Fibonacci (`fib`), and prints `fib 4` ($= 24$). Since Chapter 3 (`preflatten.tex:504`) introduces an actual Fibonacci function `fibPair`, renaming `fib` to `fact` in Figs. 2.2 & 2.4–2.8 (or changing the recurrence) avoids an immediate reader double-take.
 
 2. **Concrete C bugs in Figs. 2.5–2.9 ([`background.tex:380-540`](../latex/chapters/background.tex#L380-L540)):**
