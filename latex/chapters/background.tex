@@ -2444,13 +2444,13 @@ def doOp(l: int, r: int, env: lambda1) -> int:
 
 def call1() -> int:
   block bb0():
-    env: lambda1 = xEnv_add
+    env: lambda1 = con xEnv_add ()
     call bb1 doOp(2, 2, env)
   ...
 
 def call2() -> int:
   block bb0():
-    env: lambda1 = xEnv_sub
+    env: lambda1 = con xEnv_sub ()
     call bb1 doOp(2, 2, env)
   ...
 \end{minted}
