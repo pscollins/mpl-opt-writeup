@@ -26,21 +26,23 @@ pass) transforms layouts of containers in order to eliminate pointers.
 As we will see below, in practice, the \texttt{PreFlatten} optimizations
 interact poorly with the existing \texttt{Chunkify} pass, and so fail to
 materialize a consistent win: most benchmark configurations show a loss (on the
-order of a 1\% geomean regression across all impacted benchmarks, generally
-driven by a handful of large outlier regressions). After controlling for the
-effect of the \texttt{Chunkify} heuristic (by forcing all generated code into a
-single chunk), the \texttt{PreFlatten} optimizations are neutral-to-positive,
-demonstrating a geomean win on the order of 1-2\% across most impacted
-benchmarks. This suggests that the \texttt{Chunkify} heuristic may be over-tuned
-to the existing benchmark suite.
+order of a 1\% geomean latency increase across all impacted benchmarks,
+generally driven by a handful of large outlier regressions). After controlling
+for the effect of the \texttt{Chunkify} heuristic (by forcing all generated code
+into a single chunk), the \texttt{PreFlatten} optimizations are
+neutral-to-positive, demonstrating a geomean latency reduction on the order of
+1-2\% across most impacted benchmarks. This suggests that the \texttt{Chunkify}
+heuristic may be over-tuned to the existing benchmark suite.
 
 On the other hand, both \texttt{ShallowFlatten} transformations are
-overwhelmingly positive in the single-threaded case, improving performance of
-individual benchmarks by as much as 2x and materialzing geomean wins on the
-order of as 10\% on impacted benchmarks. Multithreaded benchmarks show mixed
-results that appear to indicate a bad interaction with MaPLe's garbage
-collection heuristics: controlling for this effect by forcing a synchronous GC
-pause at the beginning of each benchmark iteration shows individual benchmark
-wins as large as 10x and a 50\% geomean win across impacted benchmarks.
+overwhelmingly positive in the single-threaded case, demonstrating latency
+reductions on individual benchmarks as large as 50\% (i.e. 2x speedups) and
+geomean latency reductions on the order of 10\% across impacted benchmarks
+within a particular suite. Multithreaded benchmarks show mixed results that
+appear to indicate a bad interaction with MaPLe's garbage collection heuristics:
+controlling for this effect by forcing a synchronous GC pause at the beginning
+of each benchmark iteration produces latency reductions on individual benchmarks
+as large as 90\% (i.e. 10x speeups) and suite-geomean latency reductions of
+50\%.
 
 \hl{TODO: should check benchmark data more closely}
