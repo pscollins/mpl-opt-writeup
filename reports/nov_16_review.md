@@ -279,7 +279,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 
 ### 5.2 Bibliography (`references.bib` & `solution.tex`) Fixes
 
-1. ~~**Suppress `. en.` printed across ~25 bibliography entries:**~~
+1. ~~**Suppress `. en.` printed across \~25 bibliography entries:**~~
    - ~~`references.bib` sets `language = "en"`, which `biblatex` prints literally as `. en.` after titles on pages 100–102 (e.g., *`Guy E Blelloch. Vector models for data-parallel computing. en. Artificial Intelligence...`*). Add `\AtEveryBibitem{\clearlist{language}\clearfield{month}}` after `\usepackage[...]{biblatex}` in [`solution.tex:128`](../latex/solution.tex#L128) (which also silences Biber's two warnings on `month = {September}` / `{August}` in `mlton-proj` and `mpl-orig`).~~
 2. ~~**Fix 4 incomplete/misattributed entries in [`latex/references.bib`](../latex/references.bib):**~~
    - ~~**`layout-poly-paper` (`lines 363-371`):** Has no `author` and no `year`, so `\citet{layout-poly-paper}` renders inline on p. 94 as *"in e.g. Unboxed types for OCaml :: Jane Street [29]"*! Add `author = {Eisenberg, Richard A.}` and `year = {2023}` (or cite Eisenberg's ML '23 paper / Lorenzen et al. ICFP '24).~~
@@ -289,7 +289,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 3. ~~**Minor BibTeX polish:**~~
    - ~~Protect capitalization in `virgil-paper` (`{Virgil III}`), `sml-def` (`{Standard ML}`, and note 1997 is *The Definition of {Standard ML} (Revised)*; drop redundant `series = "The MIT Press"`), `realtime-sml-paper` (`an {SML} compiler`), and `java-scicomp` (`{Java}`).~~
    - ~~In [`solution.tex:270`](../latex/solution.tex#L270), remove `\nocite{*}` before adding any exploratory BibTeX entries so uncited references are not silently appended to the bibliography.~~
-   - ~~Optional cleanup in [`defs.tex:48-150`](../latex/defs.tex#L48-L150): duplicate `\usepackage{soul}` on lines 48 and 52, plus ~90 lines of unused math/calculus macros (`\Hessian`, `\curl`, `\Laplace`, `\contradiction`, `\pder`, etc.).~~
+   - ~~Optional cleanup in [`defs.tex:48-150`](../latex/defs.tex#L48-L150): duplicate `\usepackage{soul}` on lines 48 and 52, plus \~90 lines of unused math/calculus macros (`\Hessian`, `\curl`, `\Laplace`, `\contradiction`, `\pder`, etc.).~~
 
 ### 5.3 Exhaustive Line-by-Line Typo & Grammar Table
 
