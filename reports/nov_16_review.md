@@ -302,19 +302,19 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`introduction.tex:39`](../latex/chapters/introduction.tex#L39) | ~~`materialzing`~~ | `materializing` |
 | [`introduction.tex:40`](../latex/chapters/introduction.tex#L40) | ~~`on the order of as 10\%`~~ | `on the order of 10\%` |
 | [`background.tex:10`](../latex/chapters/background.tex#L10) | ~~`MLton and MPL broadly interchangeable`~~ | `MLton and MPL are broadly interchangeable` |
-| [`background.tex:64`](../latex/chapters/background.tex#L64) | `guarntees` | `guarantees` |
-| [`background.tex:70-71`](../latex/chapters/background.tex#L70-L71) | `codgen backends ... consider only on the C backend` | `codegen backends ... consider only the C backend` |
-| [`background.tex:179`](../latex/chapters/background.tex#L179) | `implemeting` | `implementing` |
-| [`background.tex:187`](../latex/chapters/background.tex#L187) | `introduces new sum type` | `introduces a new sum type` |
-| [`background.tex:561, 563`](../latex/chapters/background.tex#L561) | `correspondance` (×2) | `correspondence` |
-| [`background.tex:916`](../latex/chapters/background.tex#L916) | `Type types are mapped to C \texttt{struct} types` | `Tuple types are mapped to C \texttt{struct} types` |
-| [`background.tex:919-920`](../latex/chapters/background.tex#L919-L920) | ~~`a MLton stack operation`~~ `... medatadata` | ~~`an MLton stack operation`~~ `... metadata` |
-| [`background.tex:1288`](../latex/chapters/background.tex#L1288) | `hte` (in TODO) | `the` |
-| [`background.tex:1505`](../latex/chapters/background.tex#L1505) | `pathogical` | `pathological` |
-| [`background.tex:1985`](../latex/chapters/background.tex#L1985) | `disasterous` | `disastrous` |
-| [`background.tex:2100, 2198`](../latex/chapters/background.tex#L2100) | `while executing (a)` (missing period) | `while executing (a).` |
-| [`background.tex:2110`](../latex/chapters/background.tex#L2110) | `travsered` | `traversed` |
-| [`background.tex:2135`](../latex/chapters/background.tex#L2135) | `from the the program` | `from the program` |
+| [`background.tex:64`](../latex/chapters/background.tex#L64) | ~~`guarntees`~~ | `guarantees` |
+| [`background.tex:70-71`](../latex/chapters/background.tex#L70-L71) | ~~`codgen backends ... consider only on the C backend`~~ | `codegen backends ... consider only the C backend` |
+| [`background.tex:179`](../latex/chapters/background.tex#L179) | ~~`implemeting`~~ | `implementing` |
+| [`background.tex:187`](../latex/chapters/background.tex#L187) | ~~`introduces new sum type`~~ | `introduces a new sum type` |
+| [`background.tex:561, 563`](../latex/chapters/background.tex#L561) | ~~`correspondance` (×2)~~ | `correspondence` |
+| [`background.tex:916`](../latex/chapters/background.tex#L916) | ~~`Type types are mapped to C \texttt{struct} types`~~ | `Tuple types are mapped to C \texttt{struct} types` |
+| [`background.tex:919-920`](../latex/chapters/background.tex#L919-L920) | ~~`a MLton stack operation`~~ ~~`... medatadata`~~ | ~~`an MLton stack operation`~~ `... metadata` |
+| [`background.tex:1288`](../latex/chapters/background.tex#L1288) | ~~`hte` (in TODO)~~ | `the` |
+| [`background.tex:1505`](../latex/chapters/background.tex#L1505) | ~~`pathogical`~~ | `pathological` |
+| [`background.tex:1985`](../latex/chapters/background.tex#L1985) | ~~`disasterous`~~ | `disastrous` |
+| [`background.tex:2100, 2198`](../latex/chapters/background.tex#L2100) | ~~`while executing (a)` (missing period)~~ | `while executing (a).` |
+| [`background.tex:2110`](../latex/chapters/background.tex#L2110) | ~~`travsered`~~ | `traversed` |
+| [`background.tex:2135`](../latex/chapters/background.tex#L2135) | ~~`from the the program`~~ | `from the program` |
 | [`preflatten.tex:5`](../latex/chapters/preflatten.tex#L5) | `agressive` | `aggressive` |
 | [`preflatten.tex:108`](../latex/chapters/preflatten.tex#L108) | `defintion` | `definition` |
 | [`preflatten.tex:233`](../latex/chapters/preflatten.tex#L233) | `of a a \texttt{datatype}` | `of a \texttt{datatype}` |

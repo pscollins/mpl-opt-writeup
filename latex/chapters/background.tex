@@ -61,14 +61,14 @@ The MLton compilation pipeline passes through 8 distinct IRs
 \item \texttt{SXML} (``Simply typed \texttt{XML}''): removes polymorphism (but
   retains higher-order functions)
 \item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
-  guarntees the usual SSA properties (as described by e.g. \citet{ssa-paper})
+  guarantees the usual SSA properties (as described by e.g. \citet{ssa-paper})
 \item \texttt{SSA2}: optimizes representations of \texttt{ref}s and container types
 \item \texttt{RSSA}: introduces explicit memory layouts
 \item \texttt{Machine}: 1:1 with generated code
 \end{itemize}
 
-MLton supports a variety of codgen backends (including x86 and LLVM). In this
-document, we will consider only on the C backend, since it is the only backend
+MLton supports a variety of codegen backends (including x86 and LLVM). In this
+document, we will consider only the C backend, since it is the only backend
 supported by MPL.
 
 The optimizations that we will explore target the \texttt{SSA} representation,
@@ -176,7 +176,7 @@ label \texttt{tail}.
 
 Concrete operations on particular types are implemented in MLton as ``primitive
 applications,'' denoted in the IR by the keyword \texttt{prim}. MLton defines on
-the order of 500 distinct \texttt{prim}s, implemeting arithmetic operations,
+the order of 500 distinct \texttt{prim}s, implementing arithmetic operations,
 container manipulation, casts, and so on. Different \texttt{prim}s are
 eliminated in different compiler passes by either a decomposition into simpler
 \texttt{prim}s or a direct C call. MLton helpfully provides a type-checker for
@@ -184,7 +184,7 @@ eliminated in different compiler passes by either a decomposition into simpler
 each compiler pass.
 
 The semantics of \texttt{SSA} are otherwise broadly the same as their usual SML
-equivalents: \texttt{datatype} introduces new sum type endowed with some set of
+equivalents: \texttt{datatype} introduces a new sum type endowed with some set of
 constructors, \texttt{con} represents the application of one such constructor to
 concrete arguments, \texttt{case} implements conditional jumps with pattern
 matching, and \texttt{tuple} has some special syntactic support in the form of
@@ -558,9 +558,9 @@ C compiler register allocator succeeds at keeping the temporaries in registers,
 or the C compiler emits a spill-fetch sequence that is of roughly equivalent
 cost to the explicit MLton stack operations.
 
-This completes the discussion of the correspondance between \texttt{SSA} and C
+This completes the discussion of the correspondence between \texttt{SSA} and C
 representations of control flow, as well as the in-memory layout for program
-data that lives on the stack. The remaining correspondance to describe is the
+data that lives on the stack. The remaining correspondence to describe is the
 in-memory layout for heap data, which we will cover in the following section
 (alongside the optimizations that impact it).
 
@@ -913,11 +913,11 @@ float y = tmp2 + 2.0f;
 \end{figure}
 
 
-Type types are mapped to C \texttt{struct} types (\cref{fig:layout_tuple}).
+Tuple types are mapped to C \texttt{struct} types (\cref{fig:layout_tuple}).
 Unlike primitive types, tuple data is always allocated on the heap. Any
 references in the generated code read/write through a pointer, which itself may
 be passed around either via temporaries or a MLton stack operation. Each tuple
-object is tagged with a \texttt{GC\_header}, which tracks various medatadata
+object is tagged with a \texttt{GC\_header}, which tracks various metadata
 required during garbage collection, not discussed here.
 
 \begin{figure}[H]
@@ -1285,7 +1285,7 @@ size_t len = meta->length;
 %% is no runtime polymorphism in the generated code. Headers carrying type
 %% information exist only for the benefit of the GC. \hl{CUT?}
 
-\hl{TODO: do we need to discuss hte allocation side too?}
+\hl{TODO: do we need to discuss the allocation side too?}
 
 \subsection{\texttt{Flatten}}
 \label{sec:basic_flatten}
@@ -1502,7 +1502,7 @@ def main() -> T1:
 The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
 ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
 we can guarantee that all uses are compatible with flattening, avoiding
-pathogical cases (like the one above) that result from applying purely-local
+pathological cases (like the one above) that result from applying purely-local
 heuristics.
 
 This approach has the advantage that it handles more general cases of tuple
@@ -1982,7 +1982,7 @@ _ = prim Array_update(arr, 1, t')
 %% particular tuple's data regardless of how many containers we insert it into.
 
 In terms of global program efficiency on modern CPU architectures, however, this
-layout is disasterous. As an illustration, consider the C++ snippet in
+layout is disastrous. As an illustration, consider the C++ snippet in
 \cref{fig:nonflat_distance}, which corresponds to the ``non-flat'' naive MLton
 layout (i.e. a container of pointers). Suppose that \texttt{lhs.size() =
   rhs.size() = n}. Then the memory bandwidth requirement for this implementation
@@ -2097,7 +2097,7 @@ float GetDistance(
         node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Non-flat container layout and access. (a) C++ corresponding to the naive layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
+  \caption{Non-flat container layout and access. (a) C++ corresponding to the naive layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a).}
   \label{fig:nonflat_distance}
 \end{figure}
 
@@ -2107,7 +2107,7 @@ float GetDistance(
   efficiency while loading them. \hl{REPHRASE}
 \item Cost to load $2n$ \texttt{Point} objects: \texttt{$2n$ * cacheline size}.
   Since these \texttt{Point} objects are unlikely to have any particular spatial
-  locality in the heap when travsered in their order in the \texttt{vector}s,
+  locality in the heap when traversed in their order in the \texttt{vector}s,
   the most likely case is that we only get \texttt{sizeof(Point) == 8} useful
   bytes out of each read from DRAM.
 \end{enumerate}
@@ -2132,7 +2132,7 @@ memory access pattern of the consuming code, this strategy is optimal: since the
 \texttt{Point} data is in a dense, contiguous layout, we can make use of every
 single byte in each cacheline that we read, yielding 100\% efficient utilization
 of memory bandwidth. We also eliminate the pipeline-hostile chain of dependent
-loads from the the program.
+loads from the program.
 
 \begin{figure}[htbp]
   \centering
@@ -2195,7 +2195,7 @@ float GetDistanceFlat(
         node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Flat container layout and access. (a) C++ corresponding to the flattened layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a)}
+  \caption{Flat container layout and access. (a) C++ corresponding to the flattened layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a).}
   \label{fig:flat_distance}
 \end{figure}
 
