@@ -647,7 +647,7 @@ rather than a win.
   \label{fig:con_parallel_bench}
 \end{figure}
 
-On \cref{fig:con_parallel_bench}, we see strong wins across a number of
+In \cref{fig:con_parallel_bench}, we see strong wins across a number of
 benchmarks, and few losses, for a strong geomean win of $4.1\%$. To what degree
 is this measurement impacted by chunkification noise, as we saw above?
 
@@ -1052,7 +1052,7 @@ fairly stable performance from trial to trial at all core counts,
 slow iterations on both sides.
 
 It seems likely that this is an effect from the garbage collector: as described
-in \citet{mpl-orig}, running hte MPL garbage collector has the effect of pausing
+by \citet{mpl-orig}, running hte MPL garbage collector has the effect of pausing
 one of the worker threads, and hence for workloads with a uniform balance of
 work between worker threads (like \texttt{linearrec}, whose innermost loop is
 identical across processors), we should expect the GC pause to land on the

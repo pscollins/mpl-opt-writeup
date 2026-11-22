@@ -18,21 +18,21 @@ that converting function calls to dispatch tables may introduce overhead in the
 caller: our contribution is to eliminate this overhead in cases where the callee
 is known statically.
 
-\citet{higher-order-flattening} introduces a theoretical framework to solve the
+\citet{higher-order-flattening} introduce a theoretical framework to solve the
 problem of the \texttt{tuple}-\texttt{PreFlatten} transformation in the context
 of a higher-order language, i.e. solving the SML-NJ-lineage (CPS IR) equivalent
 of MLton's \citet{flat-paper}. We avoid the complexity that
-\citet{higher-order-flattening} addresses by implementing our optimizations in
+\citet{higher-order-flattening} address by implementing our optimizations in
 MLton's first-order \texttt{SSA} IR.
 
-\citet{manticore-arity-paper} solves the problem of tuple flattening for
-a CPS IR (as addressed in \citet{higher-order-flattening}) in the context of a
+\citet{manticore-arity-paper} solve the problem of tuple flattening for
+a CPS IR (as addressed by \citet{higher-order-flattening}) in the context of a
 parallel dialect of SML. We, again, differ by targeting a first-order SSA IR.
 We also differ in that their flattening heuristic is maximally conservative
 (i.e. it never introduces unnecessary pack/unpack operations), whereas we
 explore tradeoffs that favor more-aggressive flattening.
 
-The recent work \citet{closure-sharing-paper} examines the opposite optimization
+Recent work by \citet{closure-sharing-paper} examines the opposite optimization
 strategy to our \texttt{ConApp}-\texttt{PreFlatten} optimization -- introducing
 new layers of indirection in closure representations as a performance
 optimization. Like \citet{manticore-arity-paper}, their analysis differs
@@ -49,7 +49,7 @@ order to handle the case where the concrete type is unknown.
 Our \texttt{tuple}-\texttt{PreFlatten} transformation differs by targeting a
 monomorphic IR, and by employing a more limited flattening heuristic.
 
-\citet{haskell-fc-unbox} introduces a strategy for tuple flattening in the
+\citet{haskell-fc-unbox} introduce a strategy for tuple flattening in the
 context of an IR that is both higher-order and non-strict. Their solution is to
 rewrite a function with tuple arguments into a ``wrapper/worker'' pair, where
 the ``wrapper'' is an unpack sequence followed by a call to the ``worker'', and
@@ -88,7 +88,7 @@ source language); however their contribution focuses on a novel, lossless
 in-memory representation for the ADT rather than optimizing out the ADT metadata
 entirely.
 
-\citet{bbv-paper} applies similar techniques to our \texttt{ConApp} flattening
+\citet{bbv-paper} apply similar techniques to our \texttt{ConApp} flattening
 (i.e. emitting specialized code based on callers) in the context of optimizing a
 dynamically-typed language. Our work differs from theirs in that we specialize
 only on properties that we can guarantee from the type system, and so both our
@@ -100,7 +100,7 @@ latter relying entirely on standard, pre-existing optimization techniques to
 
 The equivalent transformation in C/C++ compilers like \texttt{clang} or
 \texttt{gcc} is referred to as ``scalar replacement of aggregates,'' (SROA) as
-described in \citet{munchick-compiler-design}. Since these languages natively
+described by \citet{munchick-compiler-design}. Since these languages natively
 support ``unboxed'' \texttt{struct} value types, the goal in this context is to
 enable subsequent optimizations like constant or copy propagation, rather than
 to eliminate heap allocations. In order for the transformation to be sound, the
@@ -121,7 +121,7 @@ aggregate objects are heap allocated, and hence replacement with scalars
 eliminates an allocation. The soundness analysis in the Java case is identical
 to the C/C++ case -- the compiler must prove that references to the flattenable
 object do not escape the current scope. \citet{partial-escape-analysis}
-introduces a novel technique to enable SROA when an object escapes in some (but
+introduce a novel technique to enable SROA when an object escapes in some (but
 not all) control flow paths: their solution is to delay the ``pack'' operation
 in order to exclude the non-escaping paths \hl{TODO: how to summarize difference?}
 
@@ -129,7 +129,7 @@ in order to exclude the non-escaping paths \hl{TODO: how to summarize difference
 %% DeepFlatten-focused examples
 \section{\texttt{array}, \texttt{vector} Flattening}
 
-\citet{dataonly-paper} applies a similar transformation (tuple flattening) in a
+\citet{dataonly-paper} apply a similar transformation (tuple flattening) in a
 similar context: in fact, their ``data-only flattening'' is roughly the SoA
 transformation that we apply. Our SoA transformation differs from theirs by
 lacking shape descriptors. We differ from their approach by a) considering a
@@ -147,14 +147,14 @@ potentially-unboxed type -- does not apply to MPL: since MLton does whole-progra
 compilation, we always know at compile time which specializations are necessary
 to emit.
 
-\citet{futhark-flatten} also discusses the problem of choosing an optimum
+\citet{futhark-flatten} also discuss the problem of choosing an optimum
 flattened representation from among the possible choices -- here on the GPU for
 the Futhark programming language. Their problem differs from ours in that MPL
 resolves the issue of work imbalance between functional units (CPU cores or GPU
 SMs) through low-overhead scheduling of tasks at runtime, rather than at compile
-time, as explored in \citet{mpl-sched-paper}.
+time, as explored by \citet{mpl-sched-paper}.
 
-\citet{realtime-sml-paper} also investigates the impact of deep flattening
+\citet{realtime-sml-paper} also investigate the impact of deep flattening
 optimizations on performance: the authors there disable \texttt{DeepFlatten} in
 order to avoid complexity when computing byte offsets for
 post-\texttt{DeepFlatten} arrays whose flattened tuples contained elements of
@@ -169,7 +169,7 @@ equivalent to plain \texttt{Flatten}; for arrays they choose between SoA and AoS
 ``[d]epending on the compilation target.'' In line with our observations above,
 they remark that extreme flattening can be harmful for large tuples.
 
-\citet{automating-adhoc-paper} proposes a generic mechanism (in the context of
+\citet{automating-adhoc-paper} propose a generic mechanism (in the context of
 the Scala compiler) to allow programmers to regions of code with representation
 decisions (e.g. all arays within a particular region use an SoA representation,
 or all 32-bit complex numbers use a packed 64-bit representation). Their
@@ -179,10 +179,10 @@ representations (analogously to our inserted pack/unpack sequences); their
 approach is different in that both the transformation heuristic and the data
 representations are provided by the programmer.
 
-\citet{object-inlining} addresses the problem of the MLton \texttt{DeepFlatten}
+\citet{object-inlining} address the problem of the MLton \texttt{DeepFlatten}
 pass in the context of object oriented languages, proposing a mechanism to
 ``flatten'' nested objects by inlining pointed-to children. \citet{java-scicomp}
-extends the mechanism of \citet{object-inlining} in order to replace
+extend the mechanism of \citet{object-inlining} in order to replace
 array-of-pointers containers in Java with the corresponding struct-of-arrays
 representation, like our \texttt{SoA}-\texttt{ShallowFlatten}. Their approach
 differs from ours in that (like \texttt{DeepFlatten}) they restrict their
@@ -190,7 +190,7 @@ optimization to cases where no coercion pack/unpack sequences are required.
 
 AoS container layouts have a long history in the literature of data-parallel
 computing. In the context of functional, SML-like languages, it was first
-introduced by way of the NESL programming language, in \citet{nesl-book} (which
+introduced by way of the NESL programming language \citep{nesl-book} (which
 also proposed the \texttt{quickhull} and \texttt{linearrec} benchmarks that
 appear in this work), in which AoS is the canonical layout for
 container-of-tuple types. The Data Parallel Haskell project of
@@ -200,7 +200,7 @@ context of a language whose default representation is array-of-pointers.
 
 In the broader computer architecture context, a major motivation for flat
 AoS/SoA layouts is to enable SIMD parallelism -- in fact, the ``AoS/SoA''
-terminology itself was coined in \citet{intel-simd-journal}, which introduced
+terminology itself was coined in the work of \citet{intel-simd-journal}, which introduced
 the SSE instruction set extension for the Pentium III processor. While this work
 does not leverage SIMD parallelism, we hope that the \texttt{ShallowFlatten}
 transformation can enable future investigation in this area for both MPL and

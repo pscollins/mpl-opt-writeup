@@ -9,12 +9,12 @@ disastrous performance characteristics on modern CPUs: every function call and
 every access into a (non-primitive) container incurs a cache miss at an
 unpredictable address in the heap.
 
-%% \cite rather than \citet because it's a citation for MLton
+%% \citep rather than \citet because it's a citation for MLton
 
 Each Standard ML compiler chooses different strategies to mitigate these costs:
-MLton \cite{mlton-website} deploys a class of optimizations that it calls
-``flattening,'' first introduced in \citet{flat-paper}. These strategies are also
-used in MLton's parallel-friendly fork, MaPLe (MPL), introduced in \citet{mpl-orig}.
+MLton \citep{mlton-website} deploys a class of optimizations that it calls
+``flattening,'' first introduced by \citet{flat-paper}. These strategies are also
+used in MLton's parallel-friendly fork, MaPLe (MPL), introduced by \citet{mpl-orig}.
 
 In this document, we will explore two novel ``flattening'' strategies: the
 first, \texttt{PreFlatten} (building on top of the existing \texttt{Flatten}

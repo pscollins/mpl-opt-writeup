@@ -2,8 +2,8 @@
 \section{MLton/MPL Compilation Pipeline}
 
 \subsection{Pipeline Overview}
-MLton is a whole-program optimizing compiler for Standard ML introduced in
-\citet{mlton-proj}, with a parallel variant MaPLe (MPL) introduced in
+MLton is a whole-program optimizing compiler for Standard ML introduced by
+\citet{mlton-proj}, with a parallel variant MaPLe (MPL) introduced by
 \citet{mpl-orig}. MPL expands on MLton with a variety of primitive operations
 to support parallel programming (e.g. fork/join, atomics) along with runtime
 support for managing pools of green threads and a parallel garbage collector.
@@ -13,8 +13,8 @@ unless explicitly noted otherwise, any statements about one compiler will also
 apply to the other.
 
 The MLton compilation pipeline passes through 8 distinct IRs
-\cite{mlton-website} on the way to codegen, illustrated in
-Figure~\ref{fig:mlton-ir-pipeline}:
+\citep{mlton-website} on the way to codegen, illustrated in
+\cref{fig:mlton-ir-pipeline}:
 
 %% http://mlton.org/IntermediateLanguage
 
@@ -61,7 +61,7 @@ Figure~\ref{fig:mlton-ir-pipeline}:
 \item \texttt{SXML} (``Simply typed \texttt{XML}''): removes polymorphism (but
   retains higher-order functions)
 \item \texttt{SSA} (``Single Static Assignment''): removes higher-order functions,
-  guarntees the usual SSA properties (as described in e.g. \citet{ssa-paper})
+  guarntees the usual SSA properties (as described by e.g. \citet{ssa-paper})
 \item \texttt{SSA2}: optimizes representations of \texttt{ref}s and container types
 \item \texttt{RSSA}: introduces explicit memory layouts
 \item \texttt{Machine}: 1:1 with generated code
@@ -353,10 +353,9 @@ Within each block, the generated code can access temporaries (represented as C
 function-local variables), call lower-level C primitives, and manipulate the
 current thread's stack. Explicit stack operations allow MLton to implement
 non-tail-recursive function calls through the jump table mechanism, without
-emitting a distinct C function for each such callee. Figures
-\cref{fig:pseudo_small_bb0}, \cref{fig:pseudo_small_bb1},
-\cref{fig:pseudo_small_bb2} and \cref{fig:pseudo_small_bb3} demonstrate the flow
-of data between \texttt{SSA} functions and blocks.
+emitting a distinct C function for each such callee.
+\Cref{fig:pseudo_small_bb0,fig:pseudo_small_bb1,fig:pseudo_small_bb2,fig:pseudo_small_bb3}
+demonstrate the flow of data between \texttt{SSA} functions and blocks.
 
 \begin{figure}[htbp]
   \centering
@@ -847,7 +846,7 @@ The following section will outline two of the existing ``flattening
 optimizations'' performed by MLton. In the context of MLton, this class of
 optimization was originally explored by \citet{flat-paper}. Additional
 optimizations of this type were implemented by later contributors without
-corresponding publications, as discussed in e.g. \citet{deep-flat-email}. These
+corresponding publications, as discussed by e.g. \citet{deep-flat-email}. These
 passes (alongside some additional flattening passes that we will not discuss
 here) are responsible for selecting in-memory representations for heap-allocated
 data in MLton.
@@ -1312,7 +1311,7 @@ disastrous performance characteristics. Every single function call must:
 {\clubpenalty=10000
 These penalties apply even in the fast intra-chunk call case. Compared to the
 usual x86\_64 calling convention (where up to 14 values may pass ``for free'' in
-registers \cite{amd64-abi}), we pay the price of a heap allocation per function
+registers \citep{amd64-abi}), we pay the price of a heap allocation per function
 call and two memory accesses per argument, hurting locality and wasting memory
 bandwidth.\par}
 
@@ -1551,7 +1550,7 @@ def add_vec_flat(
 
 It is worth recalling, however, that reasoning about costs in the generated code
 from the \texttt{SSA} representation alone can be misleading: while a direct
-translation of the \cref{fig:nested_tuple_flattened} to C would suggest that all
+translation of \cref{fig:nested_tuple_flattened} to C would suggest that all
 4 values pass to \texttt{add\_vec\_flat} in registers, \texttt{Chunkify} may
 choose to put \texttt{add\_vec\_flat} in a different chunk from its callers. In
 this case, the callers must pass data through the MLton stack -- requiring

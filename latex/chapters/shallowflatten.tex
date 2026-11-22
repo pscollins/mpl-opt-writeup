@@ -333,8 +333,8 @@ PointSoA struct_of_arrays;
 
 Libraries and frameworks to support SIMD CPU programming commonly offer support
 for accessing SoA-layout data via AoS-like syntax, e.g. Intel's ISPC, introduced
-in \citet{ispc-paper}. ``Manual,'' source-language-level SoA layouts are also a
-standard technique in high-performance GPU programming, as discussed in e.g.
+by \citet{ispc-paper}. ``Manual,'' source-language-level SoA layouts are also a
+standard technique in high-performance GPU programming, as discussed by e.g.
 \citet{cuda-textbook}. Without such constructs in our source
 language, it is necessary for the compiler to ``bridge the gap'' between
 flat-layout AoS/SoA containers and surrounding code that expects a
@@ -1120,7 +1120,7 @@ and \texttt{element'} physically identical?
 If \texttt{arr} has been \texttt{ShallowFlatten}ed, the answer is ``no:'' we
 cannot preserve pointer equality, since the write/read result in pack/unpack
 operations that construct a new tuple. From the perspective of strict Standard ML
-as defined in the language specification \citet{sml-def}, this is a non-issue:
+as defined in the language specification \citep{sml-def}, this is a non-issue:
 there is no way to observe pointer equality of tuples in the source language,
 and so the compiler has complete freedom. The only language-extension-free way
 to write this test would be to wrap the element type in \texttt{ref}, as
@@ -1191,7 +1191,7 @@ allow user programs to observe this behavior: both have \texttt{MLton.eq}
 compare-and-swap primitives to support implementing lock-free parallel
 algorithms.
 
-Since physical equality of tuples is not defined in \citet{sml-def}, one option
+Since physical equality of tuples is not defined by \citet{sml-def}, one option
 to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
 to (perhaps spuriously) return \texttt{false} in these cases. Another simple
 option would to be disable \texttt{ShallowFlatten} for all values of any types
