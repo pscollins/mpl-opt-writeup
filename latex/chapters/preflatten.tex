@@ -3,7 +3,7 @@ down'' \texttt{tuple} and \texttt{datatype} constructor calls across function
 call boundaries, creating new opportunities for subsequent optimization passes
 to eliminate the corresponding allocations entirely. It is intended to be a more
 ``agressive'' extension of the existing \texttt{Flatten} pass, supporting a
-mixture of flattenable and un-flattenable callsites by duplicating function
+mixture of flattenable and unflattenable callsites by duplicating function
 definitions.
 
 %% In order to achieve this goal in the case
@@ -310,7 +310,7 @@ replaces the \texttt{case} statement with a static \texttt{jump}
 
 \item \texttt{Flatten}: if \texttt{PreFlateen} runs before \texttt{Flatten}, then
 it can create new opportunities for \texttt{Flatten} by creating larger
-subgraphs of the dataflow graph that are free from un-flattenable constructs
+subgraphs of the dataflow graph that are free from unflattenable constructs
 (such as \texttt{ConApp} calls -- \cref{fig:simplify_enable_flatten})
 
 \end{itemize}
@@ -1309,7 +1309,7 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
   % =========================================================================
   % Row 2: Mixed callers (single flattenable caller edge + non-flattenable caller)
   % =========================================================================
-  {\centering\textbf{\footnotesize (2) Two callers of \texttt{g}: one flattenable call edge and one non-flattenable call edge}\par}\vspace{1mm}
+  {\centering\textbf{\footnotesize (2) Two callers of \texttt{g}: one flattenable call edge and one unflattenable call edge}\par}\vspace{1mm}
   \begin{subfigure}[t]{0.32\textwidth}
     \caption{Before flattening}
     \label{fig:df_mixed_before}
@@ -1439,7 +1439,7 @@ See \cref{fig:flatten_dataflow_comparison} for an illustration.
   % =========================================================================
   % Row 3: Fan-out from tuple in caller (one consumer flattenable, one non-flattenable)
   % =========================================================================
-  {\centering\textbf{\footnotesize (3) Tuple value in \texttt{f} with multiple data-flow consumers (one flattenable, one non-flattenable)}\par}\vspace{1mm}
+  {\centering\textbf{\footnotesize (3) Tuple value in \texttt{f} with multiple data-flow consumers (one flattenable, one unflattenable)}\par}\vspace{1mm}
   \begin{subfigure}[t]{0.32\textwidth}
     \caption{Before flattening}
     \label{fig:df_branch_before}

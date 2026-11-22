@@ -142,13 +142,13 @@ leveraging pre-existing optimizations.
 Various work at Jane Street for unboxed types in OCaml aims to materialize the
 same wins that we demonstrate here through the SoA transformation, as discussed
 in e.g. \citet{layout-poly-paper}. However, the primary technical challenge that
-they seek to overcome – selecting the appropriate function specialization for a
-potentially-unboxed type – does not apply to MPL: since MLton does whole-program
+they seek to overcome -- selecting the appropriate function specialization for a
+potentially-unboxed type -- does not apply to MPL: since MLton does whole-program
 compilation, we always know at compile time which specializations are necessary
 to emit.
 
 \citet{futhark-flatten} also discusses the problem of choosing an optimum
-flattened representation from among the possible choices – here on the GPU for
+flattened representation from among the possible choices -- here on the GPU for
 the Futhark programming language. Their problem differs from ours in that MPL
 resolves the issue of work imbalance between functional units (CPU cores or GPU
 SMs) through low-overhead scheduling of tasks at runtime, rather than at compile
@@ -203,7 +203,7 @@ AoS/SoA layouts is to enable SIMD parallelism -- in fact, the ``AoS/SoA''
 terminology itself was coined in \citet{intel-simd-journal}, which introduced
 the SSE instruction set extension for the Pentium III processor. While this work
 does not leverage SIMD parallelism, we hope that the \texttt{ShallowFlatten}
-transformation can enable future investigation in this area for both MaPLe and
+transformation can enable future investigation in this area for both MPL and
 MLton.
 
 %% AoS and SoA layouts are 

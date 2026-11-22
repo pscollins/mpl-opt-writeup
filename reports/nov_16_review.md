@@ -260,13 +260,13 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
      - Verbs: `flatten-away` (`related_work.tex:166`) $\to$ `flatten away`; `better-leverage` (`shallowflatten.tex:1221`) $\to$ `better leverage`.
 
 2. **Standardize project/technical terms across chapters:**
-   - **`MaPLe` (7×) vs. `MPL` (38×):** Introduce `"MaPLe (MPL)"` once in [`introduction.tex:17`](../latex/chapters/introduction.tex#L17) (and [`background.tex:6`](../latex/chapters/background.tex#L6)), then use one consistently (`MPL` dominates 38 to 7).
-   - **`\texttt{parallel-ml-bench}` (25×) vs. variants:** Replace `\texttt{parallel\_bench}` (`evaluation.tex:49, 917, 1483, 1672`), `\texttt{parallel\_ml\_bench}` (`evaluation.tex:956`), and unformatted `parallel ML bench` (`evaluation.tex:53, 175`) with `\texttt{parallel-ml-bench}`.
-   - **`AoS` (64×) vs. `AOS` (9×):** Replace all-caps `AOS` in `evaluation.tex` (`lines 916, 949, 1055, 1068, 1086, 1242, 1252, 1269`) with `AoS`.
-   - **`unflattenable` (13×) vs. `un-flattenable` (3×) vs. `non-flattenable` (2×):** Standardize on `unflattenable`.
-   - **`Standard ML` (12×) vs. `StandardML` (`shallowflatten.tex:1122`):** Add space.
+   - ~~**`MaPLe` (7×) vs. `MPL` (38×):** Introduce `"MaPLe (MPL)"` once in [`introduction.tex:17`](../latex/chapters/introduction.tex#L17) (and [`background.tex:6`](../latex/chapters/background.tex#L6)), then use one consistently (`MPL` dominates 38 to 7).~~
+   - ~~**`\texttt{parallel-ml-bench}` (25×) vs. variants:** Replace `\texttt{parallel\_bench}` (`evaluation.tex:49, 917, 1483, 1672`), `\texttt{parallel\_ml\_bench}` (`evaluation.tex:956`), and unformatted `parallel ML bench` (`evaluation.tex:53, 175`) with `\texttt{parallel-ml-bench}`.~~
+   - ~~**`AoS` (64×) vs. `AOS` (9×):** Replace all-caps `AOS` in `evaluation.tex` (`lines 916, 949, 1055, 1068, 1086, 1242, 1252, 1269`) with `AoS`.~~
+   - ~~**`unflattenable` (13×) vs. `un-flattenable` (3×) vs. `non-flattenable` (2×):** Standardize on `unflattenable`.~~
+   - ~~**`Standard ML` (12×) vs. `StandardML` (`shallowflatten.tex:1122`):** Add space.~~
    - **Pass naming in Chapter 6:** `\section{\texttt{array}, \texttt{vector} Flattening}` ([`related_work.tex:130`](../latex/chapters/related_work.tex#L130)) never mentions the name `\texttt{ShallowFlatten}` until line 187 (`\texttt{SoA}-\texttt{ShallowFlatten}`); name `\texttt{ShallowFlatten}` in the opening paragraph of §6.2 to mirror §6.1.
-   - **Dashes:** [`related_work.tex:145, 151`](../latex/chapters/related_work.tex#L145) use spaced Unicode en-dashes ` – ` whereas the rest of the thesis uses `--` (or unspaced em-dashes `---`). Pick one convention thesis-wide.
+   - ~~**Dashes:** [`related_work.tex:145, 151`](../latex/chapters/related_work.tex#L145) use spaced Unicode en-dashes ` – ` whereas the rest of the thesis uses `--` (or unspaced em-dashes `---`). Pick one convention thesis-wide.~~
 
 3. **Citation & Cross-Reference Grammar (`\citet` vs. `\citep`, `\cref`):**
    - **Plural `\citet` subjects with singular verbs in [`related_work.tex`](../latex/chapters/related_work.tex):** Because `\citet{...}` expands to the author list, 11 sentences read ungrammatically in the PDF (e.g., *"Hannan and Hicks [15] introduces"*, *"Bergstrom and Reppy [16] solves"*, *"Peyton Jones and Launchbury [19] introduces"*, *"Melançon, Feeley, and Serrano [24] applies"*, *"Stadler, Würthinger, and Mössenböck [27] introduces"*, *"Bergstrom et al. [28] applies"*, *"Henriksen et al. [30] also discusses"*, *"Li et al. [32] also investigates"*, *"Ureche et al. [34] proposes"*, *"Dolby and Chien [35] addresses"*, *"Budimlić, Joyner, and Kennedy [36] extends"*). Either pluralize the verbs (`introduce`, `solve`, `apply`, ...) or write *"The work of \citet{...} introduces..."*.

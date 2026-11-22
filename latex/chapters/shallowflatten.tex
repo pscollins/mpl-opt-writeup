@@ -1107,7 +1107,7 @@ As outlined above, this implementation only supports the case when all AoP
 containers of a given type are flattened -- we cannot support a mix of flattened
 and unflattened AoP containers with a given type using the strategy above. The
 implementation discussed in this document simply emits an error if it encounters
-an un-flattenable construct, none of which appear in the benchmark suites that
+an unflattenable construct, none of which appear in the benchmark suites that
 we evaluated this optimization against.
 
 The primary case when such a fallback would be necessary is when the source
@@ -1119,7 +1119,7 @@ and \texttt{element'} physically identical?
 
 If \texttt{arr} has been \texttt{ShallowFlatten}ed, the answer is ``no:'' we
 cannot preserve pointer equality, since the write/read result in pack/unpack
-operations that construct a new tuple. From the perspective of strict StandardML
+operations that construct a new tuple. From the perspective of strict Standard ML
 as defined in the language specification \citet{sml-def}, this is a non-issue:
 there is no way to observe pointer equality of tuples in the source language,
 and so the compiler has complete freedom. The only language-extension-free way

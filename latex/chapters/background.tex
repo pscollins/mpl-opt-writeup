@@ -1,10 +1,10 @@
 
-\section{MLton/MaPLe Compilation Pipeline}
+\section{MLton/MPL Compilation Pipeline}
 
 \subsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced in
-\citet{mlton-proj}, with a parallel variant MaPLe introduced in
-\citet{mpl-orig}. MaPLe expands on MLton with a variety of primitive operations
+\citet{mlton-proj}, with a parallel variant MaPLe (MPL) introduced in
+\citet{mpl-orig}. MPL expands on MLton with a variety of primitive operations
 to support parallel programming (e.g. fork/join, atomics) along with runtime
 support for managing pools of green threads and a parallel garbage collector.
 For the purposes of this document, MLton and MPL broadly interchangeable,
@@ -69,7 +69,7 @@ Figure~\ref{fig:mlton-ir-pipeline}:
 
 MLton supports a variety of codgen backends (including x86 and LLVM). In this
 document, we will consider only on the C backend, since it is the only backend
-supported by MaPLe.
+supported by MPL.
 
 The optimizations that we will explore target the \texttt{SSA} representation,
 so in the following sections we will give a high-level overview of the mapping

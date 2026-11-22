@@ -12,9 +12,9 @@ This paper explores two novel flattening optimizations: \texttt{PreFlatten},
 which seeks to unbox aggregates passed across function calls,
 and \texttt{ShallowFlatten}, which seeks to unbox aggregates stored in
 containers. We implement thes optimizations in both the MLton compiler and its
-parallel variant, MaPLe, and measure their impact across two
+parallel variant, MaPLe (MPL), and measure their impact across two
 benchmark suites: MLton's (sequential) benchmarks, and
-MaPLe's \texttt{parallel-ml-bench}.
+MPL's \texttt{parallel-ml-bench}.
 
 Under ``fair'' conditions, we find that \texttt{PreFlatten} is broadly
 neutral-to-negative (a geomean 2.7\% win to a 4.2\% loss across different
@@ -28,7 +28,7 @@ and \texttt{ShallowFlatten} performance strongly improves (geomean wins of up to
 50\%). \hl{TODO: better way to summarize chunks?}
 
 In the course of the evaluation, we also note that the default C toolchain
-settings for both MLton and MaPLe lead to severe instability in performance
+settings for both MLton and MPL lead to severe instability in performance
 measurements, yielding per-benchmark performance swings of up to 50\% for no-op
 changes. \hl{TODO: be sure that we talk about this in evaluation}
 

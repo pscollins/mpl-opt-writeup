@@ -14,7 +14,7 @@ unpredictable address in the heap.
 Each Standard ML compiler chooses different strategies to mitigate these costs:
 MLton \cite{mlton-website} deploys a class of optimizations that it calls
 ``flattening,'' first introduced in \citet{flat-paper}. These strategies are also
-used in MLton's parallel-friendly fork, MaPLe, introduced in \citet{mpl-orig}.
+used in MLton's parallel-friendly fork, MaPLe (MPL), introduced in \citet{mpl-orig}.
 
 In this document, we will explore two novel ``flattening'' strategies: the
 first, \texttt{PreFlatten} (building on top of the existing \texttt{Flatten}
@@ -39,7 +39,7 @@ overwhelmingly positive in the single-threaded case, demonstrating latency
 reductions on individual benchmarks as large as 50\% (i.e. 2x speedups) and
 geomean latency reductions on the order of 10\% across impacted benchmarks
 within a particular suite. Multithreaded benchmarks show mixed results that
-appear to indicate a bad interaction with MaPLe's garbage collection heuristics:
+appear to indicate a bad interaction with MPL's garbage collection heuristics:
 controlling for this effect by forcing a synchronous GC pause at the beginning
 of each benchmark iteration produces latency reductions on individual benchmarks
 as large as 90\% (i.e. 10x speeups) and suite-geomean latency reductions of
