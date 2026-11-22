@@ -4,13 +4,15 @@
 \subsection{Pipeline Overview}
 MLton is a whole-program optimizing compiler for Standard ML introduced by
 \citet{mlton-proj}, with a parallel variant MaPLe (MPL) introduced by
-\citet{mpl-orig}. MPL expands on MLton with a variety of primitive operations
-to support parallel programming (e.g. fork/join, atomics) along with runtime
+\citet{mpl-orig}. MPL expands on MLton with a variety of primitive operations to
+support parallel programming (e.g. fork/join, atomics) along with runtime
 support for managing pools of green threads and a parallel garbage collector.
-For the purposes of this document, MLton and MPL are broadly interchangeable,
-differing primarily in terms of the benchmark workloads that they support:
-unless explicitly noted otherwise, any statements about one compiler will also
-apply to the other.
+For the purposes of this document, MLton and MPL are broadly
+interchangeable\footnote{ The most salient difference in the context of this
+document is the benchmark workloads that they support -- MLton does not support
+multithreading in the \texttt{parallel-ml-bench} suite, and MPL does not support
+the sequential MLton benchmark suite.}: unless explicitly noted otherwise, any
+statements about one compiler will also apply to the other.
 
 The MLton compilation pipeline passes through 8 distinct IRs
 \citep{mlton-website} on the way to codegen, illustrated in
@@ -48,7 +50,7 @@ The MLton compilation pipeline passes through 8 distinct IRs
     \draw[arr] (ssa2) -- (rssa);
     \draw[arr] (rssa) -- (mach);
   \end{tikzpicture}
-  \caption{The MLton intermediate representation (IR) compilation pipeline.}
+  \caption{The MLton compilation pipeline.}
   \label{fig:mlton-ir-pipeline}
 \end{figure}
 
@@ -151,7 +153,7 @@ def main() -> unit:
 %% \hl{TODO: grammar is misisng constants, also missing tuple/container types. What
 %%   do we call the SSA?}
 
-\hl{TODO: grammar needs to mention globals}
+%% \hl{TODO: grammar needs to mention globals}
 
 A grammar for this intermediate representation is provided in
 \cref{fig:ssa_grammar}. Mirroring MLton's representation of \texttt{SSA}, a
@@ -165,14 +167,17 @@ SSA: bound variables are available for use in any program position that they
 strictly dominate, and conditionally binding variables to names is implemented
 with a conditional \texttt{goto}.
 
-The \texttt{call} statement differs somewhat from the \texttt{call} statement
-used in other SSA IRs: the syntax is \texttt{call return\_label func\_name
-  (...arguments...)}, where \texttt{return\_label} is a block label within the
-current function. Names for function return values in the caller are thus bound
-using the same block-argument mechanism described above. Tail-recursive
-functions are distinguished in \texttt{SSA} by the lack of a
-\texttt{return\_label}; in the textual representation they use the placeholder
-label \texttt{tail}.
+MLton's \texttt{SSA} \texttt{call} statement differs somewhat from its
+counterpart in other SSA IRs (e.g., LLVM), reflecting its roots in the family of
+continuation-passing style compilers for functional languages: the syntax is
+\texttt{call return\_label func\_name (...arguments...)}, where
+\texttt{return\_label} is a block label within the current function -- a
+\texttt{return $x_1, x_2, \dots$} in the callee transfers control to
+\texttt{return\_label} with arguments $x_1, x_2, \dots$. Names for function
+return values in the caller are thus bound using the same block-argument
+mechanism described above. Tail calls are distinguished in \texttt{SSA} by the
+lack of a \texttt{return\_label}; in the textual representation they use the
+placeholder label \texttt{tail}.
 
 Concrete operations on particular types are implemented in MLton as ``primitive
 applications,'' denoted in the IR by the keyword \texttt{prim}. MLton defines on
@@ -184,13 +189,14 @@ eliminated in different compiler passes by either a decomposition into simpler
 each compiler pass.
 
 The semantics of \texttt{SSA} are otherwise broadly the same as their usual SML
-equivalents: \texttt{datatype} introduces a new sum type endowed with some set of
-constructors, \texttt{con} represents the application of one such constructor to
-concrete arguments, \texttt{case} implements conditional jumps with pattern
-matching, and \texttt{tuple} has some special syntactic support in the form of
-the \texttt{select} operator. The types \texttt{a' array} and \texttt{a' vector}
+equivalents: \texttt{datatype} introduces a new sum type endowed with some set
+of constructors, \texttt{con} represents the application of one such constructor
+to concrete arguments (referred to as a \texttt{ConApp} within MLton),
+\texttt{case} implements conditional jumps with pattern matching, and
+\texttt{tuple} has some special syntactic support in the form of the
+\texttt{select} operator. The types \texttt{$\tau$ array} and \texttt{$\tau$ vector}
 likewise match their usual SML counterparts, representing a mutable or an
-immutable container of objects of type \texttt{a'}, respectively.
+immutable container of objects of type \texttt{$\tau$}, respectively.
 
 %% \hl{TODO: LET'S MENTION TAIL CALLS IN THE GRAMMAR?}
 
