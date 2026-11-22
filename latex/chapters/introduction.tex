@@ -23,16 +23,40 @@ more-aggressive elimination of heap allocations at callsites. The second,
 \texttt{ShallowFlatten} (building on top of the existing \texttt{DeepFlatten}
 pass) transforms layouts of containers in order to eliminate pointers.
 
-As we will see below, in practice, the \texttt{PreFlatten} optimizations
-interact poorly with the existing \texttt{Chunkify} pass, and so fail to
-materialize a consistent win: most benchmark configurations show a loss (on the
-order of a 1\% geomean latency increase across all impacted benchmarks,
-generally driven by a handful of large outlier regressions). After controlling
-for the effect of the \texttt{Chunkify} heuristic (by forcing all generated code
-into a single chunk), the \texttt{PreFlatten} optimizations are
-neutral-to-positive, demonstrating a geomean latency reduction on the order of
-1-2\% across most impacted benchmarks. This suggests that the \texttt{Chunkify}
-heuristic may be over-tuned to the existing benchmark suite.
+Our \texttt{PreFlatten} pass implements two distinct concrete optimizations,
+which we benchmark and analyze separately. The high-level goal of the pass is to
+pull ``pack'' operations (i.e. object constructor calls, corresponding to
+potential heap allocations) across function call boundaries, enabling subsequent
+optimization passes to eliminate the constructed object completely (in some
+cases). The two concrete optimizations target two of the languages' object
+types: \texttt{tuple}s and tagged-union \texttt{datatype} values.
+
+In order to achieve this goal, the pass emits a duplicate definitions of the
+callee that are specialized to the particular patterns of ``pack'' operations
+that immediately precede calls. For \texttt{tuple} pack operations, this is
+necessary in order to handle cases where different callers exhibit different
+patterns; for \texttt{datatype} pack operations, it is required in order to pass
+the union's payload separately from the ``tag.'' \hl{TODO: NOT GREAT PHRASING}
+
+We find that in practice, the \texttt{PreFlatten} optimizations interact poorly
+with the existing \texttt{Chunkify} pass, and so fail to materialize a
+consistent win: most benchmark configurations show a loss (on the order of a 1\%
+geomean latency increase across all impacted benchmarks, generally driven by a
+handful of large outlier regressions). After controlling for the effect of
+the \texttt{Chunkify} heuristic (by forcing all generated code into a single
+chunk), the \texttt{PreFlatten} optimizations are neutral-to-positive,
+demonstrating a geomean latency reduction on the order of 1-2\% across most
+impacted benchmarks. This suggests that the \texttt{Chunkify} heuristic may be
+over-tuned to the existing benchmark suite. \hl{TODO: describe chunkify?}
+
+\hl{TODO: fix start}
+Our \texttt{ShallowFlatten} pass, likewise, explores two distinct \hl{concrete}
+optimizations, which we benchmark and analyze separately. For both
+optimizations, we rewrite containers over tuple types so that the innermost
+
+\hl{TODO: fix end}
+
+
 
 On the other hand, both \texttt{ShallowFlatten} transformations are
 overwhelmingly positive in the single-threaded case, demonstrating latency
