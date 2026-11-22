@@ -279,17 +279,17 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 
 ### 5.2 Bibliography (`references.bib` & `solution.tex`) Fixes
 
-1. **Suppress `. en.` printed across ~25 bibliography entries:**
-   - `references.bib` sets `language = "en"`, which `biblatex` prints literally as `. en.` after titles on pages 100–102 (e.g., *`Guy E Blelloch. Vector models for data-parallel computing. en. Artificial Intelligence...`*). Add `\AtEveryBibitem{\clearlist{language}\clearfield{month}}` after `\usepackage[...]{biblatex}` in [`solution.tex:128`](../latex/solution.tex#L128) (which also silences Biber's two warnings on `month = {September}` / `{August}` in `mlton-proj` and `mpl-orig`).
+1. ~~**Suppress `. en.` printed across ~25 bibliography entries:**~~
+   - ~~`references.bib` sets `language = "en"`, which `biblatex` prints literally as `. en.` after titles on pages 100–102 (e.g., *`Guy E Blelloch. Vector models for data-parallel computing. en. Artificial Intelligence...`*). Add `\AtEveryBibitem{\clearlist{language}\clearfield{month}}` after `\usepackage[...]{biblatex}` in [`solution.tex:128`](../latex/solution.tex#L128) (which also silences Biber's two warnings on `month = {September}` / `{August}` in `mlton-proj` and `mpl-orig`).~~
 2. **Fix 4 incomplete/misattributed entries in [`latex/references.bib`](../latex/references.bib):**
    - **`layout-poly-paper` (`lines 363-371`):** Has no `author` and no `year`, so `\citet{layout-poly-paper}` renders inline on p. 94 as *"in e.g. Unboxed types for OCaml :: Jane Street [29]"*! Add `author = {Eisenberg, Richard A.}` and `year = {2023}` (or cite Eisenberg's ML '23 paper / Lorenzen et al. ICFP '24).
-   - **`data-parallel-haskell` (`lines 830-844`):** Currently `@MISC` with no `year` and no `booktitle`, and writes `Jones, Simon Peyton` (parsing surname as `Jones` rather than `Peyton Jones` as in `[19, 20]`). Change to `@inproceedings`, `author = {Chakravarty, Manuel M. T. and Leshchinskiy, Roman and Peyton Jones, Simon and Keller, Gabriele and Marlow, Simon}`, `booktitle = {Proceedings of the ACM SIGPLAN Workshop on Declarative Aspects of Multicore Programming (DAMP '07)}`, `pages = {10--18}`, `year = {2007}`.
-   - **`intel-simd-journal` (`lines 846-853`):** Currently attributes the journal issue title `"Intel Technology Journal {Q2}, 1999"` to managing editor `Chao, Lin`. The actual article coining AoS/SoA in that issue is: `author = {Abel, James and Balasubramanian, Kumar and Bargeron, Mike and Craver, Tom and Phlipot, Mike}`, `title = {Applications tuning for {Streaming SIMD Extensions}}`, `journal = {Intel Technology Journal}`, `volume = {3}`, `number = {Q2}`, `year = {1999}`.
-   - **`adt4hpc-paper` (`lines 407-413`):** `@PHDTHESIS` missing `school = {Universit{\'e} de Lyon}` (ENS de Lyon).
-3. **Minor BibTeX polish:**
-   - Protect capitalization in `virgil-paper` (`{Virgil III}`), `sml-def` (`{Standard ML}`, and note 1997 is *The Definition of {Standard ML} (Revised)*; drop redundant `series = "The MIT Press"`), `realtime-sml-paper` (`an {SML} compiler`), and `java-scicomp` (`{Java}`).
-   - In [`solution.tex:270`](../latex/solution.tex#L270), remove `\nocite{*}` before adding any exploratory BibTeX entries so uncited references are not silently appended to the bibliography.
-   - Optional cleanup in [`defs.tex:48-150`](../latex/defs.tex#L48-L150): duplicate `\usepackage{soul}` on lines 48 and 52, plus ~90 lines of unused math/calculus macros (`\Hessian`, `\curl`, `\Laplace`, `\contradiction`, `\pder`, etc.).
+   - ~~**`data-parallel-haskell` (`lines 830-844`):** Currently `@MISC` with no `year` and no `booktitle`, and writes `Jones, Simon Peyton` (parsing surname as `Jones` rather than `Peyton Jones` as in `[19, 20]`). Change to `@inproceedings`, `author = {Chakravarty, Manuel M. T. and Leshchinskiy, Roman and Peyton Jones, Simon and Keller, Gabriele and Marlow, Simon}`, `booktitle = {Proceedings of the ACM SIGPLAN Workshop on Declarative Aspects of Multicore Programming (DAMP '07)}`, `pages = {10--18}`, `year = {2007}`.~~
+   - ~~**`intel-simd-journal` (`lines 846-853`):** Currently attributes the journal issue title `"Intel Technology Journal {Q2}, 1999"` to managing editor `Chao, Lin`. The actual article coining AoS/SoA in that issue is: `author = {Abel, James and Balasubramanian, Kumar and Bargeron, Mike and Craver, Tom and Phlipot, Mike}`, `title = {Applications tuning for {Streaming SIMD Extensions}}`, `journal = {Intel Technology Journal}`, `volume = {3}`, `number = {Q2}`, `year = {1999}`.~~
+   - ~~**`adt4hpc-paper` (`lines 407-413`):** `@PHDTHESIS` missing `school = {Universit{\'e} de Lyon}` (ENS de Lyon).~~
+3. ~~**Minor BibTeX polish:**~~
+   - ~~Protect capitalization in `virgil-paper` (`{Virgil III}`), `sml-def` (`{Standard ML}`, and note 1997 is *The Definition of {Standard ML} (Revised)*; drop redundant `series = "The MIT Press"`), `realtime-sml-paper` (`an {SML} compiler`), and `java-scicomp` (`{Java}`).~~
+   - ~~In [`solution.tex:270`](../latex/solution.tex#L270), remove `\nocite{*}` before adding any exploratory BibTeX entries so uncited references are not silently appended to the bibliography.~~
+   - ~~Optional cleanup in [`defs.tex:48-150`](../latex/defs.tex#L48-L150): duplicate `\usepackage{soul}` on lines 48 and 52, plus ~90 lines of unused math/calculus macros (`\Hessian`, `\curl`, `\Laplace`, `\contradiction`, `\pder`, etc.).~~
 
 ### 5.3 Exhaustive Line-by-Line Typo & Grammar Table
 
@@ -299,7 +299,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`introduction.tex:27`](../latex/chapters/introduction.tex#L27) | ~~`optimizations interact poorly ... and so fails`~~ | `...and so fail` (subject-verb agreement) |
 | [`introduction.tex:39`](../latex/chapters/introduction.tex#L39) | ~~`materialzing`~~ | `materializing` |
 | [`introduction.tex:40`](../latex/chapters/introduction.tex#L40) | ~~`on the order of as 10\%`~~ | `on the order of 10\%` |
-| [`background.tex:10`](../latex/chapters/background.tex#L10) | `MLton and MPL broadly interchangeable` | `MLton and MPL are broadly interchangeable` |
+| [`background.tex:10`](../latex/chapters/background.tex#L10) | ~~`MLton and MPL broadly interchangeable`~~ | `MLton and MPL are broadly interchangeable` |
 | [`background.tex:64`](../latex/chapters/background.tex#L64) | `guarntees` | `guarantees` |
 | [`background.tex:70-71`](../latex/chapters/background.tex#L70-L71) | `codgen backends ... consider only on the C backend` | `codegen backends ... consider only the C backend` |
 | [`background.tex:179`](../latex/chapters/background.tex#L179) | `implemeting` | `implementing` |

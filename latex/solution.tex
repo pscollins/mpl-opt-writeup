@@ -126,6 +126,7 @@
     style=numeric-comp,
     sorting=none
 ]{biblatex}
+\AtEveryBibitem{\clearlist{language}\clearfield{month}}
 \addbibresource{references.bib}
 
 \usepackage{lscape}
@@ -267,6 +268,5 @@
 \phantomsection
 \addcontentsline{toc}{chapter}{Bibliography}
 
-\nocite{*}
 \printbibliography
 \end{document}
