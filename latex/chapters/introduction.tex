@@ -101,7 +101,7 @@ of each benchmark iteration produces latency reductions on individual benchmarks
 as large as 90\% (i.e. 10x speeups) and suite-geomean latency reductions of
 50\%.
 
-Apart from the optimizations developed for this paper, our evaluation also
+Apart from the optimizations developed for this document, our evaluation also
 identifies a source of severe performance noise that impacts all benchmark data
 collected from MLton-derived compilers using the C backend with its default C
 toolchain configuration: no-op changes to end-stage MLton IR can result in
@@ -118,21 +118,35 @@ and MPL, which aim to eliminate indiractions around containers.
 
 \item An empirical evaluation of the two new passes across both MLton and MPL,
 with a detailed investigation of their interactions with existing system
-components.
+components and sources of noise.
 
-\item An empirical investigation into an observed source of performance
-noise in MLton and MPL under their default C code generator backend.
+%% \item An empirical investigation into an observed source of performance
+%% noise in MLton and MPL under their default C code generator backend.
 
 \end{itemize}
 
 \subsection{Outline}
 
-The structure of this document is as follows: first, we present an overview of
-the MLton compilation pipeline and the intermediate representations that will be
-the target of our work; next, we provide a rigorous description of our
-implemented optimizations followed by an empirical evaluation of their
-effectiveness; finally, we provide an overview of related works and situate our
-contribution within it.
+The remainder of this document is structured as follows:
+First, \cref{ch:background} provides an overview of the existing MLton
+compilation pipeline, with a focus on the intermediate representation that our
+optimizations target, alongside closely-related pre-existing optimizations.
+Next, \cref{ch:preflatten} and \cref{ch:shallowflatten} provide a rigorous
+description of our implemented optimizations, and \cref{ch:evaluation} presents
+an empirical evaluation of their impacts. Next, \cref{ch:related_work} provides
+an overview of related works in the field, and situates our contribution within
+it. Finally, \cref{ch:conclusion} summarizes our findings and considers
+directions for future work.
+
+
+\hl{TODO: make sure we actually talk about future works}
+
+%% The structure of this document is as follows: first, we present an overview of
+%% the MLton compilation pipeline and the intermediate representations that will be
+%% the target of our work; next, we provide a rigorous description of our
+%% implemented optimizations followed by an empirical evaluation of their
+%% effectiveness; finally, we provide an overview of related works and situate our
+%% contribution within it.
 
 \hl{TODO: edit for phrasing?}
 
