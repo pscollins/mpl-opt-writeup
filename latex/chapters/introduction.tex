@@ -13,8 +13,9 @@ unpredictable address in the heap.
 
 Each Standard ML compiler chooses different strategies to mitigate these costs:
 MLton \citep{mlton-website} deploys a class of optimizations that it calls
-``flattening,'' first introduced by \citet{flat-paper}. These strategies are also
-used in MLton's parallel-friendly fork, MaPLe (MPL), introduced by \citet{mpl-orig}.
+``flattening,'' first introduced by \citet{flat-paper}. These strategies are
+also used in MLton's parallel-friendly fork, MaPLe (MPL), introduced
+by \citet{mpl-orig}.
 
 In this document, we will explore two novel ``flattening'' strategies: the
 first, \texttt{PreFlatten} (building on top of the existing \texttt{Flatten}
@@ -36,29 +37,55 @@ callee that are specialized to the particular patterns of ``pack'' operations
 that immediately precede calls. For \texttt{tuple} pack operations, this is
 necessary in order to handle cases where different callers exhibit different
 patterns; for \texttt{datatype} pack operations, it is required in order to pass
-the union's payload separately from the ``tag.'' \hl{TODO: NOT GREAT PHRASING}
+the union's payload separately from the ``tag.''
 
-We find that in practice, the \texttt{PreFlatten} optimizations interact poorly
-with the existing \texttt{Chunkify} pass, and so fail to materialize a
-consistent win: most benchmark configurations show a loss (on the order of a 1\%
-geomean latency increase across all impacted benchmarks, generally driven by a
-handful of large outlier regressions). After controlling for the effect of
-the \texttt{Chunkify} heuristic (by forcing all generated code into a single
-chunk), the \texttt{PreFlatten} optimizations are neutral-to-positive,
-demonstrating a geomean latency reduction on the order of 1-2\% across most
-impacted benchmarks. This suggests that the \texttt{Chunkify} heuristic may be
-over-tuned to the existing benchmark suite. \hl{TODO: describe chunkify?}
+These duplicate definitions interact with MLton's downstream \texttt{Chunkify}
+pass. MLton default code generator backend emits C and then invokes GCC. The
+structure of the generated C mirrors the generated code from the native backend,
+with (SML) function calls implemented by means of a jump table and operations on
+an explicit stack object rather than C-level function calls. In an ideal world,
+MLton would compile the entire user program down to a single C function; in
+practice, this strategy results in prohibitively long C compile times. MLton's
+answer to this problem is its \texttt{Chunkify} pass, which shards the generated
+program across multiple C functions (``chunks''), accepting some overhead for
+control flow across chunk boundaries in exchange for reduced C compile times.
 
-\hl{TODO: fix start}
+\hl{TODO: NOT GREAT PHRASING}
+
+Since \texttt{PreFlatten} increases the size of the generated binary with its
+newly-emitted function specializations, it serves to permute the location of
+chunk boundaries in the generated C. We find that in practice, this effect is
+large enough to nullify any potential wins from \texttt{PreFlatten}: most
+benchmark configurations show a loss (on the order of a 1\% geomean latency
+increase across all impacted benchmarks, generally driven by a handful of large
+outlier regressions). After controlling for the effect of the \texttt{Chunkify}
+heuristic (by forcing all generated code into a single chunk),
+the \texttt{PreFlatten} optimizations are neutral-to-positive, demonstrating a
+geomean latency reduction on the order of 1-2\% across most impacted benchmarks.
+This suggests that the \texttt{Chunkify} heuristic may be over-tuned to the
+existing benchmark suite.
+
+%% \hl{TODO: fix start}
+
 Our \texttt{ShallowFlatten} pass, likewise, explores two distinct \hl{concrete}
 optimizations, which we benchmark and analyze separately. For both
-optimizations, we rewrite containers over tuple types so that the innermost
+optimizations, we rewrite containers over tuple types so that the ``innermost''
+type is no longer a \texttt{tuple}, and hence no longer requires an indirection
+to access. Our first strategy replaces an array-of-tuple with a tuple-of-array
+(i.e. replacing a \texttt{($\tau_1$ * $\tau_2$) array} by a \texttt{$\tau_1$
+array * $\tau_2$ array}), achieving a layout analogous to the HPC-standard
+struct-of-array (SoA) \hl{layout}. Our second strategy replaces an
+array-of-homogeneous-tuple with a flattened array whose primitive members are
+allocated inline (i.e. replacing a \texttt{($\tau$ * $\tau$) array} of length
+$n$ by a \texttt{$\tau$ array} of length $2n$), achieving a layout analogous to
+standard the C/C++ array-of-struct (AoS). The \texttt{ShallowFlatten} pass is a
+close sibling to the existing \texttt{DeepFlatten} pass, but it differs from it
+by: 1) optimizing layouts even in cases where coercions are required, 2)
+targetting an early, high-level IR so as to better-leverage existing
+optimization passes, and 3) supporting an SoA layout in addition to SoA.
 
-\hl{TODO: fix end}
 
-
-
-On the other hand, both \texttt{ShallowFlatten} transformations are
+Evaluations show that both \texttt{ShallowFlatten} transformations are
 overwhelmingly positive in the single-threaded case, demonstrating latency
 reductions on individual benchmarks as large as 50\% (i.e. 2x speedups) and
 geomean latency reductions on the order of 10\% across impacted benchmarks
@@ -69,4 +96,19 @@ of each benchmark iteration produces latency reductions on individual benchmarks
 as large as 90\% (i.e. 10x speeups) and suite-geomean latency reductions of
 50\%.
 
-\hl{TODO: add a blurb about noise?}
+Apart from the optimizations developed for this paper, our evaluation also
+identifies a source of severe performance noise that impacts all benchmark data
+collected from MLton-derived compilers using the C backend with its default C
+toolchain configuration: no-op changes to end-stage MLton IR can result in
+performance swings as large as 50\%. \hl{TODO: say more? move this to earlier?}
+
+The structure of this document is as follows: first, we present an overview of
+the MLton compilation pipeline and the intermediate representations that will be
+the target of our work; next, we provide a rigorous description of our
+implemented optimizations followed by an empirical evaluation of their
+effectiveness; finally, we provide an overview of related works and situate our
+contribution within it.
+
+\hl{TODO: edit for phrasing?}
+
+
