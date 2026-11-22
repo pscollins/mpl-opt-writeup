@@ -858,7 +858,7 @@ $\flatsem{\cdot}$ for the action of the transformation on a program $P =
 F_1 \cdots F_m$ under a flattening decision $\sigma$ produced by the analysis
 $\Sigma$ (ignoring \texttt{datatype} and global variable declarations, which are
 unchanged). For a function definition $F_j = (\mathtt{def}\
-f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq B_0 \cdots B_k)$ of arity
+f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : B_0 \cdots B_k)$ of arity
 $n$, a decision vector $\vec{d} = [d_1, \dots, d_n]$ assigns each formal
 parameter either \texttt{Preserve} or \texttt{Flatten} (written
 $\texttt{Flatten}_C$ in the \texttt{ConApp} analysis to record the
@@ -899,11 +899,11 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \[
     \begin{aligned}
       F_j
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq B_0 \cdots B_k \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : B_0 \cdots B_k \\
       \flatsem{F_j}^{\texttt{Preserve}^n}
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq \flatsem{B_0} \cdots \flatsem{B_k} \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : \flatsem{B_0} \cdots \flatsem{B_k} \\
       \flatsem{F_j}^{\vec{d}}
-        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) : \tau \syneq
+        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) \mathrel{\mathtt{->}} \tau :
            \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
@@ -1006,12 +1006,12 @@ See \cref{fig:pre_flatten_mixed_case} for an example.
     \caption{Undirected return edge before \texttt{PreFlatten}}
     \label{fig:pre_flatten_undirected_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int): int * int =
+def g(a: int, b: int) -> int * int:
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb0():
     # Return value flows directly into bb_cont
     call bb_cont g(a, b)
@@ -1026,12 +1026,12 @@ def f(a: int, b: int): ... =
     \caption{Undirected return edge after \texttt{PreFlatten}}
     \label{fig:pre_flatten_undirected_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int): int * int =
+def g(a: int, b: int) -> int * int:
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb0():
     # Unchanged: PreFlatten only acts on arguments
     call bb_cont g(a, b)
@@ -1049,14 +1049,14 @@ def f(a: int, b: int): ... =
     \caption{Mixed users before \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_users_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     x: int * int = tuple(a, b)
     # Unflattenable primitive use of x
     _: unit = prim ...(x)
     call bb_cont g(x)
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}
@@ -1065,14 +1065,14 @@ def g(p: int * int): ... =
     \caption{Mixed users after \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_users_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
     _: unit = prim ...(x)
     call bb_cont g_flat(a, b)
 
-def g_flat(p_0: int, p_1: int): ... =
+def g_flat(p_0: int, p_1: int) -> ...:
   block bbBind():
     # Rebind to the original name
     p: int * int = tuple(p_0, p_1)
@@ -1089,7 +1089,7 @@ def g_flat(p_0: int, p_1: int): ... =
     \caption{Mixed callers before \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_callers_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Flattenable allocation via `tuple`
     x: int * int = tuple(a, b)
@@ -1102,7 +1102,7 @@ def f(a: int, b: int): ... =
     # Unflattenable call
     call bb_cont g(y)
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}
@@ -1111,7 +1111,7 @@ def g(p: int * int): ... =
     \caption{Mixed callers after \texttt{PreFlatten}}
     \label{fig:pre_flatten_mixed_callers_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Calls specialized `g_flat`
     call bb_cont g_flat(a, b)
@@ -1121,7 +1121,7 @@ def f(a: int, b: int): ... =
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g_flat(p_0: int, p_1: int): ... =
+def g_flat(p_0: int, p_1: int) -> ...:
   block bbBind():
     # Rebind to the original name
     p: int * int = tuple(p_0, p_1)
@@ -1130,7 +1130,7 @@ def g_flat(p_0: int, p_1: int): ... =
   block bb0():
     ...
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}

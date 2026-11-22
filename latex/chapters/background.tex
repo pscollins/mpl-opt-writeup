@@ -115,7 +115,7 @@ val _ = print (
     \label{fig:fact_ssa}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def fact(n: int): int =
+def fact(n: int) -> int:
   block bb0():
     isEq: bool = prim Word32_equal (n, 0)
     case isEq of true => goto bb1 | false => goto bb2
@@ -132,7 +132,7 @@ def fact(n: int): int =
     funcResult: int = prim Word32_mul (callResult, n)
     return funcResult
 
-def main(): unit =
+def main() -> unit:
   block bb0():
     initVal: int = 4
     # call fact(initVal) and return to bb1
@@ -207,7 +207,7 @@ immutable container of objects of type \texttt{a'}, respectively.
     \texttt{constructor} & $C$   &             & \\[0.6em]
     \texttt{program}     & $P$   & $\Coloneqq$ & $D^* \; s^* \; F^*$ \\
     \texttt{datatype-def}& $D$   & $\Coloneqq$ & $\texttt{datatype}\; T \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\tau_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\tau_n]$ \\
-    \texttt{function-def}& $F$   & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} \tau \mathrel{\texttt{=}} B_1 \dots B_m$ \\
+    \texttt{function-def}& $F$   & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathrel{\texttt{->}} \tau \mathbin{\texttt{:}} B_1 \dots B_m$ \\
     \texttt{block}       & $B$   & $\Coloneqq$ & $\texttt{block}\; l\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} s_1 \dots s_k \; tr$ \\
     \texttt{statement}   & $s$   & $\Coloneqq$ & $\texttt{(}x \mathbin{\texttt{:}} \tau \mid \texttt{\_}\texttt{)} \mathrel{\texttt{=}} e$ \\[0.4em]
     \texttt{exp}         & $e$   & $\Coloneqq$ & $v$ \\
@@ -294,7 +294,7 @@ represents \hl{its semantics}.
     \label{fig:ssa_pseudo_small}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-def fact(n: int): int =
+def fact(n: int) -> int:
   block bb0():
     isEq: bool = prim Word32_equal (n, 0)
     case isEq of
@@ -1333,7 +1333,7 @@ fun main() = add (1, 2)
     \label{fig:add_two_ssa}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def add(ab: (int * int)): int =
+def add(ab: (int * int)) -> int:
   block bb0():
     # Tuple reads: pointer dereferences
     a: int = select (ab, 0)
@@ -1341,7 +1341,7 @@ def add(ab: (int * int)): int =
     ret: int = prim Word32_add (a, b)
     return ret
 
-def main(): int =
+def main() -> int:
   block bb0():
     # Tuple constructor call: heap allocation
     ab: (int * int) = tuple(1, 2)
@@ -1367,14 +1367,14 @@ unary-with-tuple-arguments to true-$n$-ary, as depicted in
     \label{fig:flatten_one_add_unary}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def add_tuple(ab: (int * int)): int =
+def add_tuple(ab: (int * int)) -> int:
   block bb0():
     a: int = select (ab, 0)  # tuple read
     b: int = select (ab, 1)  # tuple read
     ret: int = prim Word32_add (a, b)
     return ret
 
-def main(): int =
+def main() -> int:
   block bb0():
     # Heap allocation
     ab: (int * int) = tuple(1, 2)
@@ -1387,12 +1387,12 @@ def main(): int =
     \label{fig:flatten_one_add_flat}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def add(a: int, b: int): int =
+def add(a: int, b: int) -> int:
   block bb0():
     ret: int = prim Word32_add (a, b)
     return ret
 
-def main(): int =
+def main() -> int:
   block bb0():
     # Direct call
     call bb1 add(1, 2)
@@ -1421,19 +1421,19 @@ copy -- even if the leaf function only reads a single field.
     \label{fig:bad_flatten_unflattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def f_parent(t: (T1 * ... * Tn)): T1 =
+def f_parent(t: (T1 * ... * Tn)) -> T1:
   block bb0():
     # Only need to pass a pointer
     call bb1 f_leaf(t)
     ...
 
-def f_leaf(t: (T1 * ... * Tn)): T1 =
+def f_leaf(t: (T1 * ... * Tn)) -> T1:
   block bb0():
     # Only field 0 is read
     x1: T1 = select (t, 0)
     return x1
 
-def main(): T1 =
+def main() -> T1:
   block bb0():
     # Heap allocation of tuple
     t: (T1 * ... * Tn) =
@@ -1447,19 +1447,19 @@ def main(): T1 =
     \label{fig:bad_flatten_flattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def f_parent(x1: T1, ..., xn: Tn): T1 =
+def f_parent(x1: T1, ..., xn: Tn) -> T1:
   block bb0():
     # Need to copy all n fields
     call bb1 f_leaf(x1, ..., xn)
     ...
 
-def f_leaf(x1: T1, ..., xn: Tn): T1 =
+def f_leaf(x1: T1, ..., xn: Tn) -> T1:
   block bb0():
     # x2..xn carried across call
     # but never used
     return x1
 
-def main(): T1 =
+def main() -> T1:
   block bb0():
     # Direct call passing n fields
     call bb1 f_parent(v1, ..., vn)
@@ -1519,7 +1519,7 @@ select the optimum representation for nested tuple types (depicted in
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
 def add_vec(
   input: ((int * int) * (int * int))
-): int =
+) -> int:
   block bb0():
     lhs: int * int = select (input, 0)
     rhs: int * int = select (input, 1)
@@ -1538,7 +1538,7 @@ def add_vec(
 def add_vec_flat(
   lhs_x: int, lhs_y: int,
   rhs_x: int, rhs_y: int
-): int =
+) -> int:
   block bb0():
     # Direct access: tuple selects
     # are completely eliminated
@@ -1712,12 +1712,12 @@ See \cref{fig:true_flat_mixed_case} for an illustration.
     \caption{Undirected return edge before \texttt{Flatten}}
     \label{fig:true_flat_undirected_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int): int * int =
+def g(a: int, b: int) -> int * int:
   block bb0():
     ret: int * int = tuple(a, b)
     return ret
 
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb0():
     # Return value flows directly into bb_cont
     call bb_cont g(a, b)
@@ -1732,11 +1732,11 @@ def f(a: int, b: int): ... =
     \caption{Undirected return edge after \texttt{Flatten}}
     \label{fig:true_flat_undirected_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def g(a: int, b: int): int, int =
+def g(a: int, b: int) -> int, int:
   block bb0():
     return a, b
 
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb0():
     # g's return and bb_cont flattened together
     call bb_cont g(a, b)
@@ -1753,14 +1753,14 @@ def f(a: int, b: int): ... =
     \caption{Mixed users before \texttt{Flatten}}
     \label{fig:true_flat_mixed_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     x: int * int = tuple(a, b)
     # Unflattenable primitive use of x
     _: unit = prim ... (x)
     call bb_cont g(x)
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}
@@ -1769,14 +1769,14 @@ def g(p: int * int): ... =
     \caption{Mixed users after \texttt{Flatten}}
     \label{fig:true_flat_mixed_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
     _: unit = prim ...(x)
     call bb_cont g(a, b)
 
-def g(p_0: int, p_1: int): ... =
+def g(p_0: int, p_1: int) -> ...:
   block bb0():
     ...
 \end{minted}
@@ -1788,7 +1788,7 @@ def g(p_0: int, p_1: int): ... =
     \caption{Mixed callers before \texttt{Flatten}}
     \label{fig:true_flat_mixed_callers_before}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Flattenable allocation via `tuple`
     x: int * int = tuple(a, b)
@@ -1801,7 +1801,7 @@ def f(a: int, b: int): ... =
     # Unflattenable call
     call bb_cont g(y)
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}
@@ -1810,7 +1810,7 @@ def g(p: int * int): ... =
     \caption{Mixed callers after \texttt{Flatten}}
     \label{fig:true_flat_mixed_callers_after}
 \begin{minted}[fontsize=\scriptsize,baselinestretch=0.88,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
-def f(a: int, b: int): ... =
+def f(a: int, b: int) -> ...:
   block bb_start():
     # Unchanged: bb_other call forces `g` non-flat
     x: int * int = tuple(a, b)
@@ -1820,7 +1820,7 @@ def f(a: int, b: int): ... =
     y: int * int = prim ...
     call bb_cont g(y)
 
-def g(p: int * int): ... =
+def g(p: int * int) -> ...:
   block bb0():
     ...
 \end{minted}

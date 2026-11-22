@@ -975,8 +975,8 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
       &= \sembrack{\mathtt{datatype}\ T \syneq C_1\;[\mathtt{of}\ \tau_1] \mathrel{\mathtt{|}} \dots \mathrel{\mathtt{|}} C_n\;[\mathtt{of}\ \tau_n]}_\Phi \\
       &= \mathtt{datatype}\ T \syneq C_1\;[\mathtt{of}\ \sembrack{\tau_1}_\Phi] \mathrel{\mathtt{|}} \dots \mathrel{\mathtt{|}} C_n\;[\mathtt{of}\ \sembrack{\tau_n}_\Phi] \\
     \sembrack{F}_\Phi
-      &= \sembrack{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : \tau \syneq B_1 \cdots B_m}_\Phi \\
-      &= \mathtt{def}\ f(x_1{:}\sembrack{\tau_1}_\Phi, \dots, x_n{:}\sembrack{\tau_n}_\Phi) : \sembrack{\tau}_\Phi \syneq \sembrack{B_1}_\Phi \cdots \sembrack{B_m}_\Phi \\
+      &= \sembrack{\mathtt{def}\ f(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : B_1 \cdots B_m}_\Phi \\
+      &= \mathtt{def}\ f(x_1{:}\sembrack{\tau_1}_\Phi, \dots, x_n{:}\sembrack{\tau_n}_\Phi) \mathrel{\mathtt{->}} \sembrack{\tau}_\Phi : \sembrack{B_1}_\Phi \cdots \sembrack{B_m}_\Phi \\
     \sembrack{B}_\Phi
       &= \sembrack{\mathtt{block}\ l(x_1{:}\tau_1, \dots, x_n{:}\tau_n) : s_1 \cdots s_k \; tr}_\Phi \\
       &= \mathtt{block}\ l(x_1{:}\sembrack{\tau_1}_\Phi, \dots, x_n{:}\sembrack{\tau_n}_\Phi) : \sembrack{s_1}_\Phi \cdots \sembrack{s_k}_\Phi \; tr \\
