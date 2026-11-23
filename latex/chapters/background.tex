@@ -296,7 +296,7 @@ block labels become entries in a C enum, and control passes between blocks
 either by direct \texttt{goto} calls (for statically-known branch targets) or
 via the jump table (for indirect branches). Here and elsewhere, the provided C
 code is simplified syntactically vs the actual MLton output, but it faithfully
-represents \hl{its semantics}.
+represents its semantics.
 
 \begin{figure}[htbp]
   \centering
@@ -928,7 +928,7 @@ float y = tmp2 + 2.0f;
       \node[font=\scriptsize\color{textMuted}] at ($(p1.south)!0.5!(p2.south) + (0.3, -0.55)$) {Unboxed scalars passed by value};
     \end{tikzpicture}
   \end{minipage}
-  \caption{Primitive values: Unboxed scalar values stored directly in registers or stack slots without object headers.}
+  \caption{Primitive types: unboxed scalar values stored directly in registers or stack slots.}
   \label{fig:layout_primitive}
 \end{figure}
 
@@ -938,7 +938,7 @@ Unlike primitive types, tuple data is always allocated on the heap. Any
 references in the generated code read/write through a pointer, which itself may
 be passed around either via temporaries or a MLton stack operation. Each tuple
 object is tagged with a \texttt{GC\_header}, which tracks various metadata
-required during garbage collection, not discussed here.
+required during garbage collection (not discussed here).
 
 \begin{figure}[H]
   \centering
@@ -1001,7 +1001,9 @@ GC_header* hdr =
         node[midway, below=2pt, font=\scriptsize] {\texttt{members}};
     \end{tikzpicture}
   \end{minipage}
-  \caption{Heap-allocated tuple layout. Pointer \texttt{t1} points directly to the \texttt{members} payload; fields are accessed at non-negative offsets, while GC metadata precedes the payload at a fixed negative offset.}
+  \caption{Tuples: generated code receives a pointer \texttt{t1} to the
+    \texttt{members} payload, fields/metadata are accessed at fixed
+    positive/negative offsets, respectively}
   \label{fig:layout_tuple}
 \end{figure}
 
@@ -1082,7 +1084,8 @@ size_t len = meta->length;
         node[midway, below=2pt, font=\scriptsize] {\texttt{elements[]}};
     \end{tikzpicture}
   \end{minipage}
-  \caption{Heap-allocated array and vector layout. Pointer \texttt{arr} points to the first payload element \texttt{el[0]}; positive offsets index elements forward, while negative offsets access container metadata.}
+  \caption{Containers: generated code receives a pointer \texttt{arr} to the
+    first element \texttt{el[0]}, elements/metadata are accessed at fixed positive/negative offsets, respectively}
   \label{fig:layout_array}
 \end{figure}
 
