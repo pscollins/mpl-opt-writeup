@@ -433,7 +433,7 @@ L_bb1:
   goto doSwitchNextBlock;
 \end{minted}
   \end{subfigure}
-  \caption{Generated C for \cref{fig:ssa_pseudo_small} \texttt{bb1} (constant-valued \textttt{return}).}
+  \caption{Generated C for \cref{fig:ssa_pseudo_small} \texttt{bb1} (constant-valued \texttt{return}).}
   \label{fig:pseudo_small_bb1}
 \end{figure}
 
@@ -557,25 +557,32 @@ void MLton_Trampoline(char* stackTop, Label nextBlock) {
 \end{figure}
 
 
-``Chunkification'' is a tradeoff between C compile times and performance. Every
-chunk boundary adds overhead: first, there is direct overhead from the extra
-instructions required to bounce across the trampoline, and second, there is a
-penalty to pass data across chunk boundaries.
-
 There are two possible mechanisms to pass data along control flow edges in
-MLton, only one of which is available for inter-chunk calls: via C
-function-local variables (which are intended to map on to target CPU registers)
-or via explicit stack operations. Passing data via C function-local variables
-will generally be strictly less expensive than via stack operations: either the
-C compiler register allocator succeeds at keeping the temporaries in registers,
-or the C compiler emits a spill-fetch sequence that is of roughly equivalent
-cost to the explicit MLton stack operations.
+MLton, only one of which is available for inter-chunk calls: a) C function-local
+variables (which are intended to map on to target CPU registers) or b) explicit
+stack operations. Passing data via C function-local variables will in general be
+at-least-as-cheap as explicit stack operations, and often cheaper:
+either the C compiler
+register allocator succeeds at keeping the temporaries in registers, or the C
+compiler emits a spill-fetch sequence that is of roughly equivalent cost to the
+explicit MLton stack operations.
+
+``Chunkification,'' therefore, is a tradeoff between C compile times and
+performance. Every chunk boundary adds overhead: first, there is direct overhead
+from the extra instructions required to bounce across the trampoline, and
+second, there is a penalty to pass data across chunk boundaries -- spilling data
+to the stack that might otherwise have been able to remain in registers.
 
 This completes the discussion of the correspondence between \texttt{SSA} and C
-representations of control flow, as well as the in-memory layout for program
-data that lives on the stack. The remaining correspondence to describe is the
-in-memory layout for heap data, which we will cover in the following section
-(alongside the optimizations that impact it).
+representations of control flow, as well the calling convention for MLton's
+generated C code (which is oriented around an explicit C-level stack object).
+What remains is to describe how MLton represents data in the heap (and the
+optimizations that impact it), which we will cover in the following section.
+
+%% as well as the in-memory layout for program
+%% data that lives on the stack. The remaining correspondence to describe is the
+%% in-memory layout for heap data, which we will cover in the following section
+%% (alongside the optimizations that impact it).
 
 %% and fully describes the in-memory
 %% representation of \texttt{SSA} data that lives on the stack. 
