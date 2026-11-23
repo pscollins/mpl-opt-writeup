@@ -2308,35 +2308,29 @@ the lowering from the \texttt{SXML} to \texttt{SSA}.
 %% \Rightarrow \texttt{SSA}$ conversion.
 
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
     \caption{Before \texttt{Polyvariance}}
     \label{fig:polyvar_sml_before}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{sml}
 fun doOp (l: int, r: int,
     f: int * int -> int): int =
   f (l, r)
 
-fun add (l: int, r: int): int =
-  l + r
+fun add (l: int, r: int): int = l + r
+fun sub (l: int, r: int): int = l - r
 
-fun sub (l: int, r: int): int =
-  l - r
-
-fun call1 (): int =
-  doOp (2, 2, add)
-
-fun call2 (): int =
-  doOp (2, 2, sub)
+fun call1 (): int = doOp (2, 2, add)
+fun call2 (): int = doOp (2, 2, sub)
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
     \caption{After \texttt{Polyvariance}}
     \label{fig:polyvar_sml_after}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{sml}
 fun doOpAdd (l: int, r: int,
     f: int * int -> int): int =
   f (l, r)
@@ -2345,17 +2339,11 @@ fun doOpSub (l: int, r: int,
     f: int * int -> int): int =
   f (l, r)
 
-fun add (l: int, r: int): int =
-  l + r
+fun add (l: int, r: int): int = l + r
+fun sub (l: int, r: int): int = l - r
 
-fun sub (l: int, r: int): int =
-  l - r
-
-fun call1 (): int =
-  doOpAdd (2, 2, add)
-
-fun call2 (): int =
-  doOpSub (2, 2, sub)
+fun call1 (): int = doOpAdd (2, 2, add)
+fun call2 (): int = doOpSub (2, 2, sub)
 \end{minted}
   \end{subfigure}
   \caption{The \texttt{Polyvariance} pass duplicates higher-order functions at callsites, creating specialized copies for each caller.}
@@ -2376,13 +2364,13 @@ a simple higher-order function, without \texttt{Polyvariance}, and see
 \cref{fig:hofo_env_example} for an extension to the case of a non-empty
 environment.
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}[t]{0.40\textwidth}
     \caption{Standard ML source}
     \label{fig:hofo_no_polyvar_sml}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{sml}
 fun doOp (l: int, r: int,
     f: int * int -> int): int =
   f (l, r)
@@ -2404,7 +2392,7 @@ fun call2 (): int =
     \caption{Post-closure conversion \texttt{SSA}}
     \label{fig:hofo_no_polyvar_ssa}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 datatype lambda1 = xEnv_add | xEnv_sub
 
 def doOp(l: int, r: int, env: lambda1) -> int:
@@ -2441,13 +2429,13 @@ def call2() -> int:
 \end{figure}
 
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}[t]{0.42\textwidth}
     \caption{Standard ML source}
     \label{fig:hofo_env_example_sml}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{sml}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{sml}
 ...
 fun buildAddWithBias
     (bias: int):
@@ -2468,7 +2456,7 @@ fun call3 (): int =
     \caption{Post-closure conversion \texttt{SSA}}
     \label{fig:hofo_env_example_ssa}
     \vspace{1mm}
-\begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 datatype lambda1 =
    xEnv_add
  | xEnv_sub
@@ -2499,6 +2487,7 @@ def call3() -> int:
     upon dispatch.}
   \label{fig:hofo_env_example}
 \end{figure}
+\FloatBarrier
 
 The relevance of closure conversion to flattening is that the C representation
 for \texttt{datatype} values is, in the most general case, a tagged union whose
@@ -2509,19 +2498,19 @@ directly into the C struct for the \texttt{datatype} object, but building the
 allocation when the payload is non-empty. Hence the environment itself can
 introduce an unflattened tuple to the program.
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
     \caption{Datatype definition and tuple types}
     \label{fig:datatype_tuple_payload_types}
     \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{python}
 # Example datatype definition
 datatype Foo = Bar of int * int
              | Baz of float * float
 \end{minted}
 \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{cpp}
 // C type for int * int
 struct IntPair {
   GC_header gc_header; // GC metadata tag
@@ -2545,7 +2534,7 @@ struct FloatPair {
     \caption{C \texttt{datatype} representation}
     \label{fig:datatype_tuple_payload_c}
     \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{cpp}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=1.5mm,rulecolor=\color{black!20}]{cpp}
 // C type for `Foo`
 struct FooDatatype {
   // GC metadata tag contains the
@@ -2565,6 +2554,7 @@ struct FooDatatype {
 
   \label{fig:datatype_tuple_payload}
 \end{figure}
+\FloatBarrier
 
 %% \hl{TODO: could probably use some figures here}
 
