@@ -1003,7 +1003,7 @@ GC_header* hdr =
   \end{minipage}
   \caption{Tuples: generated code receives a pointer \texttt{t1} to the
     \texttt{members} payload, fields/metadata are accessed at fixed
-    positive/negative offsets, respectively}
+    positive/negative offsets, respectively.}
   \label{fig:layout_tuple}
 \end{figure}
 
@@ -1086,7 +1086,7 @@ size_t len = meta->length;
   \end{minipage}
   \caption{Containers: generated code receives a pointer \texttt{arr} to the
     first element, elements/metadata are accessed at fixed positive/negative
-    offsets, respectively}
+    offsets, respectively.}
   \label{fig:layout_array}
 \end{figure}
 
@@ -1179,7 +1179,7 @@ float child_f2 = *(float*)(child + 4);
       \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(f2.south) + (-0.2, 0)$) to[out=-90, in=90] (ch_f1.north west);
     \end{tikzpicture}
   \end{minipage}
-  \caption{Nested tuples: parent field points to the child ``base'' offset}
+  \caption{Nested tuples: parent field points to the child ``base'' offset.}
   \label{fig:layout_nested_tuple}
 \end{figure}
 
@@ -1431,7 +1431,7 @@ def main() -> int:
     ...
 \end{minted}
   \end{subfigure}
-  \caption{Action of the \texttt{Flatten} pass on the example from \cref{fig:add_two_ssa}}
+  \caption{Action of the \texttt{Flatten} pass on the example from \cref{fig:add_two_ssa}.}
   \label{fig:flatten_one_add}
 \end{figure}
 
@@ -2232,10 +2232,10 @@ in detail here.
 
 The most salient feature of the \texttt{DeepFlatten} analysis for our purposes
 is that it never inserts coercion pack/unpack sequences around
-container-of-tuple operations: any program construct that operates the
+container-of-tuple operations: any program construct that operates on the
 container's elements as \texttt{tuple} objects rather than accessing their
 fields (for example, copying \texttt{tuple} objects between two containers, or
-capturing a \texttt{tuple} in a closure environment) ``poisions'' an entire
+capturing a \texttt{tuple} in a closure environment) ``poisons'' an entire
 connected component of the dataflow graph, preventing flattening. This is a
 maximally-conservative strategy, and as we will see below, it seems to miss on
 substantial performance opportunities in practice.
