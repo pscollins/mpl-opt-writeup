@@ -261,7 +261,7 @@ def f(...) -> ...:
 
 def g(e: Env) -> ...:
   block bb0():
-    case e of Env1 => goto bb1 | ...
+    case e of Env1(t) => goto bb1(t) | ...
 
   # ...other blocks...
 \end{minted}
@@ -284,7 +284,7 @@ def f(...) -> ...:
 def g_flat_env1(t: a * b) -> ...:
   block bb0():
     e: Env = con Env1(t)
-    case e of Env1 => goto bb1 | ...
+    case e of Env1(t) => goto bb1(t) | ...
 
   # ...other blocks...
 \end{minted}
@@ -381,8 +381,8 @@ def g_flat_env1(t: a * b) -> ...:
 
   block bb0():
     case e of
-      Env1 => goto bb1
-    | Env2 => goto bb2
+      Env1(t) => goto bb1(t)
+    | Env2(...) => goto bb2(...)
 
   block bb1(t: a * b):
     # ...handle Env1...

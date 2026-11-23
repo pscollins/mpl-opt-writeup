@@ -130,7 +130,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 3. **Nullary `datatype` constructors in $\texttt{Flatten}_C$ ([`preflatten.tex:911-912, 929, 948-949`](../latex/chapters/preflatten.tex#L911-L912)):**
    - Fig. 3.8 assumes every constructor has the form $C \mathbin{\mathtt{of}} \tau$ carrying a payload argument. However, closure conversion routinely emits nullary constructors for capture-free functions (e.g., `xEnv_add | xEnv_sub` in `background.tex` Fig. 2.24!). Either add the nullary case ($\pi(x{:}T, \texttt{Flatten}_C) = \epsilon$, $\beta = (x{:}T \syneq \mathtt{con}\ C())$, $\alpha = \epsilon$) or note that nullary constructors are treated as carrying `unit`.
 
-4. **Missing payload binding in `ConApp` `case` arms ([`preflatten.tex:264, 287, 384`](../latex/chapters/preflatten.tex#L384)):**
+4. ~~**Missing payload binding in `ConApp` `case` arms ([`preflatten.tex:264, 287, 384`](../latex/chapters/preflatten.tex#L384)):**~~
    - In Fig. 3.3 (`lines 264, 287`) and Fig. 3.5a (`line 384`), `Env1` is declared as `Env1 of a * b` and `bb1` expects `block bb1(t: a * b):`, yet the `case` arm is written `Env1 => goto bb1` instead of `Env1(t) => goto bb1(t)` (passing 0 arguments to a 1-parameter block).
 
 5. **Abrupt transition opening §3.3 ([`preflatten.tex:987-990`](../latex/chapters/preflatten.tex#L987-L990)):**
