@@ -1026,8 +1026,8 @@ container length in addition to the GC metadata.
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{c}
 // C structs corresponding to SSA `int array`
 typedef struct {
-  GC_header gc_header; // GC metadata tag
   size_t    length;    // Array length
+  GC_header gc_header; // GC metadata tag
 } ArrMetadata;
 
 struct ArrTypeT1 {
@@ -1052,16 +1052,16 @@ size_t len = meta->length;
     \centering
     \begin{tikzpicture}
       % Heap layout cells
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.4cm, minimum height=0.62cm] (hdr) at (0, 0) {\small\texttt{header}};
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.2cm, minimum height=0.62cm, right=0cm of hdr] (len) {\small\texttt{length}};
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, minimum height=0.62cm, right=0cm of len] (el0) {\small\texttt{el[0]}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.2cm, minimum height=0.62cm] (len) at (0, 0) {\small\texttt{length}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.4cm, minimum height=0.62cm, right=0cm of len] (hdr) {\small\texttt{header}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, minimum height=0.62cm, right=0cm of hdr] (el0) {\small\texttt{el[0]}};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, minimum height=0.62cm, right=0cm of el0] (el1) {\small\texttt{el[1]}};
       \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.7cm, minimum height=0.62cm, right=0cm of el1] (dots) {$\cdots$};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.2cm, minimum height=0.62cm, right=0cm of dots] (eln) {\small\texttt{el[n-1]}};
 
       % Types above
-      \node[idx] at ($(hdr.north) + (0, 0.22)$) {\texttt{GC\_hdr}};
       \node[idx] at ($(len.north) + (0, 0.22)$) {\texttt{size\_t}};
+      \node[idx] at ($(hdr.north) + (0, 0.22)$) {\texttt{GC\_hdr}};
       \node[idx] at ($(el0.north) + (0, 0.22)$) {\texttt{int}};
       \node[idx] at ($(el1.north) + (0, 0.22)$) {\texttt{int}};
       \node[idx] at ($(eln.north) + (0, 0.22)$) {\texttt{int}};
@@ -1071,21 +1071,22 @@ size_t len = meta->length;
       \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(el0.north west) + (0, 0.65)$) -- (el0.north west);
 
       % Offsets below
-      \node[idx] at ($(hdr.south) + (0, -0.22)$) {\texttt{-16}};
-      \node[idx] at ($(len.south) + (0, -0.22)$) {\texttt{-8}};
+      \node[idx] at ($(len.south) + (0, -0.22)$) {\texttt{-16}};
+      \node[idx] at ($(hdr.south) + (0, -0.22)$) {\texttt{-8}};
       \node[idx] at ($(el0.south) + (0, -0.22)$) {\texttt{+0}};
       \node[idx] at ($(el1.south) + (0, -0.22)$) {\texttt{+4}};
       \node[idx] at ($(eln.south) + (0, -0.22)$) {\texttt{+4(n-1)}};
 
       % Braces below
-      \draw[brace] ($(hdr.south west) + (0.02, -0.42)$) -- ($(len.south east) + (-0.02, -0.42)$)
+      \draw[brace] ($(len.south west) + (0.02, -0.42)$) -- ($(hdr.south east) + (-0.02, -0.42)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{metadata}};
       \draw[brace] ($(el0.south west) + (0.02, -0.42)$) -- ($(eln.south east) + (-0.02, -0.42)$)
         node[midway, below=2pt, font=\scriptsize] {\texttt{elements[]}};
     \end{tikzpicture}
   \end{minipage}
   \caption{Containers: generated code receives a pointer \texttt{arr} to the
-    first element \texttt{el[0]}, elements/metadata are accessed at fixed positive/negative offsets, respectively}
+    first element, elements/metadata are accessed at fixed positive/negative
+    offsets, respectively}
   \label{fig:layout_array}
 \end{figure}
 
@@ -1178,7 +1179,7 @@ float child_f2 = *(float*)(child + 4);
       \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(f2.south) + (-0.2, 0)$) to[out=-90, in=90] (ch_f1.north west);
     \end{tikzpicture}
   \end{minipage}
-  \caption{Nested tuple layout. The parent tuple contains a \texttt{void*} member \texttt{field2} that stores a pointer to the payload of an out-of-line child tuple.}
+  \caption{Nested tuples: parent field points to the child ``base'' offset}
   \label{fig:layout_nested_tuple}
 \end{figure}
 
@@ -1232,16 +1233,16 @@ size_t len = meta->length;
       \node[font=\small\bfseries\ttfamily, color=textMuted, anchor=east] at (-0.15, 1.2) {ArrTypeT2:};
 
       % Array container
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.2cm, minimum height=0.58cm, anchor=north west] (ahdr) at (0, 1.49) {\small\texttt{header}};
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.1cm, minimum height=0.58cm, right=0cm of ahdr] (alen) {\small\texttt{length}};
-      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.2cm, minimum height=0.58cm, right=0cm of alen] (ael0) {\small\texttt{el[0]}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.1cm, minimum height=0.58cm, anchor=north west] (alen) at (0, 1.49) {\small\texttt{length}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.2cm, minimum height=0.58cm, right=0cm of alen] (ahdr) {\small\texttt{header}};
+      \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.2cm, minimum height=0.58cm, right=0cm of ahdr] (ael0) {\small\texttt{el[0]}};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.2cm, minimum height=0.58cm, right=0cm of ael0] (ael1) {\small\texttt{el[1]}};
       \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.6cm, minimum height=0.58cm, right=0cm of ael1] (adots) {$\cdots$};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.3cm, minimum height=0.58cm, right=0cm of adots] (aeln) {\small\texttt{el[n-1]}};
 
       % Types above array
-      \node[idx] at ($(ahdr.north) + (0, 0.2)$) {\texttt{GC\_hdr}};
       \node[idx] at ($(alen.north) + (0, 0.2)$) {\texttt{size\_t}};
+      \node[idx] at ($(ahdr.north) + (0, 0.2)$) {\texttt{GC\_hdr}};
       \node[idx] at ($(ael0.north) + (0, 0.2)$) {\texttt{void*}};
       \node[idx] at ($(ael1.north) + (0, 0.2)$) {\texttt{void*}};
       \node[idx] at ($(aeln.north) + (0, 0.2)$) {\texttt{void*}};
@@ -1251,8 +1252,8 @@ size_t len = meta->length;
       \draw[-{Stealth[length=5pt, width=4pt]}, line width=1.0pt, color=colorPtrBorder] ($(ael0.north west) + (0, 0.55)$) -- (ael0.north west);
 
       % Offsets below array
-      \node[idx] at ($(ahdr.south) + (0, -0.18)$) {\texttt{-16}};
-      \node[idx] at ($(alen.south) + (0, -0.18)$) {\texttt{-8}};
+      \node[idx] at ($(alen.south) + (0, -0.18)$) {\texttt{-16}};
+      \node[idx] at ($(ahdr.south) + (0, -0.18)$) {\texttt{-8}};
       \node[idx] at ($(ael0.south) + (0.25, -0.18)$) {\texttt{+0}};
       \node[idx] at ($(ael1.south) + (-0.25, -0.18)$) {\texttt{+8}};
       \node[idx] at ($(aeln.south) + (0, -0.18)$) {\texttt{+8(n-1)}};
@@ -1300,15 +1301,16 @@ size_t len = meta->length;
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=colorPtrBorder] ($(ael1.south) + (0.2, 0)$) to[out=-90, in=90] (c1_f1.north west);
     \end{tikzpicture}
   \end{minipage}
-  \caption{Container-of-tuple layout. The array contains \texttt{void*} pointers to separately allocated heap tuples, requiring an indirection on every element access.}
+  \caption{Container-of-tuple: parent array members are pointers to child ``base'' offsets.}
   \label{fig:layout_nested_array}
+
 \end{figure}
 
 %% Because MLton is a whole-program compiler, all types are known statically: there
 %% is no runtime polymorphism in the generated code. Headers carrying type
 %% information exist only for the benefit of the GC. \hl{CUT?}
 
-\hl{TODO: do we need to discuss the allocation side too?}
+%% \hl{TODO: do we need to discuss the allocation side too?}
 
 \subsection{\texttt{Flatten}}
 \label{sec:basic_flatten}
@@ -1897,8 +1899,8 @@ regardless of how many containers we insert it into.
 // SML: type pairArray = (int * int) array
 struct PairArrayType {
   struct Metadata {
-    GC_header header;
     size_t    length;
+    GC_header header;
   } metadata;
   // Out-of-line heap elements
   void* el[];
@@ -1947,9 +1949,9 @@ _ = prim Array_update(arr, 1, t')
     \centering
     \begin{tikzpicture}
       % Array container
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.0cm, anchor=north west] (ahdr) at (0.3, 1.9) {\scriptsize\texttt{header}};
-      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.9cm, right=0cm of ahdr] (alen) {\scriptsize\texttt{length}};
-      \node[cell, fill=colorX, draw=ThesisDarkBlue, line width=0.8pt, minimum width=1.15cm, right=0cm of alen] (ael0) {\scriptsize\texttt{el[0]}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.9cm, anchor=north west] (alen) at (0.3, 1.9) {\scriptsize\texttt{length}};
+      \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=1.0cm, right=0cm of alen] (ahdr) {\scriptsize\texttt{header}};
+      \node[cell, fill=colorX, draw=ThesisDarkBlue, line width=0.8pt, minimum width=1.15cm, right=0cm of ahdr] (ael0) {\scriptsize\texttt{el[0]}};
       \node[cell, fill=colorPtr, draw=ThesisPurple, line width=0.8pt, minimum width=1.15cm, right=0cm of ael0] (ael1) {\scriptsize\texttt{el[1]}};
       \node[cell, fill=colorHdr, draw=colorHdrBorder, minimum width=0.55cm, right=0cm of ael1] (adots) {$\cdots$};
       \node[cell, fill=colorX, draw=colorXBorder, minimum width=1.1cm, right=0cm of adots] (aeln) {\scriptsize\texttt{el[n-1]}};
@@ -2247,8 +2249,8 @@ struct PairType {
 // SML: type pairArray = (int * int) array
 struct PairArrayType {
   struct Metadata {
-    GC_header header;
     size_t    length;
+    GC_header header;
   } metadata;
   // Points to out-of-line `PairType` elements
   void* el[];
@@ -2263,8 +2265,8 @@ struct PairArrayType {
 // SML: type pairArray = (int * int) array
 struct FlatPairArrayTuple {
   struct Metadata {
-    GC_header header;
     size_t    length;
+    GC_header header;
   } metadata;
   // PairType fields directly inlined
   struct {
