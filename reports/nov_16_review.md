@@ -315,12 +315,12 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`background.tex:2100, 2198`](../latex/chapters/background.tex#L2100) | ~~`while executing (a)` (missing period)~~ | `while executing (a).` |
 | [`background.tex:2110`](../latex/chapters/background.tex#L2110) | ~~`travsered`~~ | `traversed` |
 | [`background.tex:2135`](../latex/chapters/background.tex#L2135) | ~~`from the the program`~~ | `from the program` |
-| [`preflatten.tex:5`](../latex/chapters/preflatten.tex#L5) | `agressive` | `aggressive` |
-| [`preflatten.tex:108`](../latex/chapters/preflatten.tex#L108) | `defintion` | `definition` |
-| [`preflatten.tex:233`](../latex/chapters/preflatten.tex#L233) | `of a a \texttt{datatype}` | `of a \texttt{datatype}` |
-| [`preflatten.tex:311, 314`](../latex/chapters/preflatten.tex#L311) | `\texttt{PreFlateen}` / missing period on line 314 | `\texttt{PreFlatten}` / add trailing period |
-| [`preflatten.tex:709`](../latex/chapters/preflatten.tex#L709) | `Unflattenable arguments are is marked` | `Unflattenable arguments are marked` |
-| [`preflatten.tex:792`](../latex/chapters/preflatten.tex#L792) | `arguments to a non-tail corresponds` | `arguments to a non-tail call corresponds` |
+| [`preflatten.tex:5`](../latex/chapters/preflatten.tex#L5) | ~~`agressive`~~ | `aggressive` |
+| [`preflatten.tex:108`](../latex/chapters/preflatten.tex#L108) | ~~`defintion`~~ | `definition` |
+| [`preflatten.tex:233`](../latex/chapters/preflatten.tex#L233) | ~~`of a a \texttt{datatype}`~~ | `of a \texttt{datatype}` |
+| [`preflatten.tex:311, 314`](../latex/chapters/preflatten.tex#L311) | ~~`\texttt{PreFlateen}` / missing period on line 314~~ | `\texttt{PreFlatten}` / add trailing period |
+| [`preflatten.tex:709`](../latex/chapters/preflatten.tex#L709) | ~~`Unflattenable arguments are is marked`~~ | `Unflattenable arguments are marked` |
+| [`preflatten.tex:792`](../latex/chapters/preflatten.tex#L792) | ~~`arguments to a non-tail corresponds`~~ | `arguments to a non-tail call corresponds` |
 | [`shallowflatten.tex:3`](../latex/chapters/shallowflatten.tex#L3) | `agressive` | `aggressive` |
 | [`shallowflatten.tex:424-425`](../latex/chapters/shallowflatten.tex#L424-L425) | `an length-$n$ \texttt{(int * int)}` | `a length-$n$ \texttt{(int * int) array}` |
 | [`shallowflatten.tex:427`](../latex/chapters/shallowflatten.tex#L427) | `homogoneous` | `homogeneous` |
