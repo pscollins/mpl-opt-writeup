@@ -1437,13 +1437,13 @@ def main() -> int:
 
 A naive solution to the problem would be to interpret all SML-level functions as
 $n$-ary functions over their arguments. However, this strategy can introduce
-\hl{unnecessary pack/unpack operations} in cases where the natural representation for
-data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
-that must pass through an intermediate function call before reaching a leaf
-function, as depicted in \cref{fig:bad_flatten_example}. For the ``non-flat''
-representation, each intermediate call pays only the cost to copy a pointer,
-but in the flattened representation, each call must pay for the full 1 KB
-copy.
+unnecessary unpack and copy operations in cases where the natural representation
+for data really is a tuple. For example, consider a large (e.g. 1 KB) tuple
+object read from an array that must pass through an intermediate function call
+before reaching a leaf function, as depicted in \cref{fig:bad_flatten_example}.
+For the ``non-flat'' representation, each intermediate call pays only the cost
+to copy a pointer, whereas in the flattened representation, the caller must
+unpack all $n$ fields and each call must pay for the full 1 KB copy.
 
 \begin{figure}[htbp]
   \centering
@@ -1467,9 +1467,9 @@ def f_leaf(t: (T1 * ... * Tn)) -> ...:
 
 def main() -> ...:
   block bb0():
-    # Heap allocation of tuple
+    # Read existing tuple from array
     t: (T1 * ... * Tn) =
-      tuple(v1, ..., vn)
+      prim Array_sub (arr, i)
     call bb1 f_parent(t)
     ...
 \end{minted}
@@ -1492,15 +1492,21 @@ def f_leaf(x1: T1, ..., xn: Tn) -> ...:
 
 def main() -> ...:
   block bb0():
-    # Direct call passing n fields
-    # pays for 1 KB copy
-    call bb1 f_parent(v1, ..., vn)
+    t: (T1 * ... * Tn) =
+      prim Array_sub (arr, i)
+    # Must unpack all n fields
+    x1: T1 = select (t, 0)
+    ...
+    xn: Tn = select (t, n - 1)
+    # Pays for 1 KB copy
+    call bb1 f_parent(x1, ..., xn)
     ...
 \end{minted}
   \end{subfigure}
 
   \caption{A pathological case for (naive) flattening: blindly flattening
-    \texttt{t} in \texttt{f\_parent} incurs an unnecessary 1 KB copy.}
+    \texttt{t} in \texttt{f\_parent} and \texttt{f\_leaf} forces an upfront
+    unpack in \texttt{main} and unnecessary 1 KB copies across calls.}
 
   \label{fig:bad_flatten_example}
 \end{figure}
@@ -1532,9 +1538,9 @@ def main() -> ...:
 
 The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
 ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
-we can guarantee that all uses are compatible with flattening, \hl{avoiding
+we can guarantee that all uses are compatible with flattening, avoiding
 pathological cases (like the one above) that result from applying purely-local
-heuristics.}
+heuristics.
 
 This approach has the advantage that it handles more general cases of tuple
 types than a simple tuple-as-unary argument -- for example, it can naturally
