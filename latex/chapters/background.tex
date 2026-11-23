@@ -2224,10 +2224,21 @@ struct FlatPairArrayTuple {
 
 Like \texttt{Flatten}, \texttt{DeepFlatten} performs a lattice-based analysis,
 flattening the types associated with particular variables only when all of their
-uses are compatible with the transformation: that is, \texttt{DeepFlatten} will
-never insert extra tuple pack/unpack operations. This is the most-conservative
-strategy, and as we will see below, it seems to miss on substantial performance
-opportunities in practice.
+uses are compatible with the transformation. The \texttt{DeepFlatten} lattice
+analysis is somewhat more complex than the \texttt{Flatten} analysis, working
+with nested ``flattenable''/``non-flattenable'' decisions for each data element
+(mirroring the structure of nested composite types), and we will not discuss it
+in detail here.
+
+The most salient feature of the \texttt{DeepFlatten} analysis for our purposes
+is that it never inserts coercion pack/unpack sequences around
+container-of-tuple operations: any program construct that operates the
+container's elements as \texttt{tuple} objects rather than accessing their
+fields (for example, copying \texttt{tuple} objects between two containers, or
+capturing a \texttt{tuple} in a closure environment) ``poisions'' an entire
+connected component of the dataflow graph, preventing flattening. This is a
+maximally-conservative strategy, and as we will see below, it seems to miss on
+substantial performance opportunities in practice.
 
 %% This is the most-conservative
 %% strategy, and as we will see below, it seems to miss on substantial performance
@@ -2278,11 +2289,11 @@ opportunities in practice.
 
 Although not strictly a flattening optimization, the MLton \texttt{Polyvariance}
 pass is also relevant to the optimizations we will explore here.
-\texttt{Polyvariance} runs on the \texttt{SXML} IR, where the IR still has
-higher order functions and implicit closure captures (all that has been removed
-are the \texttt{module} constructs, which are irrelevant from the perspective of
-performance). Here, we will represent \texttt{SXML} IR as plain SML, since the
-two are identical for our purposes.
+\texttt{Polyvariance} runs on the \texttt{SXML} IR, where the representation
+still has higher order functions and implicit closure captures (all that has
+been removed are the \texttt{module} constructs, which are irrelevant from the
+perspective of performance). Here, we will represent \texttt{SXML} IR as plain
+SML, since the two are identical for our purposes.
 
 The \texttt{Polyvariance} pass duplicates higher order functions at their
 callsites, as depicted in \cref{fig:polyvar_sml_example}. Whether or not it
@@ -2290,7 +2301,7 @@ chooses to duplicate the definition of a particular higher-order function is
 controlled by a heuristic cost model based on the product of how many times the
 function is called and how large the function body is. The benefit of this
 transformation is its impact on closure conversion, which takes place as part of
-the $\texttt{SXML} \Rightarrow \texttt{SSA}$ \hl{translation}.
+the lowering from the \texttt{SXML} to \texttt{SSA}.
 
 %% The benefit of this pass that is relevant to our discussion here is the impact
 %% on closure conversion, which takes places as part of the $\texttt{SXML}
@@ -2351,7 +2362,7 @@ fun call2 (): int =
   \label{fig:polyvar_sml_example}
 \end{figure}
 
-\hl{TODO: terminology? ``datatype objects''?}
+%% \hl{TODO: terminology? ``datatype objects''?}
 
 Closures are represented in SSA by tagged-value \texttt{datatype} objects, with
 the tag type indicating which function to call, and the corresponding data
@@ -2395,6 +2406,7 @@ fun call2 (): int =
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
 datatype lambda1 = xEnv_add | xEnv_sub
+
 def doOp(l: int, r: int, env: lambda1) -> int:
   block bb0():
     case env of
@@ -2423,9 +2435,8 @@ def call2() -> int:
 \end{minted}
   \end{subfigure}
   \caption{Illustration of the generated \texttt{SSA} for a simple higher-order
-    function, without \texttt{Polyvariance}. Closures are represented by
-    \texttt{datatype} values, requiring a \texttt{case} dispatch
-    at the callsite inside \texttt{doOp}.}
+    function. Closures are represented by \texttt{datatype} values, requiring a
+    \texttt{case} dispatch at the callsite inside \texttt{doOp}.}
   \label{fig:hofo_no_polyvar}
 \end{figure}
 
@@ -2548,16 +2559,19 @@ struct FooDatatype {
 };
 \end{minted}
   \end{subfigure}
-  \caption{Representation of \texttt{datatype} values with tuple payloads in lowered C code. The datatype object \texttt{FooDatatype} contains a GC tag identifying the active variant and an untyped pointer to a separately allocated tuple object representing the variant's payload.}
+
+  \caption{Representation of \texttt{datatype} values with tuple payloads in lowered C code.
+    \texttt{FooDatatype} is a tagged union with a pointer to a heap-allocated payload.}
+
   \label{fig:datatype_tuple_payload}
 \end{figure}
 
-\hl{TODO: could probably use some figures here}
+%% \hl{TODO: could probably use some figures here}
 
-The environment objects introduced by closure conversion can also inhibit
-flattening by interfering with the lattice-based analyses performed by the other
-flattening passes. For example, if a tuple is read from an array and then
-captured as part of a closure environment, it will inhibit the
+As described above, the environment objects introduced by closure conversion can
+also inhibit flattening by interfering with the lattice-based analyses performed
+by the other flattening passes. For example, if a tuple is read from an array
+and then captured as part of a closure environment, it will inhibit the
 \texttt{DeepFlatten} pass from acting on that array: \texttt{DeepFlatten}ing
 such an array would require constructing a temporary tuple at the spot where the
 tuple passes between the array and the closure environment, which
@@ -2582,7 +2596,7 @@ binary bloat.
 
 
 
-\hl{TODO: review structure}
+%% \hl{TODO: review structure}
 
 %% \texttt{Polyvariance} eliminates the 
 
