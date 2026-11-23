@@ -212,8 +212,8 @@ immutable container of objects of type \texttt{$\tau$}, respectively.
     \texttt{datatype}    & $T$   &             & \\
     \texttt{constructor} & $C$   &             & \\[0.6em]
     \texttt{program}     & $P$   & $\Coloneqq$ & $D^* \; s^* \; F^*$ \\
-    \texttt{datatype-def}& $D$   & $\Coloneqq$ & $\texttt{datatype}\; T \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\tau_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\tau_n]$ \\
-    \texttt{function-def}& $F$   & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathrel{\texttt{->}} \tau \mathbin{\texttt{:}} B_1 \dots B_m$ \\
+    \texttt{datatype-def}& $D$   & $\Coloneqq$ & $\texttt{datatype}\; T \mathrel{\texttt{=}} C_1\;[\texttt{of}\;\vec{\tau}_1] \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} C_n\;[\texttt{of}\;\vec{\tau}_n]$ \\
+    \texttt{function-def}& $F$   & $\Coloneqq$ & $\texttt{def}\; f\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathrel{\texttt{->}} \tau'_1\texttt{,}\;\dots\texttt{,}\;\tau'_k \mathbin{\texttt{:}} B_1 \dots B_m$ \\
     \texttt{block}       & $B$   & $\Coloneqq$ & $\texttt{block}\; l\texttt{(}x_1 \mathbin{\texttt{:}} \tau_1\texttt{,}\;\dots\texttt{,}\;x_n \mathbin{\texttt{:}} \tau_n\texttt{)} \mathbin{\texttt{:}} s_1 \dots s_k \; tr$ \\
     \texttt{statement}   & $s$   & $\Coloneqq$ & $\texttt{(}x \mathbin{\texttt{:}} \tau \mid \texttt{\_}\texttt{)} \mathrel{\texttt{=}} e$ \\[0.4em]
     \texttt{exp}         & $e$   & $\Coloneqq$ & $v$ \\
@@ -221,11 +221,11 @@ immutable container of objects of type \texttt{$\tau$}, respectively.
                          &       & $\mid$      & $\texttt{tuple(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
                          &       & $\mid$      & $\texttt{select(}v\texttt{,}\;i\texttt{)}$ \\
                          &       & $\mid$      & $\texttt{con}\; C\;\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\[0.4em]
-    \texttt{transfer}    & $tr$  & $\Coloneqq$ & $\texttt{return}\; v$ \\
+    \texttt{transfer}    & $tr$  & $\Coloneqq$ & $\texttt{return}\; v_1\texttt{,}\;\dots\texttt{,}\;v_n$ \\
                          &       & $\mid$      & $\texttt{goto}\; l\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
                          &       & $\mid$      & $\texttt{call}\;\texttt{(}l \mid \texttt{tail}\texttt{)}\; f\texttt{(}v_1\texttt{,}\;\dots\texttt{,}\;v_n\texttt{)}$ \\
                          &       & $\mid$      & $\texttt{case}\; v \;\texttt{of}\; pat_1 \mathrel{\texttt{=>}} \texttt{goto}\; l_1\texttt{(}\vec{v}_1\texttt{)} \mathrel{\texttt{|}} \dots \mathrel{\texttt{|}} pat_m \mathrel{\texttt{=>}} \texttt{goto}\; l_m\texttt{(}\vec{v}_m\texttt{)}$ \\[0.4em]
-    \texttt{pattern}     & $pat$ & $\Coloneqq$ & $C \mid C\texttt{(}x\texttt{)} \mid c \mid \texttt{\_}$ \\
+    \texttt{pattern}     & $pat$ & $\Coloneqq$ & $C \mid C\texttt{(}x_1\texttt{,}\;\dots\texttt{,}\;x_n\texttt{)} \mid c \mid \texttt{\_}$ \\
     \texttt{operand}     & $v$   & $\Coloneqq$ & $x \mid c$ \\
     \texttt{type}        & $\tau$& $\Coloneqq$ & $\texttt{int} \mid \texttt{real} \mid \texttt{bool} \mid \texttt{unit} \mid T \mid \tau_1 \mathbin{\texttt{*}} \dots \mathbin{\texttt{*}} \tau_n \mid \tau\;\texttt{array} \mid \tau\;\texttt{vector}$
   \end{tabular}
@@ -1317,14 +1317,14 @@ size_t len = meta->length;
 \subsection{\texttt{Flatten}}
 \label{sec:basic_flatten}
 In the source language, all functions are unary, with support for multiple
-arguments implemented via tuple types. This convention is desirable from the
-perspective of language design, since (for example) rules for type-checking
-function calls can be subsumed by rules for type-checking tuples. See
-\cref{fig:add_two_compare} for a representation of this convention in
-\texttt{SSA}.
+arguments and multiple return values implemented via tuple types. This
+convention is desirable from the perspective of language design, since (for
+example) rules for type-checking function calls can be subsumed by rules for
+type-checking tuples. See \cref{fig:add_two_compare} for a representation of
+this convention in \texttt{SSA}.
 
 
-A naive lowering the all-functions-are-unary program representation to C
+A naive lowering of the all-functions-are-unary program representation to C
 (following the memory layout conventions described in the previous section) is
 undesirable from the perspective of performance, however -- every single
 function call must:
@@ -1382,17 +1382,15 @@ def main() -> int:
 \end{figure}
 
 
-In MLton, the solution to this problem is to introduce support true $n$-ary
-functions in later phases of the compilation pipeline, beginning from
-\texttt{SSA}. It is therefore necessary at the level of \texttt{SSA} to choose
-the appropriate calling convention for each function in the program -- the MLton
-pass responsible for this decision is \texttt{Flatten}, introduced by
-\citet{flat-paper}. See \cref{fig:flatten_one_add} for a depiction of its action
-on the simple case from \cref{fig:add_two_ssa}. Since \texttt{SSA}'s
-\texttt{call} statement carries a return continuation label, \texttt{SSA}
-additionally supports $n$-ary function return values in addition to $n$-ary
-function/block argument values, so that flattened values can pass freely back
-and forth across function calls.
+In MLton, the solution to this problem is to introduce support for true $n$-ary
+functions---supporting both multiple arguments and multiple return values (via
+\texttt{SSA}'s return-continuation blocks)---in later phases of the compilation
+pipeline, beginning from \texttt{SSA}. It is therefore necessary at the level of
+\texttt{SSA} to choose the appropriate calling convention for each function in
+the program, allowing flattened values to pass freely both into and out of
+calls. The MLton pass responsible for this decision is \texttt{Flatten},
+introduced by \citet{flat-paper}; see \cref{fig:flatten_one_add} for a depiction
+of its action on the simple case from \cref{fig:add_two_ssa}.
 
 
 \begin{figure}[htbp]
@@ -1413,7 +1411,7 @@ def main() -> int:
   block bb0():
     # Heap allocation
     ab: (int * int) = tuple(1, 2)
-    call bb1 add_tuple(ab)
+    call bb1 add(ab)
     ...
 \end{minted}
   \end{subfigure}\hfill
@@ -1541,7 +1539,7 @@ def main() -> ...:
 %%   VERSION}
 
 The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
-ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
+ensures that, for every tuple value \texttt{t}, we flatten \texttt{t} only when
 we can guarantee that all uses are compatible with flattening, avoiding
 pathological cases (like the one of \cref{fig:bad_flatten_example}) that result
 from applying purely-local heuristics. This approach has the additional
@@ -1600,17 +1598,29 @@ memory operations that are linear in the number of function arguments.
 We give here a brief overview of the lattice analysis of the \texttt{Flatten}
 pass, which works as follows: first, it constructs a graph whose nodes
 correspond to ``data elements'' in the program (SSA values, function/block
-formal parameters, function \texttt{return}/\texttt{raise} arguments, or
-\texttt{datatype} constructor arguments), and whose edges encode flattening
-constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
-(i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
-be either flat or non-flat). Most IR constructs that induce an edge in the
-dataflow graph also induce an edge in this graph -- two exceptions (using the
-names from the grammar of \cref{fig:ssa_grammar}) are input edges to
-\texttt{prim} and \texttt{select} statements. Since there is no way to flatten
-these constructs, they are excluded from the constraint graph; correctness is
-ensured by leaving behind the original, unflattened objects after the
-transformation.
+formal parameters, function \texttt{return} values, or \texttt{datatype}
+constructor arguments), and whose edges encode flattening constraints. A
+directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$ (i.e. if $u$
+is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may be either
+flat or non-flat), while an undirected edge $(u, v)$ requires $u$ and $v$ to
+have the same flatness. Most IR constructs that induce an edge in the dataflow
+graph also induce an edge in this graph -- two exceptions (using the names from
+the grammar of \cref{fig:ssa_grammar}) are input edges to \texttt{prim} and
+\texttt{select} statements. Since there is no way to flatten these constructs,
+they are excluded from the constraint graph; correctness is ensured by leaving
+behind the original, unflattened objects after the transformation.
+
+Broadly speaking, program constructs that allow for the insertion of an
+intermediate packing step (or coercion block) correspond to one-way directed
+edges, whereas program constructs that do not allow for such repacking
+correspond to two-way undirected edges. Examples of directed edges include
+caller argument $\rightarrow$ function formal parameter, input argument
+$\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
+argument, \texttt{goto} argument $\rightarrow$ \texttt{block} formal parameter,
+and \texttt{datatype} constructor payload $\rightarrow$ \texttt{case} target
+\texttt{block} formal parameter; the primary example of an undirected edge is
+function return type $\leftrightarrow$ continuation \texttt{block} formal
+parameter type.
 
 After constructing the constraint graph, the pass marks a subset of nodes as
 ``unflattenable'' -- specifically, all non-\texttt{tuple}-typed objects are
@@ -1619,17 +1629,6 @@ unflattenable, and \texttt{tuple} values returned from a \texttt{select} or
 edges to propagate the unflattenable label to all nodes that require it, and any
 nodes that are left unmarked will be flattened. See
 \cref{fig:true_flat_mixed_case} for an illustration.
-
-Broadly speaking, program constructs that allow for the insertion of an
-intermediate packing step correspond to one-way directed edges; program
-constructs that do not allow for such a repacking correspond to two-way
-undirected edges. Examples of the former category include: input arguments
-$\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
-argument, \texttt{goto} argument $\rightarrow$ \texttt{block} formal parameter;
-examples of the latter category include: function return type $\leftrightarrow$
-continuation \texttt{block} formal parameter type, \texttt{datatype} constructor
-formal parameter types $\leftrightarrow$ \texttt{case} statement target
-\texttt{block} formal parameter types.
 
 
 
@@ -1808,9 +1807,9 @@ def g(p: int * int) -> ...:
 \label{sec:background_deep_flatten}
 \subsection{\texttt{DeepFlatten}}
 The \texttt{Flatten} transformation fixes the problem that the source language
-does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
-solves the problem that the source language does not support containers of
-unboxed tuple types.
+does not support true $n$-ary functions or multiple return values; the
+\texttt{DeepFlatten} transformation solves the problem that the source language
+does not support containers of unboxed tuple types.
 
 As depicted in \cref{fig:layout_nested_array}, the naive MLton lowering for
 container-of-tuple is an array of pointers to out-of-line heap objects. When the
