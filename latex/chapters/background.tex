@@ -1388,7 +1388,11 @@ functions in later phases of the compilation pipeline, beginning from
 the appropriate calling convention for each function in the program -- the MLton
 pass responsible for this decision is \texttt{Flatten}, introduced by
 \citet{flat-paper}. See \cref{fig:flatten_one_add} for a depiction of its action
-on the simple case from \cref{fig:add_two_ssa}.
+on the simple case from \cref{fig:add_two_ssa}. Since \texttt{SSA}'s
+\texttt{call} statement carries a return continuation label, \texttt{SSA}
+additionally supports $n$-ary function return values in addition to $n$-ary
+function/block argument values, so that flattened values can pass freely back
+and forth across function calls.
 
 
 \begin{figure}[htbp]
@@ -1539,12 +1543,11 @@ def main() -> ...:
 The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
 ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
 we can guarantee that all uses are compatible with flattening, avoiding
-pathological cases (like the one above) that result from applying purely-local
-heuristics.
-
-This approach has the advantage that it handles more general cases of tuple
-types than a simple tuple-as-unary argument -- for example, it can naturally
-select the optimum representation for nested tuple types (depicted in
+pathological cases (like the one of \cref{fig:bad_flatten_example}) that result
+from applying purely-local heuristics. This approach has the additional
+advantage that it handles more general cases of tuple types than a simple
+tuple-as-unary argument -- for example, it can naturally select the optimum
+representation for nested tuple types (depicted in
 \cref{fig:nested_tuple_flatten}).
 
 \begin{figure}[htbp]
@@ -1592,110 +1595,43 @@ translation of \cref{fig:nested_tuple_flattened} to C would suggest that all
 4 values pass to \texttt{add\_vec\_flat} in registers, \texttt{Chunkify} may
 choose to put \texttt{add\_vec\_flat} in a different chunk from its callers. In
 this case, the callers must pass data through the MLton stack -- requiring
-memory operations that are linear in the number of function arguments. 
+memory operations that are linear in the number of function arguments.
 
-%% choose to insert a chunk boundary between \texttt{add\_vec\_flat} and callers,
-%% forcing
+We give here a brief overview of the lattice analysis of the \texttt{Flatten}
+pass, which works as follows: first, it constructs a graph whose nodes
+correspond to ``data elements'' in the program (SSA values, function/block
+formal parameters, function \texttt{return}/\texttt{raise} arguments, or
+\texttt{datatype} constructor arguments), and whose edges encode flattening
+constraints: a directed edge $(u, v)$ means that $v$ must be no-flatter-than $u$
+(i.e. if $u$ is non-flat, then $v$ must be non-flat, but if $u$ is flat, $v$ may
+be either flat or non-flat). Most IR constructs that induce an edge in the
+dataflow graph also induce an edge in this graph -- two exceptions (using the
+names from the grammar of \cref{fig:ssa_grammar}) are input edges to
+\texttt{prim} and \texttt{select} statements. Since there is no way to flatten
+these constructs, they are excluded from the constraint graph; correctness is
+ensured by leaving behind the original, unflattened objects after the
+transformation.
 
-%% It is worth noting, however, that due to the structure of the generated C
-%% discussed above, the savings may be less large in practice \hl{than they appear}
-%% based on the transformation in the SSA format: a naive reading suggests that by
-%% translating from \texttt{add\_vec} to \texttt{add\_vec\_flat}, we have saved a
-%% total of 6 writes into temporary tuples (2 per inner tuple and 2 for the outer
-%% tuple), eliding them naturally into register writes.
-
-%% This is not true in the general case, however: if a call to
-%% \texttt{add\_vec\_flat} crosses a C chunk boundary, then we still need to pay the
-%% cost to write all 4 values to the \texttt{Stack}, and pay the same cost again to
-%% pass the data on to any further flattened callers. Therefore, for nested tuple
-%% types, it is perhaps more correct to think of flattening as a tradeoff of
-%% bandwidth for locality (passing data through hot \texttt{Stack} memory rather
-%% than cold heap) instead of a pure savings.
-
-%% \hl{TODO: BAD DISCUSSION ABOVE; WE DON'T NECESSARILY CONSTRUCT A TEMPORARY
-%%   TUPLE}
-
-%% TODO:
-%%   flatten: 'peels apart' tuples (in arguments)
-
-%%     unintuitively, because of the structure of the generated C, flattening
-%%     *does not* guarantee that data is passed in registers, even when the
-%%     argument count is small (unlike the usual e.g. Linux calling convention)
-%%
-%%     in the general case it's really a tradeoff between BW and locality (the
-%%     stack is always "hot" but we need to copy into it
-%%
-%%     chunk boundaries are not known until late so we need to make uncertain
-%%     decisions
-
-\subsubsection{Analysis}
-\label{sec:flatten_analysis}
-
-\hl{TODO: FIX THE TRANSITION -- ALSO FIX THE PART THAT TALKS ABOUT PREFLATTEN}
-
-Specifically, the analysis of the \texttt{Flatten} pass is as follows: construct
-a graph whose nodes correspond to ``data elements'' in the program (SSA values,
-function/block formal parameters, function \texttt{return}/\texttt{raise}
-arguments, or \texttt{datatype} constructor arguments), and whose edges encode
-flattening constraints: a directed edge $(u, v)$ means that $v$ must be
-no-flatter-than $u$ (i.e. if $u$ is non-flat, then $v$ must be non-flat, but if
-$u$ is flat, $v$ may be either flat or non-flat). Most IR constructs that induce
-an edge in the dataflow graph also induce an edge in this graph -- two
-exceptions (using the names from the grammar of \cref{fig:ssa_grammar}) are
-input edges to \texttt{prim} and \texttt{select} statements. Since there is no
-way to flatten these constructs, they are excluded from the constraint graph;
-correctness is ensured by leaving behind the original, unflattened objects after
-the transformation.
-
+After constructing the constraint graph, the pass marks a subset of nodes as
+``unflattenable'' -- specifically, all non-\texttt{tuple}-typed objects are
+unflattenable, and \texttt{tuple} values returned from a \texttt{select} or
+\texttt{prim} statement are unflattenable. Finally, the pass uses the constraint
+edges to propagate the unflattenable label to all nodes that require it, and any
+nodes that are left unmarked will be flattened. See
+\cref{fig:true_flat_mixed_case} for an illustration.
 
 Broadly speaking, program constructs that allow for the insertion of an
 intermediate packing step correspond to one-way directed edges; program
 constructs that do not allow for such a repacking correspond to two-way
 undirected edges. Examples of the former category include: input arguments
 $\rightarrow$ \texttt{ConApp}, returned variable $\rightarrow$ \texttt{return}
-argument, \texttt{goto} argument $\rightarrow$ \texttt{block}
-formal parameter; examples of the latter category include: function return type
-$\leftrightarrow$ continuation
-\texttt{block} formal parameter type, \texttt{datatype} constructor formal parameter types
-$\leftrightarrow$ \texttt{case} statement target \texttt{block} formal parameter
-types.
+argument, \texttt{goto} argument $\rightarrow$ \texttt{block} formal parameter;
+examples of the latter category include: function return type $\leftrightarrow$
+continuation \texttt{block} formal parameter type, \texttt{datatype} constructor
+formal parameter types $\leftrightarrow$ \texttt{case} statement target
+\texttt{block} formal parameter types.
 
-%% (arguments passed
-%% to a \texttt{ConApp}, \texttt{return} / \texttt{raise}, function call
-%% or \texttt{goto}); program constructs that do not allow such a repacking (the
-%% return type of $f$ must exactly match the argument type of the continuation
-%% block in a \texttt{call} statement; the argument type of target blocks
-%% of \texttt{case} arms must exactly match the corresponding \texttt{datatype}
-%% constructors).
 
-%% Broadly speaking, program constructs whose flattening can leave the original,
-%% unflattened name in place correspond to a one-way directed edge; program
-%% constructs whose flattening removes the unflattened name from the program
-%% correspond to a two-way undirected edge (and hence an equality constraint on
-%% their flattening decisions).
-
-%% Most program constructs that induce an edge in the data-flow graph also induce
-%% an edge in this graph: one major exception is 
-
-After constructing the constraint graph, the pass marks a subset of nodes as
-``unflattenable'' -- specifically, all non-\texttt{tuple}-typed objects are
-unflattenable, and \texttt{tuple} values returned from a \texttt{select}
-or \texttt{prim} statement are unflattenable. Finally, the pass uses the
-constraint edges to propagate the unflattenable label to all nodes that require
-it, and any nodes that are left unmarked will be flattened.
-See \cref{fig:true_flat_mixed_case} for an illustration.
-
-%% the pass marks nodes as ``flattenable''
-%% or ``non-flattenable'' -- all non-\texttt{tuple}-typed objects are
-%% ``non-flattenable;'' all
-%% \texttt{tuple}-typed objects are non-flattenable unless they are created by a
-%% \texttt{select} or \texttt{PrimApp} statement.
-
-%% -- and propagates the ``flattenable'' decision as far as possible subject to the
-%% constraints encoded by edges. See \cref{fig:true_flat_mixed_case} for an
-%% illustration.
-
-%% \hl{TODO: MENTION HOW WE SEED}
 
 %% Feedback(agy) on phrasing above:
 %% 1. "leaving the unflattened name in place" vs. "removing the unflattened name"
@@ -1735,13 +1671,6 @@ See \cref{fig:true_flat_mixed_case} for an illustration.
 %%      non-flat caller (u_2) is forced to be non-flat (since u_2 is non-flat and
 %%      v must be no-flatter-than u_2). That bridges the graph explanation back
 %%      to `PreFlatten`'s function specialization.
-%% 3. Minor typos in this file:
-%%    - Line 5: `more-agressively` -> `more aggressively`
-%%    - Line 38 (now below): `rather than optimize-out` -> `rather than optimizing out`
-%%    - Line 40 / 49 (now below): straight quotes `"clean up"`, `"data-only flattening"` -> ``...''
-%%    - Line 42 (now below): `an higher-order IR` -> `a higher-order IR`
-%%    - Line 45 (now below): `flattening optimations` -> `flattening optimizations`
-%%    - Line 51 (now below): `jane street` -> `Jane Street`
 
 \begin{figure}[htbp]
   \centering
