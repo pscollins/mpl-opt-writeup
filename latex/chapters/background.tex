@@ -1437,7 +1437,7 @@ def main() -> int:
 
 A naive solution to the problem would be to interpret all SML-level functions as
 $n$-ary functions over their arguments. However, this strategy can introduce
-unnecessary pack/unpack operations in cases where the natural representation for
+\hl{unnecessary pack/unpack operations} in cases where the natural representation for
 data really is a tuple. For example, consider a large (e.g. 1 KB) tuple object
 that must pass through an intermediate function call before reaching a leaf
 function, as depicted in \cref{fig:bad_flatten_example}. For the ``non-flat''
@@ -1462,10 +1462,10 @@ def f_leaf(t: (T1 * ... * Tn)) -> ...:
   block bb0():
     # True uses of all fields
     x1: T1 = select (t, 0)
-    x2: T1 = select (t, 1)
+    x2: T2 = select (t, 1)
     ...
 
-def main() -> T1:
+def main() -> ...:
   block bb0():
     # Heap allocation of tuple
     t: (T1 * ... * Tn) =
@@ -1479,28 +1479,28 @@ def main() -> T1:
     \label{fig:bad_flatten_flattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def f_parent(x1: T1, ..., xn: Tn) -> T1:
+def f_parent(x1: T1, ..., xn: Tn) -> ...:
   block bb0():
     # Direct call passing n fields
     # pays for 1 KB copy
     call bb1 f_leaf(x1, ..., xn)
     ...
 
-  def f_leaf(x1: T1, ..., xn: Tn) -> T1:
-    block bb0():
+def f_leaf(x1: T1, ..., xn: Tn) -> ...:
+  block bb0():
     ...
 
-  def main() -> T1:
+def main() -> ...:
   block bb0():
-  # Direct call passing n fields
-  # pays for 1 KB copy
+    # Direct call passing n fields
+    # pays for 1 KB copy
     call bb1 f_parent(v1, ..., vn)
     ...
 \end{minted}
   \end{subfigure}
 
   \caption{A pathological case for (naive) flattening: blindly flattening
-    \texttt{t} in \texttt{f_parent} incurs an unnecessary 1KB copy.}
+    \texttt{t} in \texttt{f\_parent} incurs an unnecessary 1 KB copy.}
 
   \label{fig:bad_flatten_example}
 \end{figure}
@@ -1532,9 +1532,9 @@ def f_parent(x1: T1, ..., xn: Tn) -> T1:
 
 The insight of \citet{flat-paper} is to adopt a lattice-based analysis that
 ensures that, for every tuple type \texttt{t}, we flatten \texttt{t} only when
-we can guarantee that all uses are compatible with flattening, avoiding
+we can guarantee that all uses are compatible with flattening, \hl{avoiding
 pathological cases (like the one above) that result from applying purely-local
-heuristics.
+heuristics.}
 
 This approach has the advantage that it handles more general cases of tuple
 types than a simple tuple-as-unary argument -- for example, it can naturally
