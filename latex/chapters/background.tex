@@ -81,7 +81,7 @@ constructs that our optimizations target) as well as the mapping from
 impact of our optimizations).
 
 \label{sec:background_sml_ssa}
-\subsection{SML $\Rightarrow$ \texttt{SSA}}
+\subsection{SML \texorpdfstring{$\Rightarrow$}{->} \texttt{SSA}}
 %% Regenerating code in this section:
 %%
 %% Compile command:
@@ -271,7 +271,7 @@ immutable container of objects of type \texttt{$\tau$}, respectively.
 
 %% \end{itemize}
 \FloatBarrier
-\subsection{\texttt{SSA} $\Rightarrow$ C}
+\subsection{\texttt{SSA} \texorpdfstring{$\Rightarrow$}{->} C}
 The core problems that we need to fix in order to translate
 \footnote{As noted in
 \cref{fig:mlton-ir-pipeline}, MLton's actual lowering from \texttt{SSA} to C
@@ -1228,6 +1228,7 @@ size_t len = meta->length;
   \hfill
   \begin{minipage}[c]{0.50\textwidth}
     \centering
+    \resizebox{\linewidth}{!}{%
     \begin{tikzpicture}
       % Label for Array
       \node[font=\small\bfseries\ttfamily, color=textMuted, anchor=east] at (-0.15, 1.2) {ArrTypeT2:};
@@ -1299,7 +1300,8 @@ size_t len = meta->length;
       % Arrows from array elements to child payloads
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=colorPtrBorder] ($(ael0.south) + (-0.2, 0)$) to[out=-90, in=90] (c0_f1.north west);
       \draw[-{Stealth[length=4.5pt, width=3.5pt]}, line width=0.9pt, color=colorPtrBorder] ($(ael1.south) + (0.2, 0)$) to[out=-90, in=90] (c1_f1.north west);
-    \end{tikzpicture}
+    \end{tikzpicture}%
+    }
   \end{minipage}
   \caption{Container-of-tuple: parent array members are pointers to child ``base'' offsets.}
   \label{fig:layout_nested_array}
@@ -1316,15 +1318,16 @@ size_t len = meta->length;
 \label{sec:basic_flatten}
 In the source language, all functions are unary, with support for multiple
 arguments implemented via tuple types. This convention is desirable from the
-perspective of simplifying language design, since (for example) rules for
-type-checking function calls can be subsumed by rules for typechecking tuples.
-See \cref{fig:add_two_compare} for a representation of this convention in
+perspective of language design, since (for example) rules for type-checking
+function calls can be subsumed by rules for type-checking tuples. See
+\cref{fig:add_two_compare} for a representation of this convention in
 \texttt{SSA}.
 
 
-Naively lowering the all-functions-are-unary program representation to C
-(following the memory layout conventions described in the previous section) has
-disastrous performance characteristics. Every single function call must:
+A naive lowering the all-functions-are-unary program representation to C
+(following the memory layout conventions described in the previous section) is
+undesirable from the perspective of performance, however -- every single
+function call must:
 \begin{enumerate}[noitemsep, topsep=2pt, midpenalty=10000]
 \item Allocate a new tuple on the heap to store the function arguments
 \item Copy the function arguments into the heap-allocated memory
@@ -1374,25 +1377,28 @@ def main() -> int:
     ...
 \end{minted}
   \end{subfigure}
-  \caption{A simple \texttt{add} program in Standard ML alongside its naive
-    unary representation lowered to \texttt{SSA}.}
+  \caption{Naive lowering of unary source language functions to \texttt{SSA}.}
   \label{fig:add_two_compare}
 \end{figure}
 
-Fortunately, we can represent the solution to this problem in \texttt{SSA},
-which supports true $n$-ary functions. The \texttt{Flatten} transformation
-introduced by \citet{flat-paper} implements the transformation from
-unary-with-tuple-arguments to true-$n$-ary, as depicted in
-\cref{fig:flatten_one_add}.
+
+In MLton, the solution to this problem is to introduce support true $n$-ary
+functions in later phases of the compilation pipeline, beginning from
+\texttt{SSA}. It is therefore necessary at the level of \texttt{SSA} to choose
+the appropriate calling convention for each function in the program -- the MLton
+pass responsible for this decision is \texttt{Flatten}, introduced by
+\citet{flat-paper}. See \cref{fig:flatten_one_add} for a depiction of its action
+on the simple case from \cref{fig:add_two_ssa}.
+
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Unary tuple-based representation}
+    \caption{Naive, unflattened unary representation}
     \label{fig:flatten_one_add_unary}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def add_tuple(ab: (int * int)) -> int:
+def add(ab: (int * int)) -> int:
   block bb0():
     a: int = select (ab, 0)  # tuple read
     b: int = select (ab, 1)  # tuple read
@@ -1408,7 +1414,7 @@ def main() -> int:
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Flat 2-ary representation}
+    \caption{Flattened 2-ary representation}
     \label{fig:flatten_one_add_flat}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
@@ -1424,7 +1430,7 @@ def main() -> int:
     ...
 \end{minted}
   \end{subfigure}
-  \caption{The \texttt{Flatten} transformation converts unary functions accepting tuple arguments into true $n$-ary functions.}
+  \caption{Action of the \texttt{Flatten} pass on the example from \cref{fig:add_two_ssa}}
   \label{fig:flatten_one_add}
 \end{figure}
 
@@ -1437,7 +1443,7 @@ that must pass through an intermediate function call before reaching a leaf
 function, as depicted in \cref{fig:bad_flatten_example}. For the ``non-flat''
 representation, each intermediate call pays only the cost to copy a pointer,
 but in the flattened representation, each call must pay for the full 1 KB
-copy -- even if the leaf function only reads a single field.
+copy.
 
 \begin{figure}[htbp]
   \centering
@@ -1446,17 +1452,18 @@ copy -- even if the leaf function only reads a single field.
     \label{fig:bad_flatten_unflattened}
     \vspace{1mm}
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
-def f_parent(t: (T1 * ... * Tn)) -> T1:
+def f_parent(t: (T1 * ... * Tn)) -> ...:
   block bb0():
     # Only need to pass a pointer
     call bb1 f_leaf(t)
     ...
 
-def f_leaf(t: (T1 * ... * Tn)) -> T1:
+def f_leaf(t: (T1 * ... * Tn)) -> ...:
   block bb0():
-    # Only field 0 is read
+    # True uses of all fields
     x1: T1 = select (t, 0)
-    return x1
+    x2: T1 = select (t, 1)
+    ...
 
 def main() -> T1:
   block bb0():
@@ -1474,28 +1481,27 @@ def main() -> T1:
 \begin{minted}[fontsize=\footnotesize,frame=single,framesep=2.5mm,rulecolor=\color{black!20}]{python}
 def f_parent(x1: T1, ..., xn: Tn) -> T1:
   block bb0():
-    # Need to copy all n fields
+    # Direct call passing n fields
+    # pays for 1 KB copy
     call bb1 f_leaf(x1, ..., xn)
     ...
 
-def f_leaf(x1: T1, ..., xn: Tn) -> T1:
-  block bb0():
-    # x2..xn carried across call
-    # but never used
-    return x1
+  def f_leaf(x1: T1, ..., xn: Tn) -> T1:
+    block bb0():
+    ...
 
-def main() -> T1:
+  def main() -> T1:
   block bb0():
-    # Direct call passing n fields
+  # Direct call passing n fields
+  # pays for 1 KB copy
     call bb1 f_parent(v1, ..., vn)
     ...
 \end{minted}
   \end{subfigure}
-  \caption{A pathological case for (naive) flattening: forwarding a large tuple
-    across an intermediate call layer (\texttt{f\_parent} to \texttt{f\_leaf}).
-    The unflattened code passes a single pointer in a register, whereas naive
-    flattening forces all $n$ fields to be passed and spilled at each call even
-    when only a subset is used at the leaf.}
+
+  \caption{A pathological case for (naive) flattening: blindly flattening
+    \texttt{t} in \texttt{f_parent} incurs an unnecessary 1KB copy.}
+
   \label{fig:bad_flatten_example}
 \end{figure}
 
