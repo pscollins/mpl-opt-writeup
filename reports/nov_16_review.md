@@ -113,7 +113,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
    - ~~**SML vs. SSA literal mismatch ([`background.tex:2419-2454, 2486-2514`](../latex/chapters/background.tex#L2419-L2454)):** Left-hand SML calls `doOp (2, 2, ...)`, while right-hand SSA calls `doOp(1, 2, env)`.~~
    - **`SSA` pseudocode syntax drift across Chapters 2–4 vs. `fig:ssa_grammar` ([`background.tex:200-225`](../latex/chapters/background.tex#L200-L225)):**
      - ~~`fig:ssa_grammar` defines function headers as `def f(...): tau =`, used in Figs. 2.2, 2.4, 2.15–2.19, and 3.9, whereas Figs. 2.24–2.25 (`background.tex:2431-2511`), Figs. 3.1–3.7 (`preflatten.tex:53-759`), and Fig. 4.1 (`shallowflatten.tex:76`) switch to Pythonic `def f(...) -> tau:`.~~
-     - `fig:true_flat_undirected_after` (`background.tex:1735-1737`) uses multi-value return `def g(...): int, int =` and `return a, b`, whereas `fig:ssa_grammar` only permits a single return type $\tau$ and single operand `return v`.
+     - ~~`fig:true_flat_undirected_after` (`background.tex:1735-1737`) uses multi-value return `def g(...): int, int =` and `return a, b`, whereas `fig:ssa_grammar` only permits a single return type $\tau$ and single operand `return v`.~~
      - ~~`fig:hofo_no_polyvar_ssa` (`background.tex:2447`) writes bare `env: lambda1 = xEnv_add` without `con`, whereas `fig:ssa_grammar` line 217 requires `con C(...)`.~~
 
 ### 2.2 Chapter 3 (`preflatten.tex`): Formalism & IR Snippets

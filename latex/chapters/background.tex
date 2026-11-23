@@ -1805,10 +1805,10 @@ def g(p: int * int) -> ...:
 
 \label{sec:background_deep_flatten}
 \subsection{\texttt{DeepFlatten}}
-The \texttt{Flatten} transformation fixes the problem that the source language
-does not support true $n$-ary functions; the \texttt{DeepFlatten} transformation
-solves the problem that the source language does not support containers of
-unboxed tuple types.
+While the \texttt{Flatten} transformation fixes the problem that the source
+language does not support true $n$-ary functions, the \texttt{DeepFlatten}
+transformation solves the problem that the source language does not support
+containers of unboxed tuple types.
 
 As depicted in \cref{fig:layout_nested_array}, the naive MLton lowering for
 container-of-tuple is an array of pointers to out-of-line heap objects. When the
@@ -1934,7 +1934,9 @@ _ = prim Array_update(arr, 1, t')
       \draw[dashed, line width=0.65pt, color=ThesisPurple!75] (reg_tp.south east) -- (c1_f2.north east);
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Container-of-tuple read and write operations in the naive representation. For \texttt{type pairArray = (int * int) array}, elements are stored as pointers to out-of-line heap tuples. Reading an element loads a pointer into \texttt{t}, requiring a second load to dereference payload fields via \texttt{select}. Writing an element requires first allocating a separate heap tuple object \texttt{t'} and storing its pointer into the array slot via \texttt{Array\_update}.}
+  \caption{Container-of-tuple read and write operations in the naive
+    representation: reading a field of an element incurs two indirections;
+    writing an already-constructed element incurs one.}
   \label{fig:array_read_write}
 \end{figure}
 
@@ -1946,7 +1948,7 @@ _ = prim Array_update(arr, 1, t')
 %% particular tuple's data regardless of how many containers we insert it into.
 
 In terms of global program efficiency on modern CPU architectures, however, this
-layout is disastrous. As an illustration, consider the C++ snippet in
+layout is highly suboptimal. As an illustration, consider the C++ snippet in
 \cref{fig:nonflat_distance}, which corresponds to the ``non-flat'' naive MLton
 layout (i.e. a container of pointers). Suppose that \texttt{lhs.size() =
   rhs.size() = n}. Then the memory bandwidth requirement for this implementation
@@ -2066,9 +2068,12 @@ float GetDistance(
 \end{figure}
 
 \begin{enumerate}
-\item Cost to load $2n$ pointers: \texttt{$2n$ * sizeof(uintptr\_t)}. These
-  values are laid out contiguously in memory, so we can assume perfect
-  efficiency while loading them. \hl{REPHRASE}
+\item Cost to load $2n$ pointers: \texttt{$2n$ * sizeof(uintptr\_t)}. Because
+  the pointers are laid out contiguously in each \texttt{vector} and scanned
+  sequentially, every byte of each fetched cacheline is useful (modulo a
+  constant penalty of up to 2 cachelines for the beginning and end of the
+  array).
+
 \item Cost to load $2n$ \texttt{Point} objects: \texttt{$2n$ * cacheline size}.
   Since these \texttt{Point} objects are unlikely to have any particular spatial
   locality in the heap when traversed in their order in the \texttt{vector}s,
@@ -2096,7 +2101,10 @@ memory access pattern of the consuming code, this strategy is optimal: since the
 \texttt{Point} data is in a dense, contiguous layout, we can make use of every
 single byte in each cacheline that we read, yielding 100\% efficient utilization
 of memory bandwidth. We also eliminate the pipeline-hostile chain of dependent
-loads from the program.
+loads from the program. MLton's \texttt{DeepFlatten} optimization performs the
+equivalent transformation for MLton, replacing the naive container-of-pointers
+representation with a dense representation that embeds tuple data members into
+their parent container (see \cref{fig:flatten_generated_c}).
 
 \begin{figure}[htbp]
   \centering
@@ -2162,11 +2170,6 @@ float GetDistanceFlat(
   \caption{Flat container layout and access. (a) C++ corresponding to the flattened layout for \texttt{(int * int) array}. (b) Illustration of memory access patterns while executing (a).}
   \label{fig:flat_distance}
 \end{figure}
-
-MLton's \texttt{DeepFlatten} optimization performs the equivalent transformation
-for MLton, replacing the naive container-of-pointers representation with a dense
-representation that embeds tuple data members into their parent container
-(see \cref{fig:flatten_generated_c}).
 
 \begin{figure}[htbp]
   \centering
