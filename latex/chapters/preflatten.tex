@@ -469,7 +469,7 @@ def g_flat_env1(x0: a, x1: b) -> ...:
     # ...uses of x0, x1...
 \end{minted}
   \end{subfigure}
-  \caption{Eliminating a \texttt{ConApp} wrapper via \texttt{PreFlatten} and \texttt{KnownCase} exposes the underlying payload tuple \texttt{t} directly as a function argument, enabling the global \texttt{Flatten} pass to unbox \texttt{t} across the call and basic block boundaries. \hl{TODO: FIX}}
+  \caption{\texttt{datatype}-\texttt{PreFlatten} creates new opportunities for \texttt{Flatten}}
   \label{fig:simplify_enable_flatten}
 \end{figure}
 
