@@ -1017,8 +1017,8 @@ decisions differ. Recall from \cref{sec:basic_flatten} that \texttt{Flatten} is
 a global, lattice-based analysis: by contrast,
 \texttt{PreFlatten} simply reasons about callsites
 that might benefit from flattening, matching on the purely-local pattern of
-``\texttt{tuple} constructor call\texttt{;} function call'' and duplicates the
-callee with the appropriate signature to ensure that all such sequences are
+``\texttt{tuple} constructor call\texttt{;} function call,'' then duplicating
+the callee with the appropriate signature to ensure that all such sequences are
 flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
 are ``mixed'' in the sense of
 (\cref{fig:true_flat_mixed_callers_before}, \cref{fig:true_flat_mixed_callers_after})
