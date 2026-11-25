@@ -1,4 +1,3 @@
-
 Please review this document for consistency, accuracy, and style. Do not make
 any edits, but produce a report in this directory, ${MONTH}_${DAY}_review.md,
 that details your findings.

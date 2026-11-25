@@ -654,7 +654,8 @@ def fib_pair_flat(x1: int, x2: int,
     call tail fib_pair_flat(x2, s, next_n)
 \end{minted}
   \end{subfigure}
-  \caption{Iteratively applying \texttt{PreFlatten} to recursive specializations. By analyzing newly emitted specializations, the recursive call within \texttt{fib\_pair\_flat} is rewritten to target itself directly, eliminating the intermediate tuple allocation \texttt{next\_xs} across all recursive iterations.}
+  \caption{A correct, iterative implementation of \texttt{PreFlatten}
+  successfully flattens the recursive call.}
   \label{fig:good_flat_rec_func_ssa}
 \end{figure}
 
@@ -778,7 +779,7 @@ def f_con(c: ConType, y: c, z: d, ...) -> ...:
       \]
     \end{minipage}
   \end{subfigure}
-  \caption{Initial flattening decisions ($\sigma_i$) computed during the analysis phase for \texttt{tuple} and \texttt{ConApp} flattening. Arguments directly produced by a tuple or constructor allocation are initially marked as \texttt{Flatten} or $\texttt{Flatten}_C$, while all other arguments are marked as \texttt{Preserve}.}
+  \caption{Example $\sigma_i$ computed during the analysis phase for \textttt{tuple} / \texttt{ConApp}. }
   \label{fig:example_sigma_init}
 \end{figure}
 
@@ -797,15 +798,16 @@ heuristics. The cost heuristics evaluated in this project are:
 These heuristics are motivated by the MLton calling convention described
 in \cref{sec:background_sml_ssa}: non-tail calls (if preserved until C code
 generation) pass data through explicit stack operations, so
-flattening \texttt{tuple} arguments to a non-tail call corresponds to a true copy
-rather than simply leaving data resident in registers across a call boundary.
-Tail calls, by contrast, are more likely to pass data in registers. For
-the \texttt{ConApp} case, no such tradeoff exists: flattening a \texttt{ConApp}
-results in a \texttt{tuple} argument that is no-more-expensive to pass.
+flattening \texttt{tuple} arguments to a non-tail call corresponds to a true
+copy rather than simply leaving data resident in registers across a call
+boundary. Tail calls, by contrast, are more likely to pass data in registers.
+For the \texttt{ConApp} case, no such tradeoff exists: flattening
+a \texttt{ConApp} results in a \texttt{tuple} argument that is no-more-expensive
+to pass than the original, packed value.
 
 After applying these heuristics, we end up with a final analysis result,
 $\sigma$. The action of $\sigma$ on the program is described
-in \cref{fig:tuple_flattening_impl}, specifically:
+in \cref{fig:tuple_flattening_impl} -- specifically:
 \begin{itemize}
 
 \item
@@ -855,7 +857,7 @@ newly-emitted flat function $\texttt{f}_{\vec{d}}$ to obtain a (perhaps-larger)
 flattening decision $\sigma'$. If $\sigma' = \sigma$, or if we have reached a
 user-configurable iteration limit, the transformation terminates. Otherwise, it
 is recursively applied to the sub-program composed only of new function
-definitions, \cref{fig:preflatten_recurse}. \hl{TODO: call back to previous section?}
+definitions, \cref{fig:preflatten_recurse}.
 
 \end{itemize}
 
