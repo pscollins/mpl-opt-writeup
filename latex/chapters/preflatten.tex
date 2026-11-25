@@ -904,7 +904,7 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Emitting one specialization per distinct flattening decision (where $x^{\tau_j}$ is a fresh argument name)}
+    \caption{Emitting one specialization per distinct flattening decision (where $x^{(i)}$ and $x^{(C)}$ are fresh argument names)}
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
@@ -917,8 +917,8 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
            \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
-      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{\tau_1}{:}\tau_1, \dots, x^{\tau_k}{:}\tau_k \\
-      \pi(x{:}T, \texttt{Flatten}_C) &= x^{\tau}{:}\tau
+      \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{(1)}{:}\tau_1, \dots, x^{(k)}{:}\tau_k \\
+      \pi(x{:}T, \texttt{Flatten}_C) &= x^{(C)}{:}\tau
         \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
     \end{aligned}
     \]
@@ -934,9 +934,9 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
            \beta(x_1{:}\tau_1, d_1)\ \dots\ \beta(x_n{:}\tau_n, d_n)\ \mathtt{goto}\ l_0() \\
       \beta(x{:}\tau, \texttt{Preserve}) &= \epsilon \\
       \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
-        &= x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x^{\tau_1}, \dots, x^{\tau_k}) \\
+        &= x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x^{(1)}, \dots, x^{(k)}) \\
       \beta(x{:}T, \texttt{Flatten}_C)
-        &= x : T \syneq \mathtt{con}\ C(x^{\tau})
+        &= x : T \syneq \mathtt{con}\ C(x^{(C)})
     \end{aligned}
     \]
   \end{subfigure}
