@@ -133,7 +133,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 4. ~~**Missing payload binding in `ConApp` `case` arms ([`preflatten.tex:264, 287, 384`](../latex/chapters/preflatten.tex#L384)):**~~
    - In Fig. 3.3 (`lines 264, 287`) and Fig. 3.5a (`line 384`), `Env1` is declared as `Env1 of a * b` and `bb1` expects `block bb1(t: a * b):`, yet the `case` arm is written `Env1 => goto bb1` instead of `Env1(t) => goto bb1(t)` (passing 0 arguments to a 1-parameter block).
 
-5. **Abrupt transition opening §3.3 ([`preflatten.tex:987-990`](../latex/chapters/preflatten.tex#L987-L990)):**
+5. ~~**Abrupt transition opening §3.3 ([`preflatten.tex:987-990`](../latex/chapters/preflatten.tex#L987-L990)):**~~
    - `\section{Comparison with \texttt{Flatten}}` begins *"By contrast, the analysis of `\texttt{PreFlatten}` simply reasons about callsites..."* even though the immediately preceding section (§3.2) was already about `PreFlatten`! Add a one-sentence recap of `Flatten`'s global constraint-graph propagation at the start of §3.3 so *"By contrast"* has its referent.
 
 ### 2.3 Chapter 4 (`shallowflatten.tex`): Formalism & Motivating Example

@@ -1087,7 +1087,7 @@ def f(a: int, b: int) -> ...:
     x: int * int = tuple(a, b)
     # Unflattenable primitive use of x
     _: unit = prim ...(x)
-    call bb_cont g(x)
+    call tail g(x)
 
 def g(p: int * int) -> ...:
   block bb0():
@@ -1103,7 +1103,7 @@ def f(a: int, b: int) -> ...:
     # Unflattened `x` left behind for `prim`
     x: int * int = tuple(a, b)
     _: unit = prim ...(x)
-    call bb_cont g_flat(a, b)
+    call tail g_flat(a, b)
 
 def g_flat(p_0: int, p_1: int) -> ...:
   block bbBind():
@@ -1127,13 +1127,13 @@ def f(a: int, b: int) -> ...:
     # Flattenable allocation via `tuple`
     x: int * int = tuple(a, b)
     # Flattenable call
-    call bb_cont g(x)
+    call tail g(x)
 
   block bb_other():
     # Unflattenable allocation via `prim`
     y: int * int = prim ...
     # Unflattenable call
-    call bb_cont g(y)
+    call tail g(y)
 
 def g(p: int * int) -> ...:
   block bb0():
@@ -1147,12 +1147,12 @@ def g(p: int * int) -> ...:
 def f(a: int, b: int) -> ...:
   block bb_start():
     # Calls specialized `g_flat`
-    call bb_cont g_flat(a, b)
+    call tail g_flat(a, b)
 
   block bb_other():
     # Calls original unflattened `g`
     y: int * int = prim ...
-    call bb_cont g(y)
+    call tail g(y)
 
 def g_flat(p_0: int, p_1: int) -> ...:
   block bbBind():
