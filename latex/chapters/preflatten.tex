@@ -1008,13 +1008,16 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
 \end{figure}
 
 \FloatBarrier
+
 \section{Comparison with \texttt{Flatten}}
 \label{sec:preflatten_comparison_flatten}
-By contrast, the analysis of \texttt{PreFlatten} simply reasons about callsites
+In this section, we contrast the action of \texttt{PreFlatten}
+and \texttt{Flatten}, in order to highlight the cases where their flattening
+decisions differ. Recall from \cref{sec:basic_flatten} that \texttt{Flatten} is
+a global, lattice-based analysis: by contrast,
+\texttt{PreFlatten} simply reasons about callsites
 that might benefit from flattening, matching on the purely-local pattern of
-``\texttt{tuple} constructor call\texttt{;} function call'' (ignoring, for
-comparison purposes, the tail-call restriction of
-\cref{fig:preflatten_analysis}), and duplicates the
+``\texttt{tuple} constructor call\texttt{;} function call'' and duplicates the
 callee with the appropriate signature to ensure that all such sequences are
 flattened. Duplicating callees allows \texttt{PreFlatten} to handle cases that
 are ``mixed'' in the sense of
@@ -1024,6 +1027,11 @@ are ``mixed'' in the sense of
 (\cref{fig:true_flat_mixed_before}, \cref{fig:true_flat_mixed_after}), in the
 same way as \texttt{Flatten}, leaving behind the original, unflattened names.
 See \cref{fig:pre_flatten_mixed_case} for an example.
+
+
+%% (ignoring, for
+%% comparison purposes, the tail-call restriction of
+%% \cref{fig:preflatten_analysis}),
 
 \begin{figure}[htbp]
   \centering
