@@ -127,7 +127,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
    - **Consequence:** If the iteration limit is $1$, or if a specialized function $f_{j,\vec{d}}$ calls another specialized function $h_{\vec{d}'}$ whose decision was already in $\sigma$ (so $\sigma' = \sigma$ if no new call labels appear), calls inside $f_{j,\vec{d}}$ are never rewritten! Furthermore, for $\Sigma(\mathcal{N})$ in line 966 to distinguish calls inside $\mathcal{N}$ from calls in $P$, duplicated call sites need fresh `callN` labels.
    - **Fix:** Change line 907 to $\mathtt{bbBind}_{\vec{d}}\ \flatsem{B_0} \cdots \flatsem{B_k}$ (and note in the caption of Fig. 3.8b/e that emitting $\flatsem{F_j}^{\vec{d}}$ assigns fresh block/variable/call-site names so $\Sigma(\mathcal{N})$ analyzes the newly created call sites).
 
-3. **Nullary `datatype` constructors in $\texttt{Flatten}_C$ ([`preflatten.tex:911-912, 929, 948-949`](../latex/chapters/preflatten.tex#L911-L912)):**
+3. ~~**Nullary `datatype` constructors in $\texttt{Flatten}_C$ ([`preflatten.tex:911-912, 929, 948-949`](../latex/chapters/preflatten.tex#L911-L912)):**~~
    - Fig. 3.8 assumes every constructor has the form $C \mathbin{\mathtt{of}} \tau$ carrying a payload argument. However, closure conversion routinely emits nullary constructors for capture-free functions (e.g., `xEnv_add | xEnv_sub` in `background.tex` Fig. 2.24!). Either add the nullary case ($\pi(x{:}T, \texttt{Flatten}_C) = \epsilon$, $\beta = (x{:}T \syneq \mathtt{con}\ C())$, $\alpha = \epsilon$) or note that nullary constructors are treated as carrying `unit`.
 
 4. ~~**Missing payload binding in `ConApp` `case` arms ([`preflatten.tex:264, 287, 384`](../latex/chapters/preflatten.tex#L384)):**~~

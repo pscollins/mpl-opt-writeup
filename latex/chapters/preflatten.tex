@@ -801,9 +801,20 @@ generation) pass data through explicit stack operations, so
 flattening \texttt{tuple} arguments to a non-tail call corresponds to a true
 copy rather than simply leaving data resident in registers across a call
 boundary. Tail calls, by contrast, are more likely to pass data in registers.
-For the \texttt{ConApp} case, no such tradeoff exists: flattening
-a \texttt{ConApp} results in a \texttt{tuple} argument that is no-more-expensive
-to pass than the original, packed value.
+For the \texttt{ConApp} case, no such tradeoff exists: prior to
+the \texttt{Flatten} pass, all \texttt{datatype} constructors are unary with a
+tuple payload, and so flattening a \texttt{ConApp} yields a single tuple
+argument that is no-more-expensive to pass than the original \texttt{datatype}
+object.
+
+%% because \texttt{ConApp}
+%% \texttt{PreFlatten} runs before \texttt{Flatten},
+
+
+%% each constructor carries at
+%% most one payload (a single value or \texttt{tuple}, or no argument at all for a
+%% nullary constructor), so flattening a \texttt{ConApp} passes at most one
+%% argument and is no more expensive than passing the original, packed value.
 
 After applying these heuristics, we end up with a final analysis result,
 $\sigma$. The action of $\sigma$ on the program is described
@@ -834,9 +845,11 @@ entry block of the function, \cref{fig:preflatten_rebind_block}.
 for each argument with the decision \texttt{Flatten} or $\texttt{Flatten}_C$, we
 elide the access to the temporary \texttt{tuple} or \texttt{datatype} object
 (respectively), relying on subsequent dead-code elimination to remove the
-allocation itself: \texttt{Flatten} passes the arguments to the \texttt{tuple} as a
-flat sequence of variables, $\texttt{Flatten}_C$ passes the \texttt{ConApp}
-payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
+allocation itself: \texttt{Flatten} passes the arguments to the \texttt{tuple}
+as a flat sequence of variables, while $\texttt{Flatten}_C$ passes
+the \texttt{ConApp} arguments directly (which, prior to \texttt{Flatten} is
+always a \texttt{tuple}, perhaps nullary).
+\cref{fig:preflatten_fix_call}.
 
 
 %% \item We emit fresh, globally unique names for all
@@ -906,7 +919,7 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
   \end{subfigure}
 
   \begin{subfigure}{\textwidth}
-    \caption{Emitting one specialization per distinct flattening decision (where $x^{(i)}$ and $x^{(C)}$ are fresh argument names)}
+    \caption{Emitting one specialization per distinct flattening decision (where $x^{(i)}$ is a fresh argument name)}
     \label{fig:preflatten_emit_new}
     \[
     \begin{aligned}
@@ -920,8 +933,8 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\
       \pi(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten}) &= x^{(1)}{:}\tau_1, \dots, x^{(k)}{:}\tau_k \\
-      \pi(x{:}T, \texttt{Flatten}_C) &= x^{(C)}{:}\tau
-        \qquad \text{where } C \mathbin{\mathtt{of}} \tau \text{ is a constructor of } T
+      \pi(x{:}T, \texttt{Flatten}_C) &= x^{(1)}{:}\tau_1, \dots, x^{(k)}{:}\tau_k
+        \qquad \text{where } C\ [\mathtt{of}\ \tau_1, \dots, \tau_k] \text{ in } T\; (k \ge 0)
     \end{aligned}
     \]
   \end{subfigure}
@@ -938,7 +951,7 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
       \beta(x{:}\tau_1 * \cdots * \tau_k, \texttt{Flatten})
         &= x : \tau_1 * \cdots * \tau_k \syneq \mathtt{tuple}(x^{(1)}, \dots, x^{(k)}) \\
       \beta(x{:}T, \texttt{Flatten}_C)
-        &= x : T \syneq \mathtt{con}\ C(x^{(C)})
+        &= x : T \syneq \mathtt{con}\ C(x^{(1)}, \dots, x^{(k)})
     \end{aligned}
     \]
   \end{subfigure}
@@ -957,8 +970,8 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
       \alpha(v, \texttt{Preserve}) &= v \\
       \alpha(v, \texttt{Flatten}) &= z_1, \dots, z_k
         \quad \text{where } v : \tau \syneq \mathtt{tuple}(z_1, \dots, z_k) \text{ in the caller} \\
-      \alpha(v, \texttt{Flatten}_C) &= z
-        \quad \text{where } v : T \syneq \mathtt{con}\ C(z) \text{ in the caller}
+      \alpha(v, \texttt{Flatten}_C) &= z_1, \dots, z_k
+        \quad \text{where } v : T \syneq \mathtt{con}\ C(z_1, \dots, z_k) \text{ in the caller}
     \end{aligned}
     \]
   \end{subfigure}
