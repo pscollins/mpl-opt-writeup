@@ -487,7 +487,7 @@ benchmarks. \hl{TODO: add a cref pointing to the benchmarks}
 
 %% Finally, we note one compelxity that needs to be addressed in phrasing this
 %% transformation as a strictly-local peephole optimization: missed flattening
-%% opportunities in recursive calls. Suppose we have 
+%% opportunities in recursive calls. Suppose we have
 
 Finally, we note one source of complexity in flattening recursive function
 calls: consider, for example, a function that recursively acts on
@@ -541,7 +541,8 @@ def fib_pair(xs: int * int, n: int) -> int * int:
     call tail fib_pair(next_xs, next_n)
 \end{minted}
   \end{subfigure}
-  \caption{A tail-recursive Fibonacci function over a pair of integers in Standard ML alongside its lowered \texttt{SSA} representation. Each recursive call allocates a fresh intermediate tuple \texttt{next\_xs} to pass the updated pair of values.}
+  \caption{A tail-recurisve Fibonacci implementation in SML, alongside its
+  \texttt{SSA} representation (without \texttt{PreFlatten})}
   \label{fig:rec_func_sml_ssa}
 \end{figure}
 
@@ -597,7 +598,8 @@ def fib_pair_flat(x1: int, x2: int,
     call tail fib_pair(next_xs, next_n)
 \end{minted}
   \end{subfigure}
-  \caption{A naive, non-iterative application of \texttt{PreFlatten}. Although \texttt{fib\_pair\_flat} receives its arguments unpacked, the recursive call in block \texttt{bb2} still targets the unspecialized function \texttt{fib\_pair}, allocating an intermediate tuple \texttt{next\_xs} on every recursive iteration.}
+  \caption{A naive, non-iterative implementation of \texttt{PreFlatten}
+  misses flattening the recursive call.}
   \label{fig:bad_flat_rec_func_ssa}
 \end{figure}
 
