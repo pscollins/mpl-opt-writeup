@@ -779,7 +779,7 @@ def f_con(c: ConType, y: c, z: d, ...) -> ...:
       \]
     \end{minipage}
   \end{subfigure}
-  \caption{Example $\sigma_i$ computed during the analysis phase for \textttt{tuple} / \texttt{ConApp}. }
+  \caption{Example $\sigma_i$ computed during the analysis phase for \texttt{tuple} / \texttt{ConApp}. }
   \label{fig:example_sigma_init}
 \end{figure}
 
@@ -854,10 +854,12 @@ payload as a \texttt{tuple}, \cref{fig:preflatten_fix_call}.
 \item
 Finally, we extend $\sigma$ with the result of applying the analysis to each
 newly-emitted flat function $\texttt{f}_{\vec{d}}$ to obtain a (perhaps-larger)
-flattening decision $\sigma'$. If $\sigma' = \sigma$, or if we have reached a
-user-configurable iteration limit, the transformation terminates. Otherwise, it
-is recursively applied to the sub-program composed only of new function
-definitions, \cref{fig:preflatten_recurse}.
+flattening decision $\sigma'$. If no new specializations were emitted
+($\mathcal{N} = \emptyset$), or if we have reached a user-configurable
+iteration limit, the transformation terminates (at which point fresh variable
+and block names are assigned to the cloned functions to restore the SSA
+property). Otherwise, it is recursively applied to the sub-program composed
+only of new function definitions, \cref{fig:preflatten_recurse}.
 
 \end{itemize}
 
@@ -979,7 +981,7 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
            \cup
            \begin{cases}
              \mathcal{N}
-               & \text{if } \sigma' = \sigma \text{ or limit reached} \\
+               & \text{if } \mathcal{N} = \emptyset \text{ or limit reached} \\
              \sembrack{\mathcal{N}}_{\sigma'}
                & \text{otherwise}
            \end{cases}
