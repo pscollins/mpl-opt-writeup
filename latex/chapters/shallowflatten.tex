@@ -11,21 +11,21 @@ are required.
 \section{Motivation}
 As outlined in \cref{sec:background_deep_flatten}, the MLton default
 array-of-pointers layout is hostile to the design of modern CPU caches,
-cache-efficiency, introducing a load to an unpredictable, likely-cold heap
-location on every element access. The existing remedy to this problem is
-the \texttt{DeepFlatten} pass, but \texttt{DeepFlatten} only supports the case
-where the transformation is completely ``free,'' introducing zero
-new \texttt{tuple} allocations. This seems to be an inversion of
-priorities: \texttt{ShallowFlatten} takes the opposite approach, inserting
-temporary \texttt{tuple} objects for all operations into or out of containers
-and relying on later optimization passes to eliminate them when possible.
+introducing a load to an unpredictable, likely-cold heap location on every
+element access. The existing remedy to this problem is the \texttt{DeepFlatten}
+pass, but \texttt{DeepFlatten} only supports the case where the transformation
+is completely ``free,'' introducing zero new \texttt{tuple} allocations. This
+seems to be an inversion of priorities: \texttt{ShallowFlatten} takes the
+opposite approach, inserting temporary \texttt{tuple} objects for all operations
+into or out of containers and relying on later optimization passes to eliminate
+them when possible.
 
 %% What alternatives to \texttt{DeepFlatten} could we design?
 
 Simply modifying the existing \texttt{DeepFlatten} pass to insert new
 allocations is potentially flawed: \texttt{DeepFlatten} needs to act on an IR
 that can express the ``container of flattened values'' notion
-of \cref{fig:flatten_generated_c}. The MLton compilation pipeline doesn't
+of \cref{fig:flatten_generated_c}. The MLton compilation pipeline does not
 introduce this affordance until after \texttt{SSA} -- therefore
 (since \texttt{Flatten} targets \texttt{SSA}), we may fail to optimize away new
 allocations that could have been elided by \texttt{Flatten}. As a solution, we
@@ -34,14 +34,14 @@ IR, and run before plain \texttt{Flatten} -- the name \texttt{ShallowFlatten} is
 intended to contrast with \texttt{DeepFlatten}, conveying an idea that we do not
 ``reach inside'' the representation of the container type.
 
-\hl{TODO: is this the right cref?}
+%% \hl{TODO: is this the right cref?}
 
 
 %% One option is to ``hoist'' the \texttt{tuple} type out of the
 %% container, i.e. $\texttt{(a * b) array} \rightarrow \texttt{a array * b array}$;
 %% another 
 
-\hl{TODO: weird?}
+%% \hl{TODO: weird?}
  
 %% hence any
 %% new \texttt{tuple} allocations in \texttt{DeepFlatten} 
@@ -254,19 +254,25 @@ intended to contrast with \texttt{DeepFlatten}, conveying an idea that we do not
 If we commit ourselves to implementing \texttt{ShallowFlatten} in \texttt{SSA}
 (where we have limited direct control over layouts), what representations are
 available to us? One path is to retain the \texttt{tuple}, but ``hoist'' it one
-layer higher in the type; another is to try to arrive at the same inline layout
-as \texttt{DeepFlatten} itself.
+layer higher in the type ($\texttt{(a * b) array} \Rightarrow \texttt{a array *
+b array}); another is to directly emulate \texttt{DeepFlatten}'s layout,
+accepting a restriction to tuples of homogeneous types ($\texttt{(a * a)
+array \Rightarrow \texttt{a array}$ with array length $n \Rightarrow 2n$).
+
+%% as \texttt{DeepFlatten} itself
 
 
-Speaking somewhat loosely, these two choices of strategies correspond to the
-familiar struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS
-layout is the natural default for a C++ programmer, where a composite type is
-embedded directly into the container (\cref{fig:cpp_aos_diagram}). The SoA
-layout is the natural default for SIMD programming, since it makes it simple to
-load contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}).
-The MLton default array-of-pointers layout (\cref{fig:aop_example}) lacks a name
-in standard performance-engineering parlance -- we will refer to it here as
-``AoP'' for simplicity.
+%% Speaking somewhat loosely, these two choices of strategies correspond to the
+
+These two representation choices correspond to the familiar
+struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS layout is the
+natural default for a C++ programmer, where a composite type is embedded
+directly into the container (\cref{fig:cpp_aos_diagram}). The SoA layout is the
+natural default for SIMD programming, since it makes it simple to load
+contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}). The
+MLton default array-of-pointers layout (\cref{fig:aop_example}) lacks a name in
+standard performance-engineering parlance -- we will refer to it here as ``AoP''
+for simplicity.
 
 
 \begin{figure}[htbp]
