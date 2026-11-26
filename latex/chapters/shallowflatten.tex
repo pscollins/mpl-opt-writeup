@@ -254,10 +254,10 @@ intended to contrast with \texttt{DeepFlatten}, conveying an idea that we do not
 If we commit ourselves to implementing \texttt{ShallowFlatten} in \texttt{SSA}
 (where we have limited direct control over layouts), what representations are
 available to us? One path is to retain the \texttt{tuple}, but ``hoist'' it one
-layer higher in the type ($\texttt{(a * b) array} \Rightarrow \texttt{a array *
-b array}); another is to directly emulate \texttt{DeepFlatten}'s layout,
+layer higher in the type ($\texttt{(a * b) array} \to \texttt{a array *
+b array}$); another is to directly emulate \texttt{DeepFlatten}'s layout,
 accepting a restriction to tuples of homogeneous types ($\texttt{(a * a)
-array \Rightarrow \texttt{a array}$ with array length $n \Rightarrow 2n$).
+array} \to \texttt{a array}$ with array length $n \to 2n$).
 
 %% as \texttt{DeepFlatten} itself
 
@@ -269,7 +269,7 @@ struct-of-arrays (SoA) vs array-of-structs (AoS) layouts. The AoS layout is the
 natural default for a C++ programmer, where a composite type is embedded
 directly into the container (\cref{fig:cpp_aos_diagram}). The SoA layout is the
 natural default for SIMD programming, since it makes it simple to load
-contiguous chunks of data into SIMD registers (\cref{fig:cpp_soa_diagram}). The
+contiguous chunks of data into vector registers (\cref{fig:cpp_soa_diagram}). The
 MLton default array-of-pointers layout (\cref{fig:aop_example}) lacks a name in
 standard performance-engineering parlance -- we will refer to it here as ``AoP''
 for simplicity.
@@ -375,7 +375,7 @@ PointSoA struct_of_arrays;
   \label{fig:cpp_soa_diagram}
 \end{figure}
 
-\hl{TODO: MESSY}
+%% \hl{TODO: MESSY}
 
 Libraries and frameworks to support SIMD CPU programming commonly offer support
 for accessing SoA-layout data via AoS-like syntax, e.g. Intel's ISPC, introduced
@@ -455,24 +455,37 @@ types, replacing the AoP container type with its AoS/SoA equivalent, and
 rewriting the container \texttt{prim}s appropriately
 (\cref{fig:pack_unpack_example}). This allows us to preserve all of the
 pre-existing names and (non-container) types in the consuming code, at the cost
-of potentially-unnecessary tuple allocations. In order to offset this effect,
-the \texttt{ShallowFlatten} pass runs relatively early in the \texttt{SSA} pass
-pipeline -- directly before the regular \texttt{Flatten} pass -- which allows us
-to reuse the existing mechanisms for \texttt{tuple}-elimination to the greatest
-extent possible.
+of potentially-unnecessary tuple allocations.
 
-This choice comes with a tradeoff, however: in the \texttt{SSA} representation,
-memory layouts are abstract, and so it is impossible for us to directly express
-a notion of ``\texttt{tuple} elements embedded into an array'' that the
-\texttt{DeepFlatten} pass produces (depicted in \cref{fig:flatten_generated_c}),
-which would be a direct analogue to the traditional C++ AoS layout depicted in
-\cref{fig:cpp_aos_diagram}. However, for containers of a uniform type, this
-level of control is unnecessary -- we can, for example, simply convert an
-length-$n$ \texttt{(int * int)} into an \texttt{int array} of length $2n$. For
-the benchmarks explored below, restricting the transformation to tuple elements
-with homogoneous types does not sacrifice any performance -- container-of-tuple
-types represented in these workloads generally correspond to e.g. 2-$d$ points
-in space, which are naturally homogeneous.
+%% . In order to offset this effect,
+%% the \texttt{ShallowFlatten} pass runs relatively early in the \texttt{SSA} pass
+%% pipeline -- directly before the regular \texttt{Flatten} pass -- which allows us
+%% to reuse the existing mechanisms for \texttt{tuple}-elimination to the greatest
+%% extent possible.
+
+Running in \texttt{SSA} allows us to leverage existing \texttt{Flatten}
+machinery to eliminate these temporary tuples, in exachange for which we
+sacrifice the ability to express the notion of ``\texttt{tuple} elements
+embedded into an array'' that \texttt{DeepFlatten} relies on. However, for
+containers of a homogeneous type, this level of control is unnecessary -- any
+AoP container of length $n$ over a homogeneous-type tuple \texttt{(a * a * \dots
+* a)} on $k$ elements can be converted into an AoS container of length $nk$. For
+the benchmarks explored below, accepting this restriction does not sacrifice any
+performance -- container-of-tuple types represented in these workloads generally
+correspond to e.g. 2-$d$ points in space, which are naturally homogeneous.
+
+%% This choice comes with a tradeoff, however: in the \texttt{SSA} representation,
+%% memory layouts are abstract, and so it is impossible for us to directly express
+%% a notion of ``\texttt{tuple} elements embedded into an array'' that the
+%% \texttt{DeepFlatten} pass produces (depicted in \cref{fig:flatten_generated_c}),
+%% which would be a direct analogue to the traditional C++ AoS layout depicted in
+%% \cref{fig:cpp_aos_diagram}. However, for containers of a uniform type, this
+%% level of control is unnecessary -- we can, for example, simply convert an
+%% length-$n$ \texttt{(int * int)} into an \texttt{int array} of length $2n$. For
+%% the benchmarks explored below, restricting the transformation to tuple elements
+%% with homogoneous types does not sacrifice any performance -- container-of-tuple
+%% types represented in these workloads generally correspond to e.g. 2-$d$ points
+%% in space, which are naturally homogeneous.
 
 \begin{figure}[htbp]
   \centering
