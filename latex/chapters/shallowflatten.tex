@@ -1287,22 +1287,42 @@ cells. Given that the value-to-ref rewrite is trivial and no examples of the
 problematic patterns appear in our benchmark workloads, this seems to impose
 minimal programmer burden and win substantial flexibility for the compiler.
 
-Note, however, that there is one sense of pointer equality required by
-\citet{sml-def} itself: equality of the original \texttt{array} objects
-(lowered in MLton's \texttt{SSA} IR to \texttt{MLton\_eq}). For the AoS
-rewrite, there is no problem, since we preserve the original single
-\texttt{array} value and array equality continues to compare its physical
-identity. For the SoA rewrite, however, we replace the mutable array value with
-an immutable tuple of component arrays that may be unpacked and re-allocated by
-nested \texttt{ShallowFlatten} or later \texttt{Flatten} passes; simply
-rewriting the type argument of \texttt{MLton\_eq} then compares ephemeral
-wrapper tuples and can spuriously yield \texttt{false}, as illustrated in
-\cref{fig:bad_eq_lower}. Our prototype implementation does not handle
-\texttt{MLton\_eq} on SoA-flattened arrays -- none of the benchmarks evaluated
-in \cref{ch:evaluation} perform equality comparisons on flattened arrays, so
-the pass can simply emit an error on this case (and future work could support
-it directly by lowering \texttt{MLton\_eq} to a member-wise comparison across
-the component arrays of the SoA tuple).
+Separately from the question of physical identity for flattened \texttt{tuple}
+elements (whose behavior is not specified by \citet{sml-def}), there is also a
+potential problem of physical identity for the mutable \texttt{array} objects
+themselves: \citet{sml-def} defines equality on \texttt{array}s as physical,
+pointer equality, which is not preserved by the SoA implementation
+of \texttt{ShallowFlatten} presented here. See \cref{fig:bad_eq_lower} for an
+illustration. Unlike element identity problem (which requires a global dataflow
+analysis to diagnose and fix), there is a simple local fix: add a new rule
+to \cref{fig:shallow_flat_statements} that expands \texttt{MLton_eq} operations
+on SoA-converted objects into a logical \texttt{andalso} across members of the
+generated \texttt{tuple}s. We omit handling for this edge case (which does not
+appear in any of our benchmarks) from \cref{fig:shallow_flat_statements} for
+simplicity, but see \cref{fig:correct_eq_lower} for an illustration.
+
+TODO(agy): let's restructure the examples -- first we should have SML->SSA that
+demonstrates how we get a MLton-eq from an array = operator, then we should have
+SSA->bad SSA and SSA->good SSA. i think that maybe doing SML->SSA+bad SSA in
+bad_eq_lower and then SSA->good SSA in correct_eq_lower would be best; does that
+work? 
+
+%% Note, however, that there is one sense of pointer equality required by
+%% \citet{sml-def} itself: equality of the original \texttt{array} objects
+%% (lowered in MLton's \texttt{SSA} IR to \texttt{MLton\_eq}). For the AoS
+%% rewrite, there is no problem, since we preserve the original single
+%% \texttt{array} value and array equality continues to compare its physical
+%% identity. For the SoA rewrite, however, we replace the mutable array value with
+%% an immutable tuple of component arrays that may be unpacked and re-allocated by
+%% nested \texttt{ShallowFlatten} or later \texttt{Flatten} passes; simply
+%% rewriting the type argument of \texttt{MLton\_eq} then compares ephemeral
+%% wrapper tuples and can spuriously yield \texttt{false}, as illustrated in
+%% \cref{fig:bad_eq_lower}. Our prototype implementation does not handle
+%% \texttt{MLton\_eq} on SoA-flattened arrays -- none of the benchmarks evaluated
+%% in \cref{ch:evaluation} perform equality comparisons on flattened arrays, so
+%% the pass can simply emit an error on this case (and future work could support
+%% it directly by lowering \texttt{MLton\_eq} to a member-wise comparison across
+%% the component arrays of the SoA tuple).
 
 \begin{figure}[htbp]
   \centering
