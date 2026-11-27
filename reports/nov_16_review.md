@@ -13,7 +13,7 @@ If you are triaging edits before submission, the highest-impact items to address
 
 1. **Critical Factual / Pass-Name Swaps & Stale Numbers (Part 1):**
    - ~~[`introduction.tex:32`](../latex/chapters/introduction.tex#L32) says `ShallowFlatten` where it means `PreFlatten`.~~
-   - [`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`, and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).
+   - ~~[`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`,~~ and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).
    - ~~[`related_work.tex:191-199`](../latex/chapters/related_work.tex#L191-L199) says `AoS` three times for NESL and Data Parallel Haskell, both of which use **SoA**; [`related_work.tex:143`](../latex/chapters/related_work.tex#L143) says `SoA` for Jane Street's unboxed product arrays, which are **AoS**.~~
    - ~~[`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114) says `PreFlatten` only transforms *non-tail-recursive* functions (inverted: it only transforms `tail` calls)~~, alongside several stale numbers/claims left over from earlier benchmark runs (§5.1, §5.2.2, §5.3.1, §5.5, §5.7.2).
 2. **`perf stat -dd` Multiplexing Artifact in `Topdown L1` Metrics (Part 1.4):**
@@ -35,7 +35,7 @@ If you are triaging edits before submission, the highest-impact items to address
    - **Current:** *"After controlling for the effect of the `\texttt{Chunkify}` heuristic (by forcing all generated code into a single chunk), the `\texttt{ShallowFlatten}` optimizations are neutral-to-positive, generally demonstrating a geomean win on the order of 1-2% across all impacted benchmarks."*
    - **Issue:** That paragraph is about `PreFlatten` (and the next paragraph begins *"On the other hand, both `\texttt{ShallowFlatten}` transformations are overwhelmingly positive..."*). Replace `\texttt{ShallowFlatten}` with `\texttt{PreFlatten}` on line 32.
 
-2. **`PreFlatten` written instead of `ShallowFlatten` ([`shallowflatten.tex:1126-1128`](../latex/chapters/shallowflatten.tex#L1126-L1128)):**
+2. ~~**`PreFlatten` written instead of `ShallowFlatten` ([`shallowflatten.tex:1126-1128`](../latex/chapters/shallowflatten.tex#L1126-L1128)):**~~
    - **Current:** *"...wrap the element type in `\texttt{ref}`, as depicted in `\cref{fig:push_pop_ref}` -- in which case we are guaranteed that `\texttt{element = element'}`, which is preserved by `\texttt{PreFlatten}`."*
    - **Fix:** Replace `\texttt{PreFlatten}` with `\texttt{ShallowFlatten}` (since `(int * int) ref array` has $w_t(\texttt{(int * int) ref}) = 0$, `ShallowFlatten` leaves the outer array as an array of `ref` pointers).
    - ~~**Related note ([`shallowflatten.tex:911`](../latex/chapters/shallowflatten.tex#L911)):** Your `\hl{TODO}` says *"mention the homogeneous tuple restriction in limitaitons -- say that we could skip it for AoS but it's easier to keep it"*. Note that it is **SoA** ($\Phi_{\texttt{SoA}}$) where the uniform-element restriction can be skipped without changing `SSA` (as [`shallowflatten.tex:1219`](../latex/chapters/shallowflatten.tex#L1219) correctly explains), whereas AoS requires uniform types in `SSA`.~~

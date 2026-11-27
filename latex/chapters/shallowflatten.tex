@@ -1198,7 +1198,7 @@ there is no way to observe pointer equality of tuples in the source language,
 and so the compiler has complete freedom. The only language-extension-free way
 to write this test would be to wrap the element type in \texttt{ref}, as
 depicted in \cref{fig:push_pop_ref} -- in which case we are guaranteed
-that \texttt{element = element'}, which is preserved by \texttt{PreFlatten}.
+that \texttt{element = element'}, which is preserved by \texttt{ShallowFlatten}.
 
 \begin{figure}[htbp]
   \centering
