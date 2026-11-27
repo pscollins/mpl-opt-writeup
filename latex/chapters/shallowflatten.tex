@@ -1283,16 +1283,16 @@ primitives to forbid tuple arguments: this would mirror, for example, the Java
 language ``value classes'' proposal of \citet{jep401-valhalla}, redefining all
 SML source-language tuples as ``value objects'' in the sense of that proposal,
 and completely restricting the notion of physical equality to \texttt{ref}
-cells. Given that the value-to-ref rewrite is trivial and no examples of, this
-seems to impose minimal programmer burden and win substanial flexibility for the
-compiler.
+cells. Given that the value-to-ref rewrite is trivial and no examples of the
+problematic patterns appear in our benchmark workloads, this seems to impose
+minimal programmer burden and win substanial flexibility for the compiler.
 
-\hl{TODO: are we actually sound here? perhaps not -- we don't detect the mlton.eq case}
+\hl{TODO: are we actually sound here? perhaps not -- we don't detect the mlton.eq case -- waiting for analysis to finish}
 
 An additional limitation that is specific to the AoS flavor, as described above,
 is the restriction to tuples of uniform types. This is an intentional tradeoff
-for the sake of exploration, allowing us to better-leverage the
-existing \texttt{Flatten} pass without a substanial re-architecture of the
+for the sake of exploration, allowing us to better leverage the
+existing \texttt{Flatten} pass without a substantial re-architecture of the
 compiler -- the \texttt{SSA} IR today is insufficiently-expressive to implement
 the AoS transformation. Future work could remove this restriction by
 extending \texttt{SSA} as necessary, or by re-implementing \texttt{Flatten} to

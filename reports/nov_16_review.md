@@ -329,7 +329,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`shallowflatten.tex:562`](../latex/chapters/shallowflatten.tex#L562) | ~~`inserting pack/unpack operations allow us`~~ | `inserting pack/unpack operations allows us` |
 | [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | ~~`of \texttt{ShallowFlatten} We say`~~ | `of \texttt{ShallowFlatten}, we say` |
 | [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | ~~`would to be disable ...`~~ ~~`a \texttt{MLton.eq}`~~ | `would be to disable ...` ~~`an \texttt{MLton.eq}`~~ |
-| [`shallowflatten.tex:1214, 1222`](../latex/chapters/shallowflatten.tex#L1214) | `substanial` (×2) | `substantial` |
+| [`shallowflatten.tex:1214, `~~`1222`~~](../latex/chapters/shallowflatten.tex#L1214) | `substanial` (×2) | `substantial` |
 | [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | `evalutation` | `evaluation` |
 | [`evaluation.tex:25`](../latex/chapters/evaluation.tex#L25) | ``` ``bigger number on the test side ``` | ``` ``bigger number on the test side'' ``` |
 | [`evaluation.tex:62, 72`](../latex/chapters/evaluation.tex#L62) | `\texttt{delunay}` (×3) | `\texttt{delaunay}` |
