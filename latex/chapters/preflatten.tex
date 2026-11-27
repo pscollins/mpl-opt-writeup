@@ -883,7 +883,7 @@ $\flatsem{\cdot}$ for the action of the transformation on a program $P =
 F_1 \cdots F_m$ under a flattening decision $\sigma$ produced by the analysis
 $\Sigma$ (ignoring \texttt{datatype} and global variable declarations, which are
 unchanged). For a function definition $F_j = (\mathtt{def}\
-f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : B_0 \cdots B_k)$ of arity
+f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\texttt{->}} \tau : B_0 \cdots B_k)$ of arity
 $n$, a decision vector $\vec{d} = [d_1, \dots, d_n]$ assigns each formal
 parameter either \texttt{Preserve} or \texttt{Flatten} (written
 $\texttt{Flatten}_C$ in the \texttt{ConApp} analysis to record the
@@ -924,11 +924,11 @@ $\texttt{Preserve}^n$ corresponds to the original, unspecialized function.
     \[
     \begin{aligned}
       F_j
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : B_0 \cdots B_k \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\texttt{->}} \tau : B_0 \cdots B_k \\
       \flatsem{F_j}^{\texttt{Preserve}^n}
-        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\mathtt{->}} \tau : \flatsem{B_0} \cdots \flatsem{B_k} \\
+        &= \mathtt{def}\ f_j(x_1{:}\tau_1, \dots, x_n{:}\tau_n) \mathrel{\texttt{->}} \tau : \flatsem{B_0} \cdots \flatsem{B_k} \\
       \flatsem{F_j}^{\vec{d}}
-        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) \mathrel{\mathtt{->}} \tau :
+        &= \mathtt{def}\ f_{j,\vec{d}}\big(\pi(x_1{:}\tau_1, d_1), \dots, \pi(x_n{:}\tau_n, d_n)\big) \mathrel{\texttt{->}} \tau :
            \mathtt{bbBind}_{\vec{d}}\ B_0 \cdots B_k
            \qquad (\vec{d} \neq \texttt{Preserve}^n) \\
       \pi(x{:}\tau, \texttt{Preserve}) &= x{:}\tau \\

@@ -146,7 +146,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
      - If your implementation (`maxWidthSameType`) restricts *both* AoS and SoA to uniform tuples for convenience, change Fig. 4.6's example to balanced `((int * int) * (int * int)) array` (where $w_t((\mathtt{int} * \mathtt{int}) * (\mathtt{int} * \mathtt{int})) = 2$), and reword line 1219 to note that while the current prototype applies the uniform-type policy to both flavors, the restriction is *inherent* only to AoS in `SSA` (and incidental for SoA).
      - Conversely, if $\Phi_{\texttt{SoA}}$ in your compiler already supports heterogeneous tuples $\tau_1 * \cdots * \tau_n$, generalize $w_t$ and $\Phi_{\texttt{SoA}}$ in §4.2 to $\tau_1 * \cdots * \tau_n$ and apply the uniform-type guard only to $\Phi_{\texttt{AoS}}$.
 
-2. **Subscript case typo ([`shallowflatten.tex:956`](../latex/chapters/shallowflatten.tex#L956)):**
+2. ~~**Subscript case typo ([`shallowflatten.tex:956`](../latex/chapters/shallowflatten.tex#L956)):**~~
    - Writes $\sembrack{P}_\phi^*$ (lowercase $\phi$) instead of $\sembrack{P}_\Phi^*$ (uppercase $\Phi$, matching line 907 and Fig. 4.7 line 966).
 
 3. **Incomplete sentence in §4.3 ([`shallowflatten.tex:1213-1215`](../latex/chapters/shallowflatten.tex#L1213-L1215)):**
@@ -327,7 +327,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`shallowflatten.tex:467`](../latex/chapters/shallowflatten.tex#L467) | ~~`# Consuming still code uses 'p'`~~ | `# Consuming code still uses 'p'` |
 | [`shallowflatten.tex:557, 613`](../latex/chapters/shallowflatten.tex#L557) | ~~Captions missing final period~~ | Add trailing `.` |
 | [`shallowflatten.tex:562`](../latex/chapters/shallowflatten.tex#L562) | ~~`inserting pack/unpack operations allow us`~~ | `inserting pack/unpack operations allows us` |
-| [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | `of \texttt{ShallowFlatten} We say` | `of \texttt{ShallowFlatten}, we say` |
+| [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | ~~`of \texttt{ShallowFlatten} We say`~~ | `of \texttt{ShallowFlatten}, we say` |
 | [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | `would to be disable ...` ~~`a \texttt{MLton.eq}`~~ | `would be to disable ...` ~~`an \texttt{MLton.eq}`~~ |
 | [`shallowflatten.tex:1214, 1222`](../latex/chapters/shallowflatten.tex#L1214) | `substanial` (×2) | `substantial` |
 | [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | `evalutation` | `evaluation` |
