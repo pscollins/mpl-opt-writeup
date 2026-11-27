@@ -13,7 +13,7 @@ If you are triaging edits before submission, the highest-impact items to address
 
 1. **Critical Factual / Pass-Name Swaps & Stale Numbers (Part 1):**
    - ~~[`introduction.tex:32`](../latex/chapters/introduction.tex#L32) says `ShallowFlatten` where it means `PreFlatten`.~~
-   - ~~[`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`,~~ and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).
+   - ~~[`shallowflatten.tex:1128`](../latex/chapters/shallowflatten.tex#L1128) says `PreFlatten` where it means `ShallowFlatten`, and [`shallowflatten.tex:1213`](../latex/chapters/shallowflatten.tex#L1213) has a truncated sentence (*"and no examples of, this..."*).~~
    - ~~[`related_work.tex:191-199`](../latex/chapters/related_work.tex#L191-L199) says `AoS` three times for NESL and Data Parallel Haskell, both of which use **SoA**; [`related_work.tex:143`](../latex/chapters/related_work.tex#L143) says `SoA` for Jane Street's unboxed product arrays, which are **AoS**.~~
    - ~~[`evaluation.tex:114`](../latex/chapters/evaluation.tex#L114) says `PreFlatten` only transforms *non-tail-recursive* functions (inverted: it only transforms `tail` calls)~~, alongside several stale numbers/claims left over from earlier benchmark runs (§5.1, §5.2.2, §5.3.1, §5.5, §5.7.2).
 2. **`perf stat -dd` Multiplexing Artifact in `Topdown L1` Metrics (Part 1.4):**
@@ -149,7 +149,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 2. ~~**Subscript case typo ([`shallowflatten.tex:956`](../latex/chapters/shallowflatten.tex#L956)):**~~
    - Writes $\sembrack{P}_\phi^*$ (lowercase $\phi$) instead of $\sembrack{P}_\Phi^*$ (uppercase $\Phi$, matching line 907 and Fig. 4.7 line 966).
 
-3. **Incomplete sentence in §4.3 ([`shallowflatten.tex:1213-1215`](../latex/chapters/shallowflatten.tex#L1213-L1215)):**
+3. ~~**Incomplete sentence in §4.3 ([`shallowflatten.tex:1213-1215`](../latex/chapters/shallowflatten.tex#L1213-L1215)):**~~
    - **Current:** *"Given that the value-to-ref rewrite is trivial and no examples of, this seems to impose minimal programmer burden and win substanial flexibility for the compiler."*
    - **Fix:** Supply the missing clause after *"no examples of"* (e.g., *"...and no examples of tuple pointer-equality or tuple-array CAS operations appear in our benchmark suites, this seems..."*) and fix `substanial` $\to$ `substantial` (lines 1214 and 1222).
 
@@ -257,7 +257,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
    - Standard academic style does not hyphenate `more`/`most` comparatives or `-ly` adverbs:
      - Comparatives/superlatives: `more-aggressive` $\to$ `more aggressive`, `more-expensive` $\to$ `more expensive`, `more-similar` $\to$ `more similar`, `more-faithfully` $\to$ `more faithfully`, `more-unlucky` $\to$ `more unlucky`, `most-conservative` $\to$ `most conservative`, `most-profitable` $\to$ `most profitable`, `most-closely` $\to$ `most closely`, `no-more-expensive` $\to$ `no more expensive`, `no-flatter-than` $\to$ `no flatter than`.
      - `-ly` adverbs: `strictly-local` $\to$ `strictly local`, `purely-local` $\to$ `purely local`, `statically-known` $\to$ `statically known`, `newly-emitted` $\to$ `newly emitted`, `modestly-sized` $\to$ `modestly sized`, `sufficiently-large` $\to$ `sufficiently large`, `individually-meaningful` $\to$ `individually meaningful`, `roughly-fixed` $\to$ `roughly fixed`, `previously-observed` $\to$ `previously observed`, `directionally-different` $\to$ `directionally different`, `dynamically-typed` $\to$ `dynamically typed`, `potentially-unboxed` $\to$ `potentially unboxed`, `individually-allocated` $\to$ `individually allocated`, `potentially-unnecessary` $\to$ `potentially unnecessary`, `potentially-unpleasant` $\to$ `potentially unpleasant`, `insufficiently-expressive` $\to$ `insufficiently expressive`.
-     - Verbs: `flatten-away` (`related_work.tex:166`) $\to$ `flatten away`; `better-leverage` (`shallowflatten.tex:1221`) $\to$ `better leverage`.
+     - Verbs: `flatten-away` (`related_work.tex:166`) $\to$ `flatten away`; ~~`better-leverage` (`shallowflatten.tex:1221`) $\to$ `better leverage`~~.
 
 2. **Standardize project/technical terms across chapters:**
    - ~~**`MaPLe` (7×) vs. `MPL` (38×):** Introduce `"MaPLe (MPL)"` once in [`introduction.tex:17`](../latex/chapters/introduction.tex#L17) (and [`background.tex:6`](../latex/chapters/background.tex#L6)), then use one consistently (`MPL` dominates 38 to 7).~~
@@ -329,7 +329,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`shallowflatten.tex:562`](../latex/chapters/shallowflatten.tex#L562) | ~~`inserting pack/unpack operations allow us`~~ | `inserting pack/unpack operations allows us` |
 | [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | ~~`of \texttt{ShallowFlatten} We say`~~ | `of \texttt{ShallowFlatten}, we say` |
 | [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | ~~`would to be disable ...`~~ ~~`a \texttt{MLton.eq}`~~ | `would be to disable ...` ~~`an \texttt{MLton.eq}`~~ |
-| [`shallowflatten.tex:1214, `~~`1222`~~](../latex/chapters/shallowflatten.tex#L1214) | `substanial` (×2) | `substantial` |
+| [`shallowflatten.tex:1214, 1222`](../latex/chapters/shallowflatten.tex#L1214) | ~~`substanial` (×2)~~ | `substantial` |
 | [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | `evalutation` | `evaluation` |
 | [`evaluation.tex:25`](../latex/chapters/evaluation.tex#L25) | ``` ``bigger number on the test side ``` | ``` ``bigger number on the test side'' ``` |
 | [`evaluation.tex:62, 72`](../latex/chapters/evaluation.tex#L62) | `\texttt{delunay}` (×3) | `\texttt{delaunay}` |
