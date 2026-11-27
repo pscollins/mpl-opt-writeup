@@ -1010,9 +1010,7 @@ transformation in this section for completeness.
 
 We also partition \texttt{prim}s into ``flattenable'' and ``unflattenable:''
 ``flattenable'' \texttt{prim}s are those that manipulate \texttt{array}
-or \texttt{vector} types (along with \texttt{MLton\_eq} when applied to a
-flattenable container type, as discussed in \cref{sec:shallow_limitations});
-all other \texttt{prim}s are ``unflattenable.''
+or \texttt{vector} types; all other \texttt{prim}s are ``unflattenable.''
 
 Then, at a high level, the action of the pass is:
 \begin{itemize}
@@ -1071,8 +1069,6 @@ overall action of the pass is the fixed-point $\sembrack{P}_\Phi^*$.
       &= \begin{cases}
            \Phi\big((x{:}\tau \mid \mathtt{\_}) \syneq e\big)
              & \text{if } e = \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v}),\; p \in \mathcal{P}_{\text{flat}},\; 2 \le w_t^\Phi(\tau_1) \le W \\
-           \Phi\big((x{:}\tau \mid \mathtt{\_}) \syneq e\big)
-             & \text{if } e = \mathtt{prim\ MLton\_eq}[\tau_1](v_1, v_2),\; 2 \le w_c^\Phi(\tau_1) \le W \\
            (x{:}\sembrack{\tau}_\Phi \mid \mathtt{\_}) \syneq \sembrack{e}_\Phi
              & \text{otherwise}
          \end{cases} \\
@@ -1119,10 +1115,10 @@ See \cref{fig:shallow_flat_statements}.
 
 \begin{figure}[htbp]
   \centering
-  \scriptsize
+  \footnotesize
   \setlength{\abovedisplayskip}{2pt}
   \setlength{\belowdisplayskip}{2pt}
-  \setlength{\jot}{0.5pt}
+  \setlength{\jot}{1pt}
   \[
   \begin{aligned}
     \Phi_{\texttt{SoA}}\big(a : t\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[t](m)\big)
@@ -1171,25 +1167,15 @@ See \cref{fig:shallow_flat_statements}.
       &\phantom{{}=} \big(\, a'_j : \tau_j\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau_j](a_j) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} a' : \tau_1\;\kappa_K * \cdots * \tau_n\;\kappa_K \syneq \mathtt{tuple}(a'_1, \dots, a'_n) \\
     \Phi_{\texttt{AoS}}\big(a' : t\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[t](a)\big)
-      &= a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a) \\[2pt]
-    \Phi_{\texttt{SoA}}\big(b : \mathtt{bool} \syneq \mathtt{prim\ MLton\_eq}[t\;\kappa_K](a, a')\big)
-      &= \big(\, a_j : \tau_j\;\kappa_K \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, a'_j : \tau_j\;\kappa_K \syneq \mathtt{select}(a', j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, b_j : \mathtt{bool} \syneq \mathtt{prim\ MLton\_eq}[\tau_j\;\kappa_K](a_j, a'_j) \,\big)_{j=1}^{n} \\
-      &\phantom{{}= \big(\,} c_1 : \mathtt{bool} \syneq b_1 \\
-      &\phantom{{}=} \big(\, c_j : \mathtt{bool} \syneq \mathtt{prim\ Bool\_and}(c_{j-1}, b_j) \,\big)_{j=2}^{n} \\
-      &\phantom{{}= \big(\,} b : \mathtt{bool} \syneq c_n \\
-    \Phi_{\texttt{AoS}}\big(b : \mathtt{bool} \syneq \mathtt{prim\ MLton\_eq}[t\;\kappa_K](a, a')\big)
-      &= b : \mathtt{bool} \syneq \mathtt{prim\ MLton\_eq}[\tau\;\kappa_K](a, a')
+      &= a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a)
   \end{aligned}
   \]
-  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau_1 * \cdots * \tau_n$ ($w_t^{\Phi_{\texttt{SoA}}}(t) = n$) in $\Phi_{\texttt{SoA}}$ and $t = \tau * \cdots * \tau$ ($w_t^{\Phi_{\texttt{AoS}}}(t) = n$) in $\Phi_{\texttt{AoS}}$, container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, b_j, c_j, m', i', i_j$. For brevity, we write \texttt{Bool\_and} for boolean conjunction; in MLton's concrete \texttt{SSA} IR, where \texttt{bool} is a \texttt{datatype}, this conjunction is lowered via short-circuiting \texttt{case} transfers.}
+  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau_1 * \cdots * \tau_n$ ($w_t^{\Phi_{\texttt{SoA}}}(t) = n$) in $\Phi_{\texttt{SoA}}$ and $t = \tau * \cdots * \tau$ ($w_t^{\Phi_{\texttt{AoS}}}(t) = n$) in $\Phi_{\texttt{AoS}}$, container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, m', i', i_j$.}
   \label{fig:shallow_flat_statements}
 \end{figure}
 
 %% \hl{TODO: VERIFY THE INTERPLAY OF 
 \section{Limitations}
-\label{sec:shallow_limitations}
 As outlined above, this implementation only supports the case when all AoP
 containers of a given type are flattened -- we cannot support a mix of flattened
 and unflattened AoP containers with a given type using the strategy above. The
@@ -1301,47 +1287,54 @@ cells. Given that the value-to-ref rewrite is trivial and no examples of the
 problematic patterns appear in our benchmark workloads, this seems to impose
 minimal programmer burden and win substantial flexibility for the compiler.
 
-Note, however, that there is one sense of equality required by \cite{sml-def}
-that our rewrite does preserve: equality of the original array objects, which is
-defined to be a pointer equality. For the AoS rewrite, there is no problem,
-since we preserve the original \texttt{array} value, and hence we can implement
-array equality in the normal way, by comparing physical identity. For the SoA
-rewrite, however, we replace the mutable array value with an immutable tuple
-that might be copied and thus violate physical equality. We fix this by lowering
-the equality test to test for member-wise equality across elements in the SoA
-tuple, which preserves the regular equality semantics for SML.
-See \cref{fig:bad_eq_lower} for an illustration.
+Note, however, that there is one sense of pointer equality required by
+\citet{sml-def} itself: equality of the original \texttt{array} objects
+(lowered in MLton's \texttt{SSA} IR to \texttt{MLton\_eq}). For the AoS
+rewrite, there is no problem, since we preserve the original single
+\texttt{array} value and array equality continues to compare its physical
+identity. For the SoA rewrite, however, we replace the mutable array value with
+an immutable tuple of component arrays that may be unpacked and re-allocated by
+nested \texttt{ShallowFlatten} or later \texttt{Flatten} passes; simply
+rewriting the type argument of \texttt{MLton\_eq} then compares ephemeral
+wrapper tuples and can spuriously yield \texttt{false}, as illustrated in
+\cref{fig:bad_eq_lower}. Our prototype implementation does not handle
+\texttt{MLton\_eq} on SoA-flattened arrays -- none of the benchmarks evaluated
+in \cref{ch:evaluation} perform equality comparisons on flattened arrays, so
+the pass can simply emit an error on this case (and future work could support
+it directly by lowering \texttt{MLton\_eq} to a member-wise comparison across
+the component arrays of the SoA tuple).
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[t]{\textwidth}
-    \caption{Original \texttt{SSA}: round-trip an \texttt{(int * int) array} through a nested array}
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Original \texttt{SSA} (must yield \texttt{true})}
     \label{fig:bad_eq_orig}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 a: (int * int) array = ...
 aa: ((int * int) array) array = ...
 
-# Store `a` into `aa` and immediately read it back out as `b`
-_ = prim Array_update[(int * int) array](aa, 0, a)
-b: (int * int) array = prim Array_sub[(int * int) array](aa, 0)
+# Store `a` into `aa` and read it back
+_ = prim Array_update[
+      (int * int) array](aa, 0, a)
+b: (int * int) array =
+  prim Array_sub[
+    (int * int) array](aa, 0)
 
-# Standard ML array equality `a = b` (lowered to MLton_eq; must evaluate to true)
-eq: bool = prim MLton_eq[(int * int) array](a, b)
+# SML array `=` lowered to MLton_eq
+eq: bool =
+  prim MLton_eq[(int * int) array](a, b)
 \end{minted}
-  \end{subfigure}
-
-  \vspace{2.5mm}
-
+  \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Naive SoA lowering (breaks equality)}
+    \caption{After SoA flattening (breaks \texttt{a = b})}
     \label{fig:bad_eq_naive}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 a: int array * int array = ...
 aa: int array array * int array array = ...
 
-# Unpack `aa` and `a`; write component arrays
+# Unpack `aa` and `a`; write components
 aa_x: int array array = select(aa, 0)
 aa_y: int array array = select(aa, 1)
 a_x: int array = select(a, 0)
@@ -1351,58 +1344,21 @@ _ = prim Array_update[int array](
 _ = prim Array_update[int array](
       aa_y, 0, a_y)
 
-# Read components and pack a fresh tuple `b`
+# Load components and pack fresh tuple `b`
 b_x: int array =
   prim Array_sub[int array](aa_x, 0)
 b_y: int array =
   prim Array_sub[int array](aa_y, 0)
 b: int array * int array = tuple(b_x, b_y)
 
-# BAD: compares wrapper tuple pointers -> false
+# Compares wrapper pointers -> false!
 eq: bool =
   prim MLton_eq[int array * int array](a, b)
 \end{minted}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Sound SoA lowering (preserves equality)}
-    \label{fig:bad_eq_sound}
-    \vspace{1mm}
-\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-a: int array * int array = ...
-aa: int array array * int array array = ...
-
-# Same store and load of `a` through `aa`
-aa_x: int array array = select(aa, 0)
-aa_y: int array array = select(aa, 1)
-a_x: int array = select(a, 0)
-a_y: int array = select(a, 1)
-_ = prim Array_update[int array](
-      aa_x, 0, a_x)
-_ = prim Array_update[int array](
-      aa_y, 0, a_y)
-b_x: int array =
-  prim Array_sub[int array](aa_x, 0)
-b_y: int array =
-  prim Array_sub[int array](aa_y, 0)
-b: int array * int array = tuple(b_x, b_y)
-
-# GOOD: compare underlying component arrays
-lhs_x: int array = select(a, 0)
-lhs_y: int array = select(a, 1)
-rhs_x: int array = select(b, 0)
-rhs_y: int array = select(b, 1)
-eq_x: bool =
-  prim MLton_eq[int array](lhs_x, rhs_x)
-eq_y: bool =
-  prim MLton_eq[int array](lhs_y, rhs_y)
-eq: bool = prim Bool_and(eq_x, eq_y) # true
-\end{minted}
   \end{subfigure}
-  \caption{Preserving Standard ML array equality under $\Phi_{\texttt{SoA}}$. In~(a), storing an \texttt{(int * int) array} into an \texttt{((int * int) array) array} and reading it back as \texttt{b} must satisfy \texttt{a = b}. After fixed-point SoA flattening, the load packs a fresh wrapper tuple \texttt{b}. Simply rewriting the type argument of \texttt{MLton\_eq}~(b) compares the ephemeral wrapper pointers and spuriously yields \texttt{false}; lowering \texttt{MLton\_eq} to a member-wise conjunction across the component arrays~(c) preserves Standard ML equality.}
+  \caption{How naive SoA flattening breaks Standard ML array equality. Storing an \texttt{(int * int) array} into an \texttt{((int * int) array) array} and reading it back as \texttt{b} must satisfy \texttt{a = b}~(a). After fixed-point SoA flattening~(b), the load packs a fresh wrapper tuple \texttt{b}, so leaving \texttt{MLton\_eq} to compare the wrapper tuples spuriously returns \texttt{false}.}
   \label{fig:bad_eq_lower}
 \end{figure}
-
-\hl{TODO: need to add handling for SoA}
 
 %% \hl{TODO: are we actually sound here? perhaps not -- we don't detect the mlton.eq case -- waiting for analysis to finish}
 
