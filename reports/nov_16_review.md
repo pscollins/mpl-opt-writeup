@@ -23,7 +23,7 @@ If you are triaging edits before submission, the highest-impact items to address
 4. **Structural & Build Defects in Chapter 5 & Bibliography (Part 3 & Part 5):**
    - Two `\section` commands in `ConApp Flattening` ([`evaluation.tex:707, 725`](../latex/chapters/evaluation.tex#L707)) that should be `\subsection`s; a duplicate `\label{tab:perf_comparison_aos_linearrec_1core}` collision ([`evaluation.tex:1163, 1588`](../latex/chapters/evaluation.tex#L1163)); stray numbered list text floating between tables ([`evaluation.tex:1098-1188`](../latex/chapters/evaluation.tex#L1098)); a figure overflowing the page by 2.2 inches ([`evaluation.tex:776`](../latex/chapters/evaluation.tex#L776)); `. en.` printed in ~25 bibliography entries; and missing author/venue/article metadata in 4 BibTeX entries.
 5. **Missing Sections & Unincorporated Data (Part 4):**
-   - Placeholder [`abstract.tex`](../latex/abstract.tex) and [`conclusion.tex`](../latex/chapters/conclusion.tex), missing hardware specs (`compute_icelake_r750`), 44 `\hl{...}` markers, and the new Nov 16 `-chunkify one` runs (`commit 3dd0c2c`, whose charts have not yet been generated in `analysis/charts/`) plus `soa_sync_gc` / `soa_fixed_iters`.
+   - Placeholder [`abstract.tex`](../latex/abstract.tex) and [`conclusion.tex`](../latex/chapters/conclusion.tex), ~~missing hardware specs (`compute_icelake_r750`),~~ 44 `\hl{...}` markers, and the new Nov 16 `-chunkify one` runs (`commit 3dd0c2c`, whose charts have not yet been generated in `analysis/charts/`) plus `soa_sync_gc` / `soa_fixed_iters`.
 
 ---
 
@@ -205,7 +205,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 2. **Introduction Roadmap & Explicit Contributions ([`latex/chapters/introduction.tex`](../latex/chapters/introduction.tex)):**
    - ~~At 45 lines, Chapter 1 jumps straight from a two-paragraph motivation to benchmark numbers without an explicit **contributions list** (noted in `appendix_notes.tex:133`) or a **chapter-by-chapter outline** linking `\cref{ch:background}`–`\cref{ch:conclusion}`.~~
 
-3. **Hardware & Benchmark Suite Description ([`evaluation.tex:101-103`](../latex/chapters/evaluation.tex#L101-L103), `\hl{TODO: DESCRIBE HW}`):**
+3. ~~**Hardware & Benchmark Suite Description ([`evaluation.tex:101-103`](../latex/chapters/evaluation.tex#L101-L103), `\hl{TODO: DESCRIBE HW}`):**~~
    - From [`analysis/reserve_machine.sh`](../analysis/reserve_machine.sh) and `analysis/perf_data/*.txt`, fill in the Chameleon Cloud hardware details: `compute_icelake_r750` (Dell PowerEdge R750, dual-socket Intel Xeon Platinum 8380 Ice Lake at ~3.0 GHz, $2 \times 40 = 80$ physical cores / $160$ hardware threads with SMT, Ubuntu Linux, GCC 15.2.0).
    - **Important insight to mention:** Calling out that the machine has **80 physical cores and 160 SMT threads across 2 sockets** immediately explains why `procs` spans $\{1, 2, 4, 8, 16, 32, 64, 80, 128, 160\}$—up to `80` scales across physical cores, while `128` and `160` cross into hyperthreading!
    - Also state the total benchmark counts in §5.1 (**45** in the MLton suite, **34** in `parallel-ml-bench`) and how many benchmarks each pass modifies (e.g., AoS/SoA modify only `flat-array` ($1/45$) in MLton's suite vs. $11/34$ in `parallel-ml-bench`).
@@ -245,7 +245,7 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
   - ~~`shallowflatten.tex`: [`332`](../latex/chapters/shallowflatten.tex#L332), [`636`](../latex/chapters/shallowflatten.tex#L636), [`911`](../latex/chapters/shallowflatten.tex#L911), [`1217`](../latex/chapters/shallowflatten.tex#L1217) (clarify that `MLton_equal` / `MLton_eq` is polymorphic or check if it's in $\mathcal{P}_{\text{flat}}$'s error list).~~
   - `related_work.tex`: [`99, 109, 112, 126`](../latex/chapters/related_work.tex#L99-L126) — cite `\citep{amd64-abi}` (already in `references.bib`!) for ABI signature constraints and contrast intraprocedural PEA (delays `pack` onto escaping branches) with interprocedural `PreFlatten` (clones/specializes the callee so the tuple never escapes across the call)—see `reports/related_work_recommendations.md` Item B.1 for drop-in prose.
 - **Substantive Missing Prose / Evaluation Rewrites (21):**
-  - [`abstract.tex:3`](../latex/abstract.tex#L3), [`introduction.tex:46`](../latex/chapters/introduction.tex#L46), [`conclusion.tex:2`](../latex/chapters/conclusion.tex#L2), and [`evaluation.tex`](../latex/chapters/evaluation.tex) lines `101, 103, 116, 122, 431, 496, 642, 673, 704, 799, 857, 1057, 1070, 1092, 1094, 1096, 1239, 1527` (all covered in Parts 1.3, 1.4, and 4.1 above).
+  - [`abstract.tex:3`](../latex/abstract.tex#L3), [`introduction.tex:46`](../latex/chapters/introduction.tex#L46), [`conclusion.tex:2`](../latex/chapters/conclusion.tex#L2), and [`evaluation.tex`](../latex/chapters/evaluation.tex) lines ~~`101, 103`,~~ `116, 122, 431, 496, 642, 673, 704, 799, 857, 1057, 1070, 1092, 1094, 1096, 1239, 1527` (all covered in Parts 1.3, 1.4, and 4.1 above).
 
 ---
 
@@ -330,10 +330,10 @@ Across **all** `perf` tables in Chapter 5 (Tables 5.1–5.4 and 5.6–5.12), the
 | [`shallowflatten.tex:931`](../latex/chapters/shallowflatten.tex#L931) | ~~`of \texttt{ShallowFlatten} We say`~~ | `of \texttt{ShallowFlatten}, we say` |
 | [`shallowflatten.tex:1197-1198`](../latex/chapters/shallowflatten.tex#L1197-L1198) | ~~`would to be disable ...`~~ ~~`a \texttt{MLton.eq}`~~ | `would be to disable ...` ~~`an \texttt{MLton.eq}`~~ |
 | [`shallowflatten.tex:1214, 1222`](../latex/chapters/shallowflatten.tex#L1214) | ~~`substanial` (×2)~~ | `substantial` |
-| [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | `evalutation` | `evaluation` |
+| [`evaluation.tex:3`](../latex/chapters/evaluation.tex#L3) | ~~`evalutation`~~ | `evaluation` |
 | [`evaluation.tex:25`](../latex/chapters/evaluation.tex#L25) | ``` ``bigger number on the test side ``` | ``` ``bigger number on the test side'' ``` |
 | [`evaluation.tex:62, 72`](../latex/chapters/evaluation.tex#L62) | `\texttt{delunay}` (×3) | `\texttt{delaunay}` |
-| [`evaluation.tex:90`](../latex/chapters/evaluation.tex#L90) | `formed from hash of` | `formed from a hash of` |
+| [`evaluation.tex:90`](../latex/chapters/evaluation.tex#L90) | ~~`formed from hash of`~~ | `formed from a hash of` |
 | [`evaluation.tex:150`](../latex/chapters/evaluation.tex#L150) | `flattning` | `flattening` |
 | [`evaluation.tex:182`](../latex/chapters/evaluation.tex#L182) | `optimzation` | `optimization` |
 | [`evaluation.tex:305`](../latex/chapters/evaluation.tex#L305) | `spwaning` | `spawning` |

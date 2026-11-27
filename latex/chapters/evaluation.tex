@@ -1,6 +1,6 @@
 
 \section{Methodology}
-In the evalutation below, we will use two sets of benchmarks:
+In the evaluation below, we will use two sets of benchmarks:
 \begin{enumerate}
 
 \item The MLton benchmark suite: shipped as part of the MLton codebase, this
@@ -78,7 +78,7 @@ this case, it was necessary to:
 
 \item Manually override the ``magic number'' inserted by MLton into the
   generated binary to a fixed, deterministic value: this magic number is formed
-  from hash of the compiler binary version (deterministic) and a call to
+  from a hash of the compiler binary version (deterministic) and a call to
   \texttt{Random.word ()} (not necessarily fixed, in case the optimization pass
   advanced the state of the random number generator).
 
@@ -89,9 +89,22 @@ performance.
 
 \end{itemize}
 
-All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
+Across both suites, the MLton benchmark suite contains 45 benchmarks and
+\texttt{parallel-ml-bench} contains 34 benchmarks. Because we filter out
+bit-identical binaries, each section below reports only the subset of benchmarks
+modified by the pass under test (for example, \texttt{ShallowFlatten} modifies
+only \texttt{flat-array} ($1/45$) in the MLton suite versus $11/34$ benchmarks
+in \texttt{parallel-ml-bench}, while \texttt{ConApp}-\texttt{PreFlatten}
+modifies all $34/34$ benchmarks in \texttt{parallel-ml-bench}).
 
-\hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
+All of the benchmarks described below were run on a Chameleon Cloud
+\texttt{compute\_icelake\_r750} bare-metal node (Dell PowerEdge R750) equipped
+with dual-socket Intel Xeon Platinum 8380 (Ice Lake) processors running at
+$\approx 3.0\text{ GHz}$, providing $2 \times 40 = 80$ physical cores and 160
+hyperthreads, running Ubuntu Linux and compiling generated C code with GCC
+15.2.0. In the multi-core MPL experiments below, we sweep processor counts
+across $\{1, 2, 4, 8, 16, 32, 64, 80, 128, 160\}$: counts up to 80 scale across
+physical cores, while 128 and 160 exercise SMT hyperthreading.
 
 \FloatBarrier
 \section{Tuple Flattening}
