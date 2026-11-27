@@ -1373,7 +1373,7 @@ b_y: int array =
   prim Array_sub[int array](aa_y, 0)
 b: int array * int array = tuple(b_x, b_y)
 
-# Compares wrapper pointers -> false!
+# Compares wrapper `tuple` identity -> false
 eq: bool =
   prim MLton_eq[int array * int array](a, b)
 \end{minted}
@@ -1385,13 +1385,15 @@ eq: bool =
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 # ... same update and load of `b` as (c) ...
 
-# Expand MLton_eq to component-wise andalso
+# Expand MLton_eq to component-wise andalso: first, member 0
 a0: int array = select(a, 0)
 b0: int array = select(b, 0)
 eq0: bool =
   prim MLton_eq[int array](a0, b0)
 case eq0 of
+  # First member mismatch: result is false
   false => goto join(false)
+  # First member match: check next member
 | true => goto check1()
 
 block check1():
@@ -1406,7 +1408,10 @@ block join(eq: bool):
   ...
 \end{minted}
   \end{subfigure}
-  \caption{How naive SoA flattening breaks Standard ML array equality and how a local rewrite preserves it. In SML~(a), storing an \texttt{(int * int) array} into an \texttt{((int * int) array) array} and reading it back as \texttt{b} must satisfy \texttt{a = b}, which lowers to \texttt{MLton\_eq} in \texttt{SSA}~(b). After naive fixed-point SoA flattening~(c), the load packs a fresh wrapper tuple \texttt{b}, so \texttt{MLton\_eq} compares wrapper pointers and spuriously returns \texttt{false}. Expanding \texttt{MLton\_eq} to compare the component arrays member-wise~(d) restores \texttt{true}.}
+
+  \caption{Interaction between SML \texttt{array} equality and
+  SoA \texttt{ShallowFlatten}.}
+  
   \label{fig:soa_eq_lower}
 \end{figure}
 
