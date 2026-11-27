@@ -1291,50 +1291,49 @@ Separately from the question of physical identity for flattened \texttt{tuple}
 elements (whose behavior is not specified by \citet{sml-def}), there is also a
 potential problem of physical identity for the mutable \texttt{array} objects
 themselves: \citet{sml-def} defines equality on \texttt{array}s as physical,
-pointer equality, which is not preserved by the SoA implementation
-of \texttt{ShallowFlatten} presented here. See \cref{fig:bad_eq_lower} for an
-illustration. Unlike element identity problem (which requires a global dataflow
-analysis to diagnose and fix), there is a simple local fix: add a new rule
-to \cref{fig:shallow_flat_statements} that expands \texttt{MLton_eq} operations
-on SoA-converted objects into a logical \texttt{andalso} across members of the
-generated \texttt{tuple}s. We omit handling for this edge case (which does not
-appear in any of our benchmarks) from \cref{fig:shallow_flat_statements} for
-simplicity, but see \cref{fig:correct_eq_lower} for an illustration.
-
-TODO(agy): let's restructure the examples -- first we should have SML->SSA that
-demonstrates how we get a MLton-eq from an array = operator, then we should have
-SSA->bad SSA and SSA->good SSA. i think that maybe doing SML->SSA+bad SSA in
-bad_eq_lower and then SSA->good SSA in correct_eq_lower would be best; does that
-work? 
-
-%% Note, however, that there is one sense of pointer equality required by
-%% \citet{sml-def} itself: equality of the original \texttt{array} objects
-%% (lowered in MLton's \texttt{SSA} IR to \texttt{MLton\_eq}). For the AoS
-%% rewrite, there is no problem, since we preserve the original single
-%% \texttt{array} value and array equality continues to compare its physical
-%% identity. For the SoA rewrite, however, we replace the mutable array value with
-%% an immutable tuple of component arrays that may be unpacked and re-allocated by
-%% nested \texttt{ShallowFlatten} or later \texttt{Flatten} passes; simply
-%% rewriting the type argument of \texttt{MLton\_eq} then compares ephemeral
-%% wrapper tuples and can spuriously yield \texttt{false}, as illustrated in
-%% \cref{fig:bad_eq_lower}. Our prototype implementation does not handle
-%% \texttt{MLton\_eq} on SoA-flattened arrays -- none of the benchmarks evaluated
-%% in \cref{ch:evaluation} perform equality comparisons on flattened arrays, so
-%% the pass can simply emit an error on this case (and future work could support
-%% it directly by lowering \texttt{MLton\_eq} to a member-wise comparison across
-%% the component arrays of the SoA tuple).
+pointer equality (lowered to \texttt{MLton\_eq} in \texttt{SSA}, as in
+\cref{fig:soa_eq_sml,fig:soa_eq_orig}), which is not preserved by the SoA
+implementation of \texttt{ShallowFlatten} presented here
+(\cref{fig:soa_eq_bad}). Unlike the element identity problem (which requires a
+global dataflow analysis to diagnose and fix), there is a simple local fix: add
+a new rule to \cref{fig:shallow_flat_statements} that expands \texttt{MLton\_eq}
+operations on SoA-converted objects into a logical \texttt{andalso} across
+members of the generated \texttt{tuple}s. We omit handling for this edge case
+(which does not appear in any of our benchmarks) from
+\cref{fig:shallow_flat_statements} for simplicity, but see
+\cref{fig:soa_eq_good} for an illustration.
 
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{Original \texttt{SSA} (must yield \texttt{true})}
-    \label{fig:bad_eq_orig}
+    \caption{Standard ML source}
+    \label{fig:soa_eq_sml}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{sml}
+val empty : (int * int) array =
+  Array.array (0, (0, 0))
+val a : (int * int) array =
+  Array.array (3, (0, 0))
+val aa : ((int * int) array) array =
+  Array.array (1, empty)
+
+(* Store `a` into `aa` and read back *)
+val _ = Array.update (aa, 0, a)
+val b = Array.sub (aa, 0)
+
+(* SML array `=` (must yield true) *)
+val eq : bool = (a = b)
+\end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Pre-\texttt{ShallowFlatten} \texttt{SSA}}
+    \label{fig:soa_eq_orig}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 a: (int * int) array = ...
 aa: ((int * int) array) array = ...
 
-# Store `a` into `aa` and read it back
+# Store `a` into `aa` and read back
 _ = prim Array_update[
       (int * int) array](aa, 0, a)
 b: (int * int) array =
@@ -1345,10 +1344,13 @@ b: (int * int) array =
 eq: bool =
   prim MLton_eq[(int * int) array](a, b)
 \end{minted}
-  \end{subfigure}\hfill
+  \end{subfigure}
+
+  \vspace{3mm}
+
   \begin{subfigure}[t]{0.48\textwidth}
-    \caption{After SoA flattening (breaks \texttt{a = b})}
-    \label{fig:bad_eq_naive}
+    \caption{Naive SoA \texttt{SSA} (breaks \texttt{a = b})}
+    \label{fig:soa_eq_bad}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
 a: int array * int array = ...
@@ -1375,9 +1377,37 @@ b: int array * int array = tuple(b_x, b_y)
 eq: bool =
   prim MLton_eq[int array * int array](a, b)
 \end{minted}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \caption{Fixed SoA \texttt{SSA} (preserves \texttt{a = b})}
+    \label{fig:soa_eq_good}
+    \vspace{1mm}
+\begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
+# ... same update and load of `b` as (c) ...
+
+# Expand MLton_eq to component-wise andalso
+a0: int array = select(a, 0)
+b0: int array = select(b, 0)
+eq0: bool =
+  prim MLton_eq[int array](a0, b0)
+case eq0 of
+  false => goto join(false)
+| true => goto check1()
+
+block check1():
+  a1: int array = select(a, 1)
+  b1: int array = select(b, 1)
+  eq1: bool =
+    prim MLton_eq[int array](a1, b1)
+  goto join(eq1)
+
+block join(eq: bool):
+  # Compares underlying arrays -> true!
+  ...
+\end{minted}
   \end{subfigure}
-  \caption{How naive SoA flattening breaks Standard ML array equality. Storing an \texttt{(int * int) array} into an \texttt{((int * int) array) array} and reading it back as \texttt{b} must satisfy \texttt{a = b}~(a). After fixed-point SoA flattening~(b), the load packs a fresh wrapper tuple \texttt{b}, so leaving \texttt{MLton\_eq} to compare the wrapper tuples spuriously returns \texttt{false}.}
-  \label{fig:bad_eq_lower}
+  \caption{How naive SoA flattening breaks Standard ML array equality and how a local rewrite preserves it. In SML~(a), storing an \texttt{(int * int) array} into an \texttt{((int * int) array) array} and reading it back as \texttt{b} must satisfy \texttt{a = b}, which lowers to \texttt{MLton\_eq} in \texttt{SSA}~(b). After naive fixed-point SoA flattening~(c), the load packs a fresh wrapper tuple \texttt{b}, so \texttt{MLton\_eq} compares wrapper pointers and spuriously returns \texttt{false}. Expanding \texttt{MLton\_eq} to compare the component arrays member-wise~(d) restores \texttt{true}.}
+  \label{fig:soa_eq_lower}
 \end{figure}
 
 %% \hl{TODO: are we actually sound here? perhaps not -- we don't detect the mlton.eq case -- waiting for analysis to finish}
