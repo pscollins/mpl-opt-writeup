@@ -1,4 +1,4 @@
-Data generated at 2026-11-21 05:55:24.489636 using the following config:
+Data generated at 2026-11-27 22:09:53.450001 using the following config:
 
 {
   "output_directory": "charts/",
@@ -8,7 +8,7 @@ Data generated at 2026-11-21 05:55:24.489636 using the following config:
     "tuple": "tuple_test_o3_fixed_downgrade:flattening-tests:964de7355:20261013_131143.jsonl",
     "tuple_chunkify_one": "tuple_chunkify_one:flattening-tests:2194c3541:20261116_040536.jsonl",
     "con": "test_conapp_flatten_test_o3:flattening-tests:cd5550ce5:20260909_171650.jsonl",
-    "con_chunkify_one": "mlton_only_chunkify_one:flattening-tests:5894a329f:20260907_204709.jsonl",
+    "con_chunkify_one": "con_chunkify_one:flattening-tests:2194c3541:20261122_013833.jsonl",
     "aos": "test_aos_flatten_test_o3:flattening-tests:cd5550ce5:20260909_131724.jsonl",
     "soa": "test_soa_flatten_test_o3:flattening-tests:cd5550ce5:20260909_151708.jsonl"
   },

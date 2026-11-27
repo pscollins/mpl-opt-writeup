@@ -34,14 +34,18 @@ percentage change.
 
 All benchmarks use the C backend of MLton/MPL for codegen, calling into GCC
 (version 15.2.0) to emit the final binary. We found that it was necessary to
-compile the benchmarks under \texttt{-O2} (rather than the MLton default of
+compile the benchmarks under \texttt{-O3} (rather than the MLton default of
 \texttt{-O1}) in order to obtain stable, interpretable performance data: with
 \texttt{-O1}, we observed that the same compiler configuration would yield
 dramatically different results on similar host CPUs (Intel Icelake vs AMD Ryzen
 9), e.g. a 40\% slowdown on Intel vs a 10\% speedup on AMD. These differences
 went away after supplying C compiler flags that controlled low-level code layout
-options, e.g. \texttt{-falign-loops}. We also chose to enable
-\texttt{-march=native} because it reduced the strange variance described above.
+options, e.g. \texttt{-falign-loops}, which are enabled by default at
+\texttt{-O2} and above. We also chose to enable \texttt{-march=native} because
+it reduced the strange variance described above. Since this effect impacts all
+benchmark data collected against MLton-derviced compilers and it appears not to
+be highlighted in any of hte published MLton literature, we include a small
+empircal demonstration at the end of this chapter, \cref{sec:mlton_noise}.
 
 As we'll discuss in more detail below, directly examining the experiment data
 makes it clear that trial runtimes are not normally distributed: as can be seen
@@ -1406,4 +1410,7 @@ transformation is broadly the same as the AoS transformation.
   \label{fig:soa_vs_aos_geomean}
 \end{figure}
 
+\section{Benchmark noise under \texttt{-O1}}
+
 \FloatBarrier
+
