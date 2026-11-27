@@ -1296,12 +1296,13 @@ rewrite, however, we replace the mutable array value with an immutable tuple
 that might be copied and thus violate physical equality. We fix this by lowering
 the equality test to test for member-wise equality across elements in the SoA
 tuple, which preserves the regular equality semantics for SML.
+See \cref{fig:bad_eq_lower} for an illustration.
 
 TODO(agy): give an example where we have an (int * int) array array and give a
 naive implementation for handling MLton_eq, where we put an element into the
 inner array and then take it back out; give an example of the bad lowering that
 can break equality and then give an example of the good lowering; also fix the
-formal spec to supply this rule
+formal spec to supply this rule -- make it the figure above
 
 \hl{TODO: need to add handling for SoA}
 
