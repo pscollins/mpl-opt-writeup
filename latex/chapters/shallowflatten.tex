@@ -14,11 +14,11 @@ array-of-pointers layout is hostile to the design of modern CPU caches,
 introducing a load to an unpredictable, likely-cold heap location on every
 element access. The existing remedy to this problem is the \texttt{DeepFlatten}
 pass, but \texttt{DeepFlatten} only supports the case where the transformation
-is completely ``free,'' introducing zero new \texttt{tuple} allocations. This
-seems to be an inversion of priorities: \texttt{ShallowFlatten} takes the
-opposite approach, inserting temporary \texttt{tuple} objects for all operations
-into or out of containers and relying on later optimization passes to eliminate
-them when possible.
+is completely ``free,'' introducing zero new \texttt{tuple} allocations. From
+the perspective of performance, this seems to be an inversion of
+priorities: \texttt{ShallowFlatten} takes the opposite approach, inserting
+temporary \texttt{tuple} objects for all operations into or out of containers
+and relying on later optimization passes to eliminate them when possible.
 
 %% What alternatives to \texttt{DeepFlatten} could we design?
 
@@ -28,11 +28,11 @@ that can express the ``container of flattened values'' notion
 of \cref{fig:flatten_generated_c}. The MLton compilation pipeline does not
 introduce this affordance until after \texttt{SSA} -- therefore
 (since \texttt{Flatten} targets \texttt{SSA}), we may fail to optimize away new
-allocations that could have been elided by \texttt{Flatten}. As a solution, we
-structure \texttt{ShallowFlatten} so that it is able to target the \texttt{SSA}
-IR, and run before plain \texttt{Flatten} -- the name \texttt{ShallowFlatten} is
-intended to contrast with \texttt{DeepFlatten}, conveying an idea that we do not
-``reach inside'' the representation of the container type.
+allocations that could have been elided by \texttt{Flatten}. As a solution,
+we \texttt{ShallowFlatten} targets the \texttt{SSA} IR, and run it before
+plain \texttt{Flatten}. The name \texttt{ShallowFlatten} is intended to contrast
+with \texttt{DeepFlatten}, conveying an idea that we do not ``reach inside'' the
+representation of the container type.
 
 %% \hl{TODO: is this the right cref?}
 
@@ -316,7 +316,7 @@ std::vector<Point> array_of_structs;
         node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Array-of-Structs (AoS) container definition and memory layout. Composite elements are embedded directly and contiguously in a single buffer, with struct members interleaved.}
+  \caption{Array-of-Structs (AoS) container definition and memory layout.}
   \label{fig:cpp_aos_diagram}
 \end{figure}
 
@@ -371,7 +371,7 @@ PointSoA struct_of_arrays;
         node[midway, below=2pt, font=\tiny\color{textMuted}] {Contiguous SIMD-friendly buffers (eight 4-byte \texttt{int} slots shown)};
     \end{tikzpicture}
   \end{subfigure}
-  \caption{Structure-of-Arrays (SoA) container definition and memory layout. Fields are decomposed into parallel contiguous buffers, facilitating SIMD vector loads.}
+  \caption{Structure-of-Arrays (SoA) container definition and memory layout.}
   \label{fig:cpp_soa_diagram}
 \end{figure}
 
@@ -455,7 +455,7 @@ types, replacing the AoP container type with its AoS/SoA equivalent, and
 rewriting the container \texttt{prim}s appropriately
 (\cref{fig:pack_unpack_example}). This allows us to preserve all of the
 pre-existing names and (non-container) types in the consuming code, at the cost
-of potentially-unnecessary tuple allocations.
+of potentially unnecessary tuple allocations.
 
 %% . In order to offset this effect,
 %% the \texttt{ShallowFlatten} pass runs relatively early in the \texttt{SSA} pass
@@ -464,15 +464,20 @@ of potentially-unnecessary tuple allocations.
 %% extent possible.
 
 Running in \texttt{SSA} allows us to leverage existing \texttt{Flatten}
-machinery to eliminate these temporary tuples, in exachange for which we
+machinery to eliminate these temporary tuples, in exchange for which we
 sacrifice the ability to express the notion of ``\texttt{tuple} elements
 embedded into an array'' that \texttt{DeepFlatten} relies on. However, for
-containers of a homogeneous type, this level of control is unnecessary -- any
+containers of homogeneous tuples, this level of control is unnecessary -- any
 AoP container of length $n$ over a homogeneous-type tuple \texttt{(a * a * \dots
 * a)} on $k$ elements can be converted into an AoS container of length $nk$. For
 the benchmarks explored below, accepting this restriction does not sacrifice any
 performance -- container-of-tuple types represented in these workloads generally
-correspond to e.g. 2-$d$ points in space, which are naturally homogeneous.
+correspond to e.g. 2-$d$ points in space, which are naturally homogeneous. To
+ensure fair benchmarks, the implementation of \texttt{ShallowFlatten} applies
+the homogenous type restriction to both the AoS and the SoA transformations.
+
+%% ensure that our measurements comparing AoS and SoA capture only the effect of
+%% layout choices and not hte 
 
 %% This choice comes with a tradeoff, however: in the \texttt{SSA} representation,
 %% memory layouts are abstract, and so it is impossible for us to directly express
@@ -677,8 +682,8 @@ t2: int * (int array * int array) =
 
 Note that a single application of the \texttt{prim} rewrite transformation can
 create new flattenable types not present in the original program -- for example,
-SoA-flattening the type \texttt{((a * b) * c) array} yields \texttt{(a * b)
-array * c array}. Therefore, in order to completely eliminate flattenable types,
+SoA-flattening the type \texttt{((a * a) * a) array} yields \texttt{(a * a)
+array * a array}. Therefore, in order to completely eliminate flattenable types,
 it is necessary to iteratively re-apply the transformation until convergence.
 See \cref{fig:shallow_needs_repeated} for a detailed example.
 
@@ -692,8 +697,8 @@ See \cref{fig:shallow_needs_repeated} for a detailed example.
 
 %% handled inconsistently.
 
-\hl{TODO: we use distinct types here, but we don't have to. the rest of the document
-doesnt say that distinct types are supported}
+%% \hl{TODO: we use distinct types here, but we don't have to. the rest of the
+%% document doesnt say that distinct types are supported}
 
 \begin{figure}[htbp]
   \centering
