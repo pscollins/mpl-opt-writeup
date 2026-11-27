@@ -1,5 +1,5 @@
 
-\section{Methodology}
+\section{Methodology} \label{sec:methodology}
 In the evalutation below, we will use two sets of benchmarks:
 \begin{enumerate}
 
@@ -1438,12 +1438,16 @@ transformation is broadly the same as the AoS transformation.
 \end{figure}
 
 \section{Benchmark noise under \texttt{-O1}}
+Here, we explore the performance instability observed under \texttt{-O1} that
+motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
+\cref{sec:methodology}.
+\section{Benchmark noise under \texttt{-O1}}
 Here. we explore the performance instability observed under \texttt{-O1} that
 motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
-\cref{sec:TODOWHATSECTION}.
-
-
-TODO(agy): fix the TODOWHATSECTION
+\cref{sec:TODOWHATSECTION}. We proceed in two steps: first, we demonstrate that
+code alignment alone (which MLton's C backend does not control) can drive
+changes in observed latency by as much as 50\%; second, we demonstrate that
+simply 
 
 \FloatBarrier
 
