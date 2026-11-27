@@ -975,17 +975,18 @@ transformation on statements.
 We define the flavor-dependent ``\texttt{tuple} width'' of a type $t$ as
 $w_t^\Phi(t)$, where:
 \[
-w_t^{\Phi_{\texttt{SoA}}}(t) =
+\begin{aligned}
+w_t^{\Phi_{\texttt{SoA}}}(t) &=
 \begin{cases}
 n &: \textrm{if $t$ is of the form $\tau_1 * \cdots * \tau_n$} \\
 0 &: \textrm{otherwise}
-\end{cases}
-\qquad
-w_t^{\Phi_{\texttt{AoS}}}(t) =
+\end{cases} \\[4pt]
+w_t^{\Phi_{\texttt{AoS}}}(t) &=
 \begin{cases}
 n &: \textrm{if $t$ is of the form $\underbrace{\tau * \cdots * \tau}_{n}$} \\
 0 &: \textrm{otherwise}
 \end{cases}
+\end{aligned}
 \]
 We likewise define the ``container width'' of a type $c$ as $w_c^\Phi(c)$, where:
 \[
