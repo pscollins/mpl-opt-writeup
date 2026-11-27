@@ -29,7 +29,7 @@ of \cref{fig:flatten_generated_c}. The MLton compilation pipeline does not
 introduce this affordance until after \texttt{SSA} -- therefore
 (since \texttt{Flatten} targets \texttt{SSA}), we may fail to optimize away new
 allocations that could have been elided by \texttt{Flatten}. As a solution,
-we \texttt{ShallowFlatten} targets the \texttt{SSA} IR, and run it before
+\texttt{ShallowFlatten} targets the \texttt{SSA} IR, and we run it before
 plain \texttt{Flatten}. The name \texttt{ShallowFlatten} is intended to contrast
 with \texttt{DeepFlatten}, conveying an idea that we do not ``reach inside'' the
 representation of the container type.
@@ -254,8 +254,8 @@ representation of the container type.
 If we commit ourselves to implementing \texttt{ShallowFlatten} in \texttt{SSA}
 (where we have limited direct control over layouts), what representations are
 available to us? One path is to retain the \texttt{tuple}, but ``hoist'' it one
-layer higher in the type ($\texttt{(a * b) array} \to \texttt{a array *
-b array}$); another is to directly emulate \texttt{DeepFlatten}'s layout,
+layer higher in the type ($\texttt{(a * b) array} \to$ \texttt{a array *
+b array}); another is to directly emulate \texttt{DeepFlatten}'s layout,
 accepting a restriction to tuples of homogeneous types ($\texttt{(a * a)
 array} \to \texttt{a array}$ with array length $n \to 2n$).
 
@@ -300,6 +300,7 @@ std::vector<Point> array_of_structs;
     \label{fig:cpp_aos_mem}
     \vspace{4mm}
     \centering
+    \resizebox{\linewidth}{!}{%
     \begin{tikzpicture}
       \node[labelnode, anchor=east] at (-0.05, 0.5) {\texttt{array\_of\_structs}:};
       \foreach \s in {0,...,7} {
@@ -314,7 +315,8 @@ std::vector<Point> array_of_structs;
       }
       \draw[brace] ($(0.0, 0.16)$) -- ($(6.4, 0.16)$)
         node[midway, below=2pt, font=\tiny\color{textMuted}] {64-byte DRAM cache line (eight 8-byte \texttt{Point} slots)};
-    \end{tikzpicture}
+    \end{tikzpicture}%
+    }
   \end{subfigure}
   \caption{Array-of-Structs (AoS) container definition and memory layout.}
   \label{fig:cpp_aos_diagram}
@@ -474,7 +476,7 @@ the benchmarks explored below, accepting this restriction does not sacrifice any
 performance -- container-of-tuple types represented in these workloads generally
 correspond to e.g. 2-$d$ points in space, which are naturally homogeneous. To
 ensure fair benchmarks, the implementation of \texttt{ShallowFlatten} applies
-the homogenous type restriction to both the AoS and the SoA transformations.
+the homogeneous type restriction to both the AoS and the SoA transformations.
 
 %% ensure that our measurements comparing AoS and SoA capture only the effect of
 %% layout choices and not hte 
