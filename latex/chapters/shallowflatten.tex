@@ -1330,19 +1330,25 @@ val eq : bool = (a = b)
     \label{fig:soa_eq_orig}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-a: (int * int) array = ...
-aa: ((int * int) array) array = ...
+block bb0():
+  a: (int * int) array = ...
+  aa: ((int * int) array) array = ...
 
-# Store `a` into `aa` and read back
-_ = prim Array_update[
-      (int * int) array](aa, 0, a)
-b: (int * int) array =
-  prim Array_sub[
-    (int * int) array](aa, 0)
+  # Store `a` into `aa` and read back
+  _ = prim Array_update[
+        (int * int) array](aa, 0, a)
+  b: (int * int) array =
+    prim Array_sub[
+      (int * int) array](aa, 0)
 
-# SML array `=` lowered to MLton_eq
-eq: bool =
-  prim MLton_eq[(int * int) array](a, b)
+  # SML array `=` lowered to MLton_eq
+  eq: bool =
+    prim MLton_eq[(int * int) array](a, b)
+  goto join(eq)
+
+block join(eq: bool):
+  # `eq` is true
+  ...
 \end{minted}
   \end{subfigure}
 
@@ -1353,29 +1359,36 @@ eq: bool =
     \label{fig:soa_eq_bad}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-a: int array * int array = ...
-aa: int array array * int array array = ...
+block bb0():
+  a: int array * int array = ...
+  aa: int array array * int array array = ...
 
-# Unpack `aa` and `a`; write components
-aa_x: int array array = select(aa, 0)
-aa_y: int array array = select(aa, 1)
-a_x: int array = select(a, 0)
-a_y: int array = select(a, 1)
-_ = prim Array_update[int array](
-      aa_x, 0, a_x)
-_ = prim Array_update[int array](
-      aa_y, 0, a_y)
+  # Unpack `aa` and `a`; write components
+  aa_x: int array array = select(aa, 0)
+  aa_y: int array array = select(aa, 1)
+  a_x: int array = select(a, 0)
+  a_y: int array = select(a, 1)
+  _ = prim Array_update[int array](
+        aa_x, 0, a_x)
+  _ = prim Array_update[int array](
+        aa_y, 0, a_y)
 
-# Load components and pack fresh tuple `b`
-b_x: int array =
-  prim Array_sub[int array](aa_x, 0)
-b_y: int array =
-  prim Array_sub[int array](aa_y, 0)
-b: int array * int array = tuple(b_x, b_y)
+  # Load components and pack fresh tuple `b`
+  b_x: int array =
+    prim Array_sub[int array](aa_x, 0)
+  b_y: int array =
+    prim Array_sub[int array](aa_y, 0)
+  b: int array * int array = tuple(b_x, b_y)
 
-# Compares wrapper `tuple` identity -> false
-eq: bool =
-  prim MLton_eq[int array * int array](a, b)
+  # Compares wrapper `tuple` identity -> false
+  eq: bool =
+    prim MLton_eq[
+      int array * int array](a, b)
+  goto join(eq)
+
+block join(eq: bool):
+  # `eq` is false
+  ...
 \end{minted}
   \end{subfigure}\hfill
   \begin{subfigure}[t]{0.48\textwidth}
@@ -1383,18 +1396,20 @@ eq: bool =
     \label{fig:soa_eq_good}
     \vspace{1mm}
 \begin{minted}[fontsize=\scriptsize,frame=single,framesep=2mm,rulecolor=\color{black!20}]{python}
-# ... same update and load of `b` as (c) ...
+block bb0():
+  # ... same store into `a` + load of `b` as (c)
 
-# Expand MLton_eq to component-wise andalso: first, member 0
-a0: int array = select(a, 0)
-b0: int array = select(b, 0)
-eq0: bool =
-  prim MLton_eq[int array](a0, b0)
-case eq0 of
-  # First member mismatch: result is false
-  false => goto join(false)
-  # First member match: check next member
-| true => goto check1()
+  # Expand MLton_eq to component-wise
+  # andalso: first, member 0
+  a0: int array = select(a, 0)
+  b0: int array = select(b, 0)
+  eq0: bool =
+    prim MLton_eq[int array](a0, b0)
+  case eq0 of
+    # First member mismatch: result is false
+    false => goto join(false)
+    # First member match: check next member
+  | true => goto check1()
 
 block check1():
   a1: int array = select(a, 1)
@@ -1404,7 +1419,7 @@ block check1():
   goto join(eq1)
 
 block join(eq: bool):
-  # Compares underlying arrays -> true!
+  # Compares underlying arrays -> `eq` is true
   ...
 \end{minted}
   \end{subfigure}
