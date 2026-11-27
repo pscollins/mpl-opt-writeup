@@ -1,0 +1,609 @@
+[
+  {
+    "benchmark": "wc-input1",
+    "suite": "mlton",
+    "o1_fast_seed": 7,
+    "o1_slow_seed": 13,
+    "sweep_cycle_ratio": 1.4157385920154042,
+    "profiles": {
+      "O1_fast": {
+        "config": "O1",
+        "seed": 7,
+        "wall_s": 0.5565696377307177,
+        "counters": {
+          "cycles": 1640031460.0,
+          "instructions": 3157623951.0,
+          "branch-misses": 142793.0,
+          "slots": 8200157300.0,
+          "topdown-fe-bound": 220369404.0,
+          "topdown-be-bound": 5091790279.0,
+          "topdown-bad-spec": 257161143.0,
+          "topdown-retiring": 2636728007.0,
+          "idq.dsb_uops": 2573945541.0,
+          "idq.mite_uops": 118268823.0,
+          "dsb2mite_switches.penalty_cycles": 7265373.0,
+          "icache_64b.iftag_stall": 4935795.0
+        },
+        "derived": {
+          "ipc": 1.9253435242028833,
+          "fe_bound_pct": 2.68738020427974,
+          "be_bound_pct": 62.09381226138186,
+          "bad_spec_pct": 3.136051341356586,
+          "retiring_pct": 32.15460277816866,
+          "dsb_share_pct": 95.60700572058904,
+          "mite_share_pct": 4.392994279410954
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x000000000000d6fe",
+          "Chunk_1": "0x000000000000d8a1",
+          "Chunk_10": "0x000000000000d98f",
+          "Chunk_11": "0x0000000000005a40",
+          "Chunk_2": "0x000000000000d927",
+          "Chunk_3": "0x000000000000d723",
+          "Chunk_4": "0x000000000000d743",
+          "Chunk_5": "0x000000000000d763",
+          "Chunk_6": "0x000000000000d783",
+          "Chunk_7": "0x000000000000d7a3",
+          "Chunk_8": "0x0000000000006013",
+          "Chunk_9": "0x000000000000d905"
+        }
+      },
+      "O1_slow": {
+        "config": "O1",
+        "seed": 13,
+        "wall_s": 0.7780247967069348,
+        "counters": {
+          "cycles": 2302414744.0,
+          "instructions": 3133783430.0,
+          "branch-misses": 174461.0,
+          "slots": 11512005308.0,
+          "topdown-fe-bound": 172026227.0,
+          "topdown-be-bound": 8442137225.0,
+          "topdown-bad-spec": 376222298.0,
+          "topdown-retiring": 2558210426.0,
+          "idq.dsb_uops": 2514755231.0,
+          "idq.mite_uops": 121217093.0,
+          "dsb2mite_switches.penalty_cycles": 7559073.0,
+          "icache_64b.iftag_stall": 2240496.0
+        },
+        "derived": {
+          "ipc": 1.3610855464535716,
+          "fe_bound_pct": 1.494320254356158,
+          "be_bound_pct": 73.33333332580496,
+          "bad_spec_pct": 3.26808655776551,
+          "retiring_pct": 22.22210950703985,
+          "dsb_share_pct": 95.4014277048229,
+          "mite_share_pct": 4.598572295177102
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x000000000000d6db",
+          "Chunk_1": "0x000000000000d87e",
+          "Chunk_10": "0x000000000000d96c",
+          "Chunk_11": "0x0000000000005a40",
+          "Chunk_2": "0x000000000000d904",
+          "Chunk_3": "0x000000000000d700",
+          "Chunk_4": "0x000000000000d720",
+          "Chunk_5": "0x000000000000d740",
+          "Chunk_6": "0x000000000000d760",
+          "Chunk_7": "0x000000000000d780",
+          "Chunk_8": "0x0000000000006013",
+          "Chunk_9": "0x000000000000d8e2"
+        }
+      },
+      "O1_align_S0": {
+        "config": "O1_align",
+        "seed": 0,
+        "wall_s": 0.7711204591517647,
+        "counters": {
+          "cycles": 2280385183.0,
+          "instructions": 3420668529.0,
+          "branch-misses": 198503.0,
+          "slots": 11401858395.0,
+          "topdown-fe-bound": 182982710.0,
+          "topdown-be-bound": 8033496008.0,
+          "topdown-bad-spec": 387567731.0,
+          "topdown-retiring": 2848623513.0,
+          "idq.dsb_uops": 2799662218.0,
+          "idq.mite_uops": 126356129.0,
+          "dsb2mite_switches.penalty_cycles": 8421790.0,
+          "icache_64b.iftag_stall": 3609950.0
+        },
+        "derived": {
+          "ipc": 1.5000397978818125,
+          "fe_bound_pct": 1.6048498732473515,
+          "be_bound_pct": 70.45777740515432,
+          "bad_spec_pct": 3.3991628169137598,
+          "retiring_pct": 24.983852757276768,
+          "dsb_share_pct": 95.68163579255916,
+          "mite_share_pct": 4.318364207440836
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x000000000000eee0",
+          "Chunk_1": "0x000000000000f0c0",
+          "Chunk_10": "0x000000000000f1d0",
+          "Chunk_11": "0x0000000000005a80",
+          "Chunk_2": "0x000000000000f160",
+          "Chunk_3": "0x000000000000ef10",
+          "Chunk_4": "0x000000000000ef30",
+          "Chunk_5": "0x000000000000ef50",
+          "Chunk_6": "0x000000000000ef70",
+          "Chunk_7": "0x000000000000ef90",
+          "Chunk_8": "0x0000000000006170",
+          "Chunk_9": "0x000000000000f130"
+        }
+      },
+      "O2_S0": {
+        "config": "O2",
+        "seed": 0,
+        "wall_s": 0.664108467909197,
+        "counters": {
+          "cycles": 1961962315.0,
+          "instructions": 2824485293.0,
+          "branch-misses": 204096.0,
+          "slots": 9809811575.0,
+          "topdown-fe-bound": 206947296.0,
+          "topdown-be-bound": 7078450601.0,
+          "topdown-bad-spec": 243636876.0,
+          "topdown-retiring": 2295374849.0,
+          "idq.dsb_uops": 2205424592.0,
+          "idq.mite_uops": 120268056.0,
+          "dsb2mite_switches.penalty_cycles": 7574712.0,
+          "icache_64b.iftag_stall": 1875467.0
+        },
+        "derived": {
+          "ipc": 1.4396226020273992,
+          "fe_bound_pct": 2.10959501533545,
+          "be_bound_pct": 72.15684569354228,
+          "bad_spec_pct": 2.4836040339541383,
+          "retiring_pct": 23.398765933992976,
+          "dsb_share_pct": 94.82872097895543,
+          "mite_share_pct": 5.1712790210445725
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x000000000000cd20",
+          "Chunk_1": "0x000000000000cf10",
+          "Chunk_10": "0x000000000000cff0",
+          "Chunk_11": "0x0000000000005a60",
+          "Chunk_2": "0x000000000000cf90",
+          "Chunk_3": "0x000000000000cd50",
+          "Chunk_4": "0x000000000000cd70",
+          "Chunk_5": "0x000000000000cd90",
+          "Chunk_6": "0x000000000000cdb0",
+          "Chunk_7": "0x000000000000cdd0",
+          "Chunk_8": "0x0000000000005ff0",
+          "Chunk_9": "0x000000000000cf70"
+        }
+      },
+      "O3_native_S0": {
+        "config": "O3_native",
+        "seed": 0,
+        "wall_s": 0.6673080331335465,
+        "counters": {
+          "cycles": 1970637084.0,
+          "instructions": 2824785760.0,
+          "branch-misses": 213047.0,
+          "slots": 9853106830.0,
+          "topdown-fe-bound": 182341607.0,
+          "topdown-be-bound": 7109692770.0,
+          "topdown-bad-spec": 296257697.0,
+          "topdown-retiring": 2279738442.0,
+          "idq.dsb_uops": 2205100156.0,
+          "idq.mite_uops": 122937417.0,
+          "dsb2mite_switches.penalty_cycles": 7660253.0,
+          "icache_64b.iftag_stall": 1905138.0
+        },
+        "derived": {
+          "ipc": 1.4334378374054795,
+          "fe_bound_pct": 1.8506001218297965,
+          "be_bound_pct": 72.15686273037191,
+          "bad_spec_pct": 3.006743985541462,
+          "retiring_pct": 23.1372548916127,
+          "dsb_share_pct": 94.71926834747869,
+          "mite_share_pct": 5.280731652521315
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x000000000000d720",
+          "Chunk_1": "0x000000000000d910",
+          "Chunk_10": "0x000000000000d9f0",
+          "Chunk_11": "0x0000000000005a80",
+          "Chunk_2": "0x000000000000d990",
+          "Chunk_3": "0x000000000000d750",
+          "Chunk_4": "0x000000000000d770",
+          "Chunk_5": "0x000000000000d790",
+          "Chunk_6": "0x000000000000d7b0",
+          "Chunk_7": "0x000000000000d7d0",
+          "Chunk_8": "0x0000000000006030",
+          "Chunk_9": "0x000000000000d970"
+        }
+      }
+    }
+  },
+  {
+    "benchmark": "dense-matmul",
+    "suite": "parallel_bench",
+    "o1_fast_seed": 15,
+    "o1_slow_seed": 9,
+    "sweep_cycle_ratio": 1.0844515480462318,
+    "profiles": {
+      "O1_fast": {
+        "config": "O1",
+        "seed": 15,
+        "wall_s": 1.6184105398133397,
+        "counters": {
+          "cycles": 4816519494.0,
+          "instructions": 22672285649.0,
+          "branch-misses": 32141.0,
+          "slots": 24082575908.0,
+          "topdown-fe-bound": 4312809977.0,
+          "topdown-be-bound": 1073382347.0,
+          "topdown-bad-spec": 535151011.0,
+          "topdown-retiring": 18164260869.0,
+          "idq.dsb_uops": 18344798974.0,
+          "idq.mite_uops": 30967894.0,
+          "dsb2mite_switches.penalty_cycles": 1407972.0,
+          "icache_64b.iftag_stall": 860917.0
+        },
+        "derived": {
+          "ipc": 4.707192751372263,
+          "fe_bound_pct": 17.90842471949741,
+          "be_bound_pct": 4.457091098147157,
+          "bad_spec_pct": 2.2221502095306507,
+          "retiring_pct": 75.42490860774576,
+          "dsb_share_pct": 99.83147427684268,
+          "mite_share_pct": 0.16852572315731884
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x0000000000016618",
+          "Chunk_1": "0x00000000000095e4",
+          "Chunk_2": "0x0000000000016638",
+          "Chunk_3": "0x0000000000016658",
+          "Chunk_4": "0x0000000000016678",
+          "Chunk_5": "0x0000000000016698",
+          "Chunk_6": "0x000000000001673e",
+          "Chunk_7": "0x00000000000167e4",
+          "Chunk_8": "0x0000000000010f46",
+          "Chunk_9": "0x0000000000008a40"
+        }
+      },
+      "O1_slow": {
+        "config": "O1",
+        "seed": 9,
+        "wall_s": 1.7515656830122073,
+        "counters": {
+          "cycles": 5218245709.0,
+          "instructions": 22689834307.0,
+          "branch-misses": 34125.0,
+          "slots": 26091210973.0,
+          "topdown-fe-bound": 6412197203.0,
+          "topdown-be-bound": 729200447.0,
+          "topdown-bad-spec": 852351807.0,
+          "topdown-retiring": 18117928764.0,
+          "idq.dsb_uops": 18381414799.0,
+          "idq.mite_uops": 30880314.0,
+          "dsb2mite_switches.penalty_cycles": 1358761.0,
+          "icache_64b.iftag_stall": 827649.0
+        },
+        "derived": {
+          "ipc": 4.348172848178928,
+          "fe_bound_pct": 24.576081231475005,
+          "be_bound_pct": 2.7948125817333636,
+          "bad_spec_pct": 3.2668158173341983,
+          "retiring_pct": 69.44073536007585,
+          "dsb_share_pct": 99.83228427629211,
+          "mite_share_pct": 0.16771572370788776
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x00000000000165d2",
+          "Chunk_1": "0x00000000000095bb",
+          "Chunk_2": "0x00000000000165f2",
+          "Chunk_3": "0x0000000000016612",
+          "Chunk_4": "0x0000000000016632",
+          "Chunk_5": "0x0000000000016652",
+          "Chunk_6": "0x00000000000166f8",
+          "Chunk_7": "0x000000000001679e",
+          "Chunk_8": "0x0000000000010f16",
+          "Chunk_9": "0x0000000000008a40"
+        }
+      },
+      "O1_align_S0": {
+        "config": "O1_align",
+        "seed": 0,
+        "wall_s": 1.6267725968112547,
+        "counters": {
+          "cycles": 4844163470.0,
+          "instructions": 22777528083.0,
+          "branch-misses": 33024.0,
+          "slots": 24220796710.0,
+          "topdown-fe-bound": 4274258242.0,
+          "topdown-be-bound": 1145402843.0,
+          "topdown-bad-spec": 569901098.0,
+          "topdown-retiring": 18243701574.0,
+          "idq.dsb_uops": 18456590985.0,
+          "idq.mite_uops": 29240902.0,
+          "dsb2mite_switches.penalty_cycles": 1335583.0,
+          "icache_64b.iftag_stall": 780679.0
+        },
+        "derived": {
+          "ipc": 4.702056035900044,
+          "fe_bound_pct": 17.647058819643593,
+          "be_bound_pct": 4.729005642193014,
+          "bad_spec_pct": 2.352941172099041,
+          "retiring_pct": 75.32246685538529,
+          "dsb_share_pct": 99.84181992902055,
+          "mite_share_pct": 0.15818007097945866
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x00000000000190d0",
+          "Chunk_1": "0x0000000000009850",
+          "Chunk_2": "0x00000000000190f0",
+          "Chunk_3": "0x0000000000019110",
+          "Chunk_4": "0x0000000000019130",
+          "Chunk_5": "0x0000000000019150",
+          "Chunk_6": "0x0000000000019210",
+          "Chunk_7": "0x00000000000192d0",
+          "Chunk_8": "0x0000000000012990",
+          "Chunk_9": "0x0000000000008a80"
+        }
+      },
+      "O2_S0": {
+        "config": "O2",
+        "seed": 0,
+        "wall_s": 1.6639612158760428,
+        "counters": {
+          "cycles": 4955849832.0,
+          "instructions": 19445449060.0,
+          "branch-misses": 33297.0,
+          "slots": 24779191820.0,
+          "topdown-fe-bound": 3595412146.0,
+          "topdown-be-bound": 5117790723.0,
+          "topdown-bad-spec": 421087447.0,
+          "topdown-retiring": 15644901501.0,
+          "idq.dsb_uops": 15768534818.0,
+          "idq.mite_uops": 30813407.0,
+          "dsb2mite_switches.penalty_cycles": 1648691.0,
+          "icache_64b.iftag_stall": 839416.0
+        },
+        "derived": {
+          "ipc": 3.923736537463349,
+          "fe_bound_pct": 14.509803919827762,
+          "be_bound_pct": 20.653582086843056,
+          "bad_spec_pct": 1.69935908345537,
+          "retiring_pct": 63.13725489776688,
+          "dsb_share_pct": 99.80497039142891,
+          "mite_share_pct": 0.19502960857108395
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x00000000000148a0",
+          "Chunk_1": "0x0000000000009570",
+          "Chunk_2": "0x00000000000148c0",
+          "Chunk_3": "0x00000000000148e0",
+          "Chunk_4": "0x0000000000014900",
+          "Chunk_5": "0x0000000000014920",
+          "Chunk_6": "0x00000000000149e0",
+          "Chunk_7": "0x0000000000014aa0",
+          "Chunk_8": "0x000000000000f900",
+          "Chunk_9": "0x0000000000008a80"
+        }
+      },
+      "O3_native_S0": {
+        "config": "O3_native",
+        "seed": 0,
+        "wall_s": 1.6178538734093308,
+        "counters": {
+          "cycles": 4818091926.0,
+          "instructions": 18293894940.0,
+          "branch-misses": 42927.0,
+          "slots": 24090438193.0,
+          "topdown-fe-bound": 4793132799.0,
+          "topdown-be-bound": 3061337147.0,
+          "topdown-bad-spec": 671472237.0,
+          "topdown-retiring": 15602464790.0,
+          "idq.dsb_uops": 14612641373.0,
+          "idq.mite_uops": 30483674.0,
+          "dsb2mite_switches.penalty_cycles": 1312559.0,
+          "icache_64b.iftag_stall": 893244.0
+        },
+        "derived": {
+          "ipc": 3.796916958200851,
+          "fe_bound_pct": 19.896411848551384,
+          "be_bound_pct": 12.707685607352456,
+          "bad_spec_pct": 2.7872977304128526,
+          "retiring_pct": 64.76621415103041,
+          "dsb_share_pct": 99.79182262049831,
+          "mite_share_pct": 0.20817737950168855
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x0000000000015b00",
+          "Chunk_1": "0x00000000000096a0",
+          "Chunk_2": "0x0000000000015b20",
+          "Chunk_3": "0x0000000000015b40",
+          "Chunk_4": "0x0000000000015b60",
+          "Chunk_5": "0x0000000000015b80",
+          "Chunk_6": "0x0000000000015c40",
+          "Chunk_7": "0x0000000000015d00",
+          "Chunk_8": "0x00000000000105d0",
+          "Chunk_9": "0x0000000000008a80"
+        }
+      }
+    }
+  },
+  {
+    "benchmark": "checksum",
+    "suite": "mlton",
+    "o1_fast_seed": 2,
+    "o1_slow_seed": 4,
+    "sweep_cycle_ratio": 1.0767142214227632,
+    "profiles": {
+      "O1_fast": {
+        "config": "O1",
+        "seed": 2,
+        "wall_s": 0.5000376378496488,
+        "counters": {
+          "cycles": 1473499081.0,
+          "instructions": 5338819393.0,
+          "branch-misses": 11190.0,
+          "slots": 7367495406.0,
+          "topdown-fe-bound": 64339894.0,
+          "topdown-be-bound": 2378786028.0,
+          "topdown-bad-spec": 115568555.0,
+          "topdown-retiring": 4815356544.0,
+          "idq.dsb_uops": 4840339664.0,
+          "idq.mite_uops": 10711400.0,
+          "dsb2mite_switches.penalty_cycles": 522509.0,
+          "icache_64b.iftag_stall": 214634.0
+        },
+        "derived": {
+          "ipc": 3.6232254650452678,
+          "fe_bound_pct": 0.8732939819358742,
+          "be_bound_pct": 32.287580743691336,
+          "bad_spec_pct": 1.5686274457108227,
+          "retiring_pct": 65.35947806738272,
+          "dsb_share_pct": 99.77919424350137,
+          "mite_share_pct": 0.22080575649862919
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x00000000000039f2",
+          "Chunk_1": "0x0000000000003a55",
+          "Chunk_2": "0x0000000000003a77",
+          "Chunk_3": "0x0000000000002940"
+        }
+      },
+      "O1_slow": {
+        "config": "O1",
+        "seed": 4,
+        "wall_s": 0.5372002699101964,
+        "counters": {
+          "cycles": 1586215774.0,
+          "instructions": 5819076317.0,
+          "branch-misses": 11190.0,
+          "slots": 7931046048.0,
+          "topdown-fe-bound": 93306423.0,
+          "topdown-be-bound": 2457069167.0,
+          "topdown-bad-spec": 93306423.0,
+          "topdown-retiring": 5287364031.0,
+          "idq.dsb_uops": 5319978253.0,
+          "idq.mite_uops": 11342364.0,
+          "dsb2mite_switches.penalty_cycles": 535270.0,
+          "icache_64b.iftag_stall": 217587.0
+        },
+        "derived": {
+          "ipc": 3.6685275814184406,
+          "fe_bound_pct": 1.1764705744399178,
+          "be_bound_pct": 30.980392146627466,
+          "bad_spec_pct": 1.1764705744399178,
+          "retiring_pct": 66.66666665405799,
+          "dsb_share_pct": 99.78725038663343,
+          "mite_share_pct": 0.212749613366575
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x0000000000003a00",
+          "Chunk_1": "0x0000000000003a63",
+          "Chunk_2": "0x0000000000003a85",
+          "Chunk_3": "0x0000000000002940"
+        }
+      },
+      "O1_align_S0": {
+        "config": "O1_align",
+        "seed": 0,
+        "wall_s": 0.49969884598006803,
+        "counters": {
+          "cycles": 1473147321.0,
+          "instructions": 5338594103.0,
+          "branch-misses": 10664.0,
+          "slots": 7365736605.0,
+          "topdown-fe-bound": 63629462.0,
+          "topdown-be-bound": 2387814635.0,
+          "topdown-bad-spec": 125169663.0,
+          "topdown-retiring": 4814144193.0,
+          "idq.dsb_uops": 4840018250.0,
+          "idq.mite_uops": 10701686.0,
+          "dsb2mite_switches.penalty_cycles": 515091.0,
+          "icache_64b.iftag_stall": 206787.0
+        },
+        "derived": {
+          "ipc": 3.6239376923796476,
+          "fe_bound_pct": 0.863857417285423,
+          "be_bound_pct": 32.41786616940805,
+          "bad_spec_pct": 1.6993502444145572,
+          "retiring_pct": 65.35862536452998,
+          "dsb_share_pct": 99.77937942942084,
+          "mite_share_pct": 0.22062057057915455
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x0000000000003d20",
+          "Chunk_1": "0x0000000000003d90",
+          "Chunk_2": "0x0000000000003dc0",
+          "Chunk_3": "0x0000000000002980"
+        }
+      },
+      "O2_S0": {
+        "config": "O2",
+        "seed": 0,
+        "wall_s": 0.11833400558680296,
+        "counters": {
+          "cycles": 318023669.0,
+          "instructions": 1095635120.0,
+          "branch-misses": 8162.0,
+          "slots": 1590118348.0,
+          "topdown-fe-bound": 31178790.0,
+          "topdown-be-bound": 565393957.0,
+          "topdown-bad-spec": 18693069.0,
+          "topdown-retiring": 974852530.0,
+          "idq.dsb_uops": 968479786.0,
+          "idq.mite_uops": 7937982.0,
+          "dsb2mite_switches.penalty_cycles": 387101.0,
+          "icache_64b.iftag_stall": 507878.0
+        },
+        "derived": {
+          "ipc": 3.4451370347532215,
+          "fe_bound_pct": 1.960784242205348,
+          "be_bound_pct": 35.55672178181796,
+          "bad_spec_pct": 1.1755772155897417,
+          "retiring_pct": 61.30691663461014,
+          "dsb_share_pct": 99.18703015654259,
+          "mite_share_pct": 0.8129698434574165
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x00000000000037b0",
+          "Chunk_1": "0x0000000000003810",
+          "Chunk_2": "0x0000000000003830",
+          "Chunk_3": "0x0000000000002980"
+        }
+      },
+      "O3_native_S0": {
+        "config": "O3_native",
+        "seed": 0,
+        "wall_s": 0.07983988616615534,
+        "counters": {
+          "cycles": 217594911.0,
+          "instructions": 495321574.0,
+          "branch-misses": 7820.0,
+          "slots": 1087974556.0,
+          "topdown-fe-bound": 26159986.0,
+          "topdown-be-bound": 612963246.0,
+          "topdown-bad-spec": 12800563.0,
+          "topdown-retiring": 436611344.0,
+          "idq.dsb_uops": 428338066.0,
+          "idq.mite_uops": 7682236.0,
+          "dsb2mite_switches.penalty_cycles": 371207.0,
+          "icache_64b.iftag_stall": 804142.0
+        },
+        "derived": {
+          "ipc": 2.276347234977384,
+          "fe_bound_pct": 2.4044667088703497,
+          "be_bound_pct": 56.33985120512322,
+          "bad_spec_pct": 1.1765498493882058,
+          "retiring_pct": 40.130657614386344,
+          "dsb_share_pct": 98.23810130749371,
+          "mite_share_pct": 1.7618986925062952
+        },
+        "chunk_addrs": {
+          "Chunk_0": "0x0000000000003960",
+          "Chunk_1": "0x00000000000039c0",
+          "Chunk_2": "0x00000000000039e0",
+          "Chunk_3": "0x0000000000002980"
+        }
+      }
+    }
+  }
+]

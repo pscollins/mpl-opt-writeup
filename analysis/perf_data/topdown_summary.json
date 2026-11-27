@@ -1,0 +1,290 @@
+[
+  {
+    "id": "mpl_tuple_delaunay_1c",
+    "label": "tab:perf_comparison_delaunay_1core",
+    "base_file": "delaunay_1_tuple_base_topdown.txt",
+    "test_file": "delaunay_1_tuple_test_topdown.txt",
+    "base_ipc": 0.935,
+    "test_ipc": 0.943,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 18.2,
+      "tma_bad_speculation": 20.2,
+      "tma_frontend_bound": 7.9,
+      "tma_backend_bound": 53.8
+    },
+    "test": {
+      "tma_retiring": 18.5,
+      "tma_bad_speculation": 20.0,
+      "tma_frontend_bound": 8.8,
+      "tma_backend_bound": 52.6
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_tuple_delaunay_160c",
+    "label": "tab:perf_comparison_delaunay_160cores",
+    "base_file": "delaunay_160_tuple_base_topdown.txt",
+    "test_file": "delaunay_160_tuple_test_topdown.txt",
+    "base_ipc": 0.84,
+    "test_ipc": 0.856,
+    "base_width": 2.606,
+    "test_width": 2.615,
+    "base": {
+      "tma_retiring": 35.6,
+      "tma_bad_speculation": 5.8,
+      "tma_frontend_bound": 14.2,
+      "tma_backend_bound": 44.4
+    },
+    "test": {
+      "tma_retiring": 36.3,
+      "tma_bad_speculation": 5.7,
+      "tma_frontend_bound": 14.5,
+      "tma_backend_bound": 43.5
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_tuple_bfs_1c",
+    "label": "tab:perf_comparison_bfs_1core",
+    "base_file": "bfs_1_tuple_base_topdown.txt",
+    "test_file": "bfs_1_tuple_test_topdown.txt",
+    "base_ipc": 0.615,
+    "test_ipc": 0.656,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 11.6,
+      "tma_bad_speculation": 7.8,
+      "tma_frontend_bound": 4.3,
+      "tma_backend_bound": 76.3
+    },
+    "test": {
+      "tma_retiring": 12.4,
+      "tma_bad_speculation": 8.2,
+      "tma_frontend_bound": 5.6,
+      "tma_backend_bound": 73.8
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_tuple_bfs_160c",
+    "label": "tab:perf_comparison_bfs_160cores",
+    "base_file": "bfs_160_tuple_base_topdown.txt",
+    "test_file": "bfs_160_tuple_test_topdown.txt",
+    "base_ipc": 0.583,
+    "test_ipc": 0.606,
+    "base_width": 2.607,
+    "test_width": 2.611,
+    "base": {
+      "tma_retiring": 23.9,
+      "tma_bad_speculation": 4.3,
+      "tma_frontend_bound": 10.4,
+      "tma_backend_bound": 61.4
+    },
+    "test": {
+      "tma_retiring": 24.7,
+      "tma_bad_speculation": 4.1,
+      "tma_frontend_bound": 11.6,
+      "tma_backend_bound": 59.5
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_aos_quickhull_1c",
+    "label": "tab:perf_comparison_aos_quickhull_1core",
+    "base_file": "quickhull_1_aos_base_topdown.txt",
+    "test_file": "quickhull_1_aos_test_topdown.txt",
+    "base_ipc": 1.588,
+    "test_ipc": 1.569,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 30.0,
+      "tma_bad_speculation": 17.2,
+      "tma_frontend_bound": 7.0,
+      "tma_backend_bound": 45.8
+    },
+    "test": {
+      "tma_retiring": 28.7,
+      "tma_bad_speculation": 22.5,
+      "tma_frontend_bound": 8.8,
+      "tma_backend_bound": 39.9
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_aos_quickhull_160c",
+    "label": "tab:perf_comparison_aos_quickhull_160cores",
+    "base_file": "quickhull_160_aos_base_topdown.txt",
+    "test_file": "quickhull_160_aos_test_topdown.txt",
+    "base_ipc": 0.497,
+    "test_ipc": 0.709,
+    "base_width": 2.518,
+    "test_width": 2.505,
+    "base": {
+      "tma_retiring": 19.6,
+      "tma_bad_speculation": 5.6,
+      "tma_frontend_bound": 7.5,
+      "tma_backend_bound": 67.3
+    },
+    "test": {
+      "tma_retiring": 27.2,
+      "tma_bad_speculation": 9.9,
+      "tma_frontend_bound": 10.5,
+      "tma_backend_bound": 52.4
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_aos_linearrec_1c",
+    "label": "tab:perf_comparison_aos_linearrec_1core",
+    "base_file": "linearrec_1_aos_base_topdown.txt",
+    "test_file": "linearrec_1_aos_test_topdown.txt",
+    "base_ipc": 3.269,
+    "test_ipc": 1.758,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 63.8,
+      "tma_bad_speculation": 1.4,
+      "tma_frontend_bound": 6.3,
+      "tma_backend_bound": 28.5
+    },
+    "test": {
+      "tma_retiring": 34.8,
+      "tma_bad_speculation": 1.3,
+      "tma_frontend_bound": 9.0,
+      "tma_backend_bound": 54.9
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mpl_aos_linearrec_160c",
+    "label": "tab:perf_comparison_aos_linearrec_160cores",
+    "base_file": "linearrec_160_aos_base_topdown.txt",
+    "test_file": "linearrec_160_aos_test_topdown.txt",
+    "base_ipc": 0.754,
+    "test_ipc": 0.834,
+    "base_width": 2.649,
+    "test_width": 2.712,
+    "base": {
+      "tma_retiring": 30.6,
+      "tma_bad_speculation": 2.4,
+      "tma_frontend_bound": 12.7,
+      "tma_backend_bound": 54.3
+    },
+    "test": {
+      "tma_retiring": 33.9,
+      "tma_bad_speculation": 2.3,
+      "tma_frontend_bound": 12.8,
+      "tma_backend_bound": 51.0
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mlton_aos_delaunay_1c",
+    "label": "tab:perf_comparison_aos_delaunay_1core",
+    "base_file": "mlton_delaunay_1_aos_base_topdown.txt",
+    "test_file": "mlton_delaunay_1_aos_test_topdown.txt",
+    "base_ipc": 0.862,
+    "test_ipc": 0.883,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 16.5,
+      "tma_bad_speculation": 25.7,
+      "tma_frontend_bound": 8.8,
+      "tma_backend_bound": 48.9
+    },
+    "test": {
+      "tma_retiring": 16.9,
+      "tma_bad_speculation": 26.6,
+      "tma_frontend_bound": 9.1,
+      "tma_backend_bound": 47.3
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mlton_soa_delaunay_1c",
+    "label": "tab:perf_comparison_soa_delaunay_1core",
+    "base_file": "mlton_delaunay_1_soa_base_topdown.txt",
+    "test_file": "mlton_delaunay_1_soa_test_topdown.txt",
+    "base_ipc": 0.884,
+    "test_ipc": 0.71,
+    "base_width": 5.0,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 16.9,
+      "tma_bad_speculation": 26.4,
+      "tma_frontend_bound": 9.0,
+      "tma_backend_bound": 47.7
+    },
+    "test": {
+      "tma_retiring": 13.5,
+      "tma_bad_speculation": 23.0,
+      "tma_frontend_bound": 6.8,
+      "tma_backend_bound": 56.7
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mlton_aos_linearrec_1c",
+    "label": "tab:perf_comparison_mlton_aos_linearrec_1core",
+    "base_file": "mlton_linearrec_1_aos_base_topdown.txt",
+    "test_file": "mlton_linearrec_1_aos_test_topdown.txt",
+    "base_ipc": 1.792,
+    "test_ipc": 1.937,
+    "base_width": 4.999,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 36.3,
+      "tma_bad_speculation": 2.5,
+      "tma_frontend_bound": 13.1,
+      "tma_backend_bound": 48.1
+    },
+    "test": {
+      "tma_retiring": 38.4,
+      "tma_bad_speculation": 2.3,
+      "tma_frontend_bound": 13.2,
+      "tma_backend_bound": 46.1
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  },
+  {
+    "id": "mlton_soa_linearrec_1c",
+    "label": "tab:perf_comparison_soa_linearrec_1core",
+    "base_file": "mlton_linearrec_1_soa_base_topdown.txt",
+    "test_file": "mlton_linearrec_1_soa_test_topdown.txt",
+    "base_ipc": 1.799,
+    "test_ipc": 2.243,
+    "base_width": 4.999,
+    "test_width": 5.0,
+    "base": {
+      "tma_retiring": 36.4,
+      "tma_bad_speculation": 2.6,
+      "tma_frontend_bound": 13.1,
+      "tma_backend_bound": 47.9
+    },
+    "test": {
+      "tma_retiring": 44.1,
+      "tma_bad_speculation": 2.3,
+      "tma_frontend_bound": 12.9,
+      "tma_backend_bound": 40.6
+    },
+    "base_min_active_pct": 100.0,
+    "test_min_active_pct": 100.0
+  }
+]
