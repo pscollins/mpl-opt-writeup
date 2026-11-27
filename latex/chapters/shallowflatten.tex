@@ -1267,7 +1267,7 @@ algorithms.
 Since physical equality of tuples is not defined by \citet{sml-def}, one option
 to resolve the issue would be to simply allow \texttt{MLton.eq}/compare-and-swap
 to (perhaps spuriously) return \texttt{false} in these cases. Another simple
-option would to be disable \texttt{ShallowFlatten} for all values of any types
+option would be to disable \texttt{ShallowFlatten} for all values of any types
 that participate in one of the forbidden comparisons (i.e. a \texttt{MLton.eq}
 applied to an
 \texttt{int * int} tuple anywhere in the program disables
