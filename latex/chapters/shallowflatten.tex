@@ -682,8 +682,8 @@ t2: int * (int array * int array) =
 
 Note that a single application of the \texttt{prim} rewrite transformation can
 create new flattenable types not present in the original program -- for example,
-SoA-flattening the type \texttt{((a * a) * a) array} yields \texttt{(a * a)
-array * a array}. Therefore, in order to completely eliminate flattenable types,
+SoA-flattening the type \texttt{((a * b) * c) array} yields \texttt{(a * b)
+array * c array}. Therefore, in order to completely eliminate flattenable types,
 it is necessary to iteratively re-apply the transformation until convergence.
 See \cref{fig:shallow_needs_repeated} for a detailed example.
 
@@ -972,32 +972,39 @@ $\Phi \in \{\Phi_\texttt{AoS}, \Phi_\texttt{SoA}\}$; second, we describe the
 flavor-dependent transformation on types, and finally the flavor-dependent
 transformation on statements.
 
-\hl{TODO: mention the homogeneous tuple restriction in limitaitons
--- say that we could skip it for AoS but it's easier to keep it}
-
-We define the ``\texttt{tuple} width'' of a type $t$ as $w_t(t)$,
-where:
+We define the flavor-dependent ``\texttt{tuple} width'' of a type $t$ as
+$w_t^\Phi(t)$, where:
 \[
-w_t(t) =
+w_t^{\Phi_{\texttt{SoA}}}(t) =
+\begin{cases}
+n &: \textrm{if $t$ is of the form $\tau_1 * \cdots * \tau_n$} \\
+0 &: \textrm{otherwise}
+\end{cases}
+\qquad
+w_t^{\Phi_{\texttt{AoS}}}(t) =
 \begin{cases}
 n &: \textrm{if $t$ is of the form $\underbrace{\tau * \cdots * \tau}_{n}$} \\
 0 &: \textrm{otherwise}
 \end{cases}
 \]
-We likewise define the ``container width'' of a type $c$ as $w_c(c)$, where:
+We likewise define the ``container width'' of a type $c$ as $w_c^\Phi(c)$, where:
 \[
-w_c(c) =
+w_c^\Phi(c) =
 \begin{cases}
-w_t(t) &: \textrm{if $c$ is $t$ \texttt{array} or $t$ \texttt{vector}} \\
+w_t^\Phi(t) &: \textrm{if $c$ is $t$ \texttt{array} or $t$ \texttt{vector}} \\
 0 &: \textrm{otherwise}
 \end{cases}
 \]
 In the context of \texttt{ShallowFlatten} We say that a type $\tau$ is
-``flattenable'' if:
+``flattenable'' under flavor $\Phi$ if:
 \[
-2 \leq w_c(\tau) \leq W
+2 \leq w_c^\Phi(\tau) \leq W
 \]
 where $W$ is some user-specified upper bound (selected to maximize performance).
+Note that while $\Phi_{\texttt{SoA}}$ supports heterogeneous tuples directly,
+our evaluation in \cref{ch:evaluation} configures both flavors with the
+homogeneous-type policy so that AoS and SoA transform the same set of
+containers.
 
 We also partition \texttt{prim}s into ``flattenable'' and ``unflattenable:''
 ``flattenable'' \texttt{prim}s are those that manipulate \texttt{array}
@@ -1046,8 +1053,8 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
       &= \mathtt{block}\ l(x_1{:}\sembrack{\tau_1}_\Phi, \dots, x_n{:}\sembrack{\tau_n}_\Phi) : \sembrack{s_1}_\Phi \cdots \sembrack{s_k}_\Phi \; tr \\
     \sembrack{\tau}_\Phi
       &= \begin{cases}
-           \Phi(\tau) & \text{if } 2 \le w_c(\tau) \le W \\
-           \sembrack{\tau_0}_\Phi\;\kappa & \text{if } \tau = \tau_0\;\kappa \text{ and } \neg(2 \le w_c(\tau) \le W) \\
+           \Phi(\tau) & \text{if } 2 \le w_c^\Phi(\tau) \le W \\
+           \sembrack{\tau_0}_\Phi\;\kappa & \text{if } \tau = \tau_0\;\kappa \text{ and } \neg(2 \le w_c^\Phi(\tau) \le W) \\
            \sembrack{\tau_1}_\Phi * \cdots * \sembrack{\tau_n}_\Phi & \text{if } \tau = \tau_1 * \cdots * \tau_n \\
            \tau & \text{otherwise}
          \end{cases} \\
@@ -1059,7 +1066,7 @@ overall action of the pass is the fixed-point $\sembrack{P}_\phi^*$.
       &= \sembrack{(x{:}\tau \mid \mathtt{\_}) \syneq e}_\Phi \\
       &= \begin{cases}
            \Phi\big((x{:}\tau \mid \mathtt{\_}) \syneq e\big)
-             & \text{if } e = \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v}),\; p \in \mathcal{P}_{\text{flat}},\; 2 \le w_t(\tau_1) \le W \\
+             & \text{if } e = \mathtt{prim}\ p[\tau_1, \dots, \tau_m](\vec{v}),\; p \in \mathcal{P}_{\text{flat}},\; 2 \le w_t^\Phi(\tau_1) \le W \\
            (x{:}\sembrack{\tau}_\Phi \mid \mathtt{\_}) \syneq \sembrack{e}_\Phi
              & \text{otherwise}
          \end{cases} \\
@@ -1088,8 +1095,8 @@ See \cref{fig:shallow_flat_types} for a formalization.
   \setlength{\jot}{2pt}
   \[
   \begin{aligned}
-    \Phi_{\texttt{SoA}}\big((\underbrace{\tau * \cdots * \tau}_{n})\;\kappa\big)
-      &= \underbrace{\tau\;\kappa * \cdots * \tau\;\kappa}_{n} \\
+    \Phi_{\texttt{SoA}}\big((\tau_1 * \cdots * \tau_n)\;\kappa\big)
+      &= \tau_1\;\kappa * \cdots * \tau_n\;\kappa \\
     \Phi_{\texttt{AoS}}\big((\underbrace{\tau * \cdots * \tau}_{n})\;\kappa\big)
       &= \tau\;\kappa
   \end{aligned}
@@ -1113,20 +1120,20 @@ See \cref{fig:shallow_flat_statements}.
   \[
   \begin{aligned}
     \Phi_{\texttt{SoA}}\big(a : t\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[t](m)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](m) \,\big)_{j=1}^{n} \\
-      &\phantom{{}= \big(\,} a : \tau\;\mathtt{array} * \cdots * \tau\;\mathtt{array} \syneq \mathtt{tuple}(a_1, \dots, a_n) \\
+      &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau_j](m) \,\big)_{j=1}^{n} \\
+      &\phantom{{}= \big(\,} a : \tau_1\;\mathtt{array} * \cdots * \tau_n\;\mathtt{array} \syneq \mathtt{tuple}(a_1, \dots, a_n) \\
     \Phi_{\texttt{AoS}}\big(a : t\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[t](m)\big)
       &= m' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(m, n) \\
       &\phantom{{}=} a : \tau\;\mathtt{array} \syneq \mathtt{prim\ Array\_alloc}[\tau](m') \\[2pt]
     \Phi_{\texttt{SoA}}\big(m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[t](a)\big)
-      &= a_1 : \tau\;\kappa_K \syneq \mathtt{select}(a, 0) \\
-      &\phantom{{}=} m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a_1) \\
+      &= a_1 : \tau_1\;\kappa_K \syneq \mathtt{select}(a, 0) \\
+      &\phantom{{}=} m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau_1](a_1) \\
     \Phi_{\texttt{AoS}}\big(m : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[t](a)\big)
       &= m' : \mathtt{int} \syneq \mathtt{prim}\ K\mathtt{\_length}[\tau](a) \\
       &\phantom{{}=} m : \mathtt{int} \syneq \mathtt{prim\ Word32\_quot}(m', n) \\[2pt]
     \Phi_{\texttt{SoA}}\big(x : t \syneq \mathtt{prim}\ K\mathtt{\_sub}[t](a, i)\big)
-      &= \big(\, a_j : \tau\;\kappa_K \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau_j\;\kappa_K \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau_j \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau_j](a_j, i) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} x : t \syneq \mathtt{tuple}(x_1, \dots, x_n) \\
     \Phi_{\texttt{AoS}}\big(x : t \syneq \mathtt{prim}\ K\mathtt{\_sub}[t](a, i)\big)
       &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
@@ -1134,9 +1141,9 @@ See \cref{fig:shallow_flat_statements}.
       &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{prim}\ K\mathtt{\_sub}[\tau](a, i_j) \,\big)_{j=1}^{n} \\
       &\phantom{{}= \big(\,} x : t \syneq \mathtt{tuple}(x_1, \dots, x_n) \\[2pt]
     \Phi_{\texttt{SoA}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[t](a, i, x)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, x_j : \tau \syneq \mathtt{select}(x, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau](a_j, i, x_j) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, x_j : \tau_j \syneq \mathtt{select}(x, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_update}[\tau_j](a_j, i, x_j) \,\big)_{j=1}^{n} \\
     \Phi_{\texttt{AoS}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_update}[t](a, i, x)\big)
       &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
       &\phantom{{}=} \big(\, i_j : \mathtt{int} \syneq \mathtt{prim\ Word32\_add}(i', j-1) \,\big)_{j=1}^{n} \\
@@ -1147,21 +1154,21 @@ See \cref{fig:shallow_flat_statements}.
     \Phi_{\texttt{AoS}}\big(b : \mathtt{bool} \syneq \mathtt{prim\ Array\_uninitIsNop}[t](a)\big)
       &= b : \mathtt{bool} \syneq \mathtt{false} \\[2pt]
     \Phi_{\texttt{SoA}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[t](a, i)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a_j, i) \,\big)_{j=1}^{n} \\
+      &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau_j](a_j, i) \,\big)_{j=1}^{n} \\
     \Phi_{\texttt{AoS}}\big(\mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[t](a, i)\big)
       &= \phantom{\big(\,} i' : \mathtt{int} \syneq \mathtt{prim\ Word32\_mul}(i, n) \\
       &\phantom{{}=} \big(\, i_j : \mathtt{int} \syneq \mathtt{prim\ Word32\_add}(i', j-1) \,\big)_{j=1}^{n} \\
       &\phantom{{}=} \big(\, \mathtt{\_} \syneq \mathtt{prim\ Array\_uninit}[\tau](a, i_j) \,\big)_{j=1}^{n} \\[2pt]
     \Phi_{\texttt{SoA}}\big(a' : t\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[t](a)\big)
-      &= \big(\, a_j : \tau\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
-      &\phantom{{}=} \big(\, a'_j : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a_j) \,\big)_{j=1}^{n} \\
-      &\phantom{{}= \big(\,} a' : \tau\;\kappa_K * \cdots * \tau\;\kappa_K \syneq \mathtt{tuple}(a'_1, \dots, a'_n) \\
+      &= \big(\, a_j : \tau_j\;\mathtt{array} \syneq \mathtt{select}(a, j-1) \,\big)_{j=1}^{n} \\
+      &\phantom{{}=} \big(\, a'_j : \tau_j\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau_j](a_j) \,\big)_{j=1}^{n} \\
+      &\phantom{{}= \big(\,} a' : \tau_1\;\kappa_K * \cdots * \tau_n\;\kappa_K \syneq \mathtt{tuple}(a'_1, \dots, a'_n) \\
     \Phi_{\texttt{AoS}}\big(a' : t\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[t](a)\big)
       &= a' : \tau\;\kappa_K \syneq \mathtt{prim\ Array\_to}K[\tau](a)
   \end{aligned}
   \]
-  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau * \cdots * \tau$ ($w_t(t) = n$), container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, m', i', i_j$.}
+  \caption{Flavor-dependent flattenable \texttt{prim} statement transformations $\Phi_{\texttt{SoA}}$ and $\Phi_{\texttt{AoS}}$ for $t = \tau_1 * \cdots * \tau_n$ ($w_t^{\Phi_{\texttt{SoA}}}(t) = n$) in $\Phi_{\texttt{SoA}}$ and $t = \tau * \cdots * \tau$ ($w_t^{\Phi_{\texttt{AoS}}}(t) = n$) in $\Phi_{\texttt{AoS}}$, container family $K \in \{\mathtt{Array}, \mathtt{Vector}\}$ ($\kappa_{\mathtt{Array}} = \mathtt{array}$, $\kappa_{\mathtt{Vector}} = \mathtt{vector}$), and fresh names $a_j, a'_j, x_j, m', i', i_j$.}
   \label{fig:shallow_flat_statements}
 \end{figure}
 
