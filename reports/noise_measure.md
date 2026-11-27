@@ -18,7 +18,7 @@ To pin this down quantitatively without conflating it with any optimization pass
   4. `O3_native`: `-cc-opt -O3 -cc-opt -march=native` (matches the main thesis evaluation runs)
 * **Benchmarks (8 single-core benchmarks across both suites):**
   * **MLton suite (scaled to ~0.5–1.1s/trial, 2–3 trials per binary):** `wc-input1` (`doit 256`), `fft` (`doit 1`), `matrix-multiply` (`doit 3`), `imp-for` (`doit 64`), `checksum` (`doit 192`).
-  * **`parallel-ml-bench` (1-core MLton, `-repeat 3 -warmup 1`):** `primes` (`-N 40000000`), `dense-matmul` (`-N 512`), `msort` (`-N 2500000`).
+  * **`parallel-ml-bench` (1-core MLton, `-repeat 3 -warmup 1`):** `primes` (`-N 40000000`, 1 invocation), `dense-matmul` (`-N 512`, median of 5 invocations per binary to filter occasional per-process physical-page/L2-set blips on power-of-two `512×512` matrices), `msort` (`-N 2500000`, 1 invocation).
 * **Execution controls:** All 512 binaries (8 benchmarks × 4 configs × 16 offsets) were compiled in parallel, then executed sequentially pinned to CPU 0 (`taskset -c 0`) under `perf stat` collecting `cycles`, `instructions`, and `branch-misses` (Experiment 1). For the top 3 benchmarks by `-O1` cycle spread, we then collected Ice Lake Top-Down Microarchitecture Analysis (TMA) and DSB/MITE frontend counters over 3 repetitions on the fastest vs. slowest `-O1` offsets alongside `N=0` of the other three configs (Experiment 2).
 
 ### Reproducibility & Artifacts
@@ -47,14 +47,12 @@ python3 analysis/o1_instability_exp.py
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
 | **`imp-for`** | mlton | **56.04%** | **57.03%** | 3.57% | **0.21%** | 0.035% |
 | **`wc-input1`** | mlton | **33.16%** | **1.96%** | **1.23%** | **2.48%** | 0.078% |
-| **`dense-matmul`** | parallel_bench | **8.32%** | **0.88%** | 3.08% | 11.96%\* | 0.009% |
+| **`dense-matmul`** | parallel_bench | **8.37%** | **0.65%** | **0.98%** | **0.82%** | 0.007% |
 | `msort` | parallel_bench | 2.64% | 0.82% | 1.36% | 2.93% | 0.029% |
 | `fft` | mlton | 1.45% | 0.64% | 1.19% | 0.56% | 0.015% |
 | `primes` | parallel_bench | 0.61% | 1.16% | 2.98% | 2.01% | 0.040% |
 | `matrix-multiply` | mlton | 0.39% | 0.17% | 0.80% | 0.67% | 0.018% |
 | `checksum` | mlton | 0.05% | 0.34% | 0.44% | 0.12% | 0.006% |
-
-*\*On `dense-matmul`, `-O3 -march=native` is flat (~0%) across 15 of 16 offsets with a single isolated spike at $N=24$.*
 
 ### Max-to-Min Wall-Time Spread Across $N \in \{0, 4, \dots, 60\}$
 
@@ -62,7 +60,7 @@ python3 analysis/o1_instability_exp.py
 | :--- | ---: | ---: | ---: | ---: |
 | **`imp-for`** | **53.91%** | **55.20%** | 3.62% | **0.66%** |
 | **`wc-input1`** | **32.19%** | **1.99%** | **1.25%** | **2.41%** |
-| **`dense-matmul`** | **7.39%** | **0.60%** | 3.16% | 12.12% |
+| **`dense-matmul`** | **8.59%** | **0.60%** | **1.14%** | **0.46%** |
 | `msort` | 2.75% | 0.92% | 1.56% | 2.95% |
 | `fft` | 1.51% | 0.72% | 1.23% | 0.62% |
 | `primes` | 0.67% | 1.28% | 2.65% | 2.95% |
@@ -73,7 +71,7 @@ python3 analysis/o1_instability_exp.py
 1. **Exact 32-byte periodicity under `-O1`:**
    * On `wc-input1`, `-O1` produces an exact 32-byte periodic square wave: offsets $N \in \{0, 4, 8, 12\}$ and $\{32, 36, 40, 44\}$ run fast (~$-14\%$ vs. median), while $N \in \{16, 20, 24, 28\}$ and $\{48, 52, 56, 60\}$ run **33.2% slower** (~$+14\%$ vs. median). Enabling 16-byte alignment (`-O1 + align=16`) immediately eliminates the square wave (spread drops from 33.16% to 1.96%), as do `-O2` (1.23%) and `-O3 -march=native` (2.48%).
    * On `imp-for`, `-O1` exhibits exact 32-byte periodic **+56.0% spikes** at $N \in \{4, 8, 16\}$ and $\{36, 40, 48\}$. Notably, 16-byte alignment alone (`-O1 + align=16`) is *insufficient* here—it still exhibits +57.0% spikes with 32-byte periodicity ($N \in \{12, 16\}$ and $\{44, 48\}$) because 16-byte-aligned loops can still land on unfavorable 32-byte DSB boundaries. Moving to `-O2` drops the spread to 3.57%, and `-O3 -march=native` eliminates it completely (0.21%).
-   * On `dense-matmul`, `-O1` exhibits 24-byte-spaced spikes ($N \in \{0, 24, 48\}$, 8.32% spread), which `-O1 + align=16` reduces to 0.88%.
+   * On `dense-matmul`, `-O1` exhibits deterministic 24-byte-spaced spikes ($N \in \{0, 24, 48\}$, 8.37% cycle spread / 8.59% wall-time spread), whereas `-O1 + align=16` (0.65%), `-O2` (0.98%), and `-O3 -march=native` (0.82% cycles / 0.46% wall time) are all flat across all 16 offsets.
 2. **Instruction-count invariance:** Across all 8 benchmarks, retired instruction counts under `-O1` vary by **<0.08%** across all 16 offsets. The 8–56% cycle and wall-time swings are therefore purely microarchitectural code-layout artifacts rather than differences in generated work.
 
 ---
@@ -123,5 +121,5 @@ To confirm the microarchitectural cause of the `-O1` cliffs, we profiled the fas
 ## 4. Implications for the Evaluation Methodology
 
 * Under MLton's default `-O1`, **unrelated code-size changes anywhere earlier in a C chunk can induce 33–56% runtime swings** on tight-loop benchmarks without changing the executed instructions of the hot loop at all. Any compiler-pass evaluation run at `-O1` risks mistaking these layout cliffs for large optimization wins or regressions (and seeing opposite-sign effects across microarchitectures with different frontend/DSB geometries, such as Intel Ice Lake vs. AMD Ryzen).
-* Simply adding 16-byte alignment flags (`-falign-*=16`) to `-O1` fixes `wc-input1` (33.2% → 2.0%) and `dense-matmul` (8.3% → 0.9%), but does **not** eliminate the 32-byte boundary cliff on `imp-for` (57.0%).
-* Compiling with `-O2` or `-O3 -march=native` suppresses these `-O1` cliffs dramatically (`imp-for`: 56.0% → 0.21% at `-O3 -march=native`; `wc-input1`: 33.2% → 2.48%), justifying the use of `-O3 -march=native` throughout the thesis evaluation (and motivating updating the `-O2` text in `evaluation.tex` §5.1 to match the `-O3 -march=native` flags actually used in the benchmark runs).
+* Simply adding 16-byte alignment flags (`-falign-*=16`) to `-O1` fixes `wc-input1` (33.2% → 2.0%) and `dense-matmul` (8.4% → 0.7%), but does **not** eliminate the 32-byte boundary cliff on `imp-for` (57.0%).
+* Compiling with `-O2` or `-O3 -march=native` suppresses these `-O1` cliffs dramatically (`imp-for`: 56.0% → 0.21% at `-O3 -march=native`; `wc-input1`: 33.2% → 2.48%; `dense-matmul`: 8.4% → 0.82%), keeping max-to-min cycle spread below 3% across all 8 benchmarks (`0.12%–2.93%` at `-O3 -march=native`). This justifies the use of `-O3 -march=native` throughout the thesis evaluation (and motivates updating the `-O2` text in `evaluation.tex` §5.1 to match the `-O3 -march=native` flags actually used in the benchmark runs).

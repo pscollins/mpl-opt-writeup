@@ -74,7 +74,7 @@ BENCHMARKS: list[dict[str, Any]] = [
         "suite": "parallel_bench",
         "bench_dir": "dense-matmul",
         "args": ["-N", "512", "-repeat", "3", "-warmup", "1"],
-        "trials": 1,
+        "trials": 5,  # median of 5 invocations filters occasional physical-page/L2-set blips on 512x512 matrices
     },
     {
         "name": "msort",

@@ -402,7 +402,7 @@
     "suite": "parallel_bench",
     "o1_fast_offset": 60,
     "o1_slow_offset": 24,
-    "sweep_cycle_ratio": 1.0831826356594625,
+    "sweep_cycle_ratio": 1.083738078652128,
     "profiles": {
       "O1_fast": {
         "config": "O1",
