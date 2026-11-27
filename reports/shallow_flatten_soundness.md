@@ -103,13 +103,26 @@ The same `sameArray = op =` check is used in `ArraySlice.span` (`sequence0.sml:4
 
 **Why AoS is immune:** In AoS, `(t * t) array` becomes a single `t array`, so `MLton_eq[t array](a, b)` still compares the single canonical heap object pointer.
 
-**Clean fix for SoA:** Rewrite `Prim.MLton_eq[(t1 * ... * tn) array](a, b)` into:
-```
-a0 = select(a, 0)
-b0 = select(b, 0)
-res = prim MLton_eq[t1 array](a0, b0)
-```
-Because component arrays are always allocated together by `buildArrayAlloc` and never re-paired across distinct source arrays, pointer identity of component `0` is a 1-to-1 invariant of the source array's identity (note `ShareZeroVec` only transforms arrays converted to vectors via `Array_toVector`, never mutable arrays tested with `=`).
+**Clean fixes for SoA (`&&` across components vs. component `0`):**
+Lowering `MLton_eq` on SoA-flattened containers completely fixes pure SML 97 array equality (including `ArraySlice.copy`, `ArraySlice.span`, nested flattened arrays, and SML `=` on arbitrary tuples, vectors, and datatypes containing flattened arrays — because `PolyEqual` already decomposed tuple/datatype `=` into per-field array `MLton_eq`s, and a datatype's outer `MLton_eq` fast path safely falls through on `false`). There are two design options:
+
+1. **Component-`0` lowering (arrays only, no block splitting):** Rewrite `Prim.MLton_eq[(t1 * ... * tn) array](a, b)` into 3 straight-line statements:
+   ```
+   a0 = select(a, 0)
+   b0 = select(b, 0)
+   res = prim MLton_eq[t1 array](a0, b0)
+   ```
+   Because component arrays are always allocated in lockstep by `buildArrayAlloc`, never re-paired across distinct source arrays, and never merged by `MLton.share` (mutable arrays are excluded from hash-consing; `ShareZeroVec` only touches arrays passed to `Array_toVector`), component `0` is logically equivalent to `&&` across all $n$ components, faster (1 compare, no branches), and fits directly inside `ShallowFlatten`'s existing `Statement.t -> Statement.t vector` architecture (handling nested arrays automatically on subsequent fixed-point iterations).
+   - *Caution for vectors:* Component `0` alone is **unsound for `MLton_eq` on `vector`s** under `MLton.share` / `MLton.shareAll ()`: if `v1 = #[(1, 10), (2, 20)]` and `v2 = #[(1, 99), (2, 88)]`, `MLton.shareAll ()` hash-conses their identical first component vector `#[1, 2]` into the same heap object, so checking only component `0` would make `PolyEqual`'s fast path (`MLton_eq(v1, v2) orelse loop`) return `true` for unequal vectors! (If avoiding block splitting, `MLton_eq[t vector]` can instead be replaced with `ConApp false`, which is sound for SML `=` at the cost of dropping the fast path and making direct `MLton.eq (v, v)` return `false`.)
+
+2. **Full `&&` across all $n$ components (sound for *both* arrays and vectors):** Lower `MLton_eq[(t1 * ... * tn) {array|vector}](a, b)` to:
+   ```
+   MLton_eq(select(a, 0), select(b, 0)) && ... && MLton_eq(select(a, n-1), select(b, n-1))
+   ```
+   This is 100% sound for both arrays and vectors even in the presence of `MLton.shareAll ()` (all $n$ component pointers being equal implies identical contents) and preserves `PolyEqual`'s fast path on vectors.
+   - *SSA implementation note:* In MLton's SSA, `Type.bool` is a `datatype` (`true | false`) and `Prim.t` has **no** `Bool_and` primitive. Implementing `&&` therefore requires splitting the basic block via `Transfer.Case` on `bool` (just like `Dexp.conjoin` / `doit` in `mlton/ssa/poly-equal.fun:47-56, 518-642`), refactoring `ShallowFlatten` from `Statement.t -> Statement.t vector` to a block-splitting `Block.t -> Block.t list` pass.
+
+*What lowering `MLton_eq` does **not** fix:* `MLton.eq` on element tuples round-tripped through arrays (separate issue, already broken by stock `Flatten`/`CommonSubexp`/`Useless`), `MLton.Weak`/`Finalizable` on SoA-flattened arrays, AoS `Array_alloc` overflow, or the 5 unimplemented container prims.
 
 ---
 
@@ -309,7 +322,7 @@ By contrast, **mutable container identity (`MLton_eq` on `'a array`, `Weak` on `
 1. **Resolve the `\hl{TODO}` at line 1217 accurately:**
    - State clearly that the current prototype **does not** detect `MLton_eq` (or `Weak_new`, `MLton_size`, `MLton_share`), so it is **not generally sound** in the presence of those constructs — and distinguish **three** levels of soundness issues rather than only tuple `MLton.eq`:
      1. **Tuple identity (`MLton.eq` on tuples):** Broken by both AoS and SoA on array round-trips. Crucially, point out that **stock MLton's existing SSA passes (`Flatten`, `CommonSubexp`, `Useless`, `SimplifyTypes`) already do not preserve `MLton.eq` on immutable tuples** (and MLton's manual documents its semantics as "murky"), so treating tuples as identity-less value types aligns with how MLton's SSA optimizer already behaves in practice. (Only `DeepFlatten` in SSA2 preserves it, as a side effect of needing an `Objptr` to lower `MLton_eq`.)
-     2. **Container identity (`=` / `MLton_eq` and `MLton.Weak` on flattened *arrays* — SoA only):** Much more serious because `=` on `'a array` is **pure Standard ML 97** (used inside the Basis Library's own `ArraySlice.copy` and `ArraySlice.span`). Because `PolyEqual` lowers array `=` to `MLton_eq` *before* `ShallowFlatten`, SoA currently leaves `MLton_eq` comparing ephemeral wrapper tuples that `Flatten` can re-box. Note that AoS avoids this entirely, and SoA can fix array `=` soundly in a few lines by rewriting `MLton_eq` on a flattened array to compare component `0` (`MLton_eq(select(a, 0), select(b, 0))`). `Weak` on flattened arrays under SoA would still require opting out of SoA (or falling back to AoS/AoP) for arrays passed to `Weak_new`.
+     2. **Container identity (`=` / `MLton_eq` and `MLton.Weak` on flattened *arrays* — SoA only):** Much more serious because `=` on `'a array` is **pure Standard ML 97** (used inside the Basis Library's own `ArraySlice.copy` and `ArraySlice.span`). Because `PolyEqual` lowers array `=` to `MLton_eq` *before* `ShallowFlatten`, SoA currently leaves `MLton_eq` comparing ephemeral wrapper tuples that `Flatten` can re-box. Note that AoS avoids this entirely, and SoA can fix array `=` soundly either by lowering `MLton_eq` to a short-circuiting `&&` across all $n$ component containers (requires splitting SSA blocks via `Transfer.Case` since `bool` is a `datatype`, and is also sound for `vector`s under `MLton.shareAll ()`) or, for arrays alone with no block splitting, by comparing component `0` (`MLton_eq(select(a, 0), select(b, 0))`). `Weak` on flattened arrays under SoA would still require opting out of SoA (or falling back to AoS/AoP) for arrays passed to `Weak_new`.
      3. **Unimplemented container primitives & AoS overflow:** Mention that the prototype crashes on `Array_copyArray`, `Array_copyVector`, `Vector_vector`, `Array_array`, and MPL's `Array_cas` (the first four are straightforward to add; `Array_cas` fundamentally requires opting out or wide CAS), and that AoS's `Array_alloc` needs an overflow-checked multiplication under 64-bit `Int` (`-default-type int64`).
    - Add the empirical finding: **an IR-level audit across all 34 `parallel-ml-bench` evaluation benchmarks (and all 89 compilable benchmarks in the repo, plus the MLton benchmark suite) confirms that zero benchmarks trigger any of these unsound cases.**
 
@@ -319,7 +332,7 @@ By contrast, **mutable container identity (`MLton_eq` on `'a array`, `Weak` on `
 
 ### If Hardening `shallow-flatten.fun` Later (Ranked by Value/Effort)
 
-1. **Rewrite `MLton_eq` on SoA-flattened array types** to `MLton_eq(select(a, 0), select(b, 0))` (fixes pure SML array `=` and `ArraySlice.copy` corruption!).
+1. **Lower `MLton_eq` on SoA-flattened containers** — either via `&&` across all $n$ components (block-splitting via `Transfer.Case` on `Type.bool`, sound for both arrays and vectors even under `MLton.shareAll ()`) or, with zero block-splitting refactoring, `MLton_eq(select(a, 0), select(b, 0))` for arrays and `false` (or leaving the wrapper comparison) for vectors (fixes pure SML array `=` and `ArraySlice.copy` corruption!).
 2. **Add overflow check to AoS `Array_alloc`** (`n * tupleWidth`).
 3. **Implement `Array_copyArray`, `Array_copyVector`, `Vector_vector`, `Array_array`** (eliminates compiler crashes on standard SML `Array.copy` and vector literals).
 4. **Add a pre-pass escape/ban check** (type-level opt-out) disabling flattening for any container type used in `Array_cas` (AoS & SoA) or `Weak_new` (SoA), and optionally `MLton_size`/`MLton_share` (SoA).
