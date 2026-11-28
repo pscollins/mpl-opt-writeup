@@ -1476,8 +1476,10 @@ artifacts of incidental perturbations to the generated C rather than true
 effects of the measured pass.
 
 For the experiments that follow, we pick a small sample of 8 benchmarks from
-across the MLton and \texttt{parallel-ml-bench} suites. All experiments below
-were run using MLton with \texttt{ShallowFlatten} and \texttt{PreFlatten}
+across the MLton (\texttt{imp-for}, \texttt{wc-input1}, \texttt{fft},
+\texttt{matrix-multiply}, \texttt{checksum}) and \texttt{parallel-ml-bench}
+(\texttt{dense-matmul}, \texttt{msort}, \texttt{primes}) suites. All experiments
+below were run using MLton with \texttt{ShallowFlatten} and \texttt{PreFlatten}
 disabled, pinned to physical core 0 via \texttt{taskset}, with performance data
 collected via \texttt{perf stat}. Our MLton compiler is configured as in
 \cref{sec:methodology} except for the choice of \texttt{-O1} rather than
