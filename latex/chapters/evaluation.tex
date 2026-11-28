@@ -1518,15 +1518,15 @@ each benchmark, and \cref{tab:compare_o1_cycles} shows the percentage CPU time
 increase from the fastest-measured $N$ to the slowest. This data shows that
 no-op perturbations to code layout lead to performance swings of up to 56\%
 under \texttt{O1}; these swings are virtually eliminated under \texttt{O2} or
-\texttt{O3}, dropping to at most 3.6\% and 2.9\%, respectively. We additionally see that
-simply enforcing 16-byte code alignment constraints is insufficient to resolve
-the problem, with \texttt{imp-for} demonstrating virtually identical performance
-instability under \texttt{O1} (56.0\%) and \texttt{O1\_align} (57.0\%). Finally, in
-\cref{tab:compare_o1_insts}, we provide worst-to-best instruction count
-increases under each configuration: with $<0.25\%$ swings across all benchmarks
-and configurations (and $<0.1\%$ under \texttt{O1}), we can see that the gains
-and losses are driven purely by microarchitectural impacts to
-instructions-per-cycle rather than direct overhead from code bloat.
+\texttt{O3}, dropping to at most 3.6\% and 2.9\%, respectively. We additionally
+see that simply enforcing 16-byte code alignment constraints is insufficient to
+resolve the problem, with \texttt{imp-for} demonstrating virtually identical
+performance instability under \texttt{O1} (56.0\%) and \texttt{O1\_align}
+(57.0\%). Finally, in \cref{tab:compare_o1_insts}, we provide worst-to-best
+instruction count increases under each configuration: with $<0.25\%$ swings
+across all benchmarks and configurations (and $<0.1\%$ under \texttt{O1}), we
+can see that the gains and losses are driven purely by microarchitectural
+impacts to instructions-per-cycle rather than direct overhead from code bloat.
 
 \begin{figure}[htbp]
   \centering
@@ -1539,18 +1539,18 @@ instructions-per-cycle rather than direct overhead from code bloat.
   \centering
   \caption{Max-to-min CPU cycle spread ($\frac{\max}{\min} - 1$) across entry \texttt{NOP} padding offsets $N \in \{0, 4, \dots, 60\}$ for each GCC configuration.}
   \label{tab:compare_o1_cycles}
-  \begin{tabular}{llrrrr}
+  \begin{tabular}{lrrrr}
     \toprule
-    \textbf{Benchmark} & \textbf{Suite} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
+    \textbf{Benchmark} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
     \midrule
-    \texttt{imp-for}         & MLton                        & 56.04\% & 57.03\% & 3.57\% & 0.21\% \\
-    \texttt{wc-input1}       & MLton                        & 33.16\% &  1.96\% & 1.23\% & 2.48\% \\
-    \texttt{dense-matmul}    & \texttt{parallel-ml-bench}   &  8.37\% &  0.65\% & 0.98\% & 0.82\% \\
-    \texttt{msort}           & \texttt{parallel-ml-bench}   &  2.64\% &  0.82\% & 1.36\% & 2.93\% \\
-    \texttt{fft}             & MLton                        &  1.45\% &  0.64\% & 1.19\% & 0.56\% \\
-    \texttt{primes}          & \texttt{parallel-ml-bench}   &  0.61\% &  1.16\% & 2.98\% & 2.01\% \\
-    \texttt{matrix-multiply} & MLton                        &  0.39\% &  0.17\% & 0.80\% & 0.67\% \\
-    \texttt{checksum}        & MLton                        &  0.05\% &  0.34\% & 0.44\% & 0.12\% \\
+    \texttt{imp-for}         & 56.04\% & 57.03\% & 3.57\% & 0.21\% \\
+    \texttt{wc-input1}       & 33.16\% &  1.96\% & 1.23\% & 2.48\% \\
+    \texttt{dense-matmul}    &  8.37\% &  0.65\% & 0.98\% & 0.82\% \\
+    \texttt{msort}           &  2.64\% &  0.82\% & 1.36\% & 2.93\% \\
+    \texttt{fft}             &  1.45\% &  0.64\% & 1.19\% & 0.56\% \\
+    \texttt{primes}          &  0.61\% &  1.16\% & 2.98\% & 2.01\% \\
+    \texttt{matrix-multiply} &  0.39\% &  0.17\% & 0.80\% & 0.67\% \\
+    \texttt{checksum}        &  0.05\% &  0.34\% & 0.44\% & 0.12\% \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1559,21 +1559,30 @@ instructions-per-cycle rather than direct overhead from code bloat.
   \centering
   \caption{Max-to-min retired instruction count spread ($\frac{\max}{\min} - 1$) across entry \texttt{NOP} padding offsets $N \in \{0, 4, \dots, 60\}$ for each GCC configuration.}
   \label{tab:compare_o1_insts}
-  \begin{tabular}{llrrrr}
+  \begin{tabular}{lrrrr}
     \toprule
-    \textbf{Benchmark} & \textbf{Suite} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
+    \textbf{Benchmark} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
     \midrule
-    \texttt{imp-for}         & MLton                        & 0.035\% & 0.034\% & 0.005\% & 0.003\% \\
-    \texttt{wc-input1}       & MLton                        & 0.078\% & 0.021\% & 0.029\% & 0.029\% \\
-    \texttt{dense-matmul}    & \texttt{parallel-ml-bench}   & 0.007\% & 0.002\% & 0.002\% & 0.004\% \\
-    \texttt{msort}           & \texttt{parallel-ml-bench}   & 0.029\% & 0.016\% & 0.019\% & 0.017\% \\
-    \texttt{fft}             & MLton                        & 0.015\% & 0.020\% & 0.014\% & 0.021\% \\
-    \texttt{primes}          & \texttt{parallel-ml-bench}   & 0.040\% & 0.017\% & 0.012\% & 0.014\% \\
-    \texttt{matrix-multiply} & MLton                        & 0.018\% & 0.008\% & 0.216\% & 0.021\% \\
-    \texttt{checksum}        & MLton                        & 0.006\% & 0.007\% & 0.014\% & 0.039\% \\
+    \texttt{imp-for}         & 0.035\% & 0.034\% & 0.005\% & 0.003\% \\
+    \texttt{wc-input1}       & 0.078\% & 0.021\% & 0.029\% & 0.029\% \\
+    \texttt{dense-matmul}    & 0.007\% & 0.002\% & 0.002\% & 0.004\% \\
+    \texttt{msort}           & 0.029\% & 0.016\% & 0.019\% & 0.017\% \\
+    \texttt{fft}             & 0.015\% & 0.020\% & 0.014\% & 0.021\% \\
+    \texttt{primes}          & 0.040\% & 0.017\% & 0.012\% & 0.014\% \\
+    \texttt{matrix-multiply} & 0.018\% & 0.008\% & 0.216\% & 0.021\% \\
+    \texttt{checksum}        & 0.006\% & 0.007\% & 0.014\% & 0.039\% \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+This demonstrates that measured performance is unstable under the default MLton
+C toolchain configuration, but only in the presence of (perhaps unrealistic)
+synthetic code layout perturbations. Next, we recreate this effect using no-op
+perturbations to MLton IR that more closely mirror the (unintentional) impact of
+a new compiler pass.
+
+MLton emits C code \hl{TODO: first we say the order that we generate in is
+  arbitrary, then we say we permute it, then we present the data}
 
 \FloatBarrier
 
