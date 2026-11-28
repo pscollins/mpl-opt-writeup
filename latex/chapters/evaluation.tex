@@ -97,6 +97,11 @@ All of the benchmarks described below were run on \hl{TODO: DESCRIBE HW}
 
 \hl{TODO: OUTLINE BENCHMARK SUITES, BENCHMARK HARDWARE}
 
+
+\section{Summary}
+
+\hl{TODO: fill in summary of results}
+
 \FloatBarrier
 \section{Tuple Flattening}
 For the evaluation below, we use the following configuration:
@@ -1437,17 +1442,55 @@ transformation is broadly the same as the AoS transformation.
   \label{fig:soa_vs_aos_geomean}
 \end{figure}
 
-\section{Benchmark noise under \texttt{-O1}}
-Here, we explore the performance instability observed under \texttt{-O1} that
-motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
-\cref{sec:methodology}.
+%% \section{Benchmark noise under \texttt{-O1}}
+%% Here, we explore the performance instability observed under \texttt{-O1} that
+%% motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
+%% \cref{sec:methodology}.
+
 \section{Benchmark noise under \texttt{-O1}}
 Here. we explore the performance instability observed under \texttt{-O1} that
 motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
-\cref{sec:TODOWHATSECTION}. We proceed in two steps: first, we demonstrate that
-code alignment alone (which MLton's C backend does not control) can drive
-changes in observed latency by as much as 50\%; second, we demonstrate that
-simply 
+\cref{sec:methodology}. We proceed in two steps: first, we demonstrate that code
+alignment alone (which MLton's C backend does not control) can drive changes in
+observed latency by as much as 50\%; second, we demonstrate that simply
+permuting the linear program order of emitted C code can drive comparable (40\%)
+swings. The linear program order that we modify is not subject to any MLton cost
+heuristic -- it is simply a reversed pre-order traversal of the program CFG
+starting from \texttt{main} -- and hence these experiments demonstrate that
+experiments under the default \texttt{-O1} GCC compiler flag suffer from, any
+performance observed changes smaller than roughly a factor of 2 may simply be
+artifacts of incidental perturbations to the generated C rather than true
+effects of the measured pass.
+
+For the experiments that follow, we pick a small sample of 8 benchmarks from
+across the MLton and \texttt{paralell-ml-bench} suites. All experiments below
+were run using MLton with \texttt{ShallowFlatten} and \texttt{PreFlatten}
+disabled, pinned to physical core 0 via \texttt{taskset}, with performance data
+collected via \texttt{perf stat}. Our MLton compiler is configured as in
+\cref{sec:methodology} except for the choice of \texttt{-O1} rather than
+\texttt{-O3 -march=native}.
+
+For the first experiment, we pass \texttt{-fpatchable-function-entry=N,0} for $N
+\in \{0, 4, 8, \dots, 60}$ (covering all possible 4-byte offsets within a
+  64-byte cacheline), which causes GCC to insert $N$ bytes worth of \texttt{NOP}
+  instructions at the entry point for each function in the generated C. The
+  purpose of this \hl{TODO: finish}
+
+
+%%   (all possible 4-byte offsets within a 64-byte
+%% cacheline)
+
+  and compare four different conditions:
+  \begin{itemize}
+
+  \item \texttt{O1}: MLton's default C toolchain configuration, \texttt{-cc-opt -O1}
+  \item \texttt{O1_align}: Like \texttt{-O1}, but we attempt to
+
+  \end{itemize}
+
+
+therefore, this experiment demonstrates that under the default
+\texttt{-O1} GCC compiler flags, 
 
 \FloatBarrier
 
