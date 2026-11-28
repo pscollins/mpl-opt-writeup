@@ -1460,8 +1460,8 @@ transformation is broadly the same as the AoS transformation.
 %% motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
 %% \cref{sec:methodology}.
 
-\section{Benchmark noise under \texttt{-O1}}
-Here. we explore the performance instability observed under \texttt{-O1} that
+\section{Benchmark noise under \texttt{-O1}} \label{sec:mlton_noise}
+Here, we explore the performance instability observed under \texttt{-O1} that
 motivates our choice to benchmark under \texttt{-O3 -march=native}, described in
 \cref{sec:methodology}. We proceed in two steps: first, we demonstrate that code
 alignment alone (which MLton's C backend does not control) can drive changes in
@@ -1476,7 +1476,7 @@ artifacts of incidental perturbations to the generated C rather than true
 effects of the measured pass.
 
 For the experiments that follow, we pick a small sample of 8 benchmarks from
-across the MLton and \texttt{paralell-ml-bench} suites. All experiments below
+across the MLton and \texttt{parallel-ml-bench} suites. All experiments below
 were run using MLton with \texttt{ShallowFlatten} and \texttt{PreFlatten}
 disabled, pinned to physical core 0 via \texttt{taskset}, with performance data
 collected via \texttt{perf stat}. Our MLton compiler is configured as in
@@ -1484,12 +1484,12 @@ collected via \texttt{perf stat}. Our MLton compiler is configured as in
 \texttt{-O3 -march=native}.
 
 For the first experiment, we pass \texttt{-fpatchable-function-entry=N,0} for $N
-\in \{0, 4, 8, \dots, 60}$ (covering all possible 4-byte offsets within a
+\in \{0, 4, 8, \dots, 60\}$ (covering all possible 4-byte offsets within a
   64-byte cacheline), which causes GCC to insert $N$ bytes worth of \texttt{NOP}
   instructions at the entry point for each function in the generated C. At
   \texttt{-O1}, GCC enforces no code alignment constraints, hence perturbing
   \texttt{-fpatchable-function-entry=N,0} is intended to synthetically model the
-  impact of minor, insigificant program changes (e.g. duplicating the body of an
+  impact of minor, insignificant program changes (e.g. duplicating the body of an
   error-handling function that is never called at benchmark runtime) on observed
   performance via code layout effects alone.
 
@@ -1498,61 +1498,80 @@ In this experiment, we compare four different configurations:
 
 \item \texttt{O1}: MLton's default C toolchain configuration: \texttt{-cc-opt -O1}
 
-\item \texttt{O1_align}: Like \texttt{-O1}, but we enable 16-byte code alignment
+\item \texttt{O1\_align}: Like \texttt{-O1}, but we enable 16-byte code alignment
   (GCC's default for \texttt{-O2}) without the rest of \texttt{-O2}:
-  \texttt{-cc-opt -O1 -cc-opt -falign-loops=16 -cc-opt -falign-jumps=16 -cc-opt
-    -falign-labels=16 -cc-opt -falign-functions=16}
+  \texttt{-cc-opt -O1} \texttt{-cc-opt -falign-loops=16}
+  \texttt{-cc-opt -falign-jumps=16} \texttt{-cc-opt -falign-labels=16}
+  \texttt{-cc-opt -falign-functions=16}
 
-\item \texttt{O2}: Regular GCC \txttt{-O2}: \texttt{-cc-opt -O2}
+\item \texttt{O2}: Regular GCC \texttt{-O2}: \texttt{-cc-opt -O2}
 
-\item \texttt{O3}: The configuration measured in this document: \texttt{-cc-opt -O3 -march -cc opt -march=native}
+\item \texttt{O3}: The configuration measured in this document:
+  \texttt{-cc-opt -O3} \texttt{-cc-opt -march=native}
 
 \end{itemize}
 
 \cref{fig:measure_o1_cycles} shows measured CPU time as a function of $N$ across
-each benchmark, and \cref{fig:compare_o1_cycles} shows the percentage CPU time
-increase from the slowest-measured $N$ to the fastest. This data shows that
+each benchmark, and \cref{tab:compare_o1_cycles} shows the percentage CPU time
+increase from the fastest-measured $N$ to the slowest. This data shows that
 no-op perturbations to code layout lead to performance swings of up to 56\%
-under \texttt{O1}, these swings are virtually eliminated under \texttt{O2} or
-\textt{O3}, dropping to 3.5\% and 2.5\%, respectively. We additionally see that
-simply enforcing 16-byte code alignment constraints are insufficient to resolve
-the problem, with \texttt{imp-for} demonstrating identical performance
-instability under \texttt{O1} and \textt{O1_align}. Finally, in
-\cref{fig:compare_o1_insts}, we provide worst-to-best instruction count
-increases under each configuration: with $<0.1\%$ swings across all benchmarks
-in all configurations, we can see that the gains and losses are driven purely by
-microarchitectural impacts to instructions-per-cycle rather than direct overhead
-from code bloat.
+under \texttt{O1}; these swings are virtually eliminated under \texttt{O2} or
+\texttt{O3}, dropping to at most 3.6\% and 2.9\%, respectively. We additionally see that
+simply enforcing 16-byte code alignment constraints is insufficient to resolve
+the problem, with \texttt{imp-for} demonstrating virtually identical performance
+instability under \texttt{O1} (56.0\%) and \texttt{O1\_align} (57.0\%). Finally, in
+\cref{tab:compare_o1_insts}, we provide worst-to-best instruction count
+increases under each configuration: with $<0.25\%$ swings across all benchmarks
+and configurations (and $<0.1\%$ under \texttt{O1}), we can see that the gains
+and losses are driven purely by microarchitectural impacts to
+instructions-per-cycle rather than direct overhead from code bloat.
 
-%% while no-op changes can lead to changes of up to
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../analysis/charts/thesis/o1_instability_sweep.pdf}
+  \caption{Relative CPU cycle count (versus median across $N$) as a function of entry \texttt{NOP} padding $N \in \{0, 4, \dots, 60\}$ across the four GCC configurations, with flattening passes disabled. Benchmarks are ordered by descending \texttt{O1} max-to-min cycle spread.}
+  \label{fig:measure_o1_cycles}
+\end{figure}
 
-%% \cref{fig:measure_code_perm_result} summarizes the overall
-%% results. While not all benchmarks are impacted, the largest impact 
+\begin{table}[htbp]
+  \centering
+  \caption{Max-to-min CPU cycle spread ($\frac{\max}{\min} - 1$) across entry \texttt{NOP} padding offsets $N \in \{0, 4, \dots, 60\}$ for each GCC configuration.}
+  \label{tab:compare_o1_cycles}
+  \begin{tabular}{llrrrr}
+    \toprule
+    \textbf{Benchmark} & \textbf{Suite} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
+    \midrule
+    \texttt{imp-for}         & MLton                        & 56.04\% & 57.03\% & 3.57\% & 0.21\% \\
+    \texttt{wc-input1}       & MLton                        & 33.16\% &  1.96\% & 1.23\% & 2.48\% \\
+    \texttt{dense-matmul}    & \texttt{parallel-ml-bench}   &  8.37\% &  0.65\% & 0.98\% & 0.82\% \\
+    \texttt{msort}           & \texttt{parallel-ml-bench}   &  2.64\% &  0.82\% & 1.36\% & 2.93\% \\
+    \texttt{fft}             & MLton                        &  1.45\% &  0.64\% & 1.19\% & 0.56\% \\
+    \texttt{primes}          & \texttt{parallel-ml-bench}   &  0.61\% &  1.16\% & 2.98\% & 2.01\% \\
+    \texttt{matrix-multiply} & MLton                        &  0.39\% &  0.17\% & 0.80\% & 0.67\% \\
+    \texttt{checksum}        & MLton                        &  0.05\% &  0.34\% & 0.44\% & 0.12\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-TODO(agy): measure patch cycles shows the data in o1 instability sweep
-
-TODO(agy): compare patch cycles result shows the max-to-min ratios (excluding the
-``inst swing'' thing)
-
-TODO(agy): compare patch insts shows tha max-to-min ratios for ``inst swing''
-alone (across all configratuions)
-
-TODO(agy): use the same ordering in measure patch cycles vs the tables
-(currently they don't match) and use chart formatting that is consistent with
-the rest of the document
-
-
-%% purpose of this \hl{TODO: finish}
-
-
-%%   (all possible 4-byte offsets within a 64-byte
-%% cacheline)
-
-  and compare four different conditions:
-
-
-therefore, this experiment demonstrates that under the default
-\texttt{-O1} GCC compiler flags, 
+\begin{table}[htbp]
+  \centering
+  \caption{Max-to-min retired instruction count spread ($\frac{\max}{\min} - 1$) across entry \texttt{NOP} padding offsets $N \in \{0, 4, \dots, 60\}$ for each GCC configuration.}
+  \label{tab:compare_o1_insts}
+  \begin{tabular}{llrrrr}
+    \toprule
+    \textbf{Benchmark} & \textbf{Suite} & \textbf{\texttt{O1}} & \textbf{\texttt{O1\_align}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} \\
+    \midrule
+    \texttt{imp-for}         & MLton                        & 0.035\% & 0.034\% & 0.005\% & 0.003\% \\
+    \texttt{wc-input1}       & MLton                        & 0.078\% & 0.021\% & 0.029\% & 0.029\% \\
+    \texttt{dense-matmul}    & \texttt{parallel-ml-bench}   & 0.007\% & 0.002\% & 0.002\% & 0.004\% \\
+    \texttt{msort}           & \texttt{parallel-ml-bench}   & 0.029\% & 0.016\% & 0.019\% & 0.017\% \\
+    \texttt{fft}             & MLton                        & 0.015\% & 0.020\% & 0.014\% & 0.021\% \\
+    \texttt{primes}          & \texttt{parallel-ml-bench}   & 0.040\% & 0.017\% & 0.012\% & 0.014\% \\
+    \texttt{matrix-multiply} & MLton                        & 0.018\% & 0.008\% & 0.216\% & 0.021\% \\
+    \texttt{checksum}        & MLton                        & 0.006\% & 0.007\% & 0.014\% & 0.039\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \FloatBarrier
 

@@ -11,6 +11,7 @@ import statistics
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 
@@ -18,12 +19,29 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "analysis" / "data"
 OUT_DIR = REPO_ROOT / "analysis" / "charts" / "thesis"
 
+# Match thesis figure styling from build_thesis_charts.py
+THESIS_TEXTWIDTH_IN = 6.50
+THESIS_RC = {
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.serif": ["Computer Modern Roman"],
+    "font.size": 8.5,
+    "axes.labelsize": 8.5,
+    "axes.titlesize": 9.0,
+    "xtick.labelsize": 7.5,
+    "ytick.labelsize": 7.8,
+    "legend.fontsize": 7.5,
+    "axes.linewidth": 0.6,
+    "grid.linewidth": 0.45,
+    "lines.linewidth": 1.4,
+}
+
 CONFIG_ORDER = ["O1", "O1_align", "O2", "O3_native"]
 CONFIG_LABELS = {
-    "O1": "-O1 (default)",
-    "O1_align": "-O1 + -falign-*=16",
-    "O2": "-O2",
-    "O3_native": "-O3 -march=native",
+    "O1": r"\texttt{O1}",
+    "O1_align": r"\texttt{O1\_align}",
+    "O2": r"\texttt{O2}",
+    "O3_native": r"\texttt{O3}",
 }
 CONFIG_COLORS = {
     "O1": "#d62728",        # red
@@ -39,6 +57,22 @@ CONFIG_MARKERS = {
 }
 
 
+def latex_bench_label(bench: str) -> str:
+    s = str(bench).replace("_", r"\_").replace("%", r"\%")
+    return fr"\texttt{{{s}}}"
+
+
+def ordered_benchmarks(records: list[dict]) -> list[str]:
+    """Order benchmarks descending by -O1 max/min cycle spread (matching tables)."""
+    benchmarks = list(dict.fromkeys(r["benchmark"] for r in records))
+
+    def o1_cycle_spread(b: str) -> float:
+        cyc = [r["median_cycles"] for r in records if r["benchmark"] == b and r["config"] == "O1"]
+        return (max(cyc) / min(cyc) - 1.0) * 100.0 if cyc else 0.0
+
+    return sorted(benchmarks, key=o1_cycle_spread, reverse=True)
+
+
 def load_sweep(path: Path) -> list[dict]:
     records = []
     with path.open() as f:
@@ -50,25 +84,34 @@ def load_sweep(path: Path) -> list[dict]:
 
 
 def print_summary(records: list[dict], perf_data: list[dict] | None) -> None:
-    benchmarks = list(dict.fromkeys(r["benchmark"] for r in records))
+    benchmarks = ordered_benchmarks(records)
 
     print("\n## Experiment 1: Code-Layout Perturbation Sensitivity (Max/Min Cycle Spread %)")
-    print("| Benchmark | Suite | -O1 | -O1 + align | -O2 | -O3 -march=native | -O1 Inst. Spread |")
-    print("| :--- | :--- | ---: | ---: | ---: | ---: | ---: |")
+    print("| Benchmark | Suite | -O1 | -O1 + align | -O2 | -O3 -march=native |")
+    print("| :--- | :--- | ---: | ---: | ---: | ---: |")
     for b in benchmarks:
         brecs = [r for r in records if r["benchmark"] == b]
         suite = brecs[0]["suite"]
         row = [b, suite]
-        o1_inst_spread = 0.0
         for cfg in CONFIG_ORDER:
             crecs = [r for r in brecs if r["config"] == cfg]
             cyc = [r["median_cycles"] for r in crecs]
             spread = (max(cyc) / min(cyc) - 1.0) * 100.0
             row.append(f"{spread:.2f}%")
-            if cfg == "O1":
-                insts = [r["median_instructions"] for r in crecs]
-                o1_inst_spread = (max(insts) / min(insts) - 1.0) * 100.0
-        row.append(f"{o1_inst_spread:.3f}%")
+        print("| " + " | ".join(row) + " |")
+
+    print("\n## Experiment 1: Instruction Count Max/Min Spread %")
+    print("| Benchmark | Suite | -O1 | -O1 + align | -O2 | -O3 -march=native |")
+    print("| :--- | :--- | ---: | ---: | ---: | ---: |")
+    for b in benchmarks:
+        brecs = [r for r in records if r["benchmark"] == b]
+        suite = brecs[0]["suite"]
+        row = [b, suite]
+        for cfg in CONFIG_ORDER:
+            crecs = [r for r in brecs if r["config"] == cfg]
+            insts = [r["median_instructions"] for r in crecs]
+            spread = (max(insts) / min(insts) - 1.0) * 100.0
+            row.append(f"{spread:.3f}%")
         print("| " + " | ".join(row) + " |")
 
     print("\n## Experiment 1: Wall-Time Max/Min Spread %")
@@ -112,117 +155,130 @@ def print_summary(records: list[dict], perf_data: list[dict] | None) -> None:
 
 
 def plot_sweep_grid(records: list[dict], out_prefix: Path) -> None:
-    benchmarks = list(dict.fromkeys(r["benchmark"] for r in records))
+    benchmarks = ordered_benchmarks(records)
     ncols = 4
     nrows = (len(benchmarks) + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(13.5, 3.1 * nrows), sharex=True)
-    axes_flat = np.array(axes).reshape(-1)
+    fig_h = 1.48 * nrows + 0.55
 
-    for i, b in enumerate(benchmarks):
-        ax = axes_flat[i]
-        brecs = [r for r in records if r["benchmark"] == b]
-        for cfg in CONFIG_ORDER:
-            crecs = sorted([r for r in brecs if r["config"] == cfg], key=lambda r: r["offset"])
-            xs = [r["offset"] for r in crecs]
-            cyc = [r["median_cycles"] for r in crecs]
-            med = statistics.median(cyc)
-            ys = [(c / med - 1.0) * 100.0 for c in cyc]
-            ax.plot(
-                xs, ys,
-                label=CONFIG_LABELS[cfg],
-                color=CONFIG_COLORS[cfg],
-                marker=CONFIG_MARKERS[cfg],
-                markersize=3.5,
-                linewidth=1.6 if cfg == "O1" else 1.2,
-                alpha=0.95 if cfg == "O1" else 0.85,
-                zorder=5 if cfg == "O1" else 3,
-            )
-        ax.axhline(0.0, color="#666666", linestyle="--", linewidth=0.7, alpha=0.6)
-        ax.set_title(b, fontsize=10.5, fontweight="bold")
-        ax.set_xticks([0, 16, 32, 48, 60])
-        ax.grid(True, linestyle=":", alpha=0.4)
-        if i % ncols == 0:
-            ax.set_ylabel("Cycles vs. median (%)")
-        if i >= (nrows - 1) * ncols:
-            ax.set_xlabel("Entry NOP padding N (bytes)")
+    with plt.rc_context(THESIS_RC):
+        fig, axes = plt.subplots(
+            nrows, ncols,
+            figsize=(THESIS_TEXTWIDTH_IN, fig_h),
+            sharex=True,
+            layout="constrained",
+        )
+        axes_flat = np.array(axes).reshape(-1)
 
-    for j in range(len(benchmarks), len(axes_flat)):
-        axes_flat[j].set_visible(False)
+        for i, b in enumerate(benchmarks):
+            ax = axes_flat[i]
+            brecs = [r for r in records if r["benchmark"] == b]
+            all_ys = []
+            for cfg in CONFIG_ORDER:
+                crecs = sorted([r for r in brecs if r["config"] == cfg], key=lambda r: r["offset"])
+                xs = [r["offset"] for r in crecs]
+                cyc = [r["median_cycles"] for r in crecs]
+                med = statistics.median(cyc)
+                ys = [(c / med - 1.0) * 100.0 for c in cyc]
+                all_ys.extend(ys)
+                ax.plot(
+                    xs, ys,
+                    label=CONFIG_LABELS[cfg],
+                    color=CONFIG_COLORS[cfg],
+                    marker=CONFIG_MARKERS[cfg],
+                    markersize=2.6,
+                    linewidth=1.25 if cfg == "O1" else 0.95,
+                    alpha=0.92 if cfg == "O1" else 0.85,
+                    zorder=5 if cfg == "O1" else 3,
+                )
+            ax.axhline(0.0, color="0.4", linestyle="--", linewidth=0.65, alpha=0.8, zorder=2)
+            ax.set_title(latex_bench_label(b), fontsize=8.0, pad=2.5)
+            ax.set_xticks([0, 16, 32, 48, 60])
+            yspan = (max(all_ys) - min(all_ys)) if all_ys else 1.0
+            decimals = 0 if yspan >= 4.0 else 1
+            ax.yaxis.set_major_formatter(ticker.PercentFormatter(decimals=decimals))
+            ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=4, integer=(decimals == 0)))
+            ax.tick_params(axis="x", labelsize=6.8, length=2.5, pad=1.5)
+            ax.tick_params(axis="y", labelsize=6.8, length=2.5, pad=1.5)
+            ax.grid(True, linestyle=":", alpha=0.5, zorder=0)
 
-    handles, labels = axes_flat[0].get_legend_handles_labels()
-    fig.legend(
-        handles, labels,
-        loc="upper center",
-        ncol=len(CONFIG_ORDER),
-        frameon=True,
-        fontsize=9.5,
-        bbox_to_anchor=(0.5, 1.01),
-    )
-    fig.suptitle(
-        "Code-Layout Perturbation Sensitivity Across GCC Optimization Levels (Flattening Passes Disabled)",
-        fontsize=12,
-        fontweight="bold",
-        y=1.06,
-    )
-    fig.tight_layout()
-    for ext in ("pdf", "png"):
-        out_path = out_prefix.with_suffix(f".{ext}")
-        fig.savefig(out_path, bbox_inches="tight", dpi=200)
-        print(f"Wrote {out_path}")
-    plt.close(fig)
+        for j in range(len(benchmarks), len(axes_flat)):
+            axes_flat[j].set_visible(False)
+
+        handles, labels = axes_flat[0].get_legend_handles_labels()
+        fig.legend(
+            handles, labels,
+            loc="outside upper center",
+            ncol=len(CONFIG_ORDER),
+            frameon=True,
+            fontsize=7.5,
+        )
+        fig.supylabel(r"Cycles vs.\ median (\%)", fontsize=8.5)
+        fig.supxlabel(r"Entry \texttt{NOP} padding $N$ (bytes)", fontsize=8.5)
+
+        for ext in ("pdf", "png"):
+            out_path = out_prefix.with_suffix(f".{ext}")
+            save_kwargs = {"bbox_inches": "tight"}
+            if ext == "pdf":
+                save_kwargs["metadata"] = {"CreationDate": None}
+            else:
+                save_kwargs["dpi"] = 200
+            fig.savefig(out_path, **save_kwargs)
+            print(f"Wrote {out_path}")
+        plt.close(fig)
 
 
 def plot_spread_bar(records: list[dict], out_prefix: Path) -> None:
-    benchmarks = list(dict.fromkeys(r["benchmark"] for r in records))
+    benchmarks = ordered_benchmarks(records)
     x = np.arange(len(benchmarks))
     width = 0.2
 
-    fig, ax = plt.subplots(figsize=(11.5, 4.2))
-    for k, cfg in enumerate(CONFIG_ORDER):
-        spreads = []
-        for b in benchmarks:
-            crecs = [r for r in records if r["benchmark"] == b and r["config"] == cfg]
-            cyc = [r["median_cycles"] for r in crecs]
-            spreads.append((max(cyc) / min(cyc) - 1.0) * 100.0)
-        offset = (k - (len(CONFIG_ORDER) - 1) / 2.0) * width
-        bars = ax.bar(
-            x + offset, spreads, width,
-            label=CONFIG_LABELS[cfg],
-            color=CONFIG_COLORS[cfg],
-            edgecolor="black",
-            linewidth=0.4,
-            alpha=0.9,
-        )
-        if cfg == "O1":
-            for bar, val in zip(bars, spreads):
-                if val >= 2.0:
-                    ax.text(
-                        bar.get_x() + bar.get_width() / 2.0,
-                        val + 0.4,
-                        f"{val:.1f}%",
-                        ha="center",
-                        va="bottom",
-                        fontsize=7.5,
-                        color=CONFIG_COLORS["O1"],
-                        fontweight="bold",
-                    )
+    with plt.rc_context(THESIS_RC):
+        fig, ax = plt.subplots(figsize=(THESIS_TEXTWIDTH_IN, 2.75), layout="constrained")
+        for k, cfg in enumerate(CONFIG_ORDER):
+            spreads = []
+            for b in benchmarks:
+                crecs = [r for r in records if r["benchmark"] == b and r["config"] == cfg]
+                cyc = [r["median_cycles"] for r in crecs]
+                spreads.append((max(cyc) / min(cyc) - 1.0) * 100.0)
+            offset = (k - (len(CONFIG_ORDER) - 1) / 2.0) * width
+            bars = ax.bar(
+                x + offset, spreads, width,
+                label=CONFIG_LABELS[cfg],
+                color=CONFIG_COLORS[cfg],
+                edgecolor="black",
+                linewidth=0.4,
+                alpha=0.9,
+                zorder=3,
+            )
+            if cfg == "O1":
+                for bar, val in zip(bars, spreads):
+                    if val >= 2.0:
+                        ax.text(
+                            bar.get_x() + bar.get_width() / 2.0,
+                            val + 0.6,
+                            fr"{val:.1f}\%",
+                            ha="center",
+                            va="bottom",
+                            fontsize=6.8,
+                            color=CONFIG_COLORS["O1"],
+                        )
 
-    ax.set_xticks(x)
-    ax.set_xticklabels(benchmarks, rotation=20, ha="right", fontsize=9.5)
-    ax.set_ylabel("Max / Min Cycle Spread (%) across N = 0..60")
-    ax.set_title(
-        "Max-to-Min Cycle Spread Under Semantic No-Op Code-Layout Shifts (Flattening Passes Disabled)",
-        fontsize=11,
-        fontweight="bold",
-    )
-    ax.grid(True, axis="y", linestyle=":", alpha=0.5)
-    ax.legend(frameon=True, fontsize=9)
-    fig.tight_layout()
-    for ext in ("pdf", "png"):
-        out_path = out_prefix.with_suffix(f".{ext}")
-        fig.savefig(out_path, bbox_inches="tight", dpi=200)
-        print(f"Wrote {out_path}")
-    plt.close(fig)
+        ax.set_xticks(x)
+        ax.set_xticklabels([latex_bench_label(b) for b in benchmarks], rotation=20, ha="right", fontsize=7.5)
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter(decimals=0))
+        ax.set_ylabel(r"Max/min cycle spread (\%)", fontsize=8.5)
+        ax.grid(True, axis="y", linestyle=":", alpha=0.5, zorder=0)
+        ax.legend(frameon=True, fontsize=7.5, loc="upper right")
+        for ext in ("pdf", "png"):
+            out_path = out_prefix.with_suffix(f".{ext}")
+            save_kwargs = {"bbox_inches": "tight"}
+            if ext == "pdf":
+                save_kwargs["metadata"] = {"CreationDate": None}
+            else:
+                save_kwargs["dpi"] = 200
+            fig.savefig(out_path, **save_kwargs)
+            print(f"Wrote {out_path}")
+        plt.close(fig)
 
 
 def main() -> None:
